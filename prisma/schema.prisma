@@ -1,0 +1,264 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  SOLD_OUT
+  COMPLETED
+  CANCELLED
+}
+
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  PROFESSIONAL
+}
+
+enum RegistrationStatus {
+  DRAFT
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  REVIEW
+}
+
+enum PaymentProvider {
+  IYZICO
+  MANUAL
+  BANK_TRANSFER
+}
+
+enum ProviderPaymentStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+  REVIEW
+  CANCELLED
+  REFUNDED
+}
+
+enum AdminRole {
+  OWNER
+  STAFF
+  CHECKIN
+}
+
+enum CheckInStatus {
+  ELIGIBLE
+  CHECKED_IN
+  BLOCKED
+  VOID
+}
+
+enum EmailType {
+  CONFIRMATION
+  PAYMENT_FAILED
+  ADMIN_NOTICE
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model Event {
+  id                      String         @id @default(cuid())
+  code                    String         @unique
+  slug                    String         @unique
+  name                    String
+  venue                   String
+  startsAt                DateTime
+  endsAt                  DateTime
+  timezone                String         @default("Europe/Istanbul")
+  status                  EventStatus    @default(DRAFT)
+  participantSequenceNext Int            @default(1)
+  days                    EventDay[]
+  packages                EventPackage[]
+  registrations           Registration[]
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+
+  @@index([status])
+}
+
+model EventDay {
+  id        String            @id @default(cuid())
+  eventId   String
+  event     Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  date      DateTime          @db.Date
+  label     String
+  packages  EventPackageDay[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@unique([eventId, date])
+  @@index([date])
+}
+
+model EventPackage {
+  id            String            @id @default(cuid())
+  eventId       String
+  event         Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  code          String
+  name          String
+  price         Decimal           @db.Decimal(10, 2)
+  currency      String            @default("TRY")
+  capacity      Int
+  active        Boolean           @default(true)
+  days          EventPackageDay[]
+  registrations Registration[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@unique([eventId, code])
+  @@index([active])
+}
+
+model EventPackageDay {
+  id         String       @id @default(cuid())
+  packageId  String
+  package    EventPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  eventDayId String
+  eventDay   EventDay     @relation(fields: [eventDayId], references: [id], onDelete: Cascade)
+  createdAt  DateTime     @default(now())
+
+  @@unique([packageId, eventDayId])
+}
+
+model Registration {
+  id                        String             @id @default(cuid())
+  participantCode           String?            @unique
+  eventId                   String
+  event                     Event              @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  packageId                 String
+  package                   EventPackage       @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  fullName                  String
+  phone                     String
+  email                     String
+  carBrandModel             String
+  plateNumber               String
+  experienceLevel           ExperienceLevel
+  emergencyContactName      String
+  emergencyContactPhone     String
+  kvkkAcceptedAt            DateTime
+  liabilityWaiverAcceptedAt DateTime
+  marketingConsentAt        DateTime?
+  consentIpAddress          String?            @db.VarChar(45)
+  adminNotes                String?            @db.Text
+  status                    RegistrationStatus @default(DRAFT)
+  paymentStatus             PaymentStatus      @default(UNPAID)
+  qrTokenHash               String?            @unique
+  qrIssuedAt                DateTime?
+  payments                  Payment[]
+  checkIns                  CheckIn[]
+  auditLogs                 AuditLog[]
+  emails                    EmailLog[]
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+
+  @@index([eventId, status])
+  @@index([paymentStatus])
+  @@index([packageId])
+  @@index([email])
+  @@index([phone])
+  @@index([plateNumber])
+}
+
+model Payment {
+  id                    String                @id @default(cuid())
+  registrationId        String
+  registration          Registration          @relation(fields: [registrationId], references: [id], onDelete: Restrict)
+  provider              PaymentProvider       @default(IYZICO)
+  conversationId        String                @unique
+  iyzicoToken           String?               @unique
+  iyzicoPaymentId       String?
+  amount                Decimal               @db.Decimal(10, 2)
+  currency              String                @default("TRY")
+  status                ProviderPaymentStatus @default(INITIATED)
+  rawInitializeResponse Json?
+  rawCallbackResponse   Json?
+  rawWebhookPayload     Json?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@index([registrationId])
+  @@index([status])
+  @@index([iyzicoPaymentId])
+}
+
+model AdminUser {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String
+  role      AdminRole  @default(STAFF)
+  checkIns  CheckIn[]
+  auditLogs AuditLog[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CheckIn {
+  id                    String        @id @default(cuid())
+  registrationId        String
+  registration          Registration  @relation(fields: [registrationId], references: [id], onDelete: Restrict)
+  eventDate             DateTime      @db.Date
+  checkedInAt           DateTime?
+  checkedInByAdminId    String?
+  checkedInByAdmin      AdminUser?    @relation(fields: [checkedInByAdminId], references: [id], onDelete: SetNull)
+  status                CheckInStatus @default(ELIGIBLE)
+  duplicateAttemptCount Int           @default(0)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@unique([registrationId, eventDate])
+  @@index([eventDate, status])
+  @@index([checkedInByAdminId])
+}
+
+model AuditLog {
+  id             String        @id @default(cuid())
+  adminUserId    String?
+  adminUser      AdminUser?    @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  registrationId String?
+  registration   Registration? @relation(fields: [registrationId], references: [id], onDelete: SetNull)
+  action         String
+  before         Json?
+  after          Json?
+  reason         String?       @db.Text
+  ipAddress      String?       @db.VarChar(45)
+  createdAt      DateTime      @default(now())
+
+  @@index([adminUserId])
+  @@index([registrationId])
+  @@index([action])
+}
+
+model EmailLog {
+  id                String       @id @default(cuid())
+  registrationId    String
+  registration      Registration @relation(fields: [registrationId], references: [id], onDelete: Restrict)
+  type              EmailType
+  status            EmailStatus  @default(PENDING)
+  providerMessageId String?
+  createdAt         DateTime     @default(now())
+
+  @@index([registrationId])
+  @@index([type, status])
+}
