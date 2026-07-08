@@ -76,28 +76,28 @@ export default function HomePage() {
             </Link>
             <Link
               href={registerHref}
-              className="inline-flex h-10 min-w-24 items-center justify-center rounded-full bg-[#4CC9F0] px-5 text-[11px] font-bold uppercase tracking-[0.14em] text-ats-black shadow-[inset_0_1px_0_rgba(255,255,255,0.36),0_12px_34px_rgba(183,240,255,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7DDCFF] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.46),0_18px_42px_rgba(183,240,255,0.26)] active:translate-y-0"
+              className="ats-button-primary inline-flex h-10 min-w-24 items-center justify-center rounded-full bg-[#4CC9F0] px-5 text-[11px] font-bold uppercase tracking-[0.14em] text-ats-black"
             >
               Kayıt
             </Link>
           </header>
 
-          <div className="hero-copy-enter mx-auto flex w-full max-w-7xl flex-1 items-end px-6 pb-16 pt-24 sm:px-10 sm:pb-24 lg:px-12 lg:pb-28">
+          <div className="mx-auto flex w-full max-w-7xl flex-1 items-end px-6 pb-16 pt-24 sm:px-10 sm:pb-24 lg:px-12 lg:pb-28">
             <div className="max-w-4xl">
               <div className="space-y-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-ats-text/72 sm:text-xs">
                 <p>KULA MYTRACK</p>
                 <p>20 EYLÜL 2026</p>
               </div>
-              <h1 className="mt-8 max-w-5xl text-6xl font-semibold leading-[0.88] text-ats-text sm:text-7xl lg:text-8xl">
+              <h1 className="ats-hero-headline mt-8 max-w-5xl text-6xl font-semibold leading-[0.88] text-ats-text sm:text-7xl lg:text-8xl">
                 <span className="block sm:whitespace-nowrap">Pist Tutkusunu</span>
                 <span className="block sm:whitespace-nowrap">Daha Profesyonel Yaşa.</span>
               </h1>
-              <p className="mt-8 max-w-xl whitespace-pre-line text-lg font-medium leading-8 text-ats-text/82 sm:text-xl sm:leading-9">
+              <p className="ats-hero-subtitle mt-8 max-w-xl whitespace-pre-line text-lg font-medium leading-8 text-ats-text/82 sm:text-xl sm:leading-9">
                 {"Gerçek sürücüler.\nGerçek otomobiller.\nGerçek pist deneyimi."}
               </p>
               <Link
                 href={registerHref}
-                className="mt-11 inline-flex h-14 min-w-40 items-center justify-center rounded-full bg-[#4CC9F0] px-8 text-xs font-bold uppercase tracking-[0.14em] text-ats-black shadow-[inset_0_1px_0_rgba(255,255,255,0.38),0_18px_44px_rgba(183,240,255,0.20)] transition duration-300 hover:-translate-y-1 hover:bg-[#7DDCFF] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.48),0_26px_58px_rgba(183,240,255,0.30)] active:translate-y-0"
+                className="ats-button-primary ats-hero-cta mt-11 inline-flex h-14 min-w-40 items-center justify-center rounded-full bg-[#4CC9F0] px-8 text-xs font-bold uppercase tracking-[0.14em] text-ats-black"
               >
                 Kayıt Ol
               </Link>
@@ -134,7 +134,7 @@ export default function HomePage() {
         </div>
       </StorySection>
 
-      <section className="relative isolate min-h-[100svh] overflow-hidden bg-ats-black">
+      <section className="ats-section-reveal relative isolate min-h-[100svh] overflow-hidden bg-ats-black">
         <Image
           src={images.experience.src}
           alt={images.experience.alt}
@@ -158,7 +158,7 @@ export default function HomePage() {
             Program.
           </h2>
           <div className="relative mx-auto mt-16 max-w-2xl sm:mt-20">
-            <div className="absolute bottom-3 left-3 top-3 w-px bg-gradient-to-b from-[#4CC9F0]/20 via-[#4CC9F0] to-[#4CC9F0]/20" />
+            <div className="ats-timeline-line absolute bottom-3 left-3 top-3 w-px bg-gradient-to-b from-[#4CC9F0]/20 via-[#4CC9F0] to-[#4CC9F0]/20" />
             <div className="space-y-9 sm:space-y-10">
               {scheduleItems.map(([time, title]) => (
                 <div
@@ -191,37 +191,37 @@ export default function HomePage() {
             image={images.side}
             position="center 42%"
             sizes="(min-width: 768px) 58vw, 100vw"
-            className="aspect-[4/5] md:col-span-7 md:row-span-2 md:min-h-[76vh]"
+            className="ats-gallery-image aspect-[4/5] md:col-span-7 md:row-span-2 md:min-h-[76vh]"
           />
           <PhotoFrame
             image={images.back}
             position="center center"
             sizes="(min-width: 768px) 42vw, 100vw"
-            className="aspect-[3/2] md:col-span-5"
+            className="ats-gallery-image aspect-[3/2] md:col-span-5"
           />
           <PhotoFrame
             image={images.i20Front}
             position="center center"
             sizes="(min-width: 768px) 42vw, 100vw"
-            className="aspect-[3/2] md:col-span-5"
+            className="ats-gallery-image aspect-[3/2] md:col-span-5"
           />
           <PhotoFrame
             image={images.i20Back}
             position="center center"
             sizes="(min-width: 768px) 33vw, 100vw"
-            className="aspect-[4/3] md:col-span-4"
+            className="ats-gallery-image aspect-[4/3] md:col-span-4"
           />
           <PhotoFrame
             image={images.i20Girl}
             position="center center"
             sizes="(min-width: 768px) 33vw, 100vw"
-            className="aspect-[4/5] md:col-span-4"
+            className="ats-gallery-image aspect-[4/5] md:col-span-4"
           />
           <PhotoFrame
             image={images.ioniq}
             position="center center"
             sizes="(min-width: 768px) 33vw, 100vw"
-            className="aspect-[4/3] md:col-span-4"
+            className="ats-gallery-image aspect-[4/3] md:col-span-4"
           />
         </div>
       </StorySection>
@@ -241,7 +241,7 @@ export default function HomePage() {
         </div>
       </StorySection>
 
-      <section className="bg-ats-black px-6 py-28 text-center sm:px-10 sm:py-32 lg:px-12 lg:py-40">
+      <section className="ats-section-reveal bg-ats-black px-6 py-28 text-center sm:px-10 sm:py-32 lg:px-12 lg:py-40">
         <div className="mx-auto max-w-5xl">
           <div className="space-y-3 text-xs font-semibold uppercase tracking-[0.24em] text-[#4CC9F0]">
             <p>20 EYLÜL 2026</p>
@@ -254,7 +254,7 @@ export default function HomePage() {
           </h2>
           <Link
             href={registerHref}
-            className="mt-12 inline-flex h-14 min-w-40 items-center justify-center rounded-full bg-[#4CC9F0] px-9 text-xs font-bold uppercase tracking-[0.14em] text-ats-black shadow-[inset_0_1px_0_rgba(255,255,255,0.38),0_18px_44px_rgba(183,240,255,0.20)] transition duration-300 hover:-translate-y-1 hover:bg-[#7DDCFF] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.48),0_26px_58px_rgba(183,240,255,0.30)] active:translate-y-0"
+            className="ats-button-primary mt-12 inline-flex h-14 min-w-40 items-center justify-center rounded-full bg-[#4CC9F0] px-9 text-xs font-bold uppercase tracking-[0.14em] text-ats-black"
           >
             Kayıt Ol
           </Link>
@@ -276,7 +276,10 @@ function StorySection({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className={`px-6 py-28 sm:px-10 sm:py-36 lg:px-12 lg:py-48 ${className}`}>
+    <section
+      id={id}
+      className={`ats-section-reveal px-6 py-28 sm:px-10 sm:py-36 lg:px-12 lg:py-48 ${className}`}
+    >
       <div className="mx-auto max-w-7xl">{children}</div>
     </section>
   );
@@ -325,7 +328,7 @@ function HeroImage({ src, alt }: { src: string; alt: string }) {
 
 function ManifestoFooter() {
   return (
-    <footer className="border-t border-ats-border/70 bg-ats-black px-6 py-10 sm:px-10 lg:px-12">
+    <footer className="ats-footer-reveal border-t border-ats-border/70 bg-ats-black px-6 py-10 sm:px-10 lg:px-12">
       <div className="mx-auto grid max-w-7xl gap-8 text-sm text-ats-muted md:grid-cols-[1fr_auto] md:items-end">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-ats-text">
