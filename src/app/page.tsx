@@ -18,7 +18,7 @@ const images = {
     alt: "Viraj çıkışında kırmızı Honda Civic Type R",
   },
   side: {
-    src: "/images/ats/FL5_SİDE_COOL.jpg",
+    src: "/images/ats/FL5_SIDE_COOL.jpg",
     alt: "Pistte Honda Civic Type R yan profili",
   },
   back: {
@@ -30,11 +30,11 @@ const images = {
     alt: "Hyundai i20 N pist günü fotoğrafı",
   },
   i20Back: {
-    src: "/images/ats/İ20N_BACK.JPG",
+    src: "/images/ats/i20N_BACK.JPG",
     alt: "Hyundai i20 N arka açı pist fotoğrafı",
   },
   i20Girl: {
-    src: "/images/ats/İ20NGİRL.JPG",
+    src: "/images/ats/i20NGIRL.JPG",
     alt: "Paddock atmosferinde Hyundai i20 N",
   },
   ioniq: {
@@ -76,7 +76,7 @@ export default function HomePage() {
             </Link>
             <Link
               href={registerHref}
-              className="inline-flex h-10 min-w-24 items-center justify-center rounded-full bg-ats-blue px-5 text-[11px] font-bold uppercase tracking-[0.14em] text-ats-black shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_12px_34px_rgba(0,163,224,0.20)] transition duration-300 hover:-translate-y-0.5 hover:bg-ats-blue-hover hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.42),0_18px_42px_rgba(0,163,224,0.30)] active:translate-y-0"
+              className="inline-flex h-10 min-w-24 items-center justify-center rounded-full bg-[#4CC9F0] px-5 text-[11px] font-bold uppercase tracking-[0.14em] text-ats-black shadow-[inset_0_1px_0_rgba(255,255,255,0.36),0_12px_34px_rgba(183,240,255,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7DDCFF] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.46),0_18px_42px_rgba(183,240,255,0.26)] active:translate-y-0"
             >
               Kayıt
             </Link>
@@ -97,7 +97,7 @@ export default function HomePage() {
               </p>
               <Link
                 href={registerHref}
-                className="mt-11 inline-flex h-14 min-w-40 items-center justify-center rounded-full bg-ats-blue px-8 text-xs font-bold uppercase tracking-[0.14em] text-ats-black shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_44px_rgba(0,163,224,0.22)] transition duration-300 hover:-translate-y-1 hover:bg-ats-blue-hover hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.44),0_26px_58px_rgba(0,163,224,0.32)] active:translate-y-0"
+                className="mt-11 inline-flex h-14 min-w-40 items-center justify-center rounded-full bg-[#4CC9F0] px-8 text-xs font-bold uppercase tracking-[0.14em] text-ats-black shadow-[inset_0_1px_0_rgba(255,255,255,0.38),0_18px_44px_rgba(183,240,255,0.20)] transition duration-300 hover:-translate-y-1 hover:bg-[#7DDCFF] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.48),0_26px_58px_rgba(183,240,255,0.30)] active:translate-y-0"
               >
                 Kayıt Ol
               </Link>
@@ -153,25 +153,25 @@ export default function HomePage() {
       </section>
 
       <StorySection id="program">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="text-5xl font-semibold leading-[0.98] sm:text-7xl">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="text-center text-5xl font-semibold leading-[0.98] sm:text-7xl">
             Program.
           </h2>
-          <div className="relative mt-20">
-            <div className="absolute bottom-0 left-[0.375rem] top-0 w-px bg-gradient-to-b from-ats-blue/15 via-ats-blue to-ats-blue/15 md:left-1/2" />
-            <div className="space-y-16">
-              {scheduleItems.map(([time, title], index) => (
+          <div className="relative mx-auto mt-16 max-w-2xl sm:mt-20">
+            <div className="absolute bottom-3 left-3 top-3 w-px bg-gradient-to-b from-[#4CC9F0]/20 via-[#4CC9F0] to-[#4CC9F0]/20" />
+            <div className="space-y-9 sm:space-y-10">
+              {scheduleItems.map(([time, title]) => (
                 <div
                   key={time}
-                  className="relative grid gap-4 pl-9 md:grid-cols-2 md:gap-20 md:pl-0"
+                  className="relative grid grid-cols-[4.75rem_1fr] gap-5 pl-10 sm:grid-cols-[6rem_1fr] sm:gap-8"
                 >
-                  <span className="absolute left-0 top-3 h-3 w-3 rounded-full bg-ats-blue shadow-[0_0_0_6px_rgba(0,163,224,0.08)] md:left-1/2 md:-translate-x-1/2" />
-                  <div className={index % 2 === 0 ? "md:text-right" : "md:col-start-2"}>
-                    <p className="text-4xl font-semibold text-ats-blue sm:text-5xl">{time}</p>
-                  </div>
-                  <div className={index % 2 === 0 ? "md:col-start-2 md:row-start-1" : ""}>
-                    <h3 className="text-2xl font-semibold text-ats-text">{title}</h3>
-                  </div>
+                  <span className="absolute left-[0.45rem] top-2 h-3 w-3 rounded-full bg-[#4CC9F0] shadow-[0_0_0_6px_rgba(183,240,255,0.14)]" />
+                  <p className="text-lg font-semibold tabular-nums leading-7 text-[#4CC9F0] sm:text-xl">
+                    {time}
+                  </p>
+                  <h3 className="text-lg font-semibold leading-7 text-ats-text sm:text-xl">
+                    {title}
+                  </h3>
                 </div>
               ))}
             </div>
@@ -241,9 +241,9 @@ export default function HomePage() {
         </div>
       </StorySection>
 
-      <section className="bg-ats-black px-6 py-32 text-center sm:px-10 sm:py-40 lg:px-12 lg:py-52">
+      <section className="bg-ats-black px-6 py-28 text-center sm:px-10 sm:py-32 lg:px-12 lg:py-40">
         <div className="mx-auto max-w-5xl">
-          <div className="space-y-3 text-xs font-semibold uppercase tracking-[0.24em] text-ats-blue">
+          <div className="space-y-3 text-xs font-semibold uppercase tracking-[0.24em] text-[#4CC9F0]">
             <p>20 EYLÜL 2026</p>
             <p>KULA MYTRACK</p>
           </div>
@@ -254,12 +254,14 @@ export default function HomePage() {
           </h2>
           <Link
             href={registerHref}
-            className="mt-12 inline-flex h-14 min-w-40 items-center justify-center rounded-full bg-ats-blue px-9 text-xs font-bold uppercase tracking-[0.14em] text-ats-black shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_44px_rgba(0,163,224,0.22)] transition duration-300 hover:-translate-y-1 hover:bg-ats-blue-hover hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.44),0_26px_58px_rgba(0,163,224,0.32)] active:translate-y-0"
+            className="mt-12 inline-flex h-14 min-w-40 items-center justify-center rounded-full bg-[#4CC9F0] px-9 text-xs font-bold uppercase tracking-[0.14em] text-ats-black shadow-[inset_0_1px_0_rgba(255,255,255,0.38),0_18px_44px_rgba(183,240,255,0.20)] transition duration-300 hover:-translate-y-1 hover:bg-[#7DDCFF] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.48),0_26px_58px_rgba(183,240,255,0.30)] active:translate-y-0"
           >
             Kayıt Ol
           </Link>
         </div>
       </section>
+
+      <ManifestoFooter />
     </main>
   );
 }
@@ -318,5 +320,41 @@ function HeroImage({ src, alt }: { src: string; alt: string }) {
       sizes="100vw"
       className="object-cover object-[62%_center] sm:object-[58%_center] lg:object-[center_72%]"
     />
+  );
+}
+
+function ManifestoFooter() {
+  return (
+    <footer className="border-t border-ats-border/70 bg-ats-black px-6 py-10 sm:px-10 lg:px-12">
+      <div className="mx-auto grid max-w-7xl gap-8 text-sm text-ats-muted md:grid-cols-[1fr_auto] md:items-end">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-ats-text">
+            Aegean Track Society
+          </p>
+          <div className="mt-5 flex flex-wrap gap-x-6 gap-y-3">
+            <a
+              href="https://www.instagram.com/aegeantracksociety"
+              target="_blank"
+              rel="noreferrer"
+              className="transition hover:text-[#4CC9F0]"
+            >
+              Instagram: @aegeantracksociety
+            </a>
+            <a
+              href="mailto:societyaegean@gmail.com"
+              className="transition hover:text-[#4CC9F0]"
+            >
+              Email: societyaegean@gmail.com
+            </a>
+          </div>
+        </div>
+        <div className="space-y-2 text-xs font-semibold uppercase tracking-[0.14em] text-ats-muted md:text-right">
+          <p>
+            Proudly developed by <span className="text-ats-text">MORA Engineering</span>
+          </p>
+          <p>© 2026 Aegean Track Society</p>
+        </div>
+      </div>
+    </footer>
   );
 }
