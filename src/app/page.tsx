@@ -108,8 +108,8 @@ export default function HomePage() {
               </h2>
             </div>
             <p className="max-w-md text-sm leading-6 text-ats-muted">
-              Saatler operasyon planına göre netleşir; akış güvenlik briefingi
-              ve seans disiplinine göre yönetilir.
+              Etkinlik günü akışı; güvenlik briefingi, seans disiplini ve
+              kontrollü pist operasyonu üzerine kurulur.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-4">

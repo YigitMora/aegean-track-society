@@ -10,7 +10,14 @@ export function FooterCredit() {
             <a href="mailto:societyaegean@gmail.com" className="transition hover:text-ats-blue">
               societyaegean@gmail.com
             </a>
-            <span className="text-ats-muted">Instagram: yakında</span>
+            <a
+              href="https://www.instagram.com/aegeantracksociety"
+              className="transition hover:text-ats-blue"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Instagram: @aegeantracksociety
+            </a>
           </div>
         </div>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ats-muted md:text-right">

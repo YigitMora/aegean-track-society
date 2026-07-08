@@ -27,7 +27,7 @@ function formatPrice(price: { toNumber: () => number }, currency: string) {
   const amount = price.toNumber();
 
   if (amount === 0) {
-    return "Fiyat yakında";
+    return "Fiyat için iletişime geçin";
   }
 
   return new Intl.NumberFormat("tr-TR", {
@@ -152,7 +152,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
                   <span className="rounded-full border border-ats-border px-3 py-1 text-xs font-bold text-ats-muted">
                     {eventPackage.capacity > 0
                       ? `${eventPackage.capacity} kontenjan`
-                      : "Kontenjan yakında"}
+                      : "Kontenjan sınırlı"}
                   </span>
                 </div>
                 <p className="mt-6 text-2xl font-black text-ats-blue">
@@ -184,7 +184,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
               Program
             </p>
             <h2 className="mt-3 text-3xl font-black text-ats-text">
-              Net, teknik ve güvenli akış
+              Etkinlik günü akışı
             </h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
