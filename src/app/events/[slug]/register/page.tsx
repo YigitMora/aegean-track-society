@@ -12,8 +12,29 @@ type RegisterPageProps = {
 
 export const dynamic = "force-dynamic";
 
+function getDatabaseUrlHost() {
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    return "missing";
+  }
+
+  try {
+    return new URL(databaseUrl).host || "missing-host";
+  } catch {
+    return "invalid";
+  }
+}
+
+function logDatabaseUrlDebug() {
+  console.log("DATABASE_URL_EXISTS", Boolean(process.env.DATABASE_URL));
+  console.log("DATABASE_URL_HOST", getDatabaseUrlHost());
+}
+
 export default async function RegisterPage({ params }: RegisterPageProps) {
   const { slug } = await params;
+  logDatabaseUrlDebug();
+
   const event = await prisma.event.findUnique({
     where: { slug },
     include: {
