@@ -10,8 +10,10 @@
     "typecheck": "tsc --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db seed",
     "prisma:studio": "prisma studio",
+    "vercel:build": "pnpm prisma:deploy && pnpm build",
     "payments:reconcile": "tsx scripts/reconcile-payments.ts"
   },
   "dependencies": {
