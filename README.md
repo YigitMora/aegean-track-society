@@ -24,12 +24,7 @@ pnpm install
 cp .env.example .env
 ```
 
-3. Update `DATABASE_URL` and `DIRECT_URL` in `.env` with your PostgreSQL connection strings.
-
-For Supabase production deployments, use the transaction pooler for runtime and a migration-capable direct/session URL for Prisma migrations:
-
-- `DATABASE_URL`: Supabase transaction pooler, for example `aws-0-eu-central-1.pooler.supabase.com:6543`
-- `DIRECT_URL`: Supabase session pooler or direct database URL, used by Prisma Migrate
+3. Update `DATABASE_URL` in `.env` with your PostgreSQL connection string.
 
 4. Create the database tables:
 
@@ -40,7 +35,7 @@ pnpm prisma migrate dev --name init
 5. Seed Kula MyTrack:
 
 ```bash
-pnpm prisma db seed
+pnpm prisma:seed
 ```
 
 6. Start the development server:
@@ -182,7 +177,9 @@ Before launch in manual payment mode, verify:
 
 ## Production Database Migrations on Vercel
 
-Vercel can run Prisma migrations automatically during deployment. This project uses `vercel.json` to run:
+Vercel can run Prisma migrations automatically during deployment. This project does not use `prisma.config.ts`; Prisma reads `DATABASE_URL` directly from Vercel-provided `process.env`.
+
+`vercel.json` runs:
 
 ```bash
 pnpm vercel:build
@@ -190,24 +187,18 @@ pnpm vercel:build
 
 That command runs `pnpm prisma migrate deploy` before `pnpm build`.
 
-For Supabase, keep the runtime and migration URLs separate:
-
-- `DATABASE_URL`: transaction pooler for the app runtime.
-- `DIRECT_URL`: session pooler or direct database URL for Prisma Migrate.
-
-Do not point Prisma Migrate at the transaction pooler if a session/direct URL is available. Preview deployments should use a separate preview database or omit production database env vars so preview builds cannot migrate production.
+`DIRECT_URL` is not required by this deployment configuration. If Supabase transaction pooling causes migration-specific issues later, run migrations from a trusted machine or CI job with a session/direct database URL, then keep Vercel runtime on the transaction pooler. Preview deployments should use a separate preview database or omit production database env vars so preview builds cannot migrate production.
 
 For Vercel or similar hosting:
 
 - Use a production PostgreSQL database and set `DATABASE_URL`.
-- For Supabase, set `DATABASE_URL` to the transaction pooler and `DIRECT_URL` to the session pooler or direct database URL.
 - Set `PAYMENT_MODE="manual"` for launch.
 - Set `NEXT_PUBLIC_APP_URL` to the public HTTPS production URL.
 - Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and a long random `ADMIN_SESSION_SECRET`.
 - Set `EMAIL_PROVIDER`, `RESEND_API_KEY`, and verified `EMAIL_FROM`.
 - Set real `SEED_PACKAGE_SEP20_PRICE` and `SEED_PACKAGE_SEP20_CAPACITY`, then seed or update the production package.
 - Vercel uses `pnpm vercel:build`, which runs `pnpm prisma migrate deploy` before `pnpm build`.
-- After the first production migration, seed or update the event data with `pnpm prisma db seed` from a trusted environment if the production event/package rows do not exist yet.
+- After the first production migration, seed or update the event data with `pnpm prisma:seed` from a trusted environment if the production event/package rows do not exist yet.
 - Serve only over HTTPS.
 - Submit a test registration, confirm it manually in admin, verify the QR email, and test check-in on the event phones.
 
