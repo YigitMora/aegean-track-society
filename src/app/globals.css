@@ -3,7 +3,17 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
+  --color-ats-black: #080b0f;
+  --color-ats-surface: #10151b;
+  --color-ats-surface-raised: #151c24;
+  --color-ats-text: #f6f8fb;
+  --color-ats-muted: #98a4b3;
+  --color-ats-border: #25313d;
+  --color-ats-blue: #00a3e0;
+  --color-ats-blue-hover: #35b9ec;
+  --color-ats-blue-active: #007fac;
+  --color-ats-amber: #f3b23c;
 }
 
 * {
@@ -17,8 +27,8 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background: #f8f7f4;
-  color: #161a1d;
+  background: var(--color-ats-black);
+  color: var(--color-ats-text);
 }
 
 a {
@@ -27,6 +37,22 @@ a {
 }
 
 ::selection {
-  background: #d72638;
+  background: var(--color-ats-blue);
   color: #ffffff;
+}
+
+@keyframes hero-copy-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-copy-enter {
+  animation: hero-copy-in 760ms ease-out both;
 }

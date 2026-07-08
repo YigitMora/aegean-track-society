@@ -8,7 +8,7 @@ export function TestModeBanner() {
 
   return (
     <div className="border-b border-signal/40 bg-signal px-4 py-2 text-center text-xs font-black uppercase text-asphalt">
-      Test mode: iyzico sandbox is active. Do not treat payments as production.
+      Test modu: iyzico sandbox aktif. Bu ödemeleri canlı işlem olarak değerlendirmeyin.
     </div>
   );
 }

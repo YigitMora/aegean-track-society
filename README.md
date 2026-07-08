@@ -1,6 +1,6 @@
-# Aegean Track Days
+# Aegean Track Society
 
-Foundation, registration, manual payment confirmation, and reserved iyzico Checkout Form flow for the Kula MyTrack event platform.
+Foundation, registration, manual payment confirmation, and reserved iyzico Checkout Form flow for the Aegean Track Days event series under Aegean Track Society.
 
 ## Stack
 
@@ -125,7 +125,7 @@ The email provider abstraction defaults to Resend. Configure:
 ```bash
 EMAIL_PROVIDER="resend"
 RESEND_API_KEY="re_your_api_key"
-EMAIL_FROM="Aegean Track Days <registrations@your-domain.com>"
+EMAIL_FROM="Aegean Track Society <registrations@your-domain.com>"
 ```
 
 `EMAIL_FROM` must use a sender/domain verified in Resend. In manual launch mode, confirmation email is sent after an admin marks the registration as paid and confirmed. In iyzico mode, it is sent after server-side payment verification. If email sending fails, the registration remains confirmed and the failed attempt is recorded in `EmailLog`.

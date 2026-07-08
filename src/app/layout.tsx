@@ -4,8 +4,8 @@ import { TestModeBanner } from "@/components/test-mode-banner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Aegean Track Days",
-  description: "Motorsport track day events and participant registration.",
+  title: "Aegean Track Society",
+  description: "Organize, güvenli ve premium pist günü deneyimleri.",
 };
 
 export default function RootLayout({
@@ -14,7 +14,7 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="tr">
       <body>
         <TestModeBanner />
         {children}
