@@ -35,7 +35,7 @@ pnpm prisma migrate dev --name init
 5. Seed Kula MyTrack:
 
 ```bash
-pnpm prisma:seed
+pnpm prisma db seed
 ```
 
 6. Start the development server:
@@ -175,19 +175,43 @@ Before launch in manual payment mode, verify:
 
 ## Deployment Checklist
 
-## Production Database Migrations on Vercel
+## Production Database Migrations
 
-Vercel can run Prisma migrations automatically during deployment. This project does not use `prisma.config.ts`; Prisma reads `DATABASE_URL` directly from Vercel-provided `process.env`.
-
-`vercel.json` runs:
+Vercel deployments do not run Prisma migrations automatically. The Vercel build command is intentionally limited to:
 
 ```bash
-pnpm vercel:build
+pnpm build
 ```
 
-That command runs `pnpm prisma migrate deploy` before `pnpm build`.
+Run production migrations manually from a trusted development environment or a dedicated CI job before deploying or before opening registration.
 
-`DIRECT_URL` is not required by this deployment configuration. If Supabase transaction pooling causes migration-specific issues later, run migrations from a trusted machine or CI job with a session/direct database URL, then keep Vercel runtime on the transaction pooler. Preview deployments should use a separate preview database or omit production database env vars so preview builds cannot migrate production.
+### GitHub Actions Migration Workflow
+
+Use the `Production Database` GitHub Actions workflow to apply committed Prisma migrations and seed production data.
+
+Required GitHub secret:
+
+- `DATABASE_URL`: production Supabase transaction pooler connection string.
+
+The workflow is manual-only and uses the protected `production` environment. Configure GitHub Environment approvals before launch so production database changes require review.
+
+The workflow runs:
+
+```bash
+pnpm prisma migrate deploy
+pnpm prisma db seed
+```
+
+When starting the workflow, enter the production SEP20 package price and capacity. Those values are passed to the seed script as `SEED_PACKAGE_SEP20_PRICE` and `SEED_PACKAGE_SEP20_CAPACITY`.
+
+Recommended production migration commands:
+
+```bash
+DATABASE_URL="postgresql://..." pnpm prisma migrate deploy
+DATABASE_URL="postgresql://..." pnpm prisma db seed
+```
+
+Keep migration execution outside the Vercel build because Supabase pooler connections can make deployment-time migrations unstable. Preview deployments should use a separate preview database or omit production database env vars so preview builds cannot migrate production.
 
 For Vercel or similar hosting:
 
@@ -197,8 +221,9 @@ For Vercel or similar hosting:
 - Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and a long random `ADMIN_SESSION_SECRET`.
 - Set `EMAIL_PROVIDER`, `RESEND_API_KEY`, and verified `EMAIL_FROM`.
 - Set real `SEED_PACKAGE_SEP20_PRICE` and `SEED_PACKAGE_SEP20_CAPACITY`, then seed or update the production package.
-- Vercel uses `pnpm vercel:build`, which runs `pnpm prisma migrate deploy` before `pnpm build`.
-- After the first production migration, seed or update the event data with `pnpm prisma:seed` from a trusted environment if the production event/package rows do not exist yet.
+- Vercel uses `pnpm build` only; it does not run migrations.
+- Run the `Production Database` GitHub Actions workflow before deploying app code that depends on new migrations.
+- After the first production migration, seed or update the event data with `DATABASE_URL="..." pnpm prisma db seed` from a trusted environment if the production event/package rows do not exist yet.
 - Serve only over HTTPS.
 - Submit a test registration, confirm it manually in admin, verify the QR email, and test check-in on the event phones.
 

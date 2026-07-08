@@ -1,3 +1,3 @@
 {
-  "buildCommand": "pnpm vercel:build"
+  "buildCommand": "pnpm build"
 }

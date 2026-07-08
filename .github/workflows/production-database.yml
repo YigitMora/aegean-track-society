@@ -1,0 +1,65 @@
+name: Production Database
+
+on:
+  workflow_dispatch:
+    inputs:
+      seed_package_sep20_price:
+        description: "SEP20 package price used by prisma db seed"
+        required: true
+      seed_package_sep20_capacity:
+        description: "SEP20 package capacity used by prisma db seed"
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-database
+  cancel-in-progress: false
+
+jobs:
+  migrate-and-seed:
+    name: Prisma migrate deploy and seed
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.7.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify database secret
+        run: test -n "$DATABASE_URL"
+
+      - name: Apply Prisma migrations
+        run: pnpm prisma migrate deploy
+
+      - name: Verify seed inputs
+        run: |
+          test -n "$SEED_PACKAGE_SEP20_PRICE"
+          test -n "$SEED_PACKAGE_SEP20_CAPACITY"
+        env:
+          SEED_PACKAGE_SEP20_PRICE: ${{ inputs.seed_package_sep20_price }}
+          SEED_PACKAGE_SEP20_CAPACITY: ${{ inputs.seed_package_sep20_capacity }}
+
+      - name: Seed production data
+        run: pnpm prisma db seed
+        env:
+          SEED_PACKAGE_SEP20_PRICE: ${{ inputs.seed_package_sep20_price }}
+          SEED_PACKAGE_SEP20_CAPACITY: ${{ inputs.seed_package_sep20_capacity }}
