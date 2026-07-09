@@ -24,6 +24,10 @@ type RegistrationApprovedEmailInput = BaseRegistrationEmailInput & {
   rawQrToken?: string | null;
 };
 
+type RegistrationRejectedEmailInput = BaseRegistrationEmailInput & {
+  reason: string;
+};
+
 type ConfirmationEmailInput = Required<
   Pick<
     RegistrationApprovedEmailInput,
@@ -36,6 +40,13 @@ type ConfirmationEmailInput = Required<
     | "rawQrToken"
   >
 >;
+
+type EmailLogType =
+  | "CONFIRMATION"
+  | "REGISTRATION_RECEIVED"
+  | "ADMIN_NEW_REGISTRATION"
+  | "REGISTRATION_APPROVED"
+  | "REGISTRATION_REJECTED";
 
 type SendEmailInput = {
   type: string;
@@ -72,7 +83,7 @@ type EmailProviderConfig = {
 export async function sendRegistrationReceivedEmail(
   registration: RegistrationReceivedEmailInput,
 ) {
-  return sendOperationalEmail({
+  return sendLoggedRegistrationEmail(registration.registrationId, "REGISTRATION_RECEIVED", {
     type: "registration_received",
     to: registration.to,
     subject: "Aegean Track Society | Kayıt talebiniz alındı",
@@ -84,32 +95,39 @@ export async function sendRegistrationReceivedEmail(
 export async function sendAdminNewRegistrationEmail(
   registration: AdminNewRegistrationEmailInput,
 ) {
+  const emailLog = await createEmailLog(registration.registrationId, "ADMIN_NEW_REGISTRATION");
   const adminRecipient = getAdminNotificationRecipient();
 
   if (!adminRecipient) {
-    logEmailSkipped("admin_new_registration", "admin_recipient_missing");
-    return {
+    const result = {
       status: "skipped",
       reason: "config_missing",
     } satisfies SendEmailResult;
+
+    logEmailSkipped("admin_new_registration", "admin_recipient_missing");
+    await updateEmailLog(emailLog?.id ?? null, result);
+    return result;
   }
 
-  return sendOperationalEmail({
+  const result = await sendOperationalEmail({
     type: "admin_new_registration",
     to: adminRecipient,
     subject: `Yeni kayıt talebi | ${registration.fullName} | ${registration.carBrandModel}`,
     html: buildAdminNewRegistrationHtml(registration),
     text: buildAdminNewRegistrationText(registration),
   });
+
+  await updateEmailLog(emailLog?.id ?? null, result);
+  await createEmailSentAuditLog(registration.registrationId, "ADMIN_NEW_REGISTRATION", result);
+  return result;
 }
 
 export async function sendRegistrationApprovedEmail(
   registration: RegistrationApprovedEmailInput,
 ) {
-  const emailLog = await createEmailLog(registration.registrationId, "CONFIRMATION");
   const attachments = await buildQrAttachments(registration);
 
-  const result = await sendOperationalEmail({
+  return sendLoggedRegistrationEmail(registration.registrationId, "REGISTRATION_APPROVED", {
     type: "registration_approved",
     to: registration.to,
     subject: "Aegean Track Society | Kaydınız onaylandı",
@@ -117,13 +135,36 @@ export async function sendRegistrationApprovedEmail(
     text: buildRegistrationApprovedText(registration),
     attachments,
   });
+}
 
-  await updateEmailLog(emailLog?.id ?? null, result);
-  return result;
+export async function sendRegistrationRejectedEmail(
+  registration: RegistrationRejectedEmailInput,
+) {
+  return sendLoggedRegistrationEmail(registration.registrationId, "REGISTRATION_REJECTED", {
+    type: "registration_rejected",
+    to: registration.to,
+    subject: "Aegean Track Society | Kayıt talebiniz hakkında",
+    html: buildRegistrationRejectedHtml(registration),
+    text: buildRegistrationRejectedText(registration),
+  });
 }
 
 export async function sendConfirmationEmail(input: ConfirmationEmailInput) {
   return sendRegistrationApprovedEmail(input);
+}
+
+async function sendLoggedRegistrationEmail(
+  registrationId: string,
+  emailLogType: EmailLogType,
+  input: SendEmailInput,
+) {
+  const emailLog = await createEmailLog(registrationId, emailLogType);
+  const result = await sendOperationalEmail(input);
+
+  await updateEmailLog(emailLog?.id ?? null, result);
+  await createEmailSentAuditLog(registrationId, emailLogType, result);
+
+  return result;
 }
 
 async function sendOperationalEmail(input: SendEmailInput): Promise<SendEmailResult> {
@@ -180,7 +221,7 @@ function getEmailProviderConfig(): EmailProviderConfig | null {
     return null;
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY?.trim();
 
   if (!from || !apiKey) {
     return null;
@@ -201,7 +242,7 @@ function logEmailSkipped(type: string, reason: string) {
   console.warn("EMAIL_SKIPPED_CONFIG_MISSING", {
     type,
     reason,
-    emailProvider: process.env.EMAIL_PROVIDER?.toLowerCase() || "resend",
+    emailProvider: process.env.EMAIL_PROVIDER?.trim().toLowerCase() || "resend",
     hasEmailFrom: Boolean(process.env.EMAIL_FROM?.trim()),
     hasResendApiKey: Boolean(process.env.RESEND_API_KEY?.trim()),
     hasAdminRecipient: Boolean(getAdminNotificationRecipient()),
@@ -266,7 +307,7 @@ async function buildQrAttachments(registration: RegistrationApprovedEmailInput) 
   }
 }
 
-async function createEmailLog(registrationId: string, type: "CONFIRMATION") {
+async function createEmailLog(registrationId: string, type: EmailLogType) {
   try {
     return await prisma.emailLog.create({
       data: {
@@ -281,6 +322,7 @@ async function createEmailLog(registrationId: string, type: "CONFIRMATION") {
   } catch (error) {
     console.error("EMAIL_SEND_ERROR", {
       type: "email_log_create",
+      emailLogType: type,
       errorMessage: safeErrorMessage(error),
     });
     return null;
@@ -311,6 +353,36 @@ async function updateEmailLog(
   }
 }
 
+async function createEmailSentAuditLog(
+  registrationId: string,
+  emailLogType: EmailLogType,
+  result: SendEmailResult,
+) {
+  if (result.status !== "sent") {
+    return;
+  }
+
+  try {
+    await prisma.auditLog.create({
+      data: {
+        registrationId,
+        action: "EMAIL_SENT",
+        after: {
+          emailType: emailLogType,
+          providerMessageId: result.providerMessageId,
+        },
+        reason: "Operational email sent.",
+      },
+    });
+  } catch (error) {
+    console.error("EMAIL_SEND_ERROR", {
+      type: "email_audit_log_create",
+      emailLogType,
+      errorMessage: safeErrorMessage(error),
+    });
+  }
+}
+
 function buildRegistrationReceivedHtml(input: RegistrationReceivedEmailInput) {
   return emailShell(`
     <p style="margin:0 0 18px;font-size:16px;color:#111827;">Merhaba ${escapeHtml(input.fullName)},</p>
@@ -334,6 +406,8 @@ function buildRegistrationReceivedText(input: RegistrationReceivedEmailInput) {
     `Kayıt referansı: ${input.registrationId}`,
     `Araç: ${input.carBrandModel}`,
     "Tarih: 20 Eylül 2026 Pazar",
+    "",
+    ...contactFooterText(),
   ].join("\n");
 }
 
@@ -343,14 +417,14 @@ function buildAdminNewRegistrationHtml(input: AdminNewRegistrationEmailInput) {
   return emailShell(`
     <h1 style="margin:0 0 18px;font-size:28px;line-height:1.12;color:#05070a;">Yeni kayıt talebi geldi.</h1>
     ${detailsTable([
-      ["Name", input.fullName],
-      ["Email", input.email],
-      ["Phone", input.phone],
-      ["Vehicle", input.carBrandModel],
-      ["Plate", input.plateNumber],
-      ["Experience", input.experienceLevel],
-      ["Emergency contact", `${input.emergencyContactName} · ${input.emergencyContactPhone}`],
-      ["Registration ID", input.registrationId],
+      ["Ad Soyad", input.fullName],
+      ["E-posta", input.email],
+      ["Telefon", input.phone],
+      ["Araç", input.carBrandModel],
+      ["Plaka", input.plateNumber],
+      ["Sürüş deneyimi", formatExperienceLevel(input.experienceLevel)],
+      ["Acil durum", `${input.emergencyContactName} · ${input.emergencyContactPhone}`],
+      ["Kayıt ID", input.registrationId],
     ])}
     <p style="margin:24px 0 0;">
       <a href="${escapeHtml(adminUrl)}" style="display:inline-block;border-radius:999px;background:#4CC9F0;color:#05070a;font-weight:800;text-decoration:none;padding:12px 18px;">Admin panelde aç</a>
@@ -362,14 +436,14 @@ function buildAdminNewRegistrationText(input: AdminNewRegistrationEmailInput) {
   return [
     "Yeni kayıt talebi geldi.",
     "",
-    `Name: ${input.fullName}`,
-    `Email: ${input.email}`,
-    `Phone: ${input.phone}`,
-    `Vehicle: ${input.carBrandModel}`,
-    `Plate: ${input.plateNumber}`,
-    `Experience: ${input.experienceLevel}`,
-    `Emergency contact: ${input.emergencyContactName} · ${input.emergencyContactPhone}`,
-    `Registration ID: ${input.registrationId}`,
+    `Ad Soyad: ${input.fullName}`,
+    `E-posta: ${input.email}`,
+    `Telefon: ${input.phone}`,
+    `Araç: ${input.carBrandModel}`,
+    `Plaka: ${input.plateNumber}`,
+    `Sürüş deneyimi: ${formatExperienceLevel(input.experienceLevel)}`,
+    `Acil durum: ${input.emergencyContactName} · ${input.emergencyContactPhone}`,
+    `Kayıt ID: ${input.registrationId}`,
     `Admin panel: ${buildAdminRegistrationUrl(input.registrationId)}`,
   ].join("\n");
 }
@@ -394,7 +468,7 @@ function buildRegistrationApprovedHtml(input: RegistrationApprovedEmailInput) {
 
 function buildRegistrationApprovedText(input: RegistrationApprovedEmailInput) {
   const qrCopy = input.rawQrToken
-    ? "Check-in QR kodunuz bu e-postaya eklenmiştir."
+    ? "Check-in QR kodunuz bu e-postaya eklenmiştir. Etkinlik günü girişte hazır bulundurmanızı rica ederiz."
     : "Etkinlik detayları ve check-in/QR bilgileri ayrıca paylaşılacaktır.";
 
   return [
@@ -407,9 +481,40 @@ function buildRegistrationApprovedText(input: RegistrationApprovedEmailInput) {
     `Plaka: ${input.plateNumber}`,
     "Tarih: 20 Eylül 2026 Pazar",
     input.participantCode ? `Katılımcı kodu: ${input.participantCode}` : "",
+    "",
+    ...contactFooterText(),
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+function buildRegistrationRejectedHtml(input: RegistrationRejectedEmailInput) {
+  return emailShell(`
+    <p style="margin:0 0 18px;font-size:16px;color:#111827;">Merhaba ${escapeHtml(input.fullName)},</p>
+    <h1 style="margin:0 0 18px;font-size:28px;line-height:1.12;color:#05070a;">Kayıt talebiniz değerlendirildi.</h1>
+    <p style="margin:0 0 22px;color:#374151;">Kula MyTrack Pist Etkinliği için ilettiğiniz kayıt talebi şu aşamada onaylanamamıştır.</p>
+    ${detailsTable([
+      ["Araç", input.carBrandModel],
+      ["Plaka", input.plateNumber],
+      ["Tarih", "20 Eylül 2026 Pazar"],
+      ["Açıklama", input.reason],
+    ])}
+  `);
+}
+
+function buildRegistrationRejectedText(input: RegistrationRejectedEmailInput) {
+  return [
+    "Aegean Track Society",
+    "",
+    `Merhaba ${input.fullName}`,
+    "Kula MyTrack Pist Etkinliği için ilettiğiniz kayıt talebi şu aşamada onaylanamamıştır.",
+    `Araç: ${input.carBrandModel}`,
+    `Plaka: ${input.plateNumber}`,
+    "Tarih: 20 Eylül 2026 Pazar",
+    `Açıklama: ${input.reason}`,
+    "",
+    ...contactFooterText(),
+  ].join("\n");
 }
 
 function emailShell(content: string) {
@@ -419,7 +524,10 @@ function emailShell(content: string) {
         <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;padding:28px;">
           <p style="margin:0 0 22px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;color:#4CC9F0;">Aegean Track Society</p>
           ${content}
-          <p style="margin:28px 0 0;color:#6b7280;font-size:13px;">Kula MyTrack · 20 Eylül 2026 Pazar</p>
+          <div style="margin-top:28px;padding-top:18px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;">
+            <p style="margin:0 0 6px;">Kula MyTrack · 20 Eylül 2026 Pazar</p>
+            <p style="margin:0;">societyaegean@gmail.com · @aegeantracksociety · https://www.aegeantracksociety.com</p>
+          </div>
         </div>
       </div>
     </div>
@@ -441,6 +549,35 @@ function detailsTable(rows: Array<[string, string]>) {
         .join("")}
     </table>
   `;
+}
+
+function formatExperienceLevel(value: string) {
+  if (value === "BEGINNER") {
+    return "İlk pist tecrübem olacak";
+  }
+
+  if (value === "INTERMEDIATE") {
+    return "Daha önce pist deneyimim var";
+  }
+
+  if (value === "ADVANCED") {
+    return "İleri seviye pist deneyimi";
+  }
+
+  if (value === "PROFESSIONAL") {
+    return "Profesyonel / lisanslı deneyim";
+  }
+
+  return value;
+}
+
+function contactFooterText() {
+  return [
+    "İletişim:",
+    "societyaegean@gmail.com",
+    "@aegeantracksociety",
+    "https://www.aegeantracksociety.com",
+  ];
 }
 
 function buildAdminRegistrationUrl(registrationId: string) {

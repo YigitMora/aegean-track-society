@@ -33,6 +33,7 @@ export async function GET(request: Request) {
 
   const registrations = await prisma.registration.findMany({
     where: {
+      deletedAt: null,
       event: {
         slug: kulaEventSlug,
       },

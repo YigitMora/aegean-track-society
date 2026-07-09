@@ -13,7 +13,9 @@ const toneByStatus: Record<string, string> = {
   ELIGIBLE: "border-emerald-400/30 bg-emerald-400/10 text-emerald-100",
   FAILED: "border-kerb/40 bg-kerb/10 text-red-100",
   CANCELLED: "border-kerb/40 bg-kerb/10 text-red-100",
+  REJECTED: "border-kerb/40 bg-kerb/10 text-red-100",
   BLOCKED: "border-kerb/40 bg-kerb/10 text-red-100",
+  ARCHIVED: "border-white/15 bg-white/10 text-white/60",
 };
 
 export function StatusBadge({ value }: StatusBadgeProps) {

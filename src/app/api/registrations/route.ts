@@ -183,6 +183,7 @@ export async function POST(request: Request) {
             packageId: eventPackage.id,
             email,
             plateNumber,
+            deletedAt: null,
             status: {
               in: ["PENDING_PAYMENT", "CONFIRMED"],
             },
@@ -216,6 +217,7 @@ export async function POST(request: Request) {
           where: {
             eventId: event.id,
             packageId: eventPackage.id,
+            deletedAt: null,
             status: {
               in: ["PENDING_PAYMENT", "CONFIRMED"],
             },
@@ -296,6 +298,7 @@ export async function POST(request: Request) {
         : null;
 
     logRegistrationApiDebug(debugContext, "registration.writeFlow.success");
+    await createRegistrationCreatedAuditLog(registration.id, consentIpAddress);
     await Promise.allSettled([
       sendRegistrationReceivedEmail({
         registrationId: registration.id,
@@ -666,6 +669,35 @@ function sanitizeLogText(value: string) {
     .replace(/(DIRECT_URL=)(\S+)/gi, "$1***")
     .replace(/(POSTGRES_URL=)(\S+)/gi, "$1***")
     .replace(/(POSTGRES_PRISMA_URL=)(\S+)/gi, "$1***");
+}
+
+async function createRegistrationCreatedAuditLog(
+  registrationId: string,
+  ipAddress: string | null,
+) {
+  try {
+    await prisma.auditLog.create({
+      data: {
+        registrationId,
+        action: "CREATED",
+        after: {
+          source: "public_registration_form",
+          status: "PENDING_PAYMENT",
+          paymentStatus: "UNPAID",
+        },
+        reason: "Registration created from public registration form.",
+        ipAddress,
+      },
+    });
+  } catch (error) {
+    console.error("REGISTRATION_API_DEBUG", {
+      stage: "auditLog.create.CREATED.error",
+      eventSlug,
+      prismaErrorMessage: error instanceof Error ? error.message : String(error),
+      stackFirstThreeLines:
+        error instanceof Error ? error.stack?.split("\n").slice(0, 3) ?? [] : [],
+    });
+  }
 }
 
 async function markPaymentInitializationFailed(

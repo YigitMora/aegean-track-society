@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { ParticipantActionModals } from "@/components/admin/participant-action-modals";
 import { StatusBadge } from "@/components/admin/status-badge";
 import {
   formatCurrency,
@@ -11,7 +12,9 @@ import {
 } from "@/lib/admin-format";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-import { confirmManualPayment, updateAdminNotes } from "./actions";
+import {
+  addAdminNote,
+} from "./actions";
 
 type ParticipantDetailPageProps = {
   params: Promise<{
@@ -19,6 +22,7 @@ type ParticipantDetailPageProps = {
   }>;
   searchParams: Promise<{
     paymentResult?: string;
+    actionResult?: string;
   }>;
 };
 
@@ -31,7 +35,7 @@ export default async function ParticipantDetailPage({
   await requireAdminSession();
 
   const { id } = await params;
-  const { paymentResult } = await searchParams;
+  const { paymentResult, actionResult } = await searchParams;
   const registration = await prisma.registration.findUnique({
     where: { id },
     select: {
@@ -53,12 +57,23 @@ export default async function ParticipantDetailPage({
       status: true,
       paymentStatus: true,
       qrIssuedAt: true,
+      deletedAt: true,
+      deleteReason: true,
       createdAt: true,
       updatedAt: true,
+      deletedByAdmin: {
+        select: {
+          email: true,
+          name: true,
+        },
+      },
       event: {
         select: {
           name: true,
           venue: true,
+          startsAt: true,
+          endsAt: true,
+          timezone: true,
         },
       },
       package: {
@@ -101,14 +116,12 @@ export default async function ParticipantDetailPage({
           },
         },
       },
-      auditLogs: {
-        where: { action: "ADMIN_NOTES_UPDATED" },
+      adminNoteEntries: {
         orderBy: { createdAt: "desc" },
-        take: 5,
         select: {
           id: true,
-          action: true,
-          reason: true,
+          body: true,
+          authorLabel: true,
           createdAt: true,
           adminUser: {
             select: {
@@ -116,6 +129,35 @@ export default async function ParticipantDetailPage({
               email: true,
             },
           },
+        },
+      },
+      auditLogs: {
+        orderBy: { createdAt: "desc" },
+        take: 30,
+        select: {
+          id: true,
+          action: true,
+          reason: true,
+          before: true,
+          after: true,
+          createdAt: true,
+          adminUser: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+        },
+      },
+      emails: {
+        orderBy: { createdAt: "desc" },
+        take: 8,
+        select: {
+          id: true,
+          type: true,
+          status: true,
+          providerMessageId: true,
+          createdAt: true,
         },
       },
     },
@@ -126,57 +168,95 @@ export default async function ParticipantDetailPage({
   }
 
   const latestPayment = registration.payments[0];
+  const isArchived = Boolean(registration.deletedAt);
+  const canApprove =
+    !isArchived &&
+    registration.status === "PENDING_PAYMENT" &&
+    registration.paymentStatus === "UNPAID";
+  const canReject =
+    !isArchived &&
+    registration.status !== "CONFIRMED" &&
+    registration.status !== "REJECTED";
 
   return (
     <AdminShell
       title={registration.fullName}
-      eyebrow={registration.participantCode ?? "Participant code pending"}
+      eyebrow={registration.participantCode ?? `Reference ${registration.id}`}
       actions={
-        <Link
-          href="/admin/participants"
-          className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-black text-white/75 transition hover:border-white hover:text-white"
-        >
-          Back to list
-        </Link>
+        <>
+          <Link
+            href="/admin/participants"
+            className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-black text-white/75 transition hover:border-white hover:text-white"
+          >
+            Back to list
+          </Link>
+          <Link
+            href="/admin"
+            className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-black text-white/75 transition hover:border-white hover:text-white"
+          >
+            Dashboard
+          </Link>
+        </>
       }
     >
-      <PaymentResultBanner result={paymentResult} />
+      <ActionResultBanner paymentResult={paymentResult} actionResult={actionResult} />
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      {isArchived ? (
+        <section className="mb-6 rounded-lg border border-signal/40 bg-signal/10 p-4 text-signal">
+          <p className="text-sm font-black uppercase">Archived registration</p>
+          <p className="mt-2 text-sm font-semibold text-white/75">
+            Archived by {registration.deletedByAdmin?.email ?? "admin"} at{" "}
+            {formatDateTime(registration.deletedAt)}. Reason: {registration.deleteReason ?? "-"}
+          </p>
+        </section>
+      ) : null}
+
+      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-6">
-          <DetailSection title="Registration">
+          <DetailSection title="Participant profile">
             <DetailGrid>
-              <DetailRow label="Full name" value={registration.fullName} />
-              <DetailRow label="Phone" value={registration.phone} />
+              <DetailRow label="Name" value={registration.fullName} />
               <DetailRow label="Email" value={registration.email} />
-              <DetailRow label="Event" value={`${registration.event.name}, ${registration.event.venue}`} />
-              <DetailRow label="Package" value={`${registration.package.name} (${registration.package.code})`} />
+              <DetailRow label="Phone" value={registration.phone} />
+              <DetailRow label="Participant code/reference" value={registration.participantCode ?? registration.id} />
               <DetailRow label="Created" value={formatDateTime(registration.createdAt)} />
-              <DetailRow
-                label="Registration status"
-                value={<StatusBadge value={registration.status} />}
-              />
+              <DetailRow label="Updated" value={formatDateTime(registration.updatedAt)} />
+              <DetailRow label="Registration status" value={<StatusBadge value={registration.status} />} />
               <DetailRow label="Payment status" value={<StatusBadge value={registration.paymentStatus} />} />
+            </DetailGrid>
+          </DetailSection>
+
+          <DetailSection title="Event and package">
+            <DetailGrid>
+              <DetailRow label="Event" value={`${registration.event.name}, ${registration.event.venue}`} />
+              <DetailRow
+                label="Event window"
+                value={`${formatDateOnly(registration.event.startsAt)} - ${formatDateOnly(registration.event.endsAt)}`}
+              />
+              <DetailRow label="Timezone" value={registration.event.timezone} />
+              <DetailRow label="Package" value={`${registration.package.name} (${registration.package.code})`} />
+              <DetailRow
+                label="Package price"
+                value={formatCurrency(registration.package.price, registration.package.currency)}
+              />
             </DetailGrid>
           </DetailSection>
 
           <DetailSection title="Vehicle">
             <DetailGrid>
-              <DetailRow label="Car brand/model" value={registration.carBrandModel} />
-              <DetailRow label="Plate number" value={registration.plateNumber} />
-              <DetailRow label="Experience level" value={formatStatus(registration.experienceLevel)} />
+              <DetailRow label="Vehicle" value={registration.carBrandModel} />
+              <DetailRow label="Plate" value={registration.plateNumber} />
+              <DetailRow
+                label="Driving experience"
+                value={formatExperienceLevel(registration.experienceLevel)}
+              />
             </DetailGrid>
           </DetailSection>
 
-          <DetailSection title="Emergency contact">
+          <DetailSection title="Emergency and legal">
             <DetailGrid>
-              <DetailRow label="Name" value={registration.emergencyContactName} />
-              <DetailRow label="Phone" value={registration.emergencyContactPhone} />
-            </DetailGrid>
-          </DetailSection>
-
-          <DetailSection title="Consents">
-            <DetailGrid>
+              <DetailRow label="Emergency contact" value={registration.emergencyContactName} />
+              <DetailRow label="Emergency phone" value={registration.emergencyContactPhone} />
               <DetailRow label="KVKK accepted" value={formatDateTime(registration.kvkkAcceptedAt)} />
               <DetailRow
                 label="Liability waiver accepted"
@@ -192,6 +272,15 @@ export default async function ParticipantDetailPage({
         </div>
 
         <div className="space-y-6">
+          <DetailSection title="Controlled actions">
+            <ParticipantActionModals
+              registrationId={registration.id}
+              canApprove={canApprove}
+              canReject={canReject}
+              isArchived={isArchived}
+            />
+          </DetailSection>
+
           <DetailSection title="Payment">
             <DetailGrid>
               <DetailRow
@@ -211,22 +300,11 @@ export default async function ParticipantDetailPage({
               <DetailRow label="Conversation ID" value={latestPayment?.conversationId ?? "-"} />
               <DetailRow label="Last payment update" value={formatDateTime(latestPayment?.updatedAt)} />
             </DetailGrid>
-            {registration.status === "PENDING_PAYMENT" &&
-            registration.paymentStatus === "UNPAID" ? (
-              <form action={confirmManualPayment.bind(null, registration.id)} className="mt-6">
-                <button
-                  type="submit"
-                  className="inline-flex h-12 items-center rounded-full bg-emerald-500 px-5 text-sm font-black text-white transition hover:bg-white hover:text-asphalt"
-                >
-                  Mark as Paid & Send QR Confirmation
-                </button>
-              </form>
-            ) : null}
           </DetailSection>
 
           <DetailSection title="Participant code and QR">
             <DetailGrid>
-              <DetailRow label="Participant code" value={registration.participantCode ?? "Pending payment"} />
+              <DetailRow label="Participant code" value={registration.participantCode ?? "Pending approval"} />
               <DetailRow label="QR issued" value={formatDateTime(registration.qrIssuedAt)} />
             </DetailGrid>
             <p className="mt-4 text-xs font-semibold uppercase text-white/45">
@@ -268,84 +346,211 @@ export default async function ParticipantDetailPage({
               ) : null}
             </div>
           </DetailSection>
+        </div>
+      </section>
 
-          <DetailSection title="Admin notes">
-            <form action={updateAdminNotes.bind(null, registration.id)} className="space-y-4">
-              <textarea
-                name="adminNotes"
-                defaultValue={registration.adminNotes ?? ""}
-                rows={7}
-                className="w-full rounded-md border border-white/15 bg-white px-3 py-3 text-sm font-semibold leading-6 text-asphalt outline-none transition focus:border-signal"
-                placeholder="Operational notes for this participant"
-              />
-              <button
-                type="submit"
-                className="inline-flex h-11 items-center rounded-full bg-kerb px-5 text-sm font-black text-white transition hover:bg-white hover:text-asphalt"
-              >
-                Save notes
-              </button>
-            </form>
+      <section className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <DetailSection title="Internal admin notes">
+          <form action={addAdminNote.bind(null, registration.id)} className="space-y-4">
+            <textarea
+              name="note"
+              rows={5}
+              required
+              className="w-full rounded-md border border-white/15 bg-white px-3 py-3 text-sm font-semibold leading-6 text-asphalt outline-none transition focus:border-signal"
+              placeholder="Add an internal operational note"
+            />
+            <button
+              type="submit"
+              className="inline-flex h-11 items-center rounded-full bg-kerb px-5 text-sm font-black text-white transition hover:bg-white hover:text-asphalt"
+            >
+              Add note
+            </button>
+          </form>
 
-            <div className="mt-6 border-t border-white/10 pt-4">
-              <p className="text-xs font-black uppercase text-white/45">Recent note audit</p>
-              <div className="mt-3 space-y-3">
-                {registration.auditLogs.map((entry) => (
-                  <div key={entry.id} className="text-sm text-white/65">
-                    <p className="font-bold text-white">
-                      {entry.adminUser?.email ?? "Admin"} updated notes
+          {registration.adminNotes ? (
+            <div className="mt-5 rounded-md border border-white/10 bg-white/5 p-4">
+              <p className="text-xs font-black uppercase text-white/45">Legacy note</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm font-semibold leading-6 text-white/75">
+                {registration.adminNotes}
+              </p>
+            </div>
+          ) : null}
+
+          <div className="mt-6 space-y-3">
+            {registration.adminNoteEntries.map((note) => (
+              <article key={note.id} className="rounded-md border border-white/10 bg-white/5 p-4">
+                <p className="text-xs font-black uppercase text-white/45">
+                  {note.adminUser?.email ?? note.authorLabel} · {formatDateTime(note.createdAt)}
+                </p>
+                <p className="mt-2 whitespace-pre-wrap text-sm font-semibold leading-6 text-white/80">
+                  {note.body}
+                </p>
+              </article>
+            ))}
+            {registration.adminNoteEntries.length === 0 ? (
+              <p className="text-sm font-semibold text-white/60">No internal notes yet.</p>
+            ) : null}
+          </div>
+        </DetailSection>
+
+        <DetailSection title="Audit timeline">
+          <div className="space-y-3">
+            {registration.auditLogs.map((entry) => (
+              <article key={entry.id} className="rounded-md border border-white/10 bg-white/5 p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-black text-white">{entry.action}</p>
+                    <p className="mt-1 text-xs font-semibold text-white/45">
+                      {entry.adminUser?.email ?? "System"} · {formatDateTime(entry.createdAt)}
                     </p>
-                    <p>{formatDateTime(entry.createdAt)}</p>
                   </div>
-                ))}
-                {registration.auditLogs.length === 0 ? (
-                  <p className="text-sm font-semibold text-white/60">
-                    No note changes recorded yet.
+                </div>
+                {entry.reason ? (
+                  <p className="mt-3 text-sm font-semibold leading-6 text-white/75">
+                    {entry.reason}
                   </p>
                 ) : null}
-              </div>
-            </div>
-          </DetailSection>
-        </div>
+              </article>
+            ))}
+            {registration.auditLogs.length === 0 ? (
+              <p className="text-sm font-semibold text-white/60">No audit events yet.</p>
+            ) : null}
+          </div>
+        </DetailSection>
+      </section>
+
+      <section className="mt-6">
+        <DetailSection title="Email log">
+          <div className="grid gap-3 md:grid-cols-2">
+            {registration.emails.map((email) => (
+              <article key={email.id} className="rounded-md border border-white/10 bg-white/5 p-4">
+                <p className="text-sm font-black text-white">{formatStatus(email.type)}</p>
+                <p className="mt-1 text-xs font-semibold text-white/45">
+                  {formatDateTime(email.createdAt)}
+                </p>
+                <div className="mt-3">
+                  <StatusBadge value={email.status} />
+                </div>
+                {email.providerMessageId ? (
+                  <p className="mt-2 text-xs font-semibold text-white/45">
+                    Provider ID: {email.providerMessageId}
+                  </p>
+                ) : null}
+              </article>
+            ))}
+            {registration.emails.length === 0 ? (
+              <p className="text-sm font-semibold text-white/60">No email attempts logged yet.</p>
+            ) : null}
+          </div>
+        </DetailSection>
       </section>
     </AdminShell>
   );
 }
 
-function PaymentResultBanner({ result }: { result?: string }) {
-  if (!result) {
+function ActionResultBanner({
+  paymentResult,
+  actionResult,
+}: {
+  paymentResult?: string;
+  actionResult?: string;
+}) {
+  const message = resultMessage(paymentResult, actionResult);
+
+  if (!message) {
     return null;
   }
 
-  if (result === "confirmed") {
-    return (
-      <section className="mb-6 rounded-lg border border-emerald-400/30 bg-emerald-400/10 p-4 text-emerald-100">
-        <p className="text-sm font-black uppercase">Registration confirmed</p>
-        <p className="mt-2 text-sm font-semibold text-white/75">
-          Manual payment was recorded, QR was issued, and confirmation email was attempted.
-        </p>
-      </section>
-    );
-  }
-
-  if (result === "already_confirmed") {
-    return (
-      <section className="mb-6 rounded-lg border border-signal/40 bg-signal/10 p-4 text-signal">
-        <p className="text-sm font-black uppercase">Already confirmed</p>
-        <p className="mt-2 text-sm font-semibold text-white/75">
-          This registration was already marked as paid.
-        </p>
-      </section>
-    );
-  }
-
   return (
-    <section className="mb-6 rounded-lg border border-kerb/40 bg-kerb/10 p-4 text-red-100">
-      <p className="text-sm font-black uppercase">Manual confirmation rejected</p>
-      <p className="mt-2 text-sm font-semibold text-white/75">
-        This registration is not in an unpaid pending-payment state.
-      </p>
+    <section
+      className={`mb-6 rounded-lg border p-4 ${
+        message.tone === "success"
+          ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-100"
+          : message.tone === "warning"
+            ? "border-signal/40 bg-signal/10 text-signal"
+            : "border-kerb/40 bg-kerb/10 text-red-100"
+      }`}
+    >
+      <p className="text-sm font-black uppercase">{message.title}</p>
+      <p className="mt-2 text-sm font-semibold text-white/75">{message.body}</p>
     </section>
   );
+}
+
+function resultMessage(paymentResult?: string, actionResult?: string) {
+  if (paymentResult === "confirmed") {
+    return {
+      tone: "success" as const,
+      title: "Registration approved",
+      body: "Manual payment was recorded, QR was issued, and approval email was attempted.",
+    };
+  }
+
+  if (paymentResult === "already_confirmed") {
+    return {
+      tone: "warning" as const,
+      title: "Already confirmed",
+      body: "This registration was already marked as paid.",
+    };
+  }
+
+  if (paymentResult) {
+    return {
+      tone: "danger" as const,
+      title: "Approval rejected",
+      body: "This registration is not in an unpaid pending-payment state.",
+    };
+  }
+
+  const messages: Record<string, { tone: "success" | "warning" | "danger"; title: string; body: string }> = {
+    note_added: {
+      tone: "success",
+      title: "Note added",
+      body: "Internal note was added to the participant timeline.",
+    },
+    rejected: {
+      tone: "warning",
+      title: "Registration rejected",
+      body: "Registration was marked as rejected and rejection email was attempted.",
+    },
+    archived: {
+      tone: "warning",
+      title: "Registration archived",
+      body: "Registration was hidden from active operations lists.",
+    },
+    restored: {
+      tone: "success",
+      title: "Registration restored",
+      body: "Registration is visible in active operations again.",
+    },
+    reason_required: {
+      tone: "danger",
+      title: "Reason required",
+      body: "Reject and archive actions require a reason.",
+    },
+    cannot_reject_confirmed: {
+      tone: "danger",
+      title: "Cannot reject confirmed registration",
+      body: "Confirmed paid registrations should be archived or adjusted manually instead.",
+    },
+    already_archived: {
+      tone: "warning",
+      title: "Already archived",
+      body: "This registration was already archived.",
+    },
+    not_archived: {
+      tone: "warning",
+      title: "Not archived",
+      body: "This registration is already active.",
+    },
+    not_found: {
+      tone: "danger",
+      title: "Registration not found",
+      body: "The requested registration could not be found.",
+    },
+  };
+
+  return actionResult ? messages[actionResult] : null;
 }
 
 function DetailSection({ title, children }: { title: string; children: ReactNode }) {
@@ -376,4 +581,24 @@ function DetailRow({
       <dd className="mt-2 break-words text-sm font-bold text-white">{value}</dd>
     </div>
   );
+}
+
+function formatExperienceLevel(value: string) {
+  if (value === "BEGINNER") {
+    return "İlk pist tecrübem olacak";
+  }
+
+  if (value === "INTERMEDIATE") {
+    return "Daha önce pist deneyimim var";
+  }
+
+  if (value === "ADVANCED") {
+    return "İleri seviye pist deneyimi";
+  }
+
+  if (value === "PROFESSIONAL") {
+    return "Profesyonel / lisanslı deneyim";
+  }
+
+  return formatStatus(value);
 }

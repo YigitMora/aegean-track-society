@@ -77,9 +77,10 @@ export type CheckInActionResult =
 
 export async function lookupRegistrationByQrToken(rawToken: string): Promise<QrLookupResult> {
   const qrTokenHash = hashQrToken(rawToken);
-  const registration = await prisma.registration.findUnique({
+  const registration = await prisma.registration.findFirst({
     where: {
       qrTokenHash,
+      deletedAt: null,
     },
     select: checkInRegistrationSelect,
   });
@@ -113,6 +114,7 @@ export async function searchCheckInRegistrations(query: string) {
 
   return prisma.registration.findMany({
     where: {
+      deletedAt: null,
       event: {
         slug: kulaEventSlug,
       },
@@ -136,6 +138,7 @@ export async function getCheckInRegistrationById(registrationId: string) {
   return prisma.registration.findFirst({
     where: {
       id: registrationId,
+      deletedAt: null,
       event: {
         slug: kulaEventSlug,
       },
@@ -172,6 +175,7 @@ export async function confirmRegistrationCheckIn({
     const registration = await tx.registration.findFirst({
       where: {
         id: registrationId,
+        deletedAt: null,
         event: {
           slug: kulaEventSlug,
         },
@@ -425,7 +429,7 @@ export async function confirmRegistrationCheckIn({
       data: {
         adminUserId: adminUser.id,
         registrationId: registration.id,
-        action: "CHECK_IN_CONFIRMED",
+        action: "CHECKED_IN",
         before: {
           status: checkIn.status,
           checkedInAt: toIso(checkIn.checkedInAt),

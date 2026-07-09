@@ -27,6 +27,7 @@ enum RegistrationStatus {
   PENDING_PAYMENT
   CONFIRMED
   CANCELLED
+  REJECTED
 }
 
 enum PaymentStatus {
@@ -70,6 +71,10 @@ enum EmailType {
   CONFIRMATION
   PAYMENT_FAILED
   ADMIN_NOTICE
+  REGISTRATION_RECEIVED
+  ADMIN_NEW_REGISTRATION
+  REGISTRATION_APPROVED
+  REGISTRATION_REJECTED
 }
 
 enum EmailStatus {
@@ -162,10 +167,15 @@ model Registration {
   marketingConsentAt        DateTime?
   consentIpAddress          String?            @db.VarChar(45)
   adminNotes                String?            @db.Text
+  adminNoteEntries          AdminNote[]
   status                    RegistrationStatus @default(DRAFT)
   paymentStatus             PaymentStatus      @default(UNPAID)
   qrTokenHash               String?            @unique
   qrIssuedAt                DateTime?
+  deletedAt                 DateTime?
+  deletedByAdminId          String?
+  deletedByAdmin            AdminUser?         @relation("RegistrationDeletedBy", fields: [deletedByAdminId], references: [id], onDelete: SetNull)
+  deleteReason              String?            @db.Text
   payments                  Payment[]
   checkIns                  CheckIn[]
   auditLogs                 AuditLog[]
@@ -179,6 +189,9 @@ model Registration {
   @@index([email])
   @@index([phone])
   @@index([plateNumber])
+  @@index([deletedAt])
+  @@index([status, deletedAt])
+  @@index([deletedByAdminId])
 }
 
 model Payment {
@@ -204,14 +217,30 @@ model Payment {
 }
 
 model AdminUser {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  name      String
-  role      AdminRole  @default(STAFF)
-  checkIns  CheckIn[]
-  auditLogs AuditLog[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id                   String         @id @default(cuid())
+  email                String         @unique
+  name                 String
+  role                 AdminRole      @default(STAFF)
+  checkIns             CheckIn[]
+  auditLogs            AuditLog[]
+  adminNotes           AdminNote[]
+  deletedRegistrations Registration[] @relation("RegistrationDeletedBy")
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+}
+
+model AdminNote {
+  id             String       @id @default(cuid())
+  registrationId String
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  adminUserId    String?
+  adminUser      AdminUser?   @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  authorLabel    String
+  body           String       @db.Text
+  createdAt      DateTime     @default(now())
+
+  @@index([registrationId, createdAt])
+  @@index([adminUserId])
 }
 
 model CheckIn {

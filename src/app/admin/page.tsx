@@ -40,12 +40,17 @@ export default async function AdminDashboardPage() {
     prisma.registration.count({
       where: {
         eventId: event.id,
+        deletedAt: null,
         status: "CONFIRMED",
       },
     }),
     prisma.registration.count({
       where: {
         eventId: event.id,
+        deletedAt: null,
+        status: {
+          notIn: ["REJECTED", "CANCELLED"],
+        },
         OR: [{ status: "PENDING_PAYMENT" }, { paymentStatus: "UNPAID" }],
       },
     }),
@@ -54,6 +59,7 @@ export default async function AdminDashboardPage() {
         status: "FAILED",
         registration: {
           eventId: event.id,
+          deletedAt: null,
         },
       },
     }),
@@ -63,6 +69,7 @@ export default async function AdminDashboardPage() {
         status: "CHECKED_IN",
         registration: {
           eventId: event.id,
+          deletedAt: null,
         },
       },
     }),
@@ -70,13 +77,14 @@ export default async function AdminDashboardPage() {
       where: {
         eventId: event.id,
         packageId: eventPackage.id,
+        deletedAt: null,
         status: {
           in: ["PENDING_PAYMENT", "CONFIRMED"],
         },
       },
     }),
     prisma.registration.findMany({
-      where: { eventId: event.id },
+      where: { eventId: event.id, deletedAt: null },
       orderBy: { createdAt: "desc" },
       take: 8,
       select: {

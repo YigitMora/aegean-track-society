@@ -7,7 +7,13 @@ import { requireAdminSession } from "@/lib/admin-auth";
 import { kulaEventSlug } from "@/lib/event-config";
 import { prisma } from "@/lib/prisma";
 
-const registrationStatuses = ["DRAFT", "PENDING_PAYMENT", "CONFIRMED", "CANCELLED"] as const;
+const statusFilters = [
+  { value: "active", label: "All active" },
+  { value: "pending", label: "Pending" },
+  { value: "confirmed", label: "Confirmed" },
+  { value: "rejected", label: "Rejected" },
+  { value: "archived", label: "Archived" },
+] as const;
 const paymentStatuses = ["UNPAID", "PENDING", "PAID", "FAILED", "REFUNDED", "REVIEW"] as const;
 
 type ParticipantsPageProps = {
@@ -25,7 +31,7 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
 
   const filters = await searchParams;
   const query = filters.q?.trim() ?? "";
-  const status = isRegistrationStatus(filters.status) ? filters.status : undefined;
+  const status = isStatusFilter(filters.status) ? filters.status : "active";
   const paymentStatus = isPaymentStatus(filters.paymentStatus) ? filters.paymentStatus : undefined;
 
   const where: Prisma.RegistrationWhereInput = {
@@ -34,8 +40,24 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
     },
   };
 
-  if (status) {
-    where.status = status;
+  if (status === "archived") {
+    where.deletedAt = {
+      not: null,
+    };
+  } else {
+    where.deletedAt = null;
+  }
+
+  if (status === "pending") {
+    where.status = "PENDING_PAYMENT";
+  }
+
+  if (status === "confirmed") {
+    where.status = "CONFIRMED";
+  }
+
+  if (status === "rejected") {
+    where.status = "REJECTED";
   }
 
   if (paymentStatus) {
@@ -65,6 +87,7 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
       plateNumber: true,
       status: true,
       paymentStatus: true,
+      deletedAt: true,
       createdAt: true,
     },
   });
@@ -100,13 +123,12 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
           <span className="text-xs font-black uppercase text-white/50">Status</span>
           <select
             name="status"
-            defaultValue={status ?? ""}
+            defaultValue={status}
             className="mt-2 h-11 w-full rounded-md border border-white/15 bg-white px-3 text-sm font-semibold text-asphalt outline-none transition focus:border-signal"
           >
-            <option value="">All</option>
-            {registrationStatuses.map((item) => (
-              <option key={item} value={item}>
-                {item}
+            {statusFilters.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
               </option>
             ))}
           </select>
@@ -143,7 +165,7 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
       <section className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-white/10">
         <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4">
           <p className="text-sm font-black uppercase text-signal">
-            {participants.length} participants
+            {participants.length} participants · {statusFilters.find((item) => item.value === status)?.label}
           </p>
           <p className="text-xs font-semibold text-white/45">
             QR token hashes are not shown.
@@ -165,12 +187,19 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
             </thead>
             <tbody className="divide-y divide-white/10">
               {participants.map((participant) => (
-                <tr key={participant.id} className="align-top">
+                <tr key={participant.id} className="align-top transition hover:bg-white/5">
                   <td className="px-5 py-4 font-black text-white">
-                    {participant.participantCode ?? "Pending"}
+                    <Link href={`/admin/participants/${participant.id}`} className="transition hover:text-signal">
+                      {participant.participantCode ?? "Pending"}
+                    </Link>
                   </td>
                   <td className="px-5 py-4">
-                    <p className="font-black text-white">{participant.fullName}</p>
+                    <Link
+                      href={`/admin/participants/${participant.id}`}
+                      className="font-black text-white transition hover:text-signal"
+                    >
+                      {participant.fullName}
+                    </Link>
                     <p className="mt-1 text-xs font-semibold text-white/45">
                       {participant.email}
                     </p>
@@ -188,7 +217,10 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
                     </p>
                   </td>
                   <td className="px-5 py-4">
-                    <StatusBadge value={participant.status} />
+                    <div className="space-y-2">
+                      <StatusBadge value={participant.status} />
+                      {participant.deletedAt ? <StatusBadge value="ARCHIVED" /> : null}
+                    </div>
                   </td>
                   <td className="px-5 py-4">
                     <StatusBadge value={participant.paymentStatus} />
@@ -221,8 +253,8 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
   );
 }
 
-function isRegistrationStatus(value?: string): value is (typeof registrationStatuses)[number] {
-  return Boolean(value && registrationStatuses.includes(value as (typeof registrationStatuses)[number]));
+function isStatusFilter(value?: string): value is (typeof statusFilters)[number]["value"] {
+  return Boolean(value && statusFilters.some((item) => item.value === value));
 }
 
 function isPaymentStatus(value?: string): value is (typeof paymentStatuses)[number] {

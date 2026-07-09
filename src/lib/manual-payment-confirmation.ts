@@ -192,7 +192,25 @@ export async function confirmManualRegistrationPayment({
           data: {
             adminUserId: adminUser.id,
             registrationId: registration.id,
-            action: "MANUAL_PAYMENT_CONFIRMED",
+            action: "PAYMENT_CONFIRMED",
+            before: {
+              status: registration.status,
+              paymentStatus: registration.paymentStatus,
+            },
+            after: {
+              paymentStatus: "PAID",
+              provider: "MANUAL",
+            },
+            reason: "Admin manually confirmed payment.",
+            ipAddress,
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            adminUserId: adminUser.id,
+            registrationId: registration.id,
+            action: "APPROVED",
             before: {
               status: registration.status,
               paymentStatus: registration.paymentStatus,
@@ -205,7 +223,7 @@ export async function confirmManualRegistrationPayment({
               participantCode,
               qrIssuedAt: now.toISOString(),
             },
-            reason: "Admin manually confirmed payment and registration.",
+            reason: "Admin approved registration, issued participant code, and generated QR.",
             ipAddress,
           },
         });
