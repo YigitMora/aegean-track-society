@@ -4,6 +4,7 @@ import { BrowserQrScanner } from "@/components/admin/browser-qr-scanner";
 import { CheckInCard } from "@/components/admin/check-in-card";
 import { formatDateTime } from "@/lib/admin-format";
 import {
+  type CheckInRegistration,
   getCheckInRegistrationById,
   searchCheckInRegistrations,
 } from "@/lib/check-in";
@@ -140,7 +141,7 @@ function CheckInResultBanner({
   registration,
 }: {
   result?: string;
-  registration: Awaited<ReturnType<typeof getCheckInRegistrationById>>;
+  registration: CheckInRegistration | null;
 }) {
   if (!result) {
     return null;

@@ -105,7 +105,7 @@ export async function lookupRegistrationByQrToken(rawToken: string): Promise<QrL
   };
 }
 
-export async function searchCheckInRegistrations(query: string) {
+export async function searchCheckInRegistrations(query: string): Promise<CheckInRegistration[]> {
   const normalizedQuery = query.trim();
 
   if (normalizedQuery.length < 2) {
@@ -134,7 +134,9 @@ export async function searchCheckInRegistrations(query: string) {
   });
 }
 
-export async function getCheckInRegistrationById(registrationId: string) {
+export async function getCheckInRegistrationById(
+  registrationId: string,
+): Promise<CheckInRegistration | null> {
   return prisma.registration.findFirst({
     where: {
       id: registrationId,
