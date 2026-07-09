@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 import { formatDecimal, initializeCheckoutForm } from "@/lib/iyzico";
+import {
+  sendAdminNewRegistrationEmail,
+  sendRegistrationReceivedEmail,
+} from "@/lib/email";
 import { getPaymentMode, manualReservationMessage } from "@/lib/payment-mode";
 import { prisma } from "@/lib/prisma";
 import { consumeRateLimit, getRateLimitHeaders } from "@/lib/rate-limit";
@@ -260,6 +264,11 @@ export async function POST(request: Request) {
             fullName: true,
             phone: true,
             email: true,
+            carBrandModel: true,
+            plateNumber: true,
+            experienceLevel: true,
+            emergencyContactName: true,
+            emergencyContactPhone: true,
           },
         }),
     );
@@ -287,6 +296,27 @@ export async function POST(request: Request) {
         : null;
 
     logRegistrationApiDebug(debugContext, "registration.writeFlow.success");
+    await Promise.allSettled([
+      sendRegistrationReceivedEmail({
+        registrationId: registration.id,
+        to: registration.email,
+        fullName: registration.fullName,
+        carBrandModel: registration.carBrandModel,
+        plateNumber: registration.plateNumber,
+      }),
+      sendAdminNewRegistrationEmail({
+        registrationId: registration.id,
+        to: registration.email,
+        fullName: registration.fullName,
+        email: registration.email,
+        phone: registration.phone,
+        carBrandModel: registration.carBrandModel,
+        plateNumber: registration.plateNumber,
+        experienceLevel: registration.experienceLevel,
+        emergencyContactName: registration.emergencyContactName,
+        emergencyContactPhone: registration.emergencyContactPhone,
+      }),
+    ]);
 
     if (paymentMode === "manual") {
       return NextResponse.json(

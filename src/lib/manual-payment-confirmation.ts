@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { Prisma } from "@prisma/client";
-import { sendConfirmationEmail } from "./email";
+import { sendRegistrationApprovedEmail } from "./email";
 import { kulaCheckInDate } from "./event-config";
 import { prisma } from "./prisma";
 import { generateQrToken, hashQrToken } from "./qr";
@@ -232,7 +232,7 @@ export async function confirmManualRegistrationPayment({
   );
 
   if (confirmation.email) {
-    await sendConfirmationEmail(confirmation.email);
+    await sendRegistrationApprovedEmail(confirmation.email);
   }
 
   if (confirmation.status === "confirmed") {

@@ -50,14 +50,14 @@ export function getAdminReadinessWarnings({
 }
 
 export function isEmailProviderMissing() {
-  const provider = process.env.EMAIL_PROVIDER?.toLowerCase() || "resend";
+  const provider = process.env.EMAIL_PROVIDER?.trim().toLowerCase() || "resend";
 
-  if (!process.env.EMAIL_FROM) {
+  if (!process.env.EMAIL_FROM?.trim()) {
     return true;
   }
 
   if (provider === "resend") {
-    return !process.env.RESEND_API_KEY;
+    return !process.env.RESEND_API_KEY?.trim();
   }
 
   return true;
