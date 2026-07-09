@@ -13,11 +13,24 @@ const experienceLevels = [
 ];
 
 const messageTranslations: Record<string, string> = {
-  "Registration could not be completed.": "Kayıt tamamlanamadı.",
+  "Registration could not be completed.":
+    "Kayıt işlemi tamamlanamadı. Lütfen bilgileri kontrol edin veya etkinlik ekibiyle iletişime geçin.",
   "Registration could not be completed. Please try again.":
-    "Kayıt tamamlanamadı. Lütfen tekrar deneyin.",
+    "Kayıt işlemi tamamlanamadı. Lütfen tekrar deneyin.",
+  "Registration could not be saved. Please try again or contact the event team.":
+    "Kayıt veritabanına kaydedilemedi. Lütfen tekrar deneyin veya etkinlik ekibiyle iletişime geçin.",
+  "Registration database is not ready. Please contact the event team.":
+    "Kayıt veritabanı henüz hazır değil. Lütfen etkinlik ekibiyle iletişime geçin.",
+  "Registration database is temporarily unavailable. Please try again shortly.":
+    "Kayıt veritabanına şu anda ulaşılamıyor. Lütfen kısa süre sonra tekrar deneyin.",
+  "Registration is busy right now. Please submit the form again in a few seconds.":
+    "Kayıt sistemi şu anda yoğun. Lütfen birkaç saniye sonra tekrar gönderin.",
+  "A registration for this information already exists. Please contact the event team if you need changes.":
+    "Bu bilgilerle bir kayıt zaten mevcut. Değişiklik için lütfen etkinlik ekibiyle iletişime geçin.",
   "Registration received. Our team will contact you for payment and confirmation.":
     "Kayıt talebiniz alındı. Ekibimiz ödeme ve kesin onay için sizinle iletişime geçecek.",
+  "Registration received. Redirecting to confirmation page.":
+    "Kayıt talebiniz alındı. Onay sayfasına yönlendiriliyorsunuz.",
   "Secure payment could not be initialized. Please try again.":
     "Güvenli ödeme başlatılamadı. Lütfen tekrar deneyin.",
   "Redirecting to secure payment...": "Güvenli ödeme sayfasına yönlendiriliyorsunuz...",
@@ -55,7 +68,6 @@ export function RegistrationForm() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const [isReservationReceived, setIsReservationReceived] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -88,23 +100,35 @@ export function RegistrationForm() {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const data = await readJsonResponse(response);
 
       if (!response.ok) {
-        setFieldErrors(data.fieldErrors ?? {});
+        setFieldErrors(data?.fieldErrors ?? {});
         setFormMessage(
-          translateMessage(data.message, "Kayıt tamamlanamadı. Lütfen bilgileri kontrol edin."),
+          translateMessage(
+            data?.message,
+            fallbackMessageForStatus(response.status),
+          ),
         );
         return;
       }
 
+      if (!data) {
+        setFormMessage("Kayıt yanıtı okunamadı. Lütfen etkinlik ekibiyle iletişime geçin.");
+        return;
+      }
+
       if (data.paymentMode === "manual") {
-        setIsReservationReceived(true);
+        shouldKeepSubmitting = true;
         setFormMessage(
           translateMessage(
-            data.message,
-            "Kayıt talebiniz alındı. Ekibimiz ödeme ve kesin onay için sizinle iletişime geçecek.",
+            "Registration received. Redirecting to confirmation page.",
+            "Kayıt talebiniz alındı. Onay sayfasına yönlendiriliyorsunuz.",
           ),
+        );
+        window.location.assign(
+          data.successUrl ??
+            `/registration/success?registrationId=${encodeURIComponent(data.registration?.id ?? "")}`,
         );
         return;
       }
@@ -121,7 +145,9 @@ export function RegistrationForm() {
       );
       window.location.assign(data.paymentPageUrl);
     } catch {
-      setFormMessage("Kayıt tamamlanamadı. Lütfen tekrar deneyin.");
+      setFormMessage(
+        "Kayıt servisine ulaşılamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.",
+      );
     } finally {
       if (!shouldKeepSubmitting) {
         setIsSubmitting(false);
@@ -141,23 +167,6 @@ export function RegistrationForm() {
         <p className="mt-4 text-sm leading-6 text-ats-muted">
           Kayıt talebiniz alındı. Ödeme adımını tamamlamak için iyzico sayfasına
           yönlendiriliyorsunuz.
-        </p>
-      </section>
-    );
-  }
-
-  if (isReservationReceived) {
-    return (
-      <section className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8">
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-ats-blue">
-          Kayıt alındı
-        </p>
-        <h2 className="mt-3 text-3xl font-black text-ats-text">
-          Talebiniz ekibimize ulaştı.
-        </h2>
-        <p className="mt-4 text-sm leading-6 text-ats-muted">
-          {formMessage ??
-            "Kayıt talebiniz alındı. Ekibimiz ödeme ve kesin onay için sizinle iletişime geçecek."}
         </p>
       </section>
     );
@@ -381,6 +390,44 @@ function translateMessage(message: unknown, fallback: string) {
   }
 
   return messageTranslations[message] ?? message;
+}
+
+async function readJsonResponse(response: Response) {
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (!contentType.includes("application/json")) {
+    return null;
+  }
+
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+function fallbackMessageForStatus(status: number) {
+  if (status === 400) {
+    return "Form isteği okunamadı. Lütfen sayfayı yenileyip tekrar deneyin.";
+  }
+
+  if (status === 422) {
+    return "Lütfen kayıt formundaki bilgileri kontrol edin.";
+  }
+
+  if (status === 409) {
+    return "Kayıt çakışması oluştu. Lütfen bilgileri kontrol edin veya etkinlik ekibiyle iletişime geçin.";
+  }
+
+  if (status === 429) {
+    return "Çok fazla kayıt denemesi yapıldı. Lütfen kısa süre sonra tekrar deneyin.";
+  }
+
+  if (status >= 500) {
+    return "Kayıt servisi geçici olarak yanıt veremiyor. Lütfen kısa süre sonra tekrar deneyin.";
+  }
+
+  return "Kayıt işlemi tamamlanamadı. Lütfen bilgileri kontrol edin veya etkinlik ekibiyle iletişime geçin.";
 }
 
 function valueOf(formData: FormData, key: string) {

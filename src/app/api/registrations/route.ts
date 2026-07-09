@@ -83,36 +83,36 @@ export async function POST(request: Request) {
     }
   }
 
-  const event = await prisma.event.findUnique({
-    where: { slug: eventSlug },
-    include: {
-      packages: {
-        where: {
-          code: packageCode,
-          active: true,
-        },
-        take: 1,
-      },
-    },
-  });
-
-  const eventPackage = event?.packages[0];
-
-  if (!event || !eventPackage) {
-    return NextResponse.json(
-      { message: "Registration is not open for this event yet." },
-      { status: 404 },
-    );
-  }
-
-  if (paymentMode === "iyzico" && eventPackage.price.lte(0)) {
-    return NextResponse.json(
-      { message: "Payment amount is not configured for this event yet." },
-      { status: 409 },
-    );
-  }
-
   try {
+    const event = await prisma.event.findUnique({
+      where: { slug: eventSlug },
+      include: {
+        packages: {
+          where: {
+            code: packageCode,
+            active: true,
+          },
+          take: 1,
+        },
+      },
+    });
+
+    const eventPackage = event?.packages[0];
+
+    if (!event || !eventPackage) {
+      return NextResponse.json(
+        { message: "Registration is not open for this event yet." },
+        { status: 404 },
+      );
+    }
+
+    if (paymentMode === "iyzico" && eventPackage.price.lte(0)) {
+      return NextResponse.json(
+        { message: "Payment amount is not configured for this event yet." },
+        { status: 409 },
+      );
+    }
+
     const result = await prisma.$transaction(
       async (tx) => {
         const duplicate = await tx.registration.findFirst({
@@ -241,6 +241,7 @@ export async function POST(request: Request) {
         {
           message: manualReservationMessage,
           paymentMode,
+          successUrl: `/registration/success?registrationId=${result.registration.id}`,
           registration: {
             id: result.registration.id,
             status: result.registration.status,
@@ -329,13 +330,90 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    console.error("Registration create failed", error);
+    return registrationErrorResponse(error);
+  }
+}
 
+function registrationErrorResponse(error: unknown) {
+  console.error("REGISTRATION_SUBMIT_ERROR", serializeRegistrationError(error));
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2021") {
+      return NextResponse.json(
+        {
+          message:
+            "Registration database is not ready. Please contact the event team.",
+        },
+        { status: 503 },
+      );
+    }
+
+    if (error.code === "P2002") {
+      return NextResponse.json(
+        {
+          message:
+            "A registration for this information already exists. Please contact the event team if you need changes.",
+        },
+        { status: 409 },
+      );
+    }
+
+    if (error.code === "P2034") {
+      return NextResponse.json(
+        {
+          message:
+            "Registration is busy right now. Please submit the form again in a few seconds.",
+        },
+        { status: 409 },
+      );
+    }
+  }
+
+  if (
+    error instanceof Prisma.PrismaClientInitializationError ||
+    error instanceof Prisma.PrismaClientUnknownRequestError
+  ) {
     return NextResponse.json(
-      { message: "Registration could not be completed. Please try again." },
-      { status: 500 },
+      {
+        message:
+          "Registration database is temporarily unavailable. Please try again shortly.",
+      },
+      { status: 503 },
     );
   }
+
+  return NextResponse.json(
+    {
+      message:
+        "Registration could not be saved. Please try again or contact the event team.",
+    },
+    { status: 500 },
+  );
+}
+
+function serializeRegistrationError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stackFirstThreeLines: error.stack?.split("\n").slice(0, 3) ?? [],
+    };
+  }
+
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stackFirstThreeLines: error.stack?.split("\n").slice(0, 3) ?? [],
+    };
+  }
+
+  return {
+    name: "UnknownError",
+    message: String(error),
+    stackFirstThreeLines: [],
+  };
 }
 
 async function markPaymentInitializationFailed(
