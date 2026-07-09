@@ -27,6 +27,16 @@ const messageTranslations: Record<string, string> = {
     "Kayıt veritabanı tablosu bulunamadı. Lütfen etkinlik ekibiyle iletişime geçin.",
   "Registration database connection failed.":
     "Kayıt veritabanı bağlantısı kurulamadı. Lütfen kısa süre sonra tekrar deneyin veya etkinlik ekibiyle iletişime geçin.",
+  "Registration database authentication failed.":
+    "Kayıt veritabanı kimlik doğrulaması başarısız oldu. Lütfen etkinlik ekibiyle iletişime geçin.",
+  "Registration database host could not be reached.":
+    "Kayıt veritabanı sunucusuna ulaşılamadı. Lütfen kısa süre sonra tekrar deneyin veya etkinlik ekibiyle iletişime geçin.",
+  "Registration database does not exist.":
+    "Kayıt veritabanı bulunamadı. Lütfen etkinlik ekibiyle iletişime geçin.",
+  "Registration database column is missing.":
+    "Kayıt veritabanında gerekli bir alan eksik. Lütfen etkinlik ekibiyle iletişime geçin.",
+  "Registration database relation check failed.":
+    "Kayıt veritabanı ilişki kontrolü başarısız oldu. Lütfen etkinlik ekibiyle iletişime geçin.",
   "Registration database operation failed.":
     "Kayıt veritabanı işlemi başarısız oldu. Lütfen tekrar deneyin veya etkinlik ekibiyle iletişime geçin.",
   "Registration database transaction conflict.":
