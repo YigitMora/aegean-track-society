@@ -23,6 +23,14 @@ const messageTranslations: Record<string, string> = {
     "Kayıt veritabanı henüz hazır değil. Lütfen etkinlik ekibiyle iletişime geçin.",
   "Registration database is temporarily unavailable. Please try again shortly.":
     "Kayıt veritabanına şu anda ulaşılamıyor. Lütfen kısa süre sonra tekrar deneyin.",
+  "Registration database table is missing.":
+    "Kayıt veritabanı tablosu bulunamadı. Lütfen etkinlik ekibiyle iletişime geçin.",
+  "Registration database connection failed.":
+    "Kayıt veritabanı bağlantısı kurulamadı. Lütfen kısa süre sonra tekrar deneyin veya etkinlik ekibiyle iletişime geçin.",
+  "Registration database operation failed.":
+    "Kayıt veritabanı işlemi başarısız oldu. Lütfen tekrar deneyin veya etkinlik ekibiyle iletişime geçin.",
+  "Registration database transaction conflict.":
+    "Kayıt sistemi aynı anda çok fazla işlem aldı. Lütfen birkaç saniye sonra tekrar gönderin.",
   "Registration is busy right now. Please submit the form again in a few seconds.":
     "Kayıt sistemi şu anda yoğun. Lütfen birkaç saniye sonra tekrar gönderin.",
   "A registration for this information already exists. Please contact the event team if you need changes.":

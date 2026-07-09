@@ -16,6 +16,27 @@ import { getClientIpFromRequest } from "@/lib/request-ip";
 const eventSlug = "kula-mytrack-2026";
 const packageCode = "SEP20";
 
+type RegistrationApiDebugContext = {
+  eventSlug: string;
+  eventFound: boolean;
+  packageFound: boolean;
+  validationPassed: boolean;
+  normalizedPhone: string | null;
+  normalizedEmergencyPhone: string | null;
+  vehicle: string | null;
+  experience: string | null;
+};
+
+class RegistrationPrismaOperationError extends Error {
+  constructor(
+    readonly operation: string,
+    readonly originalError: unknown,
+  ) {
+    super(`Prisma operation failed: ${operation}`);
+    this.name = "RegistrationPrismaOperationError";
+  }
+}
+
 export async function POST(request: Request) {
   const clientIp = getClientIpFromRequest(request) ?? "unknown";
   const ipLimit = consumeRateLimit({
@@ -42,6 +63,20 @@ export async function POST(request: Request) {
   const parsed = registrationSchema.safeParse(body);
 
   if (!parsed.success) {
+    logRegistrationApiDebug(
+      {
+        eventSlug,
+        eventFound: false,
+        packageFound: false,
+        validationPassed: false,
+        normalizedPhone: null,
+        normalizedEmergencyPhone: null,
+        vehicle: null,
+        experience: null,
+      },
+      "registrationSchema.safeParse",
+    );
+
     return NextResponse.json(
       {
         message: "Please check the registration form.",
@@ -54,6 +89,18 @@ export async function POST(request: Request) {
   const input = parsed.data;
   const email = normalizeEmail(input.email);
   const plateNumber = normalizePlateNumber(input.plateNumber);
+  const normalizedPhone = normalizeTurkishPhone(input.phone);
+  const normalizedEmergencyPhone = normalizeTurkishPhone(input.emergencyContactPhone);
+  const debugContext: RegistrationApiDebugContext = {
+    eventSlug,
+    eventFound: false,
+    packageFound: false,
+    validationPassed: true,
+    normalizedPhone,
+    normalizedEmergencyPhone,
+    vehicle: input.carBrandModel.trim(),
+    experience: input.experienceLevel,
+  };
   const paymentMode = getPaymentMode();
   const identityLimit = consumeRateLimit({
     key: `registration:identity:${email}:${plateNumber}`,
@@ -84,20 +131,25 @@ export async function POST(request: Request) {
   }
 
   try {
-    const event = await prisma.event.findUnique({
-      where: { slug: eventSlug },
-      include: {
-        packages: {
-          where: {
-            code: packageCode,
-            active: true,
+    const event = await withPrismaOperationDebug(debugContext, "event.findUnique", () =>
+      prisma.event.findUnique({
+        where: { slug: eventSlug },
+        include: {
+          packages: {
+            where: {
+              code: packageCode,
+              active: true,
+            },
+            take: 1,
           },
-          take: 1,
         },
-      },
-    });
+      }),
+    );
 
     const eventPackage = event?.packages[0];
+    debugContext.eventFound = Boolean(event);
+    debugContext.packageFound = Boolean(eventPackage);
+    logRegistrationApiDebug(debugContext, "event.findUnique.result");
 
     if (!event || !eventPackage) {
       return NextResponse.json(
@@ -115,22 +167,27 @@ export async function POST(request: Request) {
 
     const result = await prisma.$transaction(
       async (tx) => {
-        const duplicate = await tx.registration.findFirst({
-          where: {
-            eventId: event.id,
-            packageId: eventPackage.id,
-            email,
-            plateNumber,
-            status: {
-              in: ["PENDING_PAYMENT", "CONFIRMED"],
-            },
-          },
-          select: {
-            id: true,
-            status: true,
-            createdAt: true,
-          },
-        });
+        const duplicate = await withPrismaOperationDebug(
+          debugContext,
+          "registration.findFirst.duplicateCheck",
+          () =>
+            tx.registration.findFirst({
+              where: {
+                eventId: event.id,
+                packageId: eventPackage.id,
+                email,
+                plateNumber,
+                status: {
+                  in: ["PENDING_PAYMENT", "CONFIRMED"],
+                },
+              },
+              select: {
+                id: true,
+                status: true,
+                createdAt: true,
+              },
+            }),
+        );
 
         if (duplicate) {
           return {
@@ -139,15 +196,20 @@ export async function POST(request: Request) {
           };
         }
 
-        const reservedCount = await tx.registration.count({
-          where: {
-            eventId: event.id,
-            packageId: eventPackage.id,
-            status: {
-              in: ["PENDING_PAYMENT", "CONFIRMED"],
-            },
-          },
-        });
+        const reservedCount = await withPrismaOperationDebug(
+          debugContext,
+          "registration.count.capacityCheck",
+          () =>
+            tx.registration.count({
+              where: {
+                eventId: event.id,
+                packageId: eventPackage.id,
+                status: {
+                  in: ["PENDING_PAYMENT", "CONFIRMED"],
+                },
+              },
+            }),
+        );
 
         if (eventPackage.capacity > 0 && reservedCount >= eventPackage.capacity) {
           return {
@@ -157,53 +219,60 @@ export async function POST(request: Request) {
 
         const now = new Date();
         const consentIpAddress = clientIp === "unknown" ? null : clientIp;
-        const registration = await tx.registration.create({
-          data: {
-            eventId: event.id,
-            packageId: eventPackage.id,
-            fullName: input.fullName.trim(),
-            phone: normalizeTurkishPhone(input.phone),
-            email,
-            carBrandModel: input.carBrandModel.trim(),
-            plateNumber,
-            experienceLevel: input.experienceLevel,
-            emergencyContactName: input.emergencyContactName.trim(),
-            emergencyContactPhone: normalizeTurkishPhone(input.emergencyContactPhone),
-            kvkkAcceptedAt: now,
-            liabilityWaiverAcceptedAt: now,
-            marketingConsentAt: input.marketingConsent ? now : null,
-            consentIpAddress,
-            status: "PENDING_PAYMENT",
-            paymentStatus: "UNPAID",
-          },
-          select: {
-            id: true,
-            status: true,
-            paymentStatus: true,
-            fullName: true,
-            phone: true,
-            email: true,
-          },
-        });
+        const registration = await withPrismaWriteDebug(
+          debugContext,
+          "registration.create",
+          () =>
+            tx.registration.create({
+              data: {
+                eventId: event.id,
+                packageId: eventPackage.id,
+                fullName: input.fullName.trim(),
+                phone: normalizedPhone,
+                email,
+                carBrandModel: input.carBrandModel.trim(),
+                plateNumber,
+                experienceLevel: input.experienceLevel,
+                emergencyContactName: input.emergencyContactName.trim(),
+                emergencyContactPhone: normalizedEmergencyPhone,
+                kvkkAcceptedAt: now,
+                liabilityWaiverAcceptedAt: now,
+                marketingConsentAt: input.marketingConsent ? now : null,
+                consentIpAddress,
+                status: "PENDING_PAYMENT",
+                paymentStatus: "UNPAID",
+              },
+              select: {
+                id: true,
+                status: true,
+                paymentStatus: true,
+                fullName: true,
+                phone: true,
+                email: true,
+              },
+            }),
+        );
 
         const payment =
           paymentMode === "iyzico"
-            ? await tx.payment.create({
-                data: {
-                  registrationId: registration.id,
-                  provider: "IYZICO",
-                  conversationId: randomUUID(),
-                  amount: eventPackage.price,
-                  currency: eventPackage.currency,
-                  status: "INITIATED",
-                },
-                select: {
-                  id: true,
-                  conversationId: true,
-                  amount: true,
-                  currency: true,
-                },
-              })
+            ? await withPrismaWriteDebug(debugContext, "payment.create", () =>
+                tx.payment.create({
+                  data: {
+                    registrationId: registration.id,
+                    provider: "IYZICO",
+                    conversationId: randomUUID(),
+                    amount: eventPackage.price,
+                    currency: eventPackage.currency,
+                    status: "INITIATED",
+                  },
+                  select: {
+                    id: true,
+                    conversationId: true,
+                    amount: true,
+                    currency: true,
+                  },
+                }),
+              )
             : null;
 
         return {
@@ -259,14 +328,15 @@ export async function POST(request: Request) {
       );
     }
 
+    const payment = result.payment;
     let checkoutForm: Awaited<ReturnType<typeof initializeCheckoutForm>>;
 
     try {
       checkoutForm = await initializeCheckoutForm({
-        conversationId: result.payment.conversationId,
+        conversationId: payment.conversationId,
         basketId: result.registration.id,
-        amount: result.payment.amount,
-        currency: result.payment.currency,
+        amount: payment.amount,
+        currency: payment.currency,
         buyer: {
           id: result.registration.id,
           fullName: result.registration.fullName,
@@ -280,10 +350,15 @@ export async function POST(request: Request) {
         },
       });
     } catch (error) {
-      await markPaymentInitializationFailed(result.payment.id, result.registration.id, {
-        status: "failure",
-        errorMessage: error instanceof Error ? error.message : "Unknown iyzico error",
-      });
+      await markPaymentInitializationFailed(
+        debugContext,
+        payment.id,
+        result.registration.id,
+        {
+          status: "failure",
+          errorMessage: error instanceof Error ? error.message : "Unknown iyzico error",
+        },
+      );
 
       return NextResponse.json(
         { message: "Secure payment could not be initialized. Please try again." },
@@ -293,7 +368,8 @@ export async function POST(request: Request) {
 
     if (checkoutForm.status !== "success" || !checkoutForm.paymentPageUrl) {
       await markPaymentInitializationFailed(
-        result.payment.id,
+        debugContext,
+        payment.id,
         result.registration.id,
         checkoutForm,
       );
@@ -304,13 +380,15 @@ export async function POST(request: Request) {
       );
     }
 
-    await prisma.payment.update({
-      where: { id: result.payment.id },
-      data: {
-        iyzicoToken: checkoutForm.token,
-        rawInitializeResponse: checkoutForm as Prisma.InputJsonObject,
-      },
-    });
+    await withPrismaWriteDebug(debugContext, "payment.update.checkoutInitialize", () =>
+      prisma.payment.update({
+        where: { id: payment.id },
+        data: {
+          iyzicoToken: checkoutForm.token,
+          rawInitializeResponse: checkoutForm as Prisma.InputJsonObject,
+        },
+      }),
+    );
 
     return NextResponse.json(
       {
@@ -322,9 +400,9 @@ export async function POST(request: Request) {
           paymentStatus: result.registration.paymentStatus,
         },
         payment: {
-          conversationId: result.payment.conversationId,
-          amount: formatDecimal(result.payment.amount),
-          currency: result.payment.currency,
+          conversationId: payment.conversationId,
+          amount: formatDecimal(payment.amount),
+          currency: payment.currency,
         },
       },
       { status: 201 },
@@ -334,109 +412,228 @@ export async function POST(request: Request) {
   }
 }
 
+async function withPrismaOperationDebug<T>(
+  debugContext: RegistrationApiDebugContext,
+  operation: string,
+  action: () => Promise<T>,
+) {
+  logRegistrationApiDebug(debugContext, operation);
+
+  try {
+    return await action();
+  } catch (error) {
+    logRegistrationApiDebug(debugContext, operation, error);
+    throw new RegistrationPrismaOperationError(operation, error);
+  }
+}
+
+async function withPrismaWriteDebug<T>(
+  debugContext: RegistrationApiDebugContext,
+  operation: string,
+  action: () => Promise<T>,
+) {
+  return withPrismaOperationDebug(debugContext, operation, action);
+}
+
+function logRegistrationApiDebug(
+  debugContext: RegistrationApiDebugContext,
+  prismaOperation: string,
+  error?: unknown,
+) {
+  const serializedError = error === undefined ? null : serializeRegistrationError(error);
+  const payload = {
+    eventSlug: debugContext.eventSlug,
+    eventFound: debugContext.eventFound,
+    packageFound: debugContext.packageFound,
+    validationPassed: debugContext.validationPassed,
+    normalizedPhone: debugContext.normalizedPhone,
+    normalizedEmergencyPhone: debugContext.normalizedEmergencyPhone,
+    vehicle: debugContext.vehicle,
+    experience: debugContext.experience,
+    prismaOperation,
+    prismaOperationCurrentlyExecuting: prismaOperation,
+    prismaErrorCode: serializedError?.code ?? null,
+    prismaErrorMessage: serializedError?.message ?? null,
+    stackFirstThreeLines: serializedError?.stackFirstThreeLines ?? [],
+  };
+
+  if (error === undefined) {
+    console.log("REGISTRATION_API_DEBUG", payload);
+    return;
+  }
+
+  console.error("REGISTRATION_API_DEBUG", payload);
+}
+
 function registrationErrorResponse(error: unknown) {
-  console.error("REGISTRATION_SUBMIT_ERROR", serializeRegistrationError(error));
+  const { operation, originalError } = unwrapPrismaOperationError(error);
+  const serializedError = serializeRegistrationError(originalError);
 
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    if (error.code === "P2021") {
-      return NextResponse.json(
-        {
-          message:
-            "Registration database is not ready. Please contact the event team.",
-        },
-        { status: 503 },
+  console.error("REGISTRATION_SUBMIT_ERROR", {
+    operation,
+    ...serializedError,
+  });
+
+  if (originalError instanceof Prisma.PrismaClientKnownRequestError) {
+    if (originalError.code === "P2021") {
+      return registrationDatabaseErrorResponse(
+        "Registration database table is missing.",
+        503,
+        operation,
+        serializedError.code,
       );
     }
 
-    if (error.code === "P2002") {
-      return NextResponse.json(
-        {
-          message:
-            "A registration for this information already exists. Please contact the event team if you need changes.",
-        },
-        { status: 409 },
+    if (originalError.code === "P2002") {
+      return registrationDatabaseErrorResponse(
+        "A registration for this information already exists. Please contact the event team if you need changes.",
+        409,
+        operation,
+        serializedError.code,
       );
     }
 
-    if (error.code === "P2034") {
-      return NextResponse.json(
-        {
-          message:
-            "Registration is busy right now. Please submit the form again in a few seconds.",
-        },
-        { status: 409 },
+    if (originalError.code === "P2034") {
+      return registrationDatabaseErrorResponse(
+        "Registration database transaction conflict.",
+        409,
+        operation,
+        serializedError.code,
       );
     }
   }
 
   if (
-    error instanceof Prisma.PrismaClientInitializationError ||
-    error instanceof Prisma.PrismaClientUnknownRequestError
+    originalError instanceof Prisma.PrismaClientInitializationError ||
+    originalError instanceof Prisma.PrismaClientUnknownRequestError
   ) {
-    return NextResponse.json(
-      {
-        message:
-          "Registration database is temporarily unavailable. Please try again shortly.",
-      },
-      { status: 503 },
+    return registrationDatabaseErrorResponse(
+      "Registration database connection failed.",
+      503,
+      operation,
+      serializedError.code,
     );
   }
 
-  return NextResponse.json(
-    {
-      message:
-        "Registration could not be saved. Please try again or contact the event team.",
-    },
-    { status: 500 },
+  return registrationDatabaseErrorResponse(
+    "Registration database operation failed.",
+    500,
+    operation,
+    serializedError.code,
   );
 }
 
-function serializeRegistrationError(error: unknown) {
+function registrationDatabaseErrorResponse(
+  message: string,
+  status: number,
+  operation: string,
+  errorCode: string | null,
+) {
+  return NextResponse.json(
+    {
+      message,
+      operation,
+      errorCode,
+    },
+    { status },
+  );
+}
+
+function unwrapPrismaOperationError(error: unknown) {
+  if (error instanceof RegistrationPrismaOperationError) {
+    return {
+      operation: error.operation,
+      originalError: error.originalError,
+    };
+  }
+
+  return {
+    operation: "unknown",
+    originalError: error,
+  };
+}
+
+function serializeRegistrationError(error: unknown): {
+  name: string;
+  message: string;
+  code: string | null;
+  stackFirstThreeLines: string[];
+} {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     return {
       name: error.name,
-      message: error.message,
+      message: sanitizeLogText(error.message),
       code: error.code,
-      stackFirstThreeLines: error.stack?.split("\n").slice(0, 3) ?? [],
+      stackFirstThreeLines: sanitizeStack(error.stack),
+    };
+  }
+
+  if (error instanceof Prisma.PrismaClientInitializationError) {
+    return {
+      name: error.name,
+      message: sanitizeLogText(error.message),
+      code: error.errorCode ?? null,
+      stackFirstThreeLines: sanitizeStack(error.stack),
     };
   }
 
   if (error instanceof Error) {
     return {
       name: error.name,
-      message: error.message,
-      stackFirstThreeLines: error.stack?.split("\n").slice(0, 3) ?? [],
+      message: sanitizeLogText(error.message),
+      code: null,
+      stackFirstThreeLines: sanitizeStack(error.stack),
     };
   }
 
   return {
     name: "UnknownError",
-    message: String(error),
+    message: sanitizeLogText(String(error)),
+    code: null,
     stackFirstThreeLines: [],
   };
 }
 
+function sanitizeStack(stack?: string) {
+  return stack?.split("\n").slice(0, 3).map(sanitizeLogText) ?? [];
+}
+
+function sanitizeLogText(value: string) {
+  return value
+    .replace(/(postgres(?:ql)?:\/\/)([^:\s/@]+):([^@\s]+)@/gi, "$1$2:***@")
+    .replace(/(DATABASE_URL=)(\S+)/gi, "$1***")
+    .replace(/(DIRECT_URL=)(\S+)/gi, "$1***")
+    .replace(/(POSTGRES_URL=)(\S+)/gi, "$1***")
+    .replace(/(POSTGRES_PRISMA_URL=)(\S+)/gi, "$1***");
+}
+
 async function markPaymentInitializationFailed(
+  debugContext: RegistrationApiDebugContext,
   paymentId: string,
   registrationId: string,
   rawInitializeResponse: Record<string, unknown>,
 ) {
-  await prisma.$transaction([
-    prisma.payment.update({
-      where: { id: paymentId },
-      data: {
-        status: "FAILED",
-        rawInitializeResponse: rawInitializeResponse as Prisma.InputJsonObject,
-      },
-    }),
-    prisma.registration.update({
-      where: { id: registrationId },
-      data: {
-        status: "CANCELLED",
-        paymentStatus: "FAILED",
-      },
-    }),
-  ]);
+  await prisma.$transaction(async (tx) => {
+    await withPrismaWriteDebug(debugContext, "payment.update.markInitializationFailed", () =>
+      tx.payment.update({
+        where: { id: paymentId },
+        data: {
+          status: "FAILED",
+          rawInitializeResponse: rawInitializeResponse as Prisma.InputJsonObject,
+        },
+      }),
+    );
+
+    await withPrismaWriteDebug(debugContext, "registration.update.markPaymentFailed", () =>
+      tx.registration.update({
+        where: { id: registrationId },
+        data: {
+          status: "CANCELLED",
+          paymentStatus: "FAILED",
+        },
+      }),
+    );
+  });
 }
 
 function rateLimitResponse(
