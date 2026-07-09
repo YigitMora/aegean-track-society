@@ -1,15 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import type { FormEvent } from "react";
-import { useState } from "react";
+import type { ReactNode } from "react";
+import { useId, useState } from "react";
 
 type FieldErrors = Record<string, string[] | undefined>;
 
 const experienceLevels = [
-  { value: "BEGINNER", label: "Başlangıç" },
-  { value: "INTERMEDIATE", label: "Orta seviye" },
-  { value: "ADVANCED", label: "İleri seviye" },
-  { value: "PROFESSIONAL", label: "Profesyonel" },
+  { value: "INTERMEDIATE", label: "Daha önce pist deneyimim var" },
+  { value: "BEGINNER", label: "İlk pist tecrübem olacak" },
 ];
 
 const messageTranslations: Record<string, string> = {
@@ -240,13 +240,27 @@ export function RegistrationForm() {
       <div className="mt-8 space-y-4 border-t border-ats-border pt-6">
         <Checkbox
           name="kvkkAccepted"
-          label="Kayıt ve etkinlik operasyonları için KVKK aydınlatma ve onay metnini kabul ediyorum."
+          label={
+            <>
+              <LegalLink href="/legal/kvkk-aydinlatma">KVKK Aydınlatma Metni</LegalLink>
+              {"'ni okudum ve "}
+              <LegalLink href="/legal/onay-metni">Açık Rıza / Onay Metni</LegalLink>
+              {"'ni kabul ediyorum."}
+            </>
+          }
           error={fieldErrors.kvkkAccepted?.[0]}
           required
         />
         <Checkbox
           name="liabilityWaiverAccepted"
-          label="Motorsport katılım ve sorumluluk beyanını kabul ediyorum."
+          label={
+            <>
+              <LegalLink href="/legal/motorsporlari-katilim-beyani">
+                Motorsporları Katılım ve Sorumluluk Beyanı
+              </LegalLink>
+              {"'nı okudum ve kabul ediyorum."}
+            </>
+          }
           error={fieldErrors.liabilityWaiverAccepted?.[0]}
           required
         />
@@ -312,23 +326,40 @@ function Checkbox({
   required = false,
 }: {
   name: string;
-  label: string;
+  label: ReactNode;
   error?: string;
   required?: boolean;
 }) {
+  const inputId = useId();
+
   return (
-    <label className="flex gap-3">
+    <div className="flex gap-3">
       <input
+        id={inputId}
         name={name}
         type="checkbox"
         required={required}
         className="mt-1 h-4 w-4 rounded border-ats-border bg-ats-black accent-ats-blue"
       />
       <span>
-        <span className="block text-sm font-semibold leading-6 text-ats-text">{label}</span>
+        <label htmlFor={inputId} className="block text-sm font-semibold leading-6 text-ats-text">
+          {label}
+        </label>
         <ErrorText message={error} />
       </span>
-    </label>
+    </div>
+  );
+}
+
+function LegalLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      target="_blank"
+      className="font-bold text-ats-blue underline decoration-ats-blue/40 underline-offset-4 transition hover:text-ats-blue-hover"
+    >
+      {children}
+    </Link>
   );
 }
 

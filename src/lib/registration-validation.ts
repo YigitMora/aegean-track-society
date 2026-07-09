@@ -6,7 +6,7 @@ const requiredText = (field: string) =>
     .trim()
     .min(1, `${field} is required.`);
 
-const phoneRegex = /^(?:(?:90)?[1-9]\d{9}|0[1-9]\d{9})$/;
+const turkishMobileRegex = /^(?:905\d{9}|05\d{9}|5\d{9})$/;
 
 export const experienceLevels = [
   "BEGINNER",
@@ -51,17 +51,22 @@ export function normalizePlateNumber(plateNumber: string) {
 
 export function normalizeTurkishPhone(phone: string) {
   const digits = phone.replace(/\D/g, "");
+  let nationalNumber: string | null = null;
 
   if (digits.length === 12 && digits.startsWith("90")) {
-    return `+${digits}`;
+    nationalNumber = digits.slice(2);
   }
 
   if (digits.length === 11 && digits.startsWith("0")) {
-    return `+90${digits.slice(1)}`;
+    nationalNumber = digits.slice(1);
   }
 
   if (digits.length === 10) {
-    return `+90${digits}`;
+    nationalNumber = digits;
+  }
+
+  if (nationalNumber && /^5\d{9}$/.test(nationalNumber)) {
+    return `+90 ${nationalNumber.slice(0, 3)} ${nationalNumber.slice(3, 6)} ${nationalNumber.slice(6, 8)} ${nationalNumber.slice(8, 10)}`;
   }
 
   return phone.trim();
@@ -69,5 +74,5 @@ export function normalizeTurkishPhone(phone: string) {
 
 function isValidTurkishPhone(phone: string) {
   const digits = phone.replace(/\D/g, "");
-  return phoneRegex.test(digits);
+  return turkishMobileRegex.test(digits);
 }

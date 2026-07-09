@@ -1,8 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FooterCredit } from "@/components/footer-credit";
 import { PublicNav } from "@/components/public-nav";
-import { atsImages } from "@/lib/ats-images";
 import { prisma } from "@/lib/prisma";
 
 type EventPageProps = {
@@ -40,6 +40,35 @@ function formatPrice(price: { toNumber: () => number }, currency: string) {
 function displayPackageName(name: string) {
   return name === "Sunday Track Day" ? "Pazar Pist Günü" : name;
 }
+
+const eventProgramItems = [
+  ["08:30", "Kayıt & Karşılama", "Katılımcı doğrulama, araç bilgileri ve paddock yönlendirmesi."],
+  ["09:30", "Sürücü Briefingi", "Bayraklar, pist disiplini, seans akışı ve güvenlik protokolü."],
+  ["10:00", "Pist Seansları", "Kontrollü gruplar, net çıkış ritmi ve odaklı sürüş zamanı."],
+  ["17:30", "Gün Sonu", "Seans kapanışı, paddock dönüşü ve operasyon kapanış kontrolleri."],
+] as const;
+
+// TODO: Yeni program/galeri görselleri eklenecek.
+const eventGalleryImages = [
+  {
+    src: "/images/ats/FL5_BACK.jpg",
+    alt: "Kula MyTrack pistinde Honda Civic Type R viraj çıkışı",
+    className: "md:col-span-7 md:row-span-2",
+    sizes: "(min-width: 768px) 58vw, 100vw",
+  },
+  {
+    src: "/images/ats/Community2.JPG",
+    alt: "Pist günü topluluk sürüş atmosferi",
+    className: "md:col-span-5",
+    sizes: "(min-width: 768px) 42vw, 100vw",
+  },
+  {
+    src: "/images/ats/FL5_SIDE_COOL.jpg",
+    alt: "Honda Civic Type R pist yan profili",
+    className: "md:col-span-5",
+    sizes: "(min-width: 768px) 42vw, 100vw",
+  },
+] as const;
 
 export default async function EventDetailPage({ params }: EventPageProps) {
   const { slug } = await params;
@@ -93,7 +122,6 @@ export default async function EventDetailPage({ params }: EventPageProps) {
             </div>
 
             <div
-              data-image-src={atsImages.experienceRear}
               className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft"
             >
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-ats-muted">
@@ -184,19 +212,25 @@ export default async function EventDetailPage({ params }: EventPageProps) {
               Program
             </p>
             <h2 className="mt-3 text-3xl font-black text-ats-text">
-              Etkinlik günü akışı
+              Net, kontrollü ve pist odaklı akış
             </h2>
+            <p className="mt-5 max-w-sm text-sm leading-6 text-ats-muted">
+              Gün, sürücünün piste güvenle adapte olacağı sade bir operasyon
+              ritmiyle ilerler. Her adım, zaman kaybetmeden sürüşe odaklanmak
+              için planlanır.
+            </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              ["Kayıt", "Katılımcı doğrulama, araç bilgileri ve operasyon kontrolü."],
-              ["Briefing", "Pist kuralları, bayraklar, seans ritmi ve güvenlik notları."],
-              ["Seanslar", "Disiplinli çıkışlar ve kontrollü sürüş grupları."],
-              ["Check-in", "Onaylı katılımcılar için QR ile hızlı giriş."],
-            ].map(([title, body]) => (
-              <article key={title} className="rounded-lg border border-ats-border bg-ats-black p-5">
-                <h3 className="text-lg font-black text-ats-text">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-ats-muted">{body}</p>
+          <div className="space-y-5">
+            {eventProgramItems.map(([time, title, body]) => (
+              <article
+                key={time}
+                className="grid gap-3 border-t border-ats-border/80 pt-5 sm:grid-cols-[5.5rem_1fr]"
+              >
+                <p className="text-lg font-black tabular-nums text-ats-blue">{time}</p>
+                <div>
+                  <h3 className="text-lg font-black text-ats-text">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-ats-muted">{body}</p>
+                </div>
               </article>
             ))}
           </div>
@@ -209,23 +243,28 @@ export default async function EventDetailPage({ params }: EventPageProps) {
             Galeri
           </p>
           <h2 className="mt-3 text-3xl font-black text-ats-text">
-            Gerçek fotoğraflar için hazır yapı
+            Pist atmosferinden seçkiler
           </h2>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-ats-muted">
+            Fotoğraflar; araç, topluluk ve pist disiplinini birlikte gösteren
+            gerçek etkinlik atmosferini taşır.
+          </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr]">
-          <div
-            data-image-src={atsImages.hero}
-            className="min-h-[360px] rounded-lg border border-ats-border bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(0,163,224,0.08),rgba(8,11,15,0.96))]"
-          />
-          <div className="grid gap-4">
-            {[atsImages.gallery01, atsImages.gallery02].map((src) => (
-              <div
-                key={src}
-                data-image-src={src}
-                className="min-h-[172px] rounded-lg border border-ats-border bg-ats-surface"
+        <div className="grid gap-4 md:grid-cols-12 md:auto-rows-[220px]">
+          {eventGalleryImages.map((image) => (
+            <div
+              key={image.src}
+              className={`relative min-h-[260px] overflow-hidden rounded-lg bg-ats-surface ${image.className}`}
+            >
+              <Image
+                src={image.src}
+                alt={image.alt}
+                fill
+                sizes={image.sizes}
+                className="object-cover"
               />
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
 

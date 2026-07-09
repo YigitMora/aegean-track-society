@@ -50,13 +50,29 @@ const scheduleItems = [
   ["17:30", "Gün Sonu"],
 ];
 
+// Hero copy options reviewed:
+// 1. "Limitleri pistte keşfet.\nDisiplini koru.\nDeneyimi birlikte yaşa."
+// 2. "Pistte netlik bul.\nKontrolü hisset.\nTopluluğun ritmine katıl."
+// 3. "Performansı ölç.\nÇizgini geliştir.\nPist kültürünü birlikte yaşa."
+const heroSubtitle = "Limitleri pistte keşfet.\nDisiplini koru.\nDeneyimi birlikte yaşa.";
+
 const whyItems = [
-  "Kontrollü seanslar",
-  "Profesyonel organizasyon",
-  "Gerçek pist deneyimi",
-  "Güvenlik önceliği",
-  "Topluluk ruhu",
-  "Sınırlı kontenjan",
+  {
+    title: "Kontrollü pist zamanı",
+    body: "Seans akışı, sürüşe odaklanmak ve ritmi korumak için sade tutulur.",
+  },
+  {
+    title: "Operasyon disiplini",
+    body: "Kayıt, briefing ve check-in süreçleri pist günü temposuna göre planlanır.",
+  },
+  {
+    title: "Doğru topluluk",
+    body: "Aynı tutkuyu paylaşan sürücüler güvenli ve saygılı bir atmosferde buluşur.",
+  },
+  {
+    title: "Sınırlı kontenjan",
+    body: "Yoğun kalabalık yerine daha net, daha kontrollü ve daha odaklı bir deneyim.",
+  },
 ];
 
 export default function HomePage() {
@@ -93,7 +109,7 @@ export default function HomePage() {
                 <span className="block sm:whitespace-nowrap">Daha Profesyonel Yaşa.</span>
               </h1>
               <p className="ats-hero-subtitle mt-8 max-w-xl whitespace-pre-line text-lg font-medium leading-8 text-ats-text/82 sm:text-xl sm:leading-9">
-                {"Gerçek sürücüler.\nGerçek otomobiller.\nGerçek pist deneyimi."}
+                {heroSubtitle}
               </p>
               <Link
                 href={registerHref}
@@ -182,59 +198,75 @@ export default function HomePage() {
       <StorySection id="anilar" className="px-0 sm:px-0 lg:px-0">
         <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-12">
           <h2 className="text-5xl font-semibold leading-[0.98] sm:text-7xl">
-            Anılar.
+            Pistten Kareler.
           </h2>
         </div>
 
-        <div className="mx-auto mt-20 grid max-w-7xl gap-6 px-6 sm:px-10 md:grid-cols-12 lg:px-12">
+        <div className="mx-auto mt-20 grid max-w-7xl gap-5 px-6 sm:px-10 md:grid-cols-12 md:auto-rows-[230px] lg:auto-rows-[280px] lg:px-12">
           <PhotoFrame
             image={images.side}
             position="center 42%"
             sizes="(min-width: 768px) 58vw, 100vw"
-            className="ats-gallery-image aspect-[4/5] md:col-span-7 md:row-span-2 md:min-h-[76vh]"
+            className="ats-gallery-image aspect-[4/5] md:col-span-7 md:row-span-2 md:aspect-auto"
           />
           <PhotoFrame
             image={images.back}
             position="center center"
             sizes="(min-width: 768px) 42vw, 100vw"
-            className="ats-gallery-image aspect-[3/2] md:col-span-5"
+            className="ats-gallery-image aspect-[3/2] md:col-span-5 md:aspect-auto"
           />
           <PhotoFrame
             image={images.i20Front}
             position="center center"
             sizes="(min-width: 768px) 42vw, 100vw"
-            className="ats-gallery-image aspect-[3/2] md:col-span-5"
+            className="ats-gallery-image aspect-[3/2] md:col-span-5 md:aspect-auto"
           />
           <PhotoFrame
             image={images.i20Back}
             position="center center"
             sizes="(min-width: 768px) 33vw, 100vw"
-            className="ats-gallery-image aspect-[4/3] md:col-span-4"
+            className="ats-gallery-image aspect-[4/3] md:col-span-4 md:aspect-auto"
           />
           <PhotoFrame
             image={images.i20Girl}
             position="center center"
             sizes="(min-width: 768px) 33vw, 100vw"
-            className="ats-gallery-image aspect-[4/5] md:col-span-4"
+            className="ats-gallery-image aspect-[4/5] md:col-span-4 md:aspect-auto"
           />
           <PhotoFrame
             image={images.ioniq}
             position="center center"
             sizes="(min-width: 768px) 33vw, 100vw"
-            className="ats-gallery-image aspect-[4/3] md:col-span-4"
+            className="ats-gallery-image aspect-[4/3] md:col-span-4 md:aspect-auto"
           />
         </div>
       </StorySection>
 
       <StorySection>
-        <div className="mx-auto max-w-6xl">
-          <h2 className="text-5xl font-semibold leading-[0.98] sm:text-7xl">
-            Neden ATS?
-          </h2>
-          <div className="mt-16 grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
-            {whyItems.map((item) => (
-              <div key={item} className="border-t border-ats-border/80 pt-5">
-                <p className="text-lg font-medium text-ats-text/88">{item}</p>
+        <div className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#4CC9F0]">
+              Society standard
+            </p>
+            <h2 className="mt-5 text-5xl font-semibold leading-[0.98] sm:text-7xl">
+              Neden Aegean Track Society?
+            </h2>
+          </div>
+          <div className="border-y border-ats-border/80">
+            {whyItems.map((item, index) => (
+              <div
+                key={item.title}
+                className="grid gap-5 border-b border-ats-border/80 py-7 last:border-b-0 sm:grid-cols-[3rem_1fr]"
+              >
+                <p className="text-sm font-semibold tabular-nums text-ats-muted">
+                  {String(index + 1).padStart(2, "0")}
+                </p>
+                <div>
+                  <h3 className="text-xl font-semibold text-ats-text">{item.title}</h3>
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-ats-muted">
+                    {item.body}
+                  </p>
+                </div>
               </div>
             ))}
           </div>

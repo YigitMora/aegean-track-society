@@ -68,7 +68,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
               {event.venue} · 20 Eylül 2026 Pazar
             </p>
             <h1 className="mt-5 max-w-3xl text-5xl font-black leading-none text-ats-text sm:text-7xl">
-              Kula MyTrack kaydı
+              Kula MyTrack Pist Etkinliği Kayıt
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-ats-muted">
               Sürücü, araç, acil durum iletişimi ve yasal onay bilgilerinizi
