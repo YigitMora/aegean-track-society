@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import {
   createAdminSessionCookie,
@@ -15,6 +16,7 @@ export async function POST(request: Request) {
     const password = String(formData.get("password") ?? "");
     normalizedEmail = normalizeAdminEmail(email);
     returnTo = normalizeAdminReturnTo(String(formData.get("returnTo") ?? ""));
+    logAdminLoginDebug(normalizedEmail, password);
 
     if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
       logAdminLoginSubmitError(
@@ -45,6 +47,23 @@ function normalizeAdminEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
+function logAdminLoginDebug(normalizedEmail: string, password: string) {
+  const configuredEmail = process.env.ADMIN_EMAIL ?? "";
+  const configuredPassword = process.env.ADMIN_PASSWORD ?? "";
+  const normalizedAdminEmail = normalizeAdminEmail(configuredEmail);
+  const emailsMatch = Boolean(configuredEmail) && normalizedEmail === normalizedAdminEmail;
+  const passwordMatch = Boolean(configuredPassword) && safeEqual(password, configuredPassword);
+
+  console.log("ADMIN_LOGIN_DEBUG", {
+    enteredNormalizedEmail: normalizedEmail,
+    normalizedAdminEmail,
+    emailsMatch,
+    adminEmailExists: Boolean(configuredEmail),
+    adminPasswordExists: Boolean(configuredPassword),
+    passwordMatch,
+  });
+}
+
 function invalidCredentialsRedirect(request: Request, returnTo: string) {
   const loginUrl = new URL("/admin/login", request.url);
   loginUrl.searchParams.set("error", "1");
@@ -66,4 +85,15 @@ function logAdminLoginSubmitError(error: unknown, normalizedEmail: string) {
     adminPasswordExists: Boolean(process.env.ADMIN_PASSWORD),
     enteredEmailNormalized: normalizedEmail,
   });
+}
+
+function safeEqual(left: string, right: string) {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+
+  if (leftBuffer.length !== rightBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(leftBuffer, rightBuffer);
 }
