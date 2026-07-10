@@ -312,11 +312,31 @@ model User {
   memberMarketingConsentRevokedAt DateTime?
   memberConsentIpAddress          String?        @db.VarChar(45)
   profile                         MemberProfile?
+  vehicles                        Vehicle[]
   createdAt                       DateTime       @default(now())
   updatedAt                       DateTime       @updatedAt
   deletedAt                       DateTime?
 
   @@index([status])
+}
+
+model Vehicle {
+  id          String    @id @default(cuid())
+  userId      String    @db.Uuid
+  user        User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  brand       String
+  model       String
+  year        Int?
+  plateNumber String
+  color       String?
+  isPrimary   Boolean   @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId, deletedAt])
+  @@index([userId, isPrimary, deletedAt])
+  @@index([plateNumber])
 }
 
 model MemberProfile {
