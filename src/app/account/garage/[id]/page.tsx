@@ -130,11 +130,20 @@ function VehicleCoverPanel({
     <div className="mb-6 overflow-hidden rounded-lg border border-ats-border bg-ats-surface shadow-soft">
       <div className="relative aspect-[16/9] overflow-hidden bg-ats-black sm:aspect-[21/9]">
         {coverImageUrl ? (
-          <img
-            src={coverImageUrl}
-            alt={`${label} araç fotoğrafı`}
-            className="h-full w-full object-cover"
-          />
+          <>
+            <img
+              src={coverImageUrl}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-2xl"
+            />
+            <div className="absolute inset-0 bg-ats-black/55" />
+            <img
+              src={coverImageUrl}
+              alt={`${label} araç fotoğrafı`}
+              className="relative z-10 h-full w-full object-contain p-3 sm:p-5"
+            />
+          </>
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_50%_30%,rgba(76,201,240,0.16),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))] px-6 text-center">
             <div>
@@ -148,7 +157,7 @@ function VehicleCoverPanel({
             </div>
           </div>
         )}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ats-black/70 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-24 bg-gradient-to-t from-ats-black/55 to-transparent" />
       </div>
 
       <div className="grid gap-5 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">

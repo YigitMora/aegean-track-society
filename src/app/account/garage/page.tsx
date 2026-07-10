@@ -129,24 +129,27 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
 function VehicleCoverPreview({
   coverImageUrl,
   label,
-  compact = false,
 }: {
   coverImageUrl: string | null;
   label: string;
-  compact?: boolean;
 }) {
   return (
-    <div
-      className={`relative overflow-hidden bg-ats-black ${
-        compact ? "aspect-[5/2]" : "aspect-[16/9]"
-      }`}
-    >
+    <div className="relative aspect-[16/9] overflow-hidden bg-ats-black">
       {coverImageUrl ? (
-        <img
-          src={coverImageUrl}
-          alt={`${label} araç fotoğrafı`}
-          className="h-full w-full object-cover"
-        />
+        <>
+          <img
+            src={coverImageUrl}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-2xl"
+          />
+          <div className="absolute inset-0 bg-ats-black/55" />
+          <img
+            src={coverImageUrl}
+            alt={`${label} araç fotoğrafı`}
+            className="relative z-10 h-full w-full object-contain p-2 sm:p-3"
+          />
+        </>
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_50%_30%,rgba(76,201,240,0.16),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))]">
           <div className="text-center">
@@ -159,7 +162,7 @@ function VehicleCoverPreview({
           </div>
         </div>
       )}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ats-black/65 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-20 bg-gradient-to-t from-ats-black/55 to-transparent" />
     </div>
   );
 }
@@ -256,7 +259,6 @@ function ArchivedVehicleCard({
       <VehicleCoverPreview
         coverImageUrl={vehicle.coverImageUrl}
         label={`${vehicle.brand} ${vehicle.model}`}
-        compact
       />
       <div className="flex flex-wrap items-start justify-between gap-4 p-5">
         <div>
