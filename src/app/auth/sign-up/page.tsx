@@ -91,7 +91,7 @@ function messageForSignUpError(error: string) {
     return "Ad soyad, telefon, e-posta, şifre ve üyelik onaylarını kontrol edin.";
   }
 
-  return "Üyelik başlatılamadı. Lütfen daha sonra tekrar deneyin.";
+  return "Üyelik işlemi şu anda tamamlanamadı. Bilgilerinizi kontrol edip kısa süre sonra tekrar deneyin.";
 }
 
 function SignupConsent({
