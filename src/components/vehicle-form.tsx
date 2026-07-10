@@ -1,3 +1,5 @@
+import { TurkishPlateInput } from "@/components/turkish-plate-input";
+
 type VehicleFormProps = {
   action: (formData: FormData) => void | Promise<void>;
   submitLabel: string;
@@ -50,11 +52,10 @@ export function VehicleForm({
           min="1950"
           max={String(new Date().getFullYear() + 1)}
         />
-        <VehicleField
+        <TurkishPlateInput
           label="Plaka"
           name="plateNumber"
           defaultValue={vehicle?.plateNumber ?? ""}
-          autoComplete="off"
           required
         />
         <VehicleField
