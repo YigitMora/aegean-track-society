@@ -2,16 +2,19 @@ import Link from "next/link";
 import { createVehicleAction } from "@/app/account/garage/actions";
 import { VehicleForm } from "@/components/vehicle-form";
 import { requireCompleteMemberUser } from "@/lib/member-access";
+import { normalizeMemberReturnTo } from "@/lib/member-auth";
 
 type NewVehiclePageProps = {
   searchParams: Promise<{
     garageError?: string;
+    returnTo?: string;
   }>;
 };
 
 export default async function NewVehiclePage({ searchParams }: NewVehiclePageProps) {
   await requireCompleteMemberUser("/account/garage/new");
   const params = await searchParams;
+  const returnTo = normalizeMemberReturnTo(params.returnTo);
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">
@@ -40,6 +43,7 @@ export default async function NewVehiclePage({ searchParams }: NewVehiclePagePro
         action={createVehicleAction}
         submitLabel="Aracı Kaydet"
         showPrimaryOption
+        returnTo={returnTo}
       />
     </section>
   );

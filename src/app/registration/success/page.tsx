@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { FooterCredit } from "@/components/footer-credit";
 import { PublicNav } from "@/components/public-nav";
+import { getOptionalAuthenticatedMemberIdentity } from "@/lib/member-auth";
+import { prisma } from "@/lib/prisma";
 
 type RegistrationSuccessPageProps = {
   searchParams: Promise<{
@@ -12,6 +14,28 @@ export default async function RegistrationSuccessPage({
   searchParams,
 }: RegistrationSuccessPageProps) {
   const { registrationId } = await searchParams;
+  const registration = registrationId
+    ? await prisma.registration.findUnique({
+        where: {
+          id: registrationId,
+        },
+        select: {
+          id: true,
+          userId: true,
+          registrationSource: true,
+        },
+      })
+    : null;
+  const memberIdentity = registration?.userId
+    ? await getOptionalAuthenticatedMemberIdentity()
+    : null;
+  const canShowMemberRegistrationLink = Boolean(
+    registration?.userId && memberIdentity?.id === registration.userId,
+  );
+  const canShowAnonymousReference = Boolean(
+    registrationId &&
+      (!registration || registration.registrationSource === "PUBLIC_ANONYMOUS"),
+  );
 
   return (
     <main className="min-h-screen bg-ats-black text-ats-text">
@@ -30,7 +54,21 @@ export default async function RegistrationSuccessPage({
           e-postası gönderilecektir.
         </p>
 
-        {registrationId ? (
+        {canShowMemberRegistrationLink ? (
+          <div className="mt-8 rounded-lg border border-ats-border bg-ats-surface p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-ats-muted">
+              Başvuru detayı
+            </p>
+            <Link
+              href={`/account/registrations/${registrationId}`}
+              className="mt-3 inline-flex h-11 items-center justify-center rounded-full border border-ats-border px-5 text-xs font-black uppercase tracking-[0.12em] text-ats-text transition hover:border-ats-blue hover:text-ats-blue"
+            >
+              Başvurumu Görüntüle
+            </Link>
+          </div>
+        ) : null}
+
+        {canShowAnonymousReference ? (
           <div className="mt-8 rounded-lg border border-ats-border bg-ats-surface p-5">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-ats-muted">
               Kayıt referansı

@@ -30,6 +30,12 @@ enum RegistrationStatus {
   REJECTED
 }
 
+enum RegistrationSource {
+  PUBLIC_ANONYMOUS
+  MEMBER_ACCOUNT
+  ADMIN_CREATED
+}
+
 enum PaymentStatus {
   UNPAID
   PENDING
@@ -163,6 +169,11 @@ model Registration {
   event                     Event              @relation(fields: [eventId], references: [id], onDelete: Restrict)
   packageId                 String
   package                   EventPackage       @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  userId                    String?            @db.Uuid
+  user                      User?              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  vehicleId                 String?
+  vehicle                   Vehicle?           @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  registrationSource        RegistrationSource @default(PUBLIC_ANONYMOUS)
   fullName                  String
   phone                     String
   email                     String
@@ -199,6 +210,9 @@ model Registration {
   @@index([phone])
   @@index([plateNumber])
   @@index([deletedAt])
+  @@index([userId, deletedAt])
+  @@index([vehicleId])
+  @@index([eventId, userId, deletedAt])
   @@index([status, deletedAt])
   @@index([deletedByAdminId])
 }
@@ -313,6 +327,7 @@ model User {
   memberConsentIpAddress          String?        @db.VarChar(45)
   profile                         MemberProfile?
   vehicles                        Vehicle[]
+  registrations                   Registration[]
   createdAt                       DateTime       @default(now())
   updatedAt                       DateTime       @updatedAt
   deletedAt                       DateTime?
@@ -321,18 +336,19 @@ model User {
 }
 
 model Vehicle {
-  id          String    @id @default(cuid())
-  userId      String    @db.Uuid
-  user        User      @relation(fields: [userId], references: [id], onDelete: Restrict)
-  brand       String
-  model       String
-  year        Int?
-  plateNumber String
-  color       String?
-  isPrimary   Boolean   @default(false)
-  deletedAt   DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String         @id @default(cuid())
+  userId        String         @db.Uuid
+  user          User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  brand         String
+  model         String
+  year          Int?
+  plateNumber   String
+  color         String?
+  isPrimary     Boolean        @default(false)
+  deletedAt     DateTime?
+  registrations Registration[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([userId, deletedAt])
   @@index([userId, isPrimary, deletedAt])

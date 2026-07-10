@@ -10,6 +10,7 @@ type VehicleFormProps = {
     isPrimary: boolean;
   };
   showPrimaryOption?: boolean;
+  returnTo?: string;
 };
 
 export function VehicleForm({
@@ -17,12 +18,14 @@ export function VehicleForm({
   submitLabel,
   vehicle,
   showPrimaryOption = false,
+  returnTo = "/account/garage",
 }: VehicleFormProps) {
   return (
     <form
       action={action}
       className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8"
     >
+      <input type="hidden" name="returnTo" value={returnTo} />
       <div className="grid gap-5 sm:grid-cols-2">
         <VehicleField
           label="Marka"

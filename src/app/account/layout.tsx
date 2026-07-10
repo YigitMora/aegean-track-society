@@ -30,6 +30,9 @@ export default async function AccountLayout({ children }: { children: ReactNode 
             <Link href="/account/garage" className="transition hover:text-ats-blue">
               Garajım
             </Link>
+            <Link href="/account/registrations" className="transition hover:text-ats-blue">
+              Başvurularım
+            </Link>
           </nav>
         </div>
       </header>

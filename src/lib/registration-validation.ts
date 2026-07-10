@@ -41,6 +41,27 @@ export const registrationSchema = z.object({
 
 export type RegistrationInput = z.infer<typeof registrationSchema>;
 
+export const memberEventRegistrationSchema = z.object({
+  vehicleId: requiredText("Vehicle").min(1, "Vehicle is required."),
+  experienceLevel: z.enum(experienceLevels, {
+    required_error: "Driving experience level is required.",
+  }),
+  emergencyContactName: requiredText("Emergency contact name")
+    .min(2, "Emergency contact name must be at least 2 characters.")
+    .max(120, "Emergency contact name is too long."),
+  emergencyContactPhone: requiredText("Emergency contact phone").refine(isValidTurkishPhone, {
+    message: "Enter a valid Turkish emergency contact phone number.",
+  }),
+  kvkkAccepted: z.literal(true, {
+    errorMap: () => ({ message: "KVKK consent is required." }),
+  }),
+  liabilityWaiverAccepted: z.literal(true, {
+    errorMap: () => ({ message: "Liability waiver acceptance is required." }),
+  }),
+});
+
+export type MemberEventRegistrationInput = z.infer<typeof memberEventRegistrationSchema>;
+
 export function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }

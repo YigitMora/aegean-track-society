@@ -21,7 +21,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     redirect("/account/onboarding");
   }
 
-  const [activeVehicleCount, primaryVehicle] = await Promise.all([
+  const [activeVehicleCount, primaryVehicle, activeRegistrationCount] = await Promise.all([
     prisma.vehicle.count({
       where: {
         userId: memberUser.id,
@@ -38,6 +38,12 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         brand: true,
         model: true,
         plateNumber: true,
+      },
+    }),
+    prisma.registration.count({
+      where: {
+        userId: memberUser.id,
+        deletedAt: null,
       },
     }),
   ]);
@@ -117,10 +123,26 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
           <section className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-blue">
+              Başvurular
+            </p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <Info label="Aktif kayıt" value={String(activeRegistrationCount)} />
+              <Info label="Sonraki etkinlik" value="Kula MyTrack" />
+            </div>
+            <Link
+              href="/account/registrations"
+              className="mt-6 inline-flex h-12 items-center justify-center rounded-full border border-ats-border px-6 text-sm font-black text-ats-text transition hover:border-ats-blue hover:text-ats-blue"
+            >
+              Başvurularımı Aç
+            </Link>
+          </section>
+
+          <section className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-blue">
               Yaklaşan altyapı
             </p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {["Kayıt geçmişi", "QR biletler"].map((item) => (
+            <div className="mt-5 grid gap-3">
+              {["QR biletler"].map((item) => (
                 <div key={item} className="rounded-md border border-ats-border bg-ats-black p-4">
                   <p className="text-sm font-black text-ats-text">{item}</p>
                   <p className="mt-2 text-xs font-semibold leading-5 text-ats-muted">

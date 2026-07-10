@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FooterCredit } from "@/components/footer-credit";
+import { getOptionalAuthenticatedMemberIdentity } from "@/lib/member-auth";
 import { prisma } from "@/lib/prisma";
 
 type PaymentSuccessPageProps = {
@@ -14,7 +15,7 @@ export default async function PaymentSuccessPage({
   searchParams,
 }: PaymentSuccessPageProps) {
   const { registrationId } = await searchParams;
-  const registration = registrationId
+  const rawRegistration = registrationId
     ? await prisma.registration.findFirst({
         where: {
           id: registrationId,
@@ -22,11 +23,19 @@ export default async function PaymentSuccessPage({
           paymentStatus: "PAID",
         },
         select: {
+          userId: true,
           participantCode: true,
           fullName: true,
         },
       })
     : null;
+  const memberIdentity = rawRegistration?.userId
+    ? await getOptionalAuthenticatedMemberIdentity()
+    : null;
+  const registration =
+    rawRegistration && (!rawRegistration.userId || memberIdentity?.id === rawRegistration.userId)
+      ? rawRegistration
+      : null;
 
   return (
     <main className="min-h-screen bg-paddock">

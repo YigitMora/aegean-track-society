@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCompleteMemberUser } from "@/lib/member-access";
+import { normalizeMemberReturnTo } from "@/lib/member-auth";
 import { prisma } from "@/lib/prisma";
 import { parseVehicleForm } from "@/lib/vehicle-validation";
 
@@ -20,6 +21,7 @@ const garagePath = "/account/garage";
 
 export async function createVehicleAction(formData: FormData) {
   const memberUser = await requireCompleteMemberUser("/account/garage/new");
+  const returnTo = normalizeMemberReturnTo(formData.get("returnTo"));
   const parsed = parseVehicleForm(formData);
 
   if (!parsed.ok) {
@@ -104,6 +106,12 @@ export async function createVehicleAction(formData: FormData) {
   }
 
   revalidateGarage();
+  revalidatePath(returnTo);
+
+  if (returnTo !== garagePath) {
+    redirect(returnTo);
+  }
+
   redirect(`${garagePath}?garage=created`);
 }
 

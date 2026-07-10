@@ -1,11 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import type { FormEvent } from "react";
-import type { ReactNode } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { useId, useState } from "react";
 
 type FieldErrors = Record<string, string[] | undefined>;
+
+type RegistrationFormProps = {
+  member: {
+    fullName: string;
+    email: string;
+    phone: string;
+  };
+  vehicles: Array<{
+    id: string;
+    brand: string;
+    model: string;
+    plateNumber: string;
+    isPrimary: boolean;
+  }>;
+  defaultVehicleId: string;
+};
 
 const experienceLevels = [
   { value: "INTERMEDIATE", label: "Daha önce pist deneyimim var" },
@@ -13,75 +28,26 @@ const experienceLevels = [
 ];
 
 const messageTranslations: Record<string, string> = {
-  "Registration could not be completed.":
-    "Kayıt işlemi tamamlanamadı. Lütfen bilgileri kontrol edin veya etkinlik ekibiyle iletişime geçin.",
-  "Registration could not be completed. Please try again.":
-    "Kayıt işlemi tamamlanamadı. Lütfen tekrar deneyin.",
-  "Registration could not be saved. Please try again or contact the event team.":
-    "Kayıt veritabanına kaydedilemedi. Lütfen tekrar deneyin veya etkinlik ekibiyle iletişime geçin.",
-  "Registration database is not ready. Please contact the event team.":
-    "Kayıt veritabanı henüz hazır değil. Lütfen etkinlik ekibiyle iletişime geçin.",
-  "Registration database is temporarily unavailable. Please try again shortly.":
-    "Kayıt veritabanına şu anda ulaşılamıyor. Lütfen kısa süre sonra tekrar deneyin.",
-  "Registration database table is missing.":
-    "Kayıt veritabanı tablosu bulunamadı. Lütfen etkinlik ekibiyle iletişime geçin.",
-  "Registration database connection failed.":
-    "Kayıt veritabanı bağlantısı kurulamadı. Lütfen kısa süre sonra tekrar deneyin veya etkinlik ekibiyle iletişime geçin.",
-  "Registration database authentication failed.":
-    "Kayıt veritabanı kimlik doğrulaması başarısız oldu. Lütfen etkinlik ekibiyle iletişime geçin.",
-  "Registration database host could not be reached.":
-    "Kayıt veritabanı sunucusuna ulaşılamadı. Lütfen kısa süre sonra tekrar deneyin veya etkinlik ekibiyle iletişime geçin.",
-  "Registration database does not exist.":
-    "Kayıt veritabanı bulunamadı. Lütfen etkinlik ekibiyle iletişime geçin.",
-  "Registration database column is missing.":
-    "Kayıt veritabanında gerekli bir alan eksik. Lütfen etkinlik ekibiyle iletişime geçin.",
-  "Registration database relation check failed.":
-    "Kayıt veritabanı ilişki kontrolü başarısız oldu. Lütfen etkinlik ekibiyle iletişime geçin.",
-  "Registration database operation failed.":
-    "Kayıt veritabanı işlemi başarısız oldu. Lütfen tekrar deneyin veya etkinlik ekibiyle iletişime geçin.",
-  "Registration database transaction conflict.":
-    "Kayıt sistemi aynı anda çok fazla işlem aldı. Lütfen birkaç saniye sonra tekrar gönderin.",
-  "Registration is busy right now. Please submit the form again in a few seconds.":
-    "Kayıt sistemi şu anda yoğun. Lütfen birkaç saniye sonra tekrar gönderin.",
-  "A registration for this information already exists. Please contact the event team if you need changes.":
-    "Bu bilgilerle bir kayıt zaten mevcut. Değişiklik için lütfen etkinlik ekibiyle iletişime geçin.",
-  "Registration received. Our team will contact you for payment and confirmation.":
-    "Kayıt talebiniz alındı. Ekibimiz ödeme ve kesin onay için sizinle iletişime geçecek.",
-  "Registration received. Redirecting to confirmation page.":
-    "Kayıt talebiniz alındı. Onay sayfasına yönlendiriliyorsunuz.",
-  "Secure payment could not be initialized. Please try again.":
-    "Güvenli ödeme başlatılamadı. Lütfen tekrar deneyin.",
-  "Redirecting to secure payment...": "Güvenli ödeme sayfasına yönlendiriliyorsunuz...",
-  "Please check the registration form.": "Lütfen kayıt formundaki bilgileri kontrol edin.",
-  "Invalid request body.": "Form isteği geçerli değil.",
-  "Too many registration attempts. Please try again shortly.":
-    "Çok fazla kayıt denemesi yapıldı. Lütfen kısa süre sonra tekrar deneyin.",
-  "Too many attempts for this email and plate. Please try again later.":
-    "Bu e-posta ve plaka için çok fazla deneme yapıldı. Lütfen daha sonra tekrar deneyin.",
-  "A registration for this email and plate already exists for Kula MyTrack.":
-    "Bu e-posta ve plaka için Kula MyTrack kaydı zaten mevcut.",
-  "This event package is currently full.": "Bu etkinlik paketi için kontenjan dolu.",
-  "Registration is not open for this event yet.": "Bu etkinlik için kayıt henüz açık değil.",
-  "Payment amount is not configured for this event yet.":
-    "Bu etkinlik için ödeme tutarı henüz tanımlanmadı.",
-  "Full name is required.": "Ad soyad zorunludur.",
-  "Full name must be at least 2 characters.": "Ad soyad en az 2 karakter olmalıdır.",
-  "Phone is required.": "Telefon zorunludur.",
-  "Enter a valid Turkish phone number.": "Geçerli bir Türkiye telefon numarası girin.",
-  "Email is required.": "E-posta zorunludur.",
-  "Enter a valid email address.": "Geçerli bir e-posta adresi girin.",
-  "Car brand/model is required.": "Araç marka/model zorunludur.",
-  "Plate number is required.": "Plaka zorunludur.",
-  "Driving experience level is required.": "Sürüş deneyimi seviyesi zorunludur.",
+  "Registration received. Redirecting to secure payment...":
+    "Kayıt talebiniz alındı. Güvenli ödeme sayfasına yönlendiriliyorsunuz...",
+  "Vehicle is required.": "Araç seçimi zorunludur.",
+  "Driving experience level is required.": "Sürüş deneyimi seçimi zorunludur.",
   "Emergency contact name is required.": "Acil durum kişi adı zorunludur.",
+  "Emergency contact name must be at least 2 characters.":
+    "Acil durum kişi adı en az 2 karakter olmalıdır.",
+  "Emergency contact name is too long.": "Acil durum kişi adı çok uzun.",
   "Emergency contact phone is required.": "Acil durum telefonu zorunludur.",
   "Enter a valid Turkish emergency contact phone number.":
-    "Geçerli bir acil durum telefonu girin.",
+    "Geçerli bir Türkiye acil durum telefonu girin.",
   "KVKK consent is required.": "KVKK onayı zorunludur.",
   "Liability waiver acceptance is required.": "Sorumluluk beyanı onayı zorunludur.",
 };
 
-export function RegistrationForm() {
+export function RegistrationForm({
+  member,
+  vehicles,
+  defaultVehicleId,
+}: RegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formMessage, setFormMessage] = useState<string | null>(null);
@@ -96,17 +62,12 @@ export function RegistrationForm() {
 
     const formData = new FormData(event.currentTarget);
     const payload = {
-      fullName: valueOf(formData, "fullName"),
-      phone: valueOf(formData, "phone"),
-      email: valueOf(formData, "email"),
-      carBrandModel: valueOf(formData, "carBrandModel"),
-      plateNumber: valueOf(formData, "plateNumber"),
+      vehicleId: valueOf(formData, "vehicleId"),
       experienceLevel: valueOf(formData, "experienceLevel"),
       emergencyContactName: valueOf(formData, "emergencyContactName"),
       emergencyContactPhone: valueOf(formData, "emergencyContactPhone"),
       kvkkAccepted: formData.get("kvkkAccepted") === "on",
       liabilityWaiverAccepted: formData.get("liabilityWaiverAccepted") === "on",
-      marketingConsent: formData.get("marketingConsent") === "on",
     };
 
     try {
@@ -122,12 +83,7 @@ export function RegistrationForm() {
 
       if (!response.ok) {
         setFieldErrors(data?.fieldErrors ?? {});
-        setFormMessage(
-          translateMessage(
-            data?.message,
-            fallbackMessageForStatus(response.status),
-          ),
-        );
+        setFormMessage(data?.message ?? fallbackMessageForStatus(response.status));
         return;
       }
 
@@ -138,12 +94,7 @@ export function RegistrationForm() {
 
       if (data.paymentMode === "manual") {
         shouldKeepSubmitting = true;
-        setFormMessage(
-          translateMessage(
-            "Registration received. Redirecting to confirmation page.",
-            "Kayıt talebiniz alındı. Onay sayfasına yönlendiriliyorsunuz.",
-          ),
-        );
+        setFormMessage("Kayıt talebiniz alındı. Onay sayfasına yönlendiriliyorsunuz.");
         window.location.assign(
           data.successUrl ??
             `/registration/success?registrationId=${encodeURIComponent(data.registration?.id ?? "")}`,
@@ -195,41 +146,37 @@ export function RegistrationForm() {
       onSubmit={handleSubmit}
       className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8"
     >
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field
-          label="Ad soyad"
-          name="fullName"
-          autoComplete="name"
-          error={fieldErrors.fullName?.[0]}
-        />
-        <Field
-          label="Telefon"
-          name="phone"
-          type="tel"
-          autoComplete="tel"
-          placeholder="+90 5xx xxx xx xx"
-          error={fieldErrors.phone?.[0]}
-        />
-        <Field
-          label="E-posta"
-          name="email"
-          type="email"
-          autoComplete="email"
-          error={fieldErrors.email?.[0]}
-        />
-        <Field
-          label="Araç marka/model"
-          name="carBrandModel"
-          placeholder="Hyundai i20 N"
-          error={fieldErrors.carBrandModel?.[0]}
-        />
-        <Field
-          label="Plaka"
-          name="plateNumber"
-          placeholder="35 ABC 123"
-          error={fieldErrors.plateNumber?.[0]}
-        />
-        <label className="block">
+      <section className="rounded-md border border-ats-border bg-ats-black p-5">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-ats-blue">
+          Üye bilgileri
+        </p>
+        <dl className="mt-4 grid gap-4 sm:grid-cols-3">
+          <ReadOnlyInfo label="Ad soyad" value={member.fullName} />
+          <ReadOnlyInfo label="E-posta" value={member.email} />
+          <ReadOnlyInfo label="Telefon" value={member.phone} />
+        </dl>
+      </section>
+
+      <div className="mt-6 grid gap-5 sm:grid-cols-2">
+        <label className="block sm:col-span-2">
+          <span className="text-sm font-bold text-ats-text">Araç</span>
+          <select
+            name="vehicleId"
+            required
+            defaultValue={defaultVehicleId}
+            className="mt-2 h-12 w-full rounded-md border border-ats-border bg-ats-black px-3 text-sm font-semibold text-ats-text outline-none transition focus:border-ats-blue"
+          >
+            {vehicles.map((vehicle) => (
+              <option key={vehicle.id} value={vehicle.id}>
+                {vehicle.brand} {vehicle.model} · {vehicle.plateNumber}
+                {vehicle.isPrimary ? " · Birincil" : ""}
+              </option>
+            ))}
+          </select>
+          <ErrorText message={fieldErrors.vehicleId?.[0]} />
+        </label>
+
+        <label className="block sm:col-span-2">
           <span className="text-sm font-bold text-ats-text">Sürüş deneyimi</span>
           <select
             name="experienceLevel"
@@ -248,6 +195,7 @@ export function RegistrationForm() {
           </select>
           <ErrorText message={fieldErrors.experienceLevel?.[0]} />
         </label>
+
         <Field
           label="Acil durum kişi adı"
           name="emergencyContactName"
@@ -270,9 +218,7 @@ export function RegistrationForm() {
           label={
             <>
               <LegalLink href="/legal/kvkk-aydinlatma">KVKK Aydınlatma Metni</LegalLink>
-              {"'ni okudum ve "}
-              <LegalLink href="/legal/onay-metni">Açık Rıza / Onay Metni</LegalLink>
-              {"'ni kabul ediyorum."}
+              {"'ni okudum ve etkinlik kaydı için kabul ediyorum."}
             </>
           }
           error={fieldErrors.kvkkAccepted?.[0]}
@@ -291,11 +237,6 @@ export function RegistrationForm() {
           error={fieldErrors.liabilityWaiverAccepted?.[0]}
           required
         />
-        <Checkbox
-          name="marketingConsent"
-          label="Aegean Track Society duyurularını almayı kabul ediyorum."
-          error={fieldErrors.marketingConsent?.[0]}
-        />
       </div>
 
       {formMessage ? (
@@ -309,9 +250,20 @@ export function RegistrationForm() {
         disabled={isSubmitting}
         className="mt-8 inline-flex h-12 items-center justify-center rounded-full bg-ats-blue px-6 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover disabled:cursor-not-allowed disabled:bg-ats-border disabled:text-ats-muted"
       >
-        {isSubmitting ? "Kayıt gönderiliyor..." : "Kayıt talebi gönder"}
+        {isSubmitting ? "Başvuru gönderiliyor..." : "Başvuru gönder"}
       </button>
     </form>
+  );
+}
+
+function ReadOnlyInfo({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs font-bold uppercase tracking-[0.14em] text-ats-muted">
+        {label}
+      </dt>
+      <dd className="mt-2 break-words text-sm font-black text-ats-text">{value}</dd>
+    </div>
   );
 }
 
@@ -425,29 +377,25 @@ async function readJsonResponse(response: Response) {
 }
 
 function fallbackMessageForStatus(status: number) {
-  if (status === 400) {
-    return "Form isteği okunamadı. Lütfen sayfayı yenileyip tekrar deneyin.";
+  if (status === 401) {
+    return "Etkinlik kaydı için giriş yapmanız gerekir.";
   }
 
-  if (status === 422) {
-    return "Lütfen kayıt formundaki bilgileri kontrol edin.";
+  if (status === 403) {
+    return "Etkinlik kaydı için üyelik profilinizi tamamlamanız gerekir.";
   }
 
   if (status === 409) {
-    return "Kayıt çakışması oluştu. Lütfen bilgileri kontrol edin veya etkinlik ekibiyle iletişime geçin.";
+    return "Kayıt zaten mevcut veya kontenjan dolu.";
   }
 
-  if (status === 429) {
-    return "Çok fazla kayıt denemesi yapıldı. Lütfen kısa süre sonra tekrar deneyin.";
+  if (status === 422) {
+    return "Form eksik veya geçersiz.";
   }
 
-  if (status >= 500) {
-    return "Kayıt servisi geçici olarak yanıt veremiyor. Lütfen kısa süre sonra tekrar deneyin.";
-  }
-
-  return "Kayıt işlemi tamamlanamadı. Lütfen bilgileri kontrol edin veya etkinlik ekibiyle iletişime geçin.";
+  return "Kayıt şu anda tamamlanamadı. Lütfen tekrar deneyin.";
 }
 
 function valueOf(formData: FormData, key: string) {
-  return String(formData.get(key) ?? "");
+  return String(formData.get(key) ?? "").trim();
 }

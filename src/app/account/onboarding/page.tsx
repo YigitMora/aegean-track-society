@@ -1,9 +1,10 @@
 import { MemberProfileForm } from "@/components/member-profile-form";
-import { requireMemberUser } from "@/lib/member-auth";
+import { normalizeMemberReturnTo, requireMemberUser } from "@/lib/member-auth";
 
 type AccountOnboardingPageProps = {
   searchParams: Promise<{
     profileError?: string;
+    returnTo?: string;
   }>;
 };
 
@@ -12,6 +13,7 @@ export default async function AccountOnboardingPage({
 }: AccountOnboardingPageProps) {
   const memberUser = await requireMemberUser("/account/onboarding");
   const params = await searchParams;
+  const returnTo = normalizeMemberReturnTo(params.returnTo);
   const requireMissingConsents =
     !memberUser.memberKvkkAcceptedAt || !memberUser.memberTermsAcceptedAt;
 
@@ -44,7 +46,7 @@ export default async function AccountOnboardingPage({
             !memberUser.memberMarketingConsentRevokedAt,
         )}
         requireMissingConsents={requireMissingConsents}
-        returnTo="/account/onboarding"
+        returnTo={returnTo}
         submitLabel="Profili Tamamla"
       />
     </section>

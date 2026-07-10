@@ -157,9 +157,10 @@ https://www.aegeantracksociety.com/auth/callback
 https://www.aegeantracksociety.com/auth/reset-password
 ```
 
-The first authentication sprint protects `/account` only. Public anonymous event
-registration remains available, and member-linked registrations, garage,
-registration history, and QR tickets are reserved for later phases.
+New event applications require a verified ATS member account, a completed
+member profile, and at least one active garage vehicle. Historical anonymous
+registrations remain supported operationally in admin, but new public anonymous
+submissions are rejected by `POST /api/registrations`.
 
 Member signup requires full name, a Turkish mobile phone number, and
 account-level KVKK/terms consent. Those values are first stored in Supabase Auth
