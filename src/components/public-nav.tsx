@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MemberNavLinks } from "@/components/member-nav-links";
 
 const eventHref = "/events/kula-mytrack-2026";
 const registerHref = "/events/kula-mytrack-2026/register";
@@ -27,6 +28,8 @@ export function PublicNav() {
             {item.label}
           </Link>
         ))}
+        <span className="h-4 w-px shrink-0 bg-ats-border" />
+        <MemberNavLinks />
       </nav>
     </header>
   );
