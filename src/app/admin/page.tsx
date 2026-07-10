@@ -29,14 +29,7 @@ export default async function AdminDashboardPage() {
     notFound();
   }
 
-  const [
-    totalConfirmed,
-    pendingUnpaid,
-    failedPayments,
-    checkedInCount,
-    reservedCount,
-    latestRegistrations,
-  ] = await prisma.$transaction([
+  const eventMetricsPromise = prisma.$transaction([
     prisma.registration.count({
       where: {
         eventId: event.id,
@@ -99,6 +92,46 @@ export default async function AdminDashboardPage() {
       },
     }),
   ]);
+  const memberMetricsPromise = prisma.$transaction([
+    prisma.user.count({ where: { deletedAt: null } }),
+    prisma.user.count({ where: completedMemberProfileWhere() }),
+    prisma.user.count({
+      where: {
+        deletedAt: null,
+        vehicles: {
+          some: {
+            deletedAt: null,
+          },
+        },
+      },
+    }),
+    prisma.user.count({
+      where: {
+        deletedAt: null,
+        registrations: {
+          some: {
+            deletedAt: null,
+          },
+        },
+      },
+    }),
+  ]);
+  const [
+    [
+      totalConfirmed,
+      pendingUnpaid,
+      failedPayments,
+      checkedInCount,
+      reservedCount,
+      latestRegistrations,
+    ],
+    [
+      totalMembers,
+      completedProfiles,
+      membersWithActiveVehicle,
+      membersWithRegistration,
+    ],
+  ] = await Promise.all([eventMetricsPromise, memberMetricsPromise]);
 
   const remainingCapacity =
     eventPackage.capacity > 0 ? Math.max(eventPackage.capacity - reservedCount, 0) : null;
@@ -155,6 +188,33 @@ export default async function AdminDashboardPage() {
           ))}
         </section>
       ) : null}
+
+      <section className="mt-8 rounded-lg border border-white/10 bg-white/10 p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm font-black uppercase text-signal">Members CRM</p>
+            <h2 className="mt-1 text-xl font-black">Üye hesapları</h2>
+          </div>
+          <Link
+            href="/admin/members"
+            className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-black text-white/75 transition hover:border-white hover:text-white"
+          >
+            Üyeleri aç
+          </Link>
+        </div>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Toplam üye" value={totalMembers.toString()} />
+          <MetricCard label="Tamamlanan profil" value={completedProfiles.toString()} />
+          <MetricCard
+            label="Aktif araçlı üye"
+            value={membersWithActiveVehicle.toString()}
+          />
+          <MetricCard
+            label="Başvurulu üye"
+            value={membersWithRegistration.toString()}
+          />
+        </div>
+      </section>
 
       <section className="mt-8 grid gap-6 lg:grid-cols-[0.75fr_1.25fr]">
         <article className="rounded-lg border border-white/10 bg-white/10 p-5">
@@ -237,6 +297,28 @@ export default async function AdminDashboardPage() {
       </section>
     </AdminShell>
   );
+}
+
+function completedMemberProfileWhere() {
+  return {
+    deletedAt: null,
+    memberKvkkAcceptedAt: {
+      not: null,
+    },
+    memberTermsAcceptedAt: {
+      not: null,
+    },
+    profile: {
+      is: {
+        fullName: {
+          not: null,
+        },
+        phone: {
+          not: null,
+        },
+      },
+    },
+  };
 }
 
 function MetricCard({
