@@ -2,7 +2,13 @@
 
 import { redirect } from "next/navigation";
 import { normalizeEmail } from "@/lib/registration-validation";
-import { ensureMemberUser, normalizeMemberReturnTo } from "@/lib/member-auth";
+import {
+  buildMemberSignupMetadata,
+  ensureMemberUser,
+  normalizeMemberReturnTo,
+} from "@/lib/member-auth";
+import { parseMemberSignupIdentity } from "@/lib/member-profile-validation";
+import { getRequestIpAddress } from "@/lib/request-ip";
 import { buildPublicAuthUrl, SupabaseConfigurationError } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -13,8 +19,9 @@ export async function signUpAction(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const passwordConfirmation = String(formData.get("passwordConfirmation") ?? "");
   const returnTo = normalizeMemberReturnTo(formData.get("returnTo"));
+  const signupIdentity = parseMemberSignupIdentity(formData);
 
-  if (!isValidEmail(email) || !isValidPasswordPair(password, passwordConfirmation)) {
+  if (!isValidEmail(email) || !isValidPasswordPair(password, passwordConfirmation) || !signupIdentity) {
     redirect(authPath("/auth/sign-up", { error: "invalid", returnTo }));
   }
 
@@ -24,10 +31,21 @@ export async function signUpAction(formData: FormData) {
 
   try {
     const supabase = await createSupabaseServerClient();
+    const acceptedAt = new Date();
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        data: buildMemberSignupMetadata({
+          fullName: signupIdentity.fullName,
+          phone: signupIdentity.phone,
+          memberKvkkAcceptedAt: acceptedAt,
+          memberTermsAcceptedAt: acceptedAt,
+          memberMarketingConsentAt: signupIdentity.memberMarketingConsent
+            ? acceptedAt
+            : null,
+          memberConsentIpAddress: await getRequestIpAddress(),
+        }),
         emailRedirectTo: buildPublicAuthUrl("/auth/confirm", { returnTo }),
       },
     });

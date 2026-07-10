@@ -1,10 +1,24 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/auth/actions";
 import { requireMemberUser } from "@/lib/member-auth";
+import { isMemberProfileComplete } from "@/lib/member-profile-validation";
 
-export default async function AccountPage() {
+type AccountPageProps = {
+  searchParams: Promise<{
+    profile?: string;
+  }>;
+};
+
+export default async function AccountPage({ searchParams }: AccountPageProps) {
   const memberUser = await requireMemberUser("/account");
+  const params = await searchParams;
   const profile = memberUser.profile;
-  const profileComplete = Boolean(profile?.profileCompletedAt);
+  const profileComplete = isMemberProfileComplete(memberUser);
+
+  if (!profileComplete) {
+    redirect("/account/onboarding");
+  }
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">
@@ -24,6 +38,12 @@ export default async function AccountPage() {
         </div>
 
         <div className="space-y-5">
+          {params.profile === "updated" ? (
+            <p className="rounded-md border border-emerald-300/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-100">
+              Profil bilgileriniz güncellendi.
+            </p>
+          ) : null}
+
           <section className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-muted">
               ATS member identity
@@ -39,7 +59,26 @@ export default async function AccountPage() {
                 label="Profil"
                 value={profileComplete ? "Tamamlandı" : "Henüz tamamlanmadı"}
               />
+              <Info label="Telefon" value={profile?.phone ?? "-"} />
+              <Info
+                label="Sürüş deneyimi"
+                value={formatExperienceLevel(profile?.experienceLevel)}
+              />
+              <Info
+                label="Acil durum kişisi"
+                value={profile?.emergencyContactName ?? "-"}
+              />
+              <Info
+                label="Acil durum telefonu"
+                value={profile?.emergencyContactPhone ?? "-"}
+              />
             </dl>
+            <Link
+              href="/account/profile"
+              className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-ats-blue px-6 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover"
+            >
+              Profili Düzenle
+            </Link>
           </section>
 
           <section className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8">
@@ -70,6 +109,26 @@ export default async function AccountPage() {
       </div>
     </section>
   );
+}
+
+function formatExperienceLevel(value: string | null | undefined) {
+  if (value === "BEGINNER") {
+    return "İlk pist tecrübem olacak";
+  }
+
+  if (value === "INTERMEDIATE") {
+    return "Daha önce pist deneyimim var";
+  }
+
+  if (value === "ADVANCED") {
+    return "İleri seviye pist deneyimim var";
+  }
+
+  if (value === "PROFESSIONAL") {
+    return "Profesyonel / lisanslı sürücü";
+  }
+
+  return "-";
 }
 
 function Info({ label, value }: { label: string; value: string }) {

@@ -40,6 +40,14 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
 
       <form action={signUpAction} className="space-y-5">
         <input type="hidden" name="returnTo" value={returnTo} />
+        <AuthField label="Ad soyad" name="fullName" autoComplete="name" />
+        <AuthField
+          label="Telefon"
+          name="phone"
+          type="tel"
+          autoComplete="tel"
+          placeholder="+90 5xx xxx xx xx"
+        />
         <AuthField label="E-posta" name="email" type="email" autoComplete="email" />
         <AuthField label="Şifre" name="password" type="password" autoComplete="new-password" />
         <AuthField
@@ -52,6 +60,22 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
           Şifreniz en az 8 karakter olmalıdır. Şifre yönetimi Supabase Auth
           tarafından yapılır; ATS veritabanında şifre tutulmaz.
         </p>
+        <div className="space-y-3 border-t border-ats-border pt-5">
+          <SignupConsent
+            name="memberKvkkAccepted"
+            label="Aegean Track Society üyelik hesabı için KVKK aydınlatmasını okudum ve kişisel verilerimin hesap oluşturma amacıyla işlenmesini kabul ediyorum."
+            required
+          />
+          <SignupConsent
+            name="memberTermsAccepted"
+            label="Aegean Track Society üyelik kullanım şartlarını kabul ediyorum."
+            required
+          />
+          <SignupConsent
+            name="memberMarketingConsent"
+            label="Aegean Track Society duyurularını almayı kabul ediyorum."
+          />
+        </div>
         <AuthSubmitButton>Üye Ol</AuthSubmitButton>
       </form>
     </AuthShell>
@@ -64,8 +88,30 @@ function messageForSignUpError(error: string) {
   }
 
   if (error === "invalid") {
-    return "E-posta ve şifre bilgilerini kontrol edin.";
+    return "Ad soyad, telefon, e-posta, şifre ve üyelik onaylarını kontrol edin.";
   }
 
   return "Üyelik başlatılamadı. Lütfen daha sonra tekrar deneyin.";
+}
+
+function SignupConsent({
+  name,
+  label,
+  required = false,
+}: {
+  name: string;
+  label: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="flex gap-3 text-sm font-semibold leading-6 text-ats-text">
+      <input
+        name={name}
+        type="checkbox"
+        required={required}
+        className="mt-1 h-4 w-4 rounded border-ats-border bg-ats-black accent-ats-blue"
+      />
+      <span>{label}</span>
+    </label>
+  );
 }

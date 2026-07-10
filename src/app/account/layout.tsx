@@ -24,6 +24,9 @@ export default async function AccountLayout({ children }: { children: ReactNode 
             <Link href="/account" className="transition hover:text-ats-blue">
               Hesabım
             </Link>
+            <Link href="/account/profile" className="transition hover:text-ats-blue">
+              Profil
+            </Link>
           </nav>
         </div>
       </header>

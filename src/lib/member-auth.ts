@@ -2,13 +2,22 @@ import { Prisma } from "@prisma/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { normalizeEmail } from "@/lib/registration-validation";
+import { normalizeEmail, normalizeTurkishPhone } from "@/lib/registration-validation";
 import { prisma } from "@/lib/prisma";
 import { createOptionalSupabaseServerClient, createSupabaseServerClient } from "@/lib/supabase/server";
 
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const maxReturnToLength = 2048;
+const normalizedTurkishMobileRegex = /^\+90 5\d{2} \d{3} \d{2} \d{2}$/;
+const signupMetadataKeys = {
+  fullName: "atsFullName",
+  phone: "atsPhone",
+  memberKvkkAcceptedAt: "atsMemberKvkkAcceptedAt",
+  memberTermsAcceptedAt: "atsMemberTermsAcceptedAt",
+  memberMarketingConsentAt: "atsMemberMarketingConsentAt",
+  memberConsentIpAddress: "atsMemberConsentIpAddress",
+} as const;
 
 const memberUserInclude = Prisma.validator<Prisma.UserInclude>()({
   profile: true,
@@ -17,6 +26,24 @@ const memberUserInclude = Prisma.validator<Prisma.UserInclude>()({
 export type AtsMemberUser = Prisma.UserGetPayload<{
   include: typeof memberUserInclude;
 }>;
+
+type MemberSignupMetadataInput = {
+  fullName: string | null;
+  phone: string | null;
+  memberKvkkAcceptedAt: Date | null;
+  memberTermsAcceptedAt: Date | null;
+  memberMarketingConsentAt: Date | null;
+  memberConsentIpAddress: string | null;
+};
+
+export type RequiredMemberSignupMetadataInput = {
+  fullName: string;
+  phone: string;
+  memberKvkkAcceptedAt: Date;
+  memberTermsAcceptedAt: Date;
+  memberMarketingConsentAt: Date | null;
+  memberConsentIpAddress: string | null;
+};
 
 class MemberAuthError extends Error {
   constructor(readonly code: string, message: string) {
@@ -71,36 +98,72 @@ export async function ensureMemberUser(supabaseUser?: SupabaseUser | null) {
   }
 
   const email = normalizeEmail(user.email);
+  const signupMetadata = parseSignupMetadata(user);
 
   try {
-    await prisma.user.upsert({
-      where: {
-        id: user.id,
-      },
-      update: {
-        email,
-      },
-      create: {
-        id: user.id,
-        email,
-      },
-    });
+    const memberUser = await prisma.$transaction(async (tx) => {
+      const existingUser = await tx.user.findUnique({
+        where: {
+          id: user.id,
+        },
+        select: {
+          memberKvkkAcceptedAt: true,
+          memberTermsAcceptedAt: true,
+          memberMarketingConsentAt: true,
+          memberConsentIpAddress: true,
+        },
+      });
 
-    await prisma.memberProfile.upsert({
-      where: {
-        userId: user.id,
-      },
-      update: {},
-      create: {
-        userId: user.id,
-      },
-    });
+      await tx.user.upsert({
+        where: {
+          id: user.id,
+        },
+        update: {
+          email,
+          ...consentUpdateForExistingUser(existingUser, signupMetadata),
+        },
+        create: {
+          id: user.id,
+          email,
+          memberKvkkAcceptedAt: signupMetadata.memberKvkkAcceptedAt,
+          memberTermsAcceptedAt: signupMetadata.memberTermsAcceptedAt,
+          memberMarketingConsentAt: signupMetadata.memberMarketingConsentAt,
+          memberConsentIpAddress: signupMetadata.memberConsentIpAddress,
+        },
+      });
 
-    const memberUser = await prisma.user.findUnique({
-      where: {
-        id: user.id,
-      },
-      include: memberUserInclude,
+      const existingProfile = await tx.memberProfile.findUnique({
+        where: {
+          userId: user.id,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!existingProfile) {
+        await tx.memberProfile.create({
+          data: {
+            userId: user.id,
+            fullName: signupMetadata.fullName,
+            phone: signupMetadata.phone,
+            profileCompletedAt:
+              signupMetadata.fullName &&
+              signupMetadata.phone &&
+              signupMetadata.memberKvkkAcceptedAt &&
+              signupMetadata.memberTermsAcceptedAt
+                ? new Date()
+                : null,
+          },
+        });
+      }
+
+      return tx.user.findUnique({
+        where: {
+          id: user.id,
+        },
+        include: memberUserInclude,
+      });
     });
 
     if (!memberUser) {
@@ -160,6 +223,18 @@ export function normalizeMemberReturnTo(value: FormDataEntryValue | string | nul
   return "/account";
 }
 
+export function buildMemberSignupMetadata(input: RequiredMemberSignupMetadataInput) {
+  return {
+    [signupMetadataKeys.fullName]: input.fullName,
+    [signupMetadataKeys.phone]: input.phone,
+    [signupMetadataKeys.memberKvkkAcceptedAt]: input.memberKvkkAcceptedAt.toISOString(),
+    [signupMetadataKeys.memberTermsAcceptedAt]: input.memberTermsAcceptedAt.toISOString(),
+    [signupMetadataKeys.memberMarketingConsentAt]:
+      input.memberMarketingConsentAt?.toISOString() ?? null,
+    [signupMetadataKeys.memberConsentIpAddress]: input.memberConsentIpAddress,
+  };
+}
+
 function isAllowedMemberReturnPath(returnTo: string) {
   return (
     returnTo === "/" ||
@@ -176,6 +251,96 @@ function hasUnsafeScheme(value: string) {
 
 function isEmailVerified(user: SupabaseUser) {
   return Boolean(user.email_confirmed_at || user.confirmed_at);
+}
+
+function parseSignupMetadata(user: SupabaseUser): MemberSignupMetadataInput {
+  const metadata = user.user_metadata as Record<string, unknown>;
+
+  return {
+    fullName: normalizeMetadataText(metadata[signupMetadataKeys.fullName]),
+    phone: normalizeMetadataPhone(metadata[signupMetadataKeys.phone]),
+    memberKvkkAcceptedAt: optionalDateFromMetadata(
+      metadata[signupMetadataKeys.memberKvkkAcceptedAt],
+    ),
+    memberTermsAcceptedAt: optionalDateFromMetadata(
+      metadata[signupMetadataKeys.memberTermsAcceptedAt],
+    ),
+    memberMarketingConsentAt: optionalDateFromMetadata(
+      metadata[signupMetadataKeys.memberMarketingConsentAt],
+    ),
+    memberConsentIpAddress: normalizeIpAddress(
+      metadata[signupMetadataKeys.memberConsentIpAddress],
+    ),
+  };
+}
+
+function consentUpdateForExistingUser(
+  existingUser: {
+    memberKvkkAcceptedAt: Date | null;
+    memberTermsAcceptedAt: Date | null;
+    memberMarketingConsentAt: Date | null;
+    memberConsentIpAddress: string | null;
+  } | null,
+  signupMetadata: MemberSignupMetadataInput,
+): Prisma.UserUpdateInput {
+  if (!existingUser) {
+    return {};
+  }
+
+  return {
+    memberKvkkAcceptedAt: existingUser.memberKvkkAcceptedAt
+      ? undefined
+      : signupMetadata.memberKvkkAcceptedAt,
+    memberTermsAcceptedAt: existingUser.memberTermsAcceptedAt
+      ? undefined
+      : signupMetadata.memberTermsAcceptedAt,
+    memberMarketingConsentAt: existingUser.memberMarketingConsentAt
+      ? undefined
+      : signupMetadata.memberMarketingConsentAt,
+    memberConsentIpAddress: existingUser.memberConsentIpAddress
+      ? undefined
+      : signupMetadata.memberConsentIpAddress,
+  };
+}
+
+function normalizeMetadataText(value: unknown) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim().replace(/\s+/g, " ");
+
+  return normalized.length >= 2 ? normalized.slice(0, 120) : null;
+}
+
+function normalizeMetadataPhone(value: unknown) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = normalizeTurkishPhone(value);
+
+  return normalizedTurkishMobileRegex.test(normalized) ? normalized : null;
+}
+
+function optionalDateFromMetadata(value: unknown) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function normalizeIpAddress(value: unknown) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim();
+
+  return normalized ? normalized.slice(0, 45) : null;
 }
 
 function serializeAuthError(error: unknown) {

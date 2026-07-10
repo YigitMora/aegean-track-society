@@ -85,11 +85,13 @@ export function AuthField({
   name,
   type = "text",
   autoComplete,
+  placeholder,
 }: {
   label: string;
   name: string;
   type?: string;
   autoComplete?: string;
+  placeholder?: string;
 }) {
   return (
     <label className="block">
@@ -99,6 +101,7 @@ export function AuthField({
         type={type}
         required
         autoComplete={autoComplete}
+        placeholder={placeholder}
         className="mt-2 h-12 w-full rounded-md border border-ats-border bg-ats-black px-3 text-sm font-semibold text-ats-text outline-none transition focus:border-ats-blue focus:ring-2 focus:ring-ats-blue/20"
       />
     </label>

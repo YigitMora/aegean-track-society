@@ -161,6 +161,12 @@ The first authentication sprint protects `/account` only. Public anonymous event
 registration remains available, and member-linked registrations, garage,
 registration history, and QR tickets are reserved for later phases.
 
+Member signup requires full name, a Turkish mobile phone number, and
+account-level KVKK/terms consent. Those values are first stored in Supabase Auth
+user metadata and copied into `MemberProfile` only after verified provisioning.
+Verified members with incomplete account profiles are directed to
+`/account/onboarding`.
+
 ## Participant Code
 
 Participant codes follow `ATD-KULA-2026-0001` and are generated inside the same database transaction that confirms payment.

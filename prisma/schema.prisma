@@ -302,26 +302,33 @@ model EmailLog {
 }
 
 model User {
-  id        String         @id @db.Uuid
-  email     String         @unique
-  role      MemberRole     @default(MEMBER)
-  status    MemberStatus   @default(ACTIVE)
-  profile   MemberProfile?
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  deletedAt DateTime?
+  id                       String         @id @db.Uuid
+  email                    String         @unique
+  role                     MemberRole     @default(MEMBER)
+  status                   MemberStatus   @default(ACTIVE)
+  memberKvkkAcceptedAt     DateTime?
+  memberTermsAcceptedAt    DateTime?
+  memberMarketingConsentAt DateTime?
+  memberConsentIpAddress   String?        @db.VarChar(45)
+  profile                  MemberProfile?
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+  deletedAt                DateTime?
 
   @@index([status])
 }
 
 model MemberProfile {
-  id                 String    @id @default(cuid())
-  userId             String    @unique @db.Uuid
-  user               User      @relation(fields: [userId], references: [id], onDelete: Restrict)
-  fullName           String?
-  displayName        String?
-  phone              String?
-  profileCompletedAt DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id                    String           @id @default(cuid())
+  userId                String           @unique @db.Uuid
+  user                  User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  fullName              String?
+  displayName           String?
+  phone                 String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  experienceLevel       ExperienceLevel?
+  profileCompletedAt    DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 }
