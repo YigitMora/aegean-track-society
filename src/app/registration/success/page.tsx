@@ -29,13 +29,12 @@ export default async function RegistrationSuccessPage({
   const memberIdentity = registration?.userId
     ? await getOptionalAuthenticatedMemberIdentity()
     : null;
-  const canShowMemberRegistrationLink = Boolean(
-    registration?.userId && memberIdentity?.id === registration.userId,
-  );
-  const canShowAnonymousReference = Boolean(
-    registrationId &&
-      (!registration || registration.registrationSource === "PUBLIC_ANONYMOUS"),
-  );
+  const memberRegistrationDetailHref =
+    registration?.userId && memberIdentity?.id === registration.userId
+      ? `/account/registrations/${registration.id}`
+      : null;
+  const anonymousRegistrationReference =
+    registration?.registrationSource === "PUBLIC_ANONYMOUS" ? registration.id : null;
 
   return (
     <main className="min-h-screen bg-ats-black text-ats-text">
@@ -54,13 +53,13 @@ export default async function RegistrationSuccessPage({
           e-postası gönderilecektir.
         </p>
 
-        {canShowMemberRegistrationLink ? (
+        {memberRegistrationDetailHref ? (
           <div className="mt-8 rounded-lg border border-ats-border bg-ats-surface p-5">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-ats-muted">
               Başvuru detayı
             </p>
             <Link
-              href={`/account/registrations/${registrationId}`}
+              href={memberRegistrationDetailHref}
               className="mt-3 inline-flex h-11 items-center justify-center rounded-full border border-ats-border px-5 text-xs font-black uppercase tracking-[0.12em] text-ats-text transition hover:border-ats-blue hover:text-ats-blue"
             >
               Başvurumu Görüntüle
@@ -68,13 +67,13 @@ export default async function RegistrationSuccessPage({
           </div>
         ) : null}
 
-        {canShowAnonymousReference ? (
+        {anonymousRegistrationReference ? (
           <div className="mt-8 rounded-lg border border-ats-border bg-ats-surface p-5">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-ats-muted">
               Kayıt referansı
             </p>
             <p className="mt-2 break-all text-sm font-semibold text-ats-text">
-              {registrationId}
+              {anonymousRegistrationReference}
             </p>
           </div>
         ) : null}
