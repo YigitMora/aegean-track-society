@@ -31,9 +31,6 @@ export async function updateMemberProfileAction(formData: FormData) {
         fullName: parsed.data.fullName,
         phone: parsed.data.phone,
         displayName: parsed.data.displayName,
-        emergencyContactName: parsed.data.emergencyContactName,
-        emergencyContactPhone: parsed.data.emergencyContactPhone,
-        experienceLevel: parsed.data.experienceLevel,
         profileCompletedAt: now,
       },
       create: {
@@ -41,9 +38,6 @@ export async function updateMemberProfileAction(formData: FormData) {
         fullName: parsed.data.fullName,
         phone: parsed.data.phone,
         displayName: parsed.data.displayName,
-        emergencyContactName: parsed.data.emergencyContactName,
-        emergencyContactPhone: parsed.data.emergencyContactPhone,
-        experienceLevel: parsed.data.experienceLevel,
         profileCompletedAt: now,
       },
     });

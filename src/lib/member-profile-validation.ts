@@ -1,8 +1,4 @@
-import { ExperienceLevel } from "@prisma/client";
-import {
-  experienceLevels,
-  normalizeTurkishPhone,
-} from "@/lib/registration-validation";
+import { normalizeTurkishPhone } from "@/lib/registration-validation";
 
 const requiredTextMinLength = 2;
 const maxTextLength = 120;
@@ -12,9 +8,6 @@ export type MemberProfileInput = {
   fullName: string;
   phone: string;
   displayName: string | null;
-  emergencyContactName: string | null;
-  emergencyContactPhone: string | null;
-  experienceLevel: ExperienceLevel | null;
   memberMarketingConsent: boolean;
 };
 
@@ -65,33 +58,18 @@ export function parseMemberProfileForm(
   const fullName = normalizeRequiredText(formData.get("fullName"));
   const phone = normalizeRequiredTurkishPhone(formData.get("phone"));
   const displayName = normalizeOptionalText(formData.get("displayName"));
-  const emergencyContactName = normalizeOptionalText(formData.get("emergencyContactName"));
-  const emergencyContactPhone = normalizeOptionalTurkishPhone(
-    formData.get("emergencyContactPhone"),
-  );
-  const experienceLevel = parseExperienceLevel(formData.get("experienceLevel"));
   const memberMarketingConsent = formData.get("memberMarketingConsent") === "on";
   const acceptedMissingConsents =
     formData.get("memberKvkkAccepted") === "on" &&
     formData.get("memberTermsAccepted") === "on";
 
-  if (!fullName || !phone || experienceLevel === undefined) {
+  if (!fullName || !phone) {
     return {
       ok: false,
     };
   }
 
   if (options.requireMissingConsents && !acceptedMissingConsents) {
-    return {
-      ok: false,
-    };
-  }
-
-  if (
-    formData.get("emergencyContactPhone") &&
-    String(formData.get("emergencyContactPhone")).trim() &&
-    !emergencyContactPhone
-  ) {
     return {
       ok: false,
     };
@@ -104,9 +82,6 @@ export function parseMemberProfileForm(
       fullName,
       phone,
       displayName,
-      emergencyContactName,
-      emergencyContactPhone,
-      experienceLevel,
       memberMarketingConsent,
     },
   };
@@ -172,16 +147,4 @@ function normalizeOptionalTurkishPhone(value: FormDataEntryValue | null) {
   }
 
   return normalized;
-}
-
-function parseExperienceLevel(value: FormDataEntryValue | null) {
-  if (!value) {
-    return null;
-  }
-
-  if (typeof value !== "string" || !experienceLevels.includes(value as ExperienceLevel)) {
-    return undefined;
-  }
-
-  return value as ExperienceLevel;
 }

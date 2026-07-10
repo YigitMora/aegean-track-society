@@ -1,4 +1,3 @@
-import type { ExperienceLevel } from "@prisma/client";
 import { updateMemberProfileAction } from "@/app/account/profile/actions";
 
 type MemberProfileFormProps = {
@@ -7,9 +6,6 @@ type MemberProfileFormProps = {
         fullName: string | null;
         phone: string | null;
         displayName: string | null;
-        emergencyContactName: string | null;
-        emergencyContactPhone: string | null;
-        experienceLevel: ExperienceLevel | null;
       }
     | null;
   marketingConsentActive: boolean;
@@ -17,28 +13,6 @@ type MemberProfileFormProps = {
   returnTo: string;
   submitLabel: string;
 };
-
-const experienceOptions: Array<{
-  value: ExperienceLevel;
-  label: string;
-}> = [
-  {
-    value: "BEGINNER",
-    label: "İlk pist tecrübem olacak",
-  },
-  {
-    value: "INTERMEDIATE",
-    label: "Daha önce pist deneyimim var",
-  },
-  {
-    value: "ADVANCED",
-    label: "İleri seviye pist deneyimim var",
-  },
-  {
-    value: "PROFESSIONAL",
-    label: "Profesyonel / lisanslı sürücüyüm",
-  },
-];
 
 export function MemberProfileForm({
   profile,
@@ -75,35 +49,6 @@ export function MemberProfileForm({
           name="displayName"
           defaultValue={profile?.displayName ?? ""}
           placeholder="Pistte görünmesini istediğiniz ad"
-        />
-        <label className="block">
-          <span className="text-sm font-bold text-ats-text">Sürüş deneyimi</span>
-          <select
-            name="experienceLevel"
-            defaultValue={profile?.experienceLevel ?? ""}
-            className="mt-2 h-12 w-full rounded-md border border-ats-border bg-ats-black px-3 text-sm font-semibold text-ats-text outline-none transition focus:border-ats-blue focus:ring-2 focus:ring-ats-blue/20"
-          >
-            <option value="">Seviye seçin</option>
-            {experienceOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <ProfileField
-          label="Acil durum kişi adı"
-          name="emergencyContactName"
-          defaultValue={profile?.emergencyContactName ?? ""}
-          autoComplete="off"
-        />
-        <ProfileField
-          label="Acil durum telefonu"
-          name="emergencyContactPhone"
-          type="tel"
-          defaultValue={profile?.emergencyContactPhone ?? ""}
-          autoComplete="off"
-          placeholder="+90 5xx xxx xx xx"
         />
       </div>
 

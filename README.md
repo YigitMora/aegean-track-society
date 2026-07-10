@@ -167,6 +167,10 @@ user metadata and copied into `MemberProfile` only after verified provisioning.
 Verified members with incomplete account profiles are directed to
 `/account/onboarding`.
 
+Member onboarding intentionally collects only account identity and account-level
+consents. Emergency contact, driving experience, and vehicle data remain part of
+event registration scope and are not required for member profile completion.
+
 Supabase user metadata is treated only as temporary transport. Prisma remains
 the source of truth for member profile and consent records; metadata imports are
 bounded, ignored when invalid or unreasonable, and never overwrite existing

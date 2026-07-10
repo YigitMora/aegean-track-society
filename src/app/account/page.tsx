@@ -46,7 +46,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
           <section className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-muted">
-              ATS member identity
+              Üyelik kimliği
             </p>
             <h2 className="mt-4 break-words text-3xl font-black text-ats-text">
               {profile?.displayName || profile?.fullName || memberUser.email}
@@ -60,18 +60,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                 value={profileComplete ? "Tamamlandı" : "Henüz tamamlanmadı"}
               />
               <Info label="Telefon" value={profile?.phone ?? "-"} />
-              <Info
-                label="Sürüş deneyimi"
-                value={formatExperienceLevel(profile?.experienceLevel)}
-              />
-              <Info
-                label="Acil durum kişisi"
-                value={profile?.emergencyContactName ?? "-"}
-              />
-              <Info
-                label="Acil durum telefonu"
-                value={profile?.emergencyContactPhone ?? "-"}
-              />
+              <Info label="Görünen ad" value={profile?.displayName ?? "-"} />
             </dl>
             <Link
               href="/account/profile"
@@ -109,26 +98,6 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       </div>
     </section>
   );
-}
-
-function formatExperienceLevel(value: string | null | undefined) {
-  if (value === "BEGINNER") {
-    return "İlk pist tecrübem olacak";
-  }
-
-  if (value === "INTERMEDIATE") {
-    return "Daha önce pist deneyimim var";
-  }
-
-  if (value === "ADVANCED") {
-    return "İleri seviye pist deneyimim var";
-  }
-
-  if (value === "PROFESSIONAL") {
-    return "Profesyonel / lisanslı sürücü";
-  }
-
-  return "-";
 }
 
 function Info({ label, value }: { label: string; value: string }) {
