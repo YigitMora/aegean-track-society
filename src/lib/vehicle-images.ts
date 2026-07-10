@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { createOptionalSupabaseServerClient } from "@/lib/supabase/server";
 
 export const vehicleImagesBucket = "vehicle-images";
@@ -47,10 +48,12 @@ export function buildVehicleImagePath({
   vehicleId: string;
   mimeType: VehicleImageMimeType;
 }) {
-  return `${userId}/${vehicleId}/cover.${vehicleImageExtensions[mimeType]}`;
+  return `${userId}/${vehicleId}/cover-${randomUUID()}.${vehicleImageExtensions[mimeType]}`;
 }
 
-export function validateVehicleImageFile(file: File | null): VehicleImageValidationResult {
+export async function validateVehicleImageFile(
+  file: File | null,
+): Promise<VehicleImageValidationResult> {
   if (!file || file.size === 0) {
     return {
       ok: false,
@@ -69,6 +72,15 @@ export function validateVehicleImageFile(file: File | null): VehicleImageValidat
     return {
       ok: false,
       error: "file_too_large",
+    };
+  }
+
+  const detectedMimeType = await detectVehicleImageMimeType(file);
+
+  if (detectedMimeType !== file.type) {
+    return {
+      ok: false,
+      error: "unsupported_format",
     };
   }
 
@@ -111,6 +123,48 @@ export async function createOwnedVehicleImageSignedUrl(
 
 function isVehicleImageMimeType(value: string): value is VehicleImageMimeType {
   return vehicleImageAcceptedMimeTypes.includes(value as VehicleImageMimeType);
+}
+
+async function detectVehicleImageMimeType(file: File): Promise<VehicleImageMimeType | null> {
+  try {
+    const bytes = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+
+    if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+      return "image/jpeg";
+    }
+
+    if (
+      bytes.length >= 8 &&
+      bytes[0] === 0x89 &&
+      bytes[1] === 0x50 &&
+      bytes[2] === 0x4e &&
+      bytes[3] === 0x47 &&
+      bytes[4] === 0x0d &&
+      bytes[5] === 0x0a &&
+      bytes[6] === 0x1a &&
+      bytes[7] === 0x0a
+    ) {
+      return "image/png";
+    }
+
+    if (
+      bytes.length >= 12 &&
+      bytes[0] === 0x52 &&
+      bytes[1] === 0x49 &&
+      bytes[2] === 0x46 &&
+      bytes[3] === 0x46 &&
+      bytes[8] === 0x57 &&
+      bytes[9] === 0x45 &&
+      bytes[10] === 0x42 &&
+      bytes[11] === 0x50
+    ) {
+      return "image/webp";
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
 }
 
 function safeStorageErrorCode(error: unknown) {
