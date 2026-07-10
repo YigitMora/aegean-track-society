@@ -508,7 +508,7 @@ export async function uploadVehicleImageAction(vehicleId: string, formData: Form
   const memberUser = await requireCompleteMemberUser(`/account/garage/${vehicleId}`);
   const fileValue = formData.get("image");
   const imageFile = fileValue instanceof File ? fileValue : null;
-  const validation = validateVehicleImageFile(imageFile);
+  const validation = await validateVehicleImageFile(imageFile);
 
   if (!validation.ok) {
     redirectWithError(`/account/garage/${vehicleId}`, validation.error);
@@ -551,7 +551,7 @@ export async function uploadVehicleImageAction(vehicleId: string, formData: Form
       .upload(nextImagePath, imageFile, {
         cacheControl: "31536000",
         contentType: validation.mimeType,
-        upsert: true,
+        upsert: false,
       });
 
     if (uploadError) {
