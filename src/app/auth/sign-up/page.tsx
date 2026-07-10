@@ -5,6 +5,7 @@ import {
   AuthShell,
   AuthSubmitButton,
 } from "@/components/auth/auth-shell";
+import { TurkishPhoneInput } from "@/components/turkish-phone-input";
 import { normalizeMemberReturnTo } from "@/lib/member-auth";
 import { signUpAction } from "../actions";
 
@@ -41,13 +42,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
       <form action={signUpAction} className="space-y-5">
         <input type="hidden" name="returnTo" value={returnTo} />
         <AuthField label="Ad soyad" name="fullName" autoComplete="name" />
-        <AuthField
-          label="Telefon"
-          name="phone"
-          type="tel"
-          autoComplete="tel"
-          placeholder="+90 5xx xxx xx xx"
-        />
+        <TurkishPhoneInput label="Telefon" name="phone" required />
         <AuthField label="E-posta" name="email" type="email" autoComplete="email" />
         <AuthField label="Şifre" name="password" type="password" autoComplete="new-password" />
         <AuthField

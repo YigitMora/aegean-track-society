@@ -16,8 +16,10 @@ type GaragePageProps = {
 };
 
 export default async function GaragePage({ searchParams }: GaragePageProps) {
-  const memberUser = await requireCompleteMemberUser("/account/garage");
-  const params = await searchParams;
+  const [memberUser, params] = await Promise.all([
+    requireCompleteMemberUser("/account/garage"),
+    searchParams,
+  ]);
   const [activeVehicles, archivedVehicles] = await Promise.all([
     prisma.vehicle.findMany({
       where: {
