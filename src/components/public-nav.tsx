@@ -4,15 +4,23 @@ import { MemberNavLinks } from "@/components/member-nav-links";
 const eventHref = "/events/kula-mytrack-2026";
 const registerHref = "/events/kula-mytrack-2026/register";
 
-const navItems = [
-  { label: "Etkinlik", href: eventHref },
-  { label: "Program", href: `${eventHref}#program` },
-  { label: "Galeri", href: `${eventHref}#galeri` },
-  { label: "SSS", href: `${eventHref}#sss` },
-  { label: "Kayıt", href: registerHref },
-];
+type PublicNavProps = {
+  homeAnchors?: boolean;
+};
 
-export function PublicNav() {
+function publicNavItems(homeAnchors: boolean) {
+  return [
+    { label: "Etkinlik", href: eventHref },
+    { label: "Program", href: homeAnchors ? "#program" : `${eventHref}#program` },
+    { label: "Galeri", href: homeAnchors ? "#galeri" : `${eventHref}#galeri` },
+    { label: "SSS", href: `${eventHref}#sss` },
+    { label: "Kayıt", href: registerHref },
+  ];
+}
+
+export function PublicNav({ homeAnchors = false }: PublicNavProps) {
+  const navItems = publicNavItems(homeAnchors);
+
   return (
     <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-5 px-6 py-6 sm:px-8 lg:px-10">
       <Link href="/" className="text-sm font-black uppercase tracking-[0.18em] text-ats-text">

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { PublicNav } from "@/components/public-nav";
 
 const registerHref = "/events/kula-mytrack-2026/register";
 
@@ -83,20 +84,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,11,15,0.93)_0%,rgba(8,11,15,0.68)_38%,rgba(8,11,15,0.18)_70%,rgba(8,11,15,0.02)_100%),linear-gradient(180deg,rgba(8,11,15,0.54)_0%,rgba(8,11,15,0.08)_44%,rgba(8,11,15,0.82)_100%)] lg:bg-[linear-gradient(90deg,rgba(8,11,15,0.94)_0%,rgba(8,11,15,0.62)_31%,rgba(8,11,15,0.14)_61%,rgba(8,11,15,0.02)_100%),linear-gradient(180deg,rgba(8,11,15,0.50)_0%,rgba(8,11,15,0.06)_47%,rgba(8,11,15,0.76)_100%)]" />
 
         <div className="relative flex min-h-[100svh] w-full flex-col">
-          <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-7 sm:px-10 lg:px-12">
-            <Link
-              href="/"
-              className="text-[11px] font-semibold uppercase tracking-[0.24em] text-ats-text/80 transition hover:text-ats-text"
-            >
-              Aegean Track Society
-            </Link>
-            <Link
-              href={registerHref}
-              className="ats-button-primary inline-flex h-10 min-w-24 items-center justify-center rounded-full bg-[#4CC9F0] px-5 text-[11px] font-bold uppercase tracking-[0.14em] text-ats-black"
-            >
-              Kayıt
-            </Link>
-          </header>
+          <PublicNav homeAnchors />
 
           <div className="mx-auto flex w-full max-w-7xl flex-1 items-end px-6 pb-16 pt-24 sm:px-10 sm:pb-24 lg:px-12 lg:pb-28">
             <div className="max-w-4xl">
@@ -111,12 +99,6 @@ export default function HomePage() {
               <p className="ats-hero-subtitle mt-8 max-w-xl whitespace-pre-line text-lg font-medium leading-8 text-ats-text/82 sm:text-xl sm:leading-9">
                 {heroSubtitle}
               </p>
-              <Link
-                href={registerHref}
-                className="ats-button-primary ats-hero-cta mt-11 inline-flex h-14 min-w-40 items-center justify-center rounded-full bg-[#4CC9F0] px-8 text-xs font-bold uppercase tracking-[0.14em] text-ats-black"
-              >
-                Kayıt Ol
-              </Link>
             </div>
           </div>
         </div>
@@ -195,7 +177,7 @@ export default function HomePage() {
         </div>
       </StorySection>
 
-      <StorySection id="anilar" className="px-0 sm:px-0 lg:px-0">
+      <StorySection id="galeri" className="px-0 sm:px-0 lg:px-0">
         <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-12">
           <h2 className="text-5xl font-semibold leading-[0.98] sm:text-7xl">
             Pistten Kareler.
