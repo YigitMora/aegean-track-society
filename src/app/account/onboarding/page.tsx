@@ -11,8 +11,10 @@ type AccountOnboardingPageProps = {
 export default async function AccountOnboardingPage({
   searchParams,
 }: AccountOnboardingPageProps) {
-  const memberUser = await requireMemberUser("/account/onboarding");
-  const params = await searchParams;
+  const [memberUser, params] = await Promise.all([
+    requireMemberUser("/account/onboarding"),
+    searchParams,
+  ]);
   const returnTo = normalizeMemberReturnTo(params.returnTo);
   const requireMissingConsents =
     !memberUser.memberKvkkAcceptedAt || !memberUser.memberTermsAcceptedAt;

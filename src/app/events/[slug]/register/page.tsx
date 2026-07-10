@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function RegisterPage({ params }: RegisterPageProps) {
   const { slug } = await params;
   const returnTo = `/events/${slug}/register`;
-  const event = await prisma.event.findUnique({
+  const eventPromise = prisma.event.findUnique({
     where: { slug },
     include: {
       days: {
@@ -33,13 +33,17 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
       },
     },
   });
+  const supabaseUserPromise = getVerifiedSupabaseUser().catch(() => null);
+  const [event, supabaseUser] = await Promise.all([
+    eventPromise,
+    supabaseUserPromise,
+  ]);
 
   if (!event) {
     notFound();
   }
 
   const eventPackage = event.packages[0];
-  const supabaseUser = await getVerifiedSupabaseUser().catch(() => null);
   const memberUser = supabaseUser
     ? await ensureMemberUser(supabaseUser).catch(() => null)
     : null;

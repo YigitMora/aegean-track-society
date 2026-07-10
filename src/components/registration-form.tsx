@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { FormEvent, ReactNode } from "react";
 import { useId, useState } from "react";
+import { TurkishPhoneInput } from "@/components/turkish-phone-input";
 
 type FieldErrors = Record<string, string[] | undefined>;
 
@@ -202,13 +203,18 @@ export function RegistrationForm({
           autoComplete="off"
           error={fieldErrors.emergencyContactName?.[0]}
         />
-        <Field
+        <TurkishPhoneInput
           label="Acil durum telefonu"
           name="emergencyContactPhone"
-          type="tel"
-          autoComplete="off"
-          placeholder="+90 5xx xxx xx xx"
-          error={fieldErrors.emergencyContactPhone?.[0]}
+          required
+          error={
+            fieldErrors.emergencyContactPhone?.[0]
+              ? translateMessage(
+                  fieldErrors.emergencyContactPhone[0],
+                  fieldErrors.emergencyContactPhone[0],
+                )
+              : undefined
+          }
         />
       </div>
 

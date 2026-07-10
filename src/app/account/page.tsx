@@ -12,8 +12,10 @@ type AccountPageProps = {
 };
 
 export default async function AccountPage({ searchParams }: AccountPageProps) {
-  const memberUser = await requireMemberUser("/account");
-  const params = await searchParams;
+  const [memberUser, params] = await Promise.all([
+    requireMemberUser("/account"),
+    searchParams,
+  ]);
   const profile = memberUser.profile;
   const profileComplete = isMemberProfileComplete(memberUser);
 

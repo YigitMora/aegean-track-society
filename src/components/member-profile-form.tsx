@@ -1,4 +1,5 @@
 import { updateMemberProfileAction } from "@/app/account/profile/actions";
+import { TurkishPhoneInput } from "@/components/turkish-phone-input";
 
 type MemberProfileFormProps = {
   profile:
@@ -35,13 +36,10 @@ export function MemberProfileForm({
           autoComplete="name"
           required
         />
-        <ProfileField
+        <TurkishPhoneInput
           label="Telefon"
           name="phone"
-          type="tel"
           defaultValue={profile?.phone ?? ""}
-          autoComplete="tel"
-          placeholder="+90 5xx xxx xx xx"
           required
         />
         <ProfileField

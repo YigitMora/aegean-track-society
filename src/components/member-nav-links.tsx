@@ -40,6 +40,15 @@ export function MemberNavLinks() {
     };
   }, []);
 
+  if (sessionState === "unknown") {
+    return (
+      <span
+        aria-hidden="true"
+        className="inline-flex h-4 w-32 rounded-full bg-ats-border/60"
+      />
+    );
+  }
+
   if (sessionState === "signed-in") {
     return <MemberLink href="/account">Hesabım</MemberLink>;
   }

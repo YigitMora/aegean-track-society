@@ -9,8 +9,10 @@ type AccountProfilePageProps = {
 };
 
 export default async function AccountProfilePage({ searchParams }: AccountProfilePageProps) {
-  const memberUser = await requireMemberUser("/account/profile");
-  const params = await searchParams;
+  const [memberUser, params] = await Promise.all([
+    requireMemberUser("/account/profile"),
+    searchParams,
+  ]);
   const requireMissingConsents =
     !memberUser.memberKvkkAcceptedAt || !memberUser.memberTermsAcceptedAt;
 
