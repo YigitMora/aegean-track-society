@@ -9,6 +9,8 @@ import { createOptionalSupabaseServerClient, createSupabaseServerClient } from "
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const maxReturnToLength = 2048;
+const maxMetadataFutureSkewMs = 5 * 60 * 1000;
+const earliestReasonableConsentAt = new Date("2025-01-01T00:00:00.000Z");
 const normalizedTurkishMobileRegex = /^\+90 5\d{2} \d{3} \d{2} \d{2}$/;
 const signupMetadataKeys = {
   fullName: "atsFullName",
@@ -110,6 +112,7 @@ export async function ensureMemberUser(supabaseUser?: SupabaseUser | null) {
           memberKvkkAcceptedAt: true,
           memberTermsAcceptedAt: true,
           memberMarketingConsentAt: true,
+          memberMarketingConsentRevokedAt: true,
           memberConsentIpAddress: true,
         },
       });
@@ -128,6 +131,7 @@ export async function ensureMemberUser(supabaseUser?: SupabaseUser | null) {
           memberKvkkAcceptedAt: signupMetadata.memberKvkkAcceptedAt,
           memberTermsAcceptedAt: signupMetadata.memberTermsAcceptedAt,
           memberMarketingConsentAt: signupMetadata.memberMarketingConsentAt,
+          memberMarketingConsentRevokedAt: null,
           memberConsentIpAddress: signupMetadata.memberConsentIpAddress,
         },
       });
@@ -279,6 +283,7 @@ function consentUpdateForExistingUser(
     memberKvkkAcceptedAt: Date | null;
     memberTermsAcceptedAt: Date | null;
     memberMarketingConsentAt: Date | null;
+    memberMarketingConsentRevokedAt: Date | null;
     memberConsentIpAddress: string | null;
   } | null,
   signupMetadata: MemberSignupMetadataInput,
@@ -295,6 +300,7 @@ function consentUpdateForExistingUser(
       ? undefined
       : signupMetadata.memberTermsAcceptedAt,
     memberMarketingConsentAt: existingUser.memberMarketingConsentAt
+      || existingUser.memberMarketingConsentRevokedAt
       ? undefined
       : signupMetadata.memberMarketingConsentAt,
     memberConsentIpAddress: existingUser.memberConsentIpAddress
@@ -330,7 +336,19 @@ function optionalDateFromMetadata(value: unknown) {
 
   const date = new Date(value);
 
-  return Number.isNaN(date.getTime()) ? null : date;
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  if (date.getTime() < earliestReasonableConsentAt.getTime()) {
+    return null;
+  }
+
+  if (date.getTime() > Date.now() + maxMetadataFutureSkewMs) {
+    return null;
+  }
+
+  return date;
 }
 
 function normalizeIpAddress(value: unknown) {

@@ -42,6 +42,10 @@ export default async function AccountProfilePage({ searchParams }: AccountProfil
 
       <MemberProfileForm
         profile={memberUser.profile}
+        marketingConsentActive={Boolean(
+          memberUser.memberMarketingConsentAt &&
+            !memberUser.memberMarketingConsentRevokedAt,
+        )}
         requireMissingConsents={requireMissingConsents}
         returnTo="/account/profile"
         submitLabel="Profili Kaydet"

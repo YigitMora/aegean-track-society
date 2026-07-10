@@ -55,7 +55,7 @@ export async function signUpAction(formData: FormData) {
         errorName: error.name,
         errorMessage: safeAuthErrorMessage(error.message),
       });
-      redirect(authPath("/auth/sign-up", { error: "signup_failed", returnTo }));
+      redirect(authPath("/auth/check-email", { returnTo }));
     }
   } catch (error) {
     if (isRedirectError(error)) {

@@ -39,6 +39,10 @@ export default async function AccountOnboardingPage({
 
       <MemberProfileForm
         profile={memberUser.profile}
+        marketingConsentActive={Boolean(
+          memberUser.memberMarketingConsentAt &&
+            !memberUser.memberMarketingConsentRevokedAt,
+        )}
         requireMissingConsents={requireMissingConsents}
         returnTo="/account/onboarding"
         submitLabel="Profili Tamamla"

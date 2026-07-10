@@ -48,18 +48,24 @@ export async function updateMemberProfileAction(formData: FormData) {
       },
     });
 
-    if (requiresConsents && parsed.acceptedMissingConsents) {
-      await tx.user.update({
-        where: {
-          id: memberUser.id,
-        },
-        data: {
-          memberKvkkAcceptedAt: memberUser.memberKvkkAcceptedAt ?? now,
-          memberTermsAcceptedAt: memberUser.memberTermsAcceptedAt ?? now,
-          memberConsentIpAddress: memberUser.memberConsentIpAddress ?? ipAddress,
-        },
-      });
-    }
+    await tx.user.update({
+      where: {
+        id: memberUser.id,
+      },
+      data: {
+        ...(requiresConsents && parsed.acceptedMissingConsents
+          ? {
+              memberKvkkAcceptedAt: memberUser.memberKvkkAcceptedAt ?? now,
+              memberTermsAcceptedAt: memberUser.memberTermsAcceptedAt ?? now,
+              memberConsentIpAddress: memberUser.memberConsentIpAddress ?? ipAddress,
+            }
+          : {}),
+        ...marketingConsentUpdate({
+          wantsMarketingConsent: parsed.data.memberMarketingConsent,
+          now,
+        }),
+      },
+    });
   });
 
   console.log("AUTH_PROFILE_UPDATED", {
@@ -72,4 +78,23 @@ export async function updateMemberProfileAction(formData: FormData) {
   revalidatePath("/account/onboarding");
 
   redirect(returnTo === "/account/onboarding" ? "/account?profile=updated" : `${returnTo}?profile=updated`);
+}
+
+function marketingConsentUpdate({
+  wantsMarketingConsent,
+  now,
+}: {
+  wantsMarketingConsent: boolean;
+  now: Date;
+}) {
+  if (wantsMarketingConsent) {
+    return {
+      memberMarketingConsentAt: now,
+      memberMarketingConsentRevokedAt: null,
+    };
+  }
+
+  return {
+    memberMarketingConsentRevokedAt: now,
+  };
 }

@@ -12,6 +12,7 @@ type MemberProfileFormProps = {
         experienceLevel: ExperienceLevel | null;
       }
     | null;
+  marketingConsentActive: boolean;
   requireMissingConsents: boolean;
   returnTo: string;
   submitLabel: string;
@@ -41,6 +42,7 @@ const experienceOptions: Array<{
 
 export function MemberProfileForm({
   profile,
+  marketingConsentActive,
   requireMissingConsents,
   returnTo,
   submitLabel,
@@ -120,6 +122,23 @@ export function MemberProfileForm({
           />
         </div>
       ) : null}
+
+      <div className="mt-8 border-t border-ats-border pt-5">
+        <label className="flex gap-3 text-sm font-semibold leading-6 text-ats-text">
+          <input
+            name="memberMarketingConsent"
+            type="checkbox"
+            defaultChecked={marketingConsentActive}
+            className="mt-1 h-4 w-4 rounded border-ats-border bg-ats-black accent-ats-blue"
+          />
+          <span>
+            Aegean Track Society üyelik ve etkinlik duyurularını almak istiyorum.
+          </span>
+        </label>
+        <p className="mt-2 text-xs font-semibold leading-5 text-ats-muted">
+          Bu tercihi istediğiniz zaman değiştirabilirsiniz.
+        </p>
+      </div>
 
       <button
         type="submit"

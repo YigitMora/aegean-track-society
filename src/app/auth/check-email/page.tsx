@@ -20,10 +20,16 @@ export default async function CheckEmailPage({ searchParams }: CheckEmailPagePro
       footer={
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/auth/login" className="text-ats-blue transition hover:text-ats-blue-hover">
-            Giriş sayfasına dön
+            Giriş Yap
+          </Link>
+          <Link
+            href="/auth/forgot-password"
+            className="text-ats-blue transition hover:text-ats-blue-hover"
+          >
+            Şifremi Unuttum
           </Link>
           <Link href={returnTo} className="text-ats-blue transition hover:text-ats-blue-hover">
-            Devam edilecek sayfa
+            Devam Et
           </Link>
         </div>
       }
@@ -35,6 +41,11 @@ export default async function CheckEmailPage({ searchParams }: CheckEmailPagePro
         Hesabınız doğrulandıktan sonra Aegean Track Society üyelik alanına
         erişebilirsiniz. Garaj, etkinlik geçmişi ve biletler sonraki fazlarda
         eklenecektir.
+      </p>
+      <p className="mt-4 text-sm font-semibold leading-6 text-ats-muted">
+        Bu e-posta ile daha önce üyelik oluşturduysanız yeni bir hesap açılmaz.
+        Giriş yapabilir veya şifrenizi hatırlamıyorsanız şifre yenileme
+        bağlantısı isteyebilirsiniz.
       </p>
     </AuthShell>
   );

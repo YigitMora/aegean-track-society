@@ -167,6 +167,12 @@ user metadata and copied into `MemberProfile` only after verified provisioning.
 Verified members with incomplete account profiles are directed to
 `/account/onboarding`.
 
+Supabase user metadata is treated only as temporary transport. Prisma remains
+the source of truth for member profile and consent records; metadata imports are
+bounded, ignored when invalid or unreasonable, and never overwrite existing
+Prisma consent/profile data. Repeated signup attempts use neutral copy and
+direct users toward login or password reset without revealing account existence.
+
 ## Participant Code
 
 Participant codes follow `ATD-KULA-2026-0001` and are generated inside the same database transaction that confirms payment.

@@ -15,6 +15,7 @@ export type MemberProfileInput = {
   emergencyContactName: string | null;
   emergencyContactPhone: string | null;
   experienceLevel: ExperienceLevel | null;
+  memberMarketingConsent: boolean;
 };
 
 export type MemberSignupInput = {
@@ -69,6 +70,7 @@ export function parseMemberProfileForm(
     formData.get("emergencyContactPhone"),
   );
   const experienceLevel = parseExperienceLevel(formData.get("experienceLevel"));
+  const memberMarketingConsent = formData.get("memberMarketingConsent") === "on";
   const acceptedMissingConsents =
     formData.get("memberKvkkAccepted") === "on" &&
     formData.get("memberTermsAccepted") === "on";
@@ -105,6 +107,7 @@ export function parseMemberProfileForm(
       emergencyContactName,
       emergencyContactPhone,
       experienceLevel,
+      memberMarketingConsent,
     },
   };
 }
