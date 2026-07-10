@@ -6,6 +6,12 @@ import { redirect } from "next/navigation";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { normalizeMemberReturnTo } from "@/lib/member-auth";
 import { prisma } from "@/lib/prisma";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  buildVehicleImagePath,
+  validateVehicleImageFile,
+  vehicleImagesBucket,
+} from "@/lib/vehicle-images";
 import { parseVehicleForm } from "@/lib/vehicle-validation";
 
 type GarageError =
@@ -15,6 +21,11 @@ type GarageError =
   | "archive_failed"
   | "restore_conflict"
   | "primary_conflict"
+  | "unsupported_format"
+  | "file_too_large"
+  | "storage_unavailable"
+  | "upload_failed"
+  | "remove_failed"
   | "failed";
 
 const garagePath = "/account/garage";
@@ -493,6 +504,170 @@ export async function restoreVehicleAction(vehicleId: string) {
   redirect(`${garagePath}?garage=restored`);
 }
 
+export async function uploadVehicleImageAction(vehicleId: string, formData: FormData) {
+  const memberUser = await requireCompleteMemberUser(`/account/garage/${vehicleId}`);
+  const fileValue = formData.get("image");
+  const imageFile = fileValue instanceof File ? fileValue : null;
+  const validation = validateVehicleImageFile(imageFile);
+
+  if (!validation.ok) {
+    redirectWithError(`/account/garage/${vehicleId}`, validation.error);
+  }
+
+  if (!imageFile) {
+    redirectWithError(`/account/garage/${vehicleId}`, "upload_failed");
+  }
+
+  let oldImagePath: string | null = null;
+  let nextImagePath: string | null = null;
+
+  try {
+    const vehicle = await prisma.vehicle.findFirst({
+      where: {
+        id: vehicleId,
+        userId: memberUser.id,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        imagePath: true,
+      },
+    });
+
+    if (!vehicle) {
+      redirectWithError(garagePath, "not_found");
+    }
+
+    oldImagePath = vehicle.imagePath;
+    nextImagePath = buildVehicleImagePath({
+      userId: memberUser.id,
+      vehicleId: vehicle.id,
+      mimeType: validation.mimeType,
+    });
+
+    const supabase = await createSupabaseServerClient();
+    const { error: uploadError } = await supabase.storage
+      .from(vehicleImagesBucket)
+      .upload(nextImagePath, imageFile, {
+        cacheControl: "31536000",
+        contentType: validation.mimeType,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      logVehicleImageFailure(memberUser.id, vehicleId, "upload", uploadError);
+      redirectWithError(`/account/garage/${vehicleId}`, "upload_failed");
+    }
+
+    await prisma.vehicle.update({
+      where: {
+        id: vehicleId,
+        userId: memberUser.id,
+        deletedAt: null,
+      },
+      data: {
+        imagePath: nextImagePath,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (oldImagePath && oldImagePath !== nextImagePath) {
+      await deleteVehicleImageObject(oldImagePath, memberUser.id, vehicleId, "replace_cleanup");
+    }
+
+    console.log(oldImagePath ? "VEHICLE_IMAGE_REPLACED" : "VEHICLE_IMAGE_UPLOADED", {
+      userId: memberUser.id,
+      vehicleId,
+      operation: oldImagePath ? "replace" : "upload",
+    });
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    if (nextImagePath && oldImagePath !== nextImagePath) {
+      await deleteVehicleImageObject(nextImagePath, memberUser.id, vehicleId, "upload_rollback");
+    }
+
+    logVehicleImageFailure(memberUser.id, vehicleId, "upload", error);
+    redirectWithError(
+      `/account/garage/${vehicleId}`,
+      imageErrorForUnknownFailure(error, "upload_failed"),
+    );
+  }
+
+  revalidateGarage();
+  revalidatePath(`/account/garage/${vehicleId}`);
+  redirect(`${garagePath}/${vehicleId}?garage=${oldImagePath ? "image_replaced" : "image_uploaded"}`);
+}
+
+export async function removeVehicleImageAction(vehicleId: string) {
+  const memberUser = await requireCompleteMemberUser(`/account/garage/${vehicleId}`);
+  let oldImagePath: string | null = null;
+
+  try {
+    const vehicle = await prisma.vehicle.findFirst({
+      where: {
+        id: vehicleId,
+        userId: memberUser.id,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        imagePath: true,
+      },
+    });
+
+    if (!vehicle) {
+      redirectWithError(garagePath, "not_found");
+    }
+
+    oldImagePath = vehicle.imagePath;
+
+    if (!oldImagePath) {
+      redirect(`${garagePath}/${vehicleId}?garage=image_removed`);
+    }
+
+    await prisma.vehicle.update({
+      where: {
+        id: vehicleId,
+        userId: memberUser.id,
+        deletedAt: null,
+      },
+      data: {
+        imagePath: null,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    await deleteVehicleImageObject(oldImagePath, memberUser.id, vehicleId, "remove_cleanup");
+
+    console.log("VEHICLE_IMAGE_REMOVED", {
+      userId: memberUser.id,
+      vehicleId,
+      operation: "remove",
+    });
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    logVehicleImageFailure(memberUser.id, vehicleId, "remove", error);
+    redirectWithError(
+      `/account/garage/${vehicleId}`,
+      imageErrorForUnknownFailure(error, "remove_failed"),
+    );
+  }
+
+  revalidateGarage();
+  revalidatePath(`/account/garage/${vehicleId}`);
+  redirect(`${garagePath}/${vehicleId}?garage=image_removed`);
+}
+
 function revalidateGarage() {
   revalidatePath("/account");
   revalidatePath(garagePath);
@@ -549,9 +724,67 @@ function logGarageFailure(
   });
 }
 
+async function deleteVehicleImageObject(
+  imagePath: string,
+  userId: string,
+  vehicleId: string,
+  operation: string,
+) {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.storage.from(vehicleImagesBucket).remove([imagePath]);
+
+    if (error) {
+      console.warn("VEHICLE_IMAGE_CLEANUP_FAILED", {
+        userId,
+        vehicleId,
+        operation,
+        errorCode: safeErrorCode(error),
+      });
+    }
+  } catch (error) {
+    console.warn("VEHICLE_IMAGE_CLEANUP_FAILED", {
+      userId,
+      vehicleId,
+      operation,
+      errorCode: safeErrorCode(error),
+    });
+  }
+}
+
+function logVehicleImageFailure(
+  userId: string,
+  vehicleId: string,
+  operation: string,
+  error: unknown,
+) {
+  console.warn("VEHICLE_IMAGE_OPERATION_FAILED", {
+    userId,
+    vehicleId,
+    operation,
+    errorCode: safeErrorCode(error),
+  });
+}
+
+function imageErrorForUnknownFailure(error: unknown, fallback: GarageError): GarageError {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+    return "not_found";
+  }
+
+  if (error instanceof Error && error.name === "SupabaseConfigurationError") {
+    return "storage_unavailable";
+  }
+
+  return fallback;
+}
+
 function safeErrorCode(error: unknown) {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     return error.code;
+  }
+
+  if (typeof error === "object" && error !== null && "statusCode" in error) {
+    return String((error as { statusCode?: unknown }).statusCode ?? "STORAGE_ERROR");
   }
 
   if (error instanceof Error) {
