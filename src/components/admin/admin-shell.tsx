@@ -35,6 +35,12 @@ export function AdminShell({ title, eyebrow, actions, children }: AdminShellProp
               Participants
             </Link>
             <Link
+              href="/admin/members"
+              className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
+            >
+              Members
+            </Link>
+            <Link
               href="/admin/check-in"
               className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
             >
