@@ -345,6 +345,7 @@ model Vehicle {
   plateNumber   String
   color         String?
   isPrimary     Boolean        @default(false)
+  imagePath     String?
   deletedAt     DateTime?
   registrations Registration[]
   createdAt     DateTime       @default(now())

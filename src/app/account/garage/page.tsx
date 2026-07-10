@@ -6,6 +6,7 @@ import {
 } from "@/app/account/garage/actions";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
+import { createOwnedVehicleImageSignedUrl } from "@/lib/vehicle-images";
 
 type GaragePageProps = {
   searchParams: Promise<{
@@ -47,6 +48,16 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
       },
     }),
   ]);
+  const activeVehicleCards = await Promise.all(
+    activeVehicles.map(async (vehicle) => ({
+      ...vehicle,
+      coverImageUrl: await createOwnedVehicleImageSignedUrl(vehicle, memberUser.id),
+    })),
+  );
+  const archivedVehicleCards = archivedVehicles.map((vehicle) => ({
+    ...vehicle,
+    coverImageUrl: null,
+  }));
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">
@@ -73,9 +84,9 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
 
       <GarageMessage garage={params.garage} garageError={params.garageError} />
 
-      {activeVehicles.length > 0 ? (
+      {activeVehicleCards.length > 0 ? (
         <div className="mt-10 grid gap-5 lg:grid-cols-2">
-          {activeVehicles.map((vehicle) => (
+          {activeVehicleCards.map((vehicle) => (
             <VehicleCard key={vehicle.id} vehicle={vehicle} />
           ))}
         </div>
@@ -94,7 +105,7 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
         </div>
       )}
 
-      {archivedVehicles.length > 0 ? (
+      {archivedVehicleCards.length > 0 ? (
         <section className="mt-16 border-t border-ats-border pt-10">
           <div className="max-w-2xl">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-muted">
@@ -105,13 +116,51 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
             </h2>
           </div>
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            {archivedVehicles.map((vehicle) => (
+            {archivedVehicleCards.map((vehicle) => (
               <ArchivedVehicleCard key={vehicle.id} vehicle={vehicle} />
             ))}
           </div>
         </section>
       ) : null}
     </section>
+  );
+}
+
+function VehicleCoverPreview({
+  coverImageUrl,
+  label,
+  compact = false,
+}: {
+  coverImageUrl: string | null;
+  label: string;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className={`relative overflow-hidden bg-ats-black ${
+        compact ? "aspect-[5/2]" : "aspect-[16/9]"
+      }`}
+    >
+      {coverImageUrl ? (
+        <img
+          src={coverImageUrl}
+          alt={`${label} araç fotoğrafı`}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_50%_30%,rgba(76,201,240,0.16),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))]">
+          <div className="text-center">
+            <p className="text-xs font-black uppercase tracking-[0.28em] text-ats-blue">
+              Aegean Track Society
+            </p>
+            <p className="mt-2 text-sm font-semibold text-ats-muted">
+              Araç fotoğrafı eklenmedi
+            </p>
+          </div>
+        </div>
+      )}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ats-black/65 to-transparent" />
+    </div>
   );
 }
 
@@ -126,14 +175,19 @@ function VehicleCard({
     plateNumber: string;
     color: string | null;
     isPrimary: boolean;
+    coverImageUrl: string | null;
   };
 }) {
   const makePrimaryAction = makePrimaryVehicleAction.bind(null, vehicle.id);
   const archiveAction = archiveVehicleAction.bind(null, vehicle.id);
 
   return (
-    <article className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <article className="overflow-hidden rounded-lg border border-ats-border bg-ats-surface shadow-soft">
+      <VehicleCoverPreview
+        coverImageUrl={vehicle.coverImageUrl}
+        label={`${vehicle.brand} ${vehicle.model}`}
+      />
+      <div className="flex flex-wrap items-start justify-between gap-4 p-6 pb-0">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-ats-muted">
             {vehicle.plateNumber}
@@ -152,7 +206,7 @@ function VehicleCard({
         ) : null}
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 p-6">
         <Link
           href={`/account/garage/${vehicle.id}`}
           className="inline-flex h-11 items-center justify-center rounded-full border border-ats-border px-5 text-xs font-black uppercase tracking-[0.12em] text-ats-text transition hover:border-ats-blue hover:text-ats-blue"
@@ -192,13 +246,19 @@ function ArchivedVehicleCard({
     year: number | null;
     plateNumber: string;
     color: string | null;
+    coverImageUrl: string | null;
   };
 }) {
   const restoreAction = restoreVehicleAction.bind(null, vehicle.id);
 
   return (
-    <article className="rounded-lg border border-ats-border bg-ats-black p-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <article className="overflow-hidden rounded-lg border border-ats-border bg-ats-black">
+      <VehicleCoverPreview
+        coverImageUrl={vehicle.coverImageUrl}
+        label={`${vehicle.brand} ${vehicle.model}`}
+        compact
+      />
+      <div className="flex flex-wrap items-start justify-between gap-4 p-5">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-ats-muted">
             {vehicle.plateNumber}
@@ -274,6 +334,18 @@ function successMessage(value?: string) {
     return "Araç geri yüklendi.";
   }
 
+  if (value === "image_uploaded") {
+    return "Araç fotoğrafı eklendi.";
+  }
+
+  if (value === "image_replaced") {
+    return "Araç fotoğrafı güncellendi.";
+  }
+
+  if (value === "image_removed") {
+    return "Araç fotoğrafı kaldırıldı.";
+  }
+
   return null;
 }
 
@@ -296,6 +368,26 @@ function errorMessage(value?: string) {
 
   if (value === "primary_conflict") {
     return "Birincil araç güncellenemedi. Lütfen sayfayı yenileyip tekrar deneyin.";
+  }
+
+  if (value === "unsupported_format") {
+    return "Araç fotoğrafı JPEG, PNG veya WebP formatında olmalı.";
+  }
+
+  if (value === "file_too_large") {
+    return "Araç fotoğrafı en fazla 8 MB olabilir.";
+  }
+
+  if (value === "storage_unavailable") {
+    return "Fotoğraf depolama servisine şu anda ulaşılamıyor.";
+  }
+
+  if (value === "upload_failed") {
+    return "Araç fotoğrafı yüklenemedi. Lütfen tekrar deneyin.";
+  }
+
+  if (value === "remove_failed") {
+    return "Araç fotoğrafı kaldırılamadı. Lütfen tekrar deneyin.";
   }
 
   if (value) {
