@@ -159,7 +159,7 @@ export async function updateVehicleAction(vehicleId: string, formData: FormData)
     };
 
     if (parsed.data.isPrimary && !existingVehicle.isPrimary) {
-      const [, updatedVehicle] = await prisma.$transaction([
+      await prisma.$transaction([
         prisma.vehicle.updateMany({
           where: {
             userId: memberUser.id,
@@ -170,7 +170,7 @@ export async function updateVehicleAction(vehicleId: string, formData: FormData)
             isPrimary: false,
           },
         }),
-        prisma.vehicle.updateMany({
+        prisma.vehicle.update({
           where: {
             id: vehicleId,
             userId: memberUser.id,
@@ -180,25 +180,23 @@ export async function updateVehicleAction(vehicleId: string, formData: FormData)
             ...updateData,
             isPrimary: true,
           },
+          select: {
+            id: true,
+          },
         }),
       ]);
-
-      if (updatedVehicle.count === 0) {
-        redirectWithError(garagePath, "not_found");
-      }
     } else {
-      const updatedVehicle = await prisma.vehicle.updateMany({
+      await prisma.vehicle.update({
         where: {
           id: vehicleId,
           userId: memberUser.id,
           deletedAt: null,
         },
         data: updateData,
+        select: {
+          id: true,
+        },
       });
-
-      if (updatedVehicle.count === 0) {
-        redirectWithError(garagePath, "not_found");
-      }
     }
 
     console.log("GARAGE_VEHICLE_UPDATED", {
@@ -214,7 +212,7 @@ export async function updateVehicleAction(vehicleId: string, formData: FormData)
     logGarageFailure(memberUser.id, "update", error, vehicleId);
     redirectWithError(
       `/account/garage/${vehicleId}`,
-      errorCodeForVehicleWrite(error, "duplicate_plate"),
+      errorCodeForVehicleWrite(error, "not_found"),
     );
   }
 
@@ -243,7 +241,7 @@ export async function makePrimaryVehicleAction(vehicleId: string) {
     }
 
     if (!vehicle.isPrimary) {
-      const [, updatedVehicle] = await prisma.$transaction([
+      await prisma.$transaction([
         prisma.vehicle.updateMany({
           where: {
             userId: memberUser.id,
@@ -254,7 +252,7 @@ export async function makePrimaryVehicleAction(vehicleId: string) {
             isPrimary: false,
           },
         }),
-        prisma.vehicle.updateMany({
+        prisma.vehicle.update({
           where: {
             id: vehicleId,
             userId: memberUser.id,
@@ -263,12 +261,11 @@ export async function makePrimaryVehicleAction(vehicleId: string) {
           data: {
             isPrimary: true,
           },
+          select: {
+            id: true,
+          },
         }),
       ]);
-
-      if (updatedVehicle.count === 0) {
-        redirectWithError(garagePath, "not_found");
-      }
 
       console.log("GARAGE_PRIMARY_CHANGED", {
         userId: memberUser.id,
@@ -282,7 +279,7 @@ export async function makePrimaryVehicleAction(vehicleId: string) {
     }
 
     logGarageFailure(memberUser.id, "make_primary", error, vehicleId);
-    redirectWithError(garagePath, errorCodeForVehicleWrite(error, "primary_conflict"));
+    redirectWithError(garagePath, errorCodeForVehicleWrite(error, "not_found"));
   }
 
   revalidateGarage();
@@ -334,7 +331,7 @@ export async function archiveVehicleAction(vehicleId: string) {
       });
 
       const operations = [
-        prisma.vehicle.updateMany({
+        prisma.vehicle.update({
           where: {
             id: vehicleId,
             userId: memberUser.id,
@@ -344,12 +341,15 @@ export async function archiveVehicleAction(vehicleId: string) {
             deletedAt: now,
             isPrimary: false,
           },
+          select: {
+            id: true,
+          },
         }),
       ];
 
       if (nextPrimaryVehicle) {
         operations.push(
-          prisma.vehicle.updateMany({
+          prisma.vehicle.update({
             where: {
               id: nextPrimaryVehicle.id,
               userId: memberUser.id,
@@ -358,17 +358,16 @@ export async function archiveVehicleAction(vehicleId: string) {
             data: {
               isPrimary: true,
             },
+            select: {
+              id: true,
+            },
           }),
         );
       }
 
-      const [archivedVehicle] = await prisma.$transaction(operations);
-
-      if (archivedVehicle.count === 0) {
-        redirectWithError(garagePath, "not_found");
-      }
+      await prisma.$transaction(operations);
     } else {
-      const archivedVehicle = await prisma.vehicle.updateMany({
+      await prisma.vehicle.update({
         where: {
           id: vehicleId,
           userId: memberUser.id,
@@ -378,11 +377,10 @@ export async function archiveVehicleAction(vehicleId: string) {
           deletedAt: now,
           isPrimary: false,
         },
+        select: {
+          id: true,
+        },
       });
-
-      if (archivedVehicle.count === 0) {
-        redirectWithError(garagePath, "not_found");
-      }
     }
 
     console.log("GARAGE_VEHICLE_ARCHIVED", {
@@ -497,23 +495,36 @@ function redirectWithError(pathname: string, error: GarageError): never {
 }
 
 function errorCodeForVehicleWrite(error: unknown, fallback: GarageError): GarageError {
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError)) {
+    return "failed";
+  }
+
+  if (error.code === "P2025") {
+    return fallback;
+  }
+
+  if (error.code === "P2002") {
     const target = Array.isArray(error.meta?.target)
       ? error.meta.target.join(",")
       : String(error.meta?.target ?? "");
 
-    if (target.includes("Vehicle_one_active_primary_per_user")) {
-      return "primary_conflict";
-    }
-
-    if (target.includes("Vehicle_user_active_plate_key")) {
+    if (
+      target.includes("Vehicle_user_active_plate_key") ||
+      target.includes("plateNumber")
+    ) {
       return "duplicate_plate";
     }
 
-    return fallback;
+    if (
+      target.includes("Vehicle_one_active_primary_per_user") ||
+      target === "userId" ||
+      target.includes("userId")
+    ) {
+      return "primary_conflict";
+    }
   }
 
-  return "failed";
+  return fallback;
 }
 
 function logGarageFailure(
