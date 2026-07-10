@@ -130,6 +130,37 @@ EMAIL_FROM="Aegean Track Society <registrations@your-domain.com>"
 
 `EMAIL_FROM` must use a sender/domain verified in Resend. In manual launch mode, confirmation email is sent after an admin marks the registration as paid and confirmed. In iyzico mode, it is sent after server-side payment verification. If email sending fails, the registration remains confirmed and the failed attempt is recorded in `EmailLog`.
 
+## Member Authentication
+
+Member authentication uses Supabase Auth for signup, login, email verification,
+password recovery, and session cookies. Prisma owns only ATS domain records in
+the `public` schema.
+
+Configure local and production environments with:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="your-publishable-key"
+```
+
+Do not add a Supabase service role key to the public app environment. Passwords
+and password hashes are not stored in Prisma.
+
+Required Supabase redirect URLs:
+
+```txt
+http://localhost:3000/auth/confirm
+http://localhost:3000/auth/callback
+http://localhost:3000/auth/reset-password
+https://www.aegeantracksociety.com/auth/confirm
+https://www.aegeantracksociety.com/auth/callback
+https://www.aegeantracksociety.com/auth/reset-password
+```
+
+The first authentication sprint protects `/account` only. Public anonymous event
+registration remains available, and member-linked registrations, garage,
+registration history, and QR tickets are reserved for later phases.
+
 ## Participant Code
 
 Participant codes follow `ATD-KULA-2026-0001` and are generated inside the same database transaction that confirms payment.
@@ -168,6 +199,7 @@ Before launch in manual payment mode, verify:
 - `SEED_PACKAGE_SEP20_CAPACITY` has the real operational capacity before seeding/updating packages.
 - `DATABASE_URL` points to the production PostgreSQL database.
 - `NEXT_PUBLIC_APP_URL` is the public HTTPS production URL.
+- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` are set when member auth is enabled.
 - Deployment is served over HTTPS so mobile camera permissions work; iyzico callbacks also require HTTPS if reactivated.
 - `/admin` shows no unexpected readiness warning cards.
 - `/admin/check-in` camera scan, pasted QR URL, and manual search are tested on the event phones.
@@ -218,6 +250,8 @@ For Vercel or similar hosting:
 - Use a production PostgreSQL database and set `DATABASE_URL`.
 - Set `PAYMENT_MODE="manual"` for launch.
 - Set `NEXT_PUBLIC_APP_URL` to the public HTTPS production URL.
+- Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+- Add the production Supabase redirect URLs for `/auth/confirm`, `/auth/callback`, and `/auth/reset-password`.
 - Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and a long random `ADMIN_SESSION_SECRET`.
 - Set `EMAIL_PROVIDER`, `RESEND_API_KEY`, and verified `EMAIL_FROM`.
 - Set real `SEED_PACKAGE_SEP20_PRICE` and `SEED_PACKAGE_SEP20_CAPACITY`, then seed or update the production package.

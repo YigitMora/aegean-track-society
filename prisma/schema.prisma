@@ -83,6 +83,15 @@ enum EmailStatus {
   FAILED
 }
 
+enum MemberRole {
+  MEMBER
+}
+
+enum MemberStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 model Event {
   id                      String         @id @default(cuid())
   code                    String         @unique
@@ -290,4 +299,29 @@ model EmailLog {
 
   @@index([registrationId])
   @@index([type, status])
+}
+
+model User {
+  id        String         @id @db.Uuid
+  email     String         @unique
+  role      MemberRole     @default(MEMBER)
+  status    MemberStatus   @default(ACTIVE)
+  profile   MemberProfile?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  deletedAt DateTime?
+
+  @@index([status])
+}
+
+model MemberProfile {
+  id                 String    @id @default(cuid())
+  userId             String    @unique @db.Uuid
+  user               User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  fullName           String?
+  displayName        String?
+  phone              String?
+  profileCompletedAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
