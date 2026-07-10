@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/auth/actions";
 import { requireMemberUser } from "@/lib/member-auth";
 import { isMemberProfileComplete } from "@/lib/member-profile-validation";
+import { prisma } from "@/lib/prisma";
 
 type AccountPageProps = {
   searchParams: Promise<{
@@ -20,6 +21,27 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     redirect("/account/onboarding");
   }
 
+  const [activeVehicleCount, primaryVehicle] = await Promise.all([
+    prisma.vehicle.count({
+      where: {
+        userId: memberUser.id,
+        deletedAt: null,
+      },
+    }),
+    prisma.vehicle.findFirst({
+      where: {
+        userId: memberUser.id,
+        deletedAt: null,
+        isPrimary: true,
+      },
+      select: {
+        brand: true,
+        model: true,
+        plateNumber: true,
+      },
+    }),
+  ]);
+
   return (
     <section className="mx-auto max-w-6xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">
       <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
@@ -31,9 +53,9 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             Hesabınız hazır.
           </h1>
           <p className="mt-6 text-base leading-7 text-ats-muted sm:text-lg sm:leading-8">
-            Bu alan Aegean Track Society üyelik altyapısının ilk fazıdır.
-            Dijital garaj, etkinlik kayıt geçmişi ve QR biletler sonraki
-            sprintlerde eklenecektir.
+            Bu alan Aegean Track Society üyelik altyapısının merkezidir.
+            Garajınızı yönetebilir, profil bilgilerinizi güncelleyebilir ve
+            sonraki fazlarda etkinlik kayıt geçmişinize ulaşabilirsiniz.
           </p>
         </div>
 
@@ -72,10 +94,33 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
           <section className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-blue">
+              Garaj özeti
+            </p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <Info label="Aktif araç" value={String(activeVehicleCount)} />
+              <Info
+                label="Birincil araç"
+                value={
+                  primaryVehicle
+                    ? `${primaryVehicle.brand} ${primaryVehicle.model} · ${primaryVehicle.plateNumber}`
+                    : "-"
+                }
+              />
+            </div>
+            <Link
+              href="/account/garage"
+              className="mt-6 inline-flex h-12 items-center justify-center rounded-full border border-ats-border px-6 text-sm font-black text-ats-text transition hover:border-ats-blue hover:text-ats-blue"
+            >
+              Garajımı Aç
+            </Link>
+          </section>
+
+          <section className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-blue">
               Yaklaşan altyapı
             </p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {["Dijital garaj", "Kayıt geçmişi", "QR biletler"].map((item) => (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {["Kayıt geçmişi", "QR biletler"].map((item) => (
                 <div key={item} className="rounded-md border border-ats-border bg-ats-black p-4">
                   <p className="text-sm font-black text-ats-text">{item}</p>
                   <p className="mt-2 text-xs font-semibold leading-5 text-ats-muted">
