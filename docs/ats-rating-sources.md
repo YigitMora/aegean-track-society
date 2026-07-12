@@ -28,6 +28,8 @@ Flex-fuel hardware is a hardware declaration under `flex_fuel_hardware`, not ECU
 
 Damper records receive modest Handling/Track Readiness values and require an active sport-spring record. Coilovers conflict with sport springs and dampers through catalog rules, so the batch validator accepts spring + damper together, rejects damper alone, and rejects damper + coilover.
 
+Turbo rows use the existing rating formula and platform-impact override behavior. Named turbo families receive engine-family gated impacts; generic Hybrid Turbo and Big Turbo rows are lower-confidence fallback declarations and are suppressed when a compatible named turbo exists. No turbo row creates hard requirements for ECU software, downpipe, intercooler, fuel, or drivetrain upgrades.
+
 ## Brake Pad Compounds
 
 | Code | Source title | Publisher | URL | Values used | Uncertainty note |

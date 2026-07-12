@@ -185,6 +185,10 @@ export function normalizeVehicleIdentity(value: string | null | undefined) {
 }
 
 export const genericEcuFallbackCodes = new Set(["ecu_stage_1", "ecu_stage_2"]);
+export const genericTurboFallbackCodes = new Set([
+  "engine_hybrid_turbo_generic",
+  "engine_big_turbo_generic",
+]);
 
 export const singleInstanceComponentTypes = new Set([
   "air_filter",
@@ -200,6 +204,11 @@ export const singleInstanceComponentTypes = new Set([
   "axle_back_exhaust",
   "exhaust_manifold",
   "turbo_upgrade",
+  "hybrid_turbo",
+  "big_turbo",
+  "turbocharger_upgrade",
+  "twin_turbo_upgrade",
+  "supercharger_upgrade",
   "flex_fuel",
   "flex_fuel_hardware",
   "sport_springs",
@@ -254,6 +263,14 @@ const tyreSlotComponentTypes = new Set([
 ]);
 const wheelSlotComponentTypes = new Set(["wheel", "lightweight_wheel", "forged_wheel"]);
 const ecuTuneSlotComponentTypes = new Set(["ecu_software", "platform_tune_package"]);
+const turboSlotComponentTypes = new Set([
+  "turbo_upgrade",
+  "hybrid_turbo",
+  "big_turbo",
+  "turbocharger_upgrade",
+  "twin_turbo_upgrade",
+  "supercharger_upgrade",
+]);
 
 export function componentSlotKeyForDefinition(definition: {
   componentTypeCode?: string | null;
@@ -276,11 +293,19 @@ export function componentSlotKeyForDefinition(definition: {
     return "ecu_software";
   }
 
+  if (turboSlotComponentTypes.has(componentTypeCode)) {
+    return "turbo";
+  }
+
   return componentTypeCode;
 }
 
 export function isGenericEcuFallbackDefinition(definition: { code?: string }) {
   return Boolean(definition.code && genericEcuFallbackCodes.has(definition.code));
+}
+
+export function isGenericTurboFallbackDefinition(definition: { code?: string }) {
+  return Boolean(definition.code && genericTurboFallbackCodes.has(definition.code));
 }
 
 export function isNamedProviderEcuTuneDefinition(definition: VehicleBuildDefinitionForRules) {
@@ -317,6 +342,40 @@ export function hasNamedProviderEcuTuneForVehicle({
   );
 }
 
+export function isNamedProviderTurboDefinition(definition: VehicleBuildDefinitionForRules) {
+  if (!definition.active || isGenericTurboFallbackDefinition(definition)) {
+    return false;
+  }
+
+  if (!definition.brand || definition.brand === "Generic") {
+    return false;
+  }
+
+  return componentSlotKeyForDefinition(definition) === "turbo";
+}
+
+export function hasNamedProviderTurboForVehicle({
+  vehicle,
+  definitions,
+}: {
+  vehicle: VehicleBuildVehicle;
+  definitions: VehicleBuildDefinitionForRules[];
+}) {
+  if (!vehicle.vehicleDefinitionId) {
+    return false;
+  }
+
+  return definitions.some(
+    (definition) =>
+      isNamedProviderTurboDefinition(definition) &&
+      isModificationApplicableToVehiclePowertrain(
+        definition,
+        vehicle.vehicleDefinition?.powertrain ?? null,
+      ) &&
+      isModificationCompatible(vehicle, definition.compatibilities),
+  );
+}
+
 export function formatModificationDefinition(definition: {
   code?: string;
   brand: string | null;
@@ -342,11 +401,13 @@ export function evaluateModificationAvailability({
   definition,
   installedModifications,
   hasNamedProviderEcuTune = false,
+  hasNamedProviderTurbo = false,
 }: {
   vehicle: VehicleBuildVehicle;
   definition: VehicleBuildDefinitionForRules;
   installedModifications: VehicleBuildInstalledModification[];
   hasNamedProviderEcuTune?: boolean;
+  hasNamedProviderTurbo?: boolean;
 }): VehicleModificationAvailability {
   if (!definition.active) {
     return {
@@ -375,6 +436,13 @@ export function evaluateModificationAvailability({
   }
 
   if (isGenericEcuFallbackDefinition(definition) && hasNamedProviderEcuTune) {
+    return {
+      ok: false,
+      code: "MODIFICATION_INCOMPATIBLE",
+    };
+  }
+
+  if (isGenericTurboFallbackDefinition(definition) && hasNamedProviderTurbo) {
     return {
       ok: false,
       code: "MODIFICATION_INCOMPATIBLE",
@@ -495,11 +563,13 @@ export function evaluateModificationBatchAvailability({
   definitions,
   installedModifications,
   hasNamedProviderEcuTune = false,
+  hasNamedProviderTurbo = false,
 }: {
   vehicle: VehicleBuildVehicle;
   definitions: VehicleBuildDefinitionForRules[];
   installedModifications: VehicleBuildInstalledModification[];
   hasNamedProviderEcuTune?: boolean;
+  hasNamedProviderTurbo?: boolean;
 }): VehicleModificationBatchAvailability {
   const installedDefinitionIds = new Set(
     installedModifications.map((modification) => modification.modificationDefinitionId),
@@ -544,6 +614,14 @@ export function evaluateModificationBatchAvailability({
     }
 
     if (isGenericEcuFallbackDefinition(definition) && hasNamedProviderEcuTune) {
+      return {
+        ok: false,
+        code: "MODIFICATION_INCOMPATIBLE",
+        offendingDefinitionId: definition.id,
+      };
+    }
+
+    if (isGenericTurboFallbackDefinition(definition) && hasNamedProviderTurbo) {
       return {
         ok: false,
         code: "MODIFICATION_INCOMPATIBLE",

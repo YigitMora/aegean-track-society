@@ -13,8 +13,12 @@ import {
   evaluateModificationRemoval,
   formatModificationDefinition,
   genericEcuFallbackCodes,
+  genericTurboFallbackCodes,
   hasNamedProviderEcuTuneForVehicle,
+  hasNamedProviderTurboForVehicle,
   isGenericEcuFallbackDefinition,
+  isGenericTurboFallbackDefinition,
+  isNamedProviderTurboDefinition,
   type VehicleBuildBatchResultCode,
   type VehicleBuildResultCode,
 } from "@/lib/vehicle-build-rules";
@@ -1007,11 +1011,15 @@ export async function addVehicleModificationAction(
         const hasNamedProviderEcuTune = isGenericEcuFallbackDefinition(definition)
           ? await loadHasNamedProviderEcuTuneForVehicle(tx, vehicle)
           : false;
+        const hasNamedProviderTurbo = isGenericTurboFallbackDefinition(definition)
+          ? await loadHasNamedProviderTurboForVehicle(tx, vehicle)
+          : false;
         const availability = evaluateModificationAvailability({
           vehicle,
           definition,
           installedModifications,
           hasNamedProviderEcuTune,
+          hasNamedProviderTurbo,
         });
 
         if (!availability.ok) {
@@ -1193,11 +1201,18 @@ export async function addVehicleModificationsBatchAction(
         )
           ? await loadHasNamedProviderEcuTuneForVehicle(tx, vehicle)
           : false;
+        const hasNamedProviderTurbo = orderedDefinitions.some(
+          isGenericTurboFallbackDefinition,
+        )
+          ? orderedDefinitions.some(isNamedProviderTurboDefinition) ||
+            (await loadHasNamedProviderTurboForVehicle(tx, vehicle))
+          : false;
         const availability = evaluateModificationBatchAvailability({
           vehicle,
           definitions: orderedDefinitions,
           installedModifications,
           hasNamedProviderEcuTune,
+          hasNamedProviderTurbo,
         });
 
         if (!availability.ok) {
@@ -1357,11 +1372,18 @@ export async function previewVehicleModificationsRatingAction(
     )
       ? await loadHasNamedProviderEcuTuneForVehicle(prisma, vehicle)
       : false;
+    const hasNamedProviderTurbo = orderedDefinitions.some(
+      isGenericTurboFallbackDefinition,
+    )
+      ? orderedDefinitions.some(isNamedProviderTurboDefinition) ||
+        (await loadHasNamedProviderTurboForVehicle(prisma, vehicle))
+      : false;
     const availability = evaluateModificationBatchAvailability({
       vehicle,
       definitions: orderedDefinitions,
       installedModifications,
       hasNamedProviderEcuTune,
+      hasNamedProviderTurbo,
     });
 
     if (!availability.ok) {
@@ -2444,6 +2466,36 @@ async function loadHasNamedProviderEcuTuneForVehicle(
   return hasNamedProviderEcuTuneForVehicle({
     vehicle,
     definitions: namedEcuDefinitions,
+  });
+}
+
+async function loadHasNamedProviderTurboForVehicle(
+  client: Pick<Prisma.TransactionClient, "modificationDefinition">,
+  vehicle: Parameters<typeof hasNamedProviderTurboForVehicle>[0]["vehicle"],
+) {
+  const namedTurboDefinitions = await client.modificationDefinition.findMany({
+    where: {
+      active: true,
+      code: {
+        notIn: [...genericTurboFallbackCodes],
+      },
+      componentTypeCode: {
+        in: [
+          "turbo_upgrade",
+          "hybrid_turbo",
+          "big_turbo",
+          "turbocharger_upgrade",
+          "twin_turbo_upgrade",
+          "supercharger_upgrade",
+        ],
+      },
+    },
+    select: modificationDefinitionRuleSelect,
+  });
+
+  return hasNamedProviderTurboForVehicle({
+    vehicle,
+    definitions: namedTurboDefinitions,
   });
 }
 

@@ -634,6 +634,13 @@ function CatalogOptionDetails({
     if (spec.minimumFuelOctaneRon !== null) {
       details.push(["Yakıt", `${spec.minimumFuelOctaneRon} RON+`]);
     }
+  } else if (isTurboComponent(option.componentTypeCode)) {
+    details.push(
+      ["Ürün", [option.brand, option.name, option.variant].filter(Boolean).join(" / ")],
+      ["Turbo tipi", turboTypeLabel(option)],
+      ["Yol", suspensionRoadSuitabilityLabel(option.usageClass)],
+      ["Pist", suspensionTrackSuitabilityLabel(option.usageClass)],
+    );
   } else if (option.componentTypeCode === "damper") {
     details.push(
       ["Aile", [option.brand, option.variant ?? option.name].filter(Boolean).join(" / ")],
@@ -978,6 +985,35 @@ function isChassisHardwareComponent(value?: string | null) {
         "chassis_brace",
       ].includes(value),
   );
+}
+
+function isTurboComponent(value?: string | null) {
+  return Boolean(
+    value &&
+      [
+        "turbo_upgrade",
+        "hybrid_turbo",
+        "big_turbo",
+        "turbocharger_upgrade",
+        "twin_turbo_upgrade",
+        "supercharger_upgrade",
+      ].includes(value),
+  );
+}
+
+function turboTypeLabel(option: ModificationCatalogGroup["types"][number]["options"][number]) {
+  const labels: Record<string, string> = {
+    turbo_upgrade: option.variant ?? "Turbocharger Upgrade",
+    hybrid_turbo: "Hybrid Turbo",
+    big_turbo: "Big Turbo",
+    turbocharger_upgrade: "Turbocharger Upgrade",
+    twin_turbo_upgrade: "Twin Turbo Upgrade",
+    supercharger_upgrade: "Supercharger Upgrade",
+  };
+
+  return option.componentTypeCode
+    ? labels[option.componentTypeCode] ?? option.componentTypeCode
+    : "Turbocharger Upgrade";
 }
 
 function tuningPackageTypeLabel(value: string) {
