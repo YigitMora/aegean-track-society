@@ -17,7 +17,7 @@ import {
   validateVehicleImageFile,
   vehicleImagesBucket,
 } from "@/lib/vehicle-images";
-import { parseVehicleForm } from "@/lib/vehicle-validation";
+import { parseVehicleForm, type VehicleInput } from "@/lib/vehicle-validation";
 
 type GarageError =
   | "invalid"
@@ -53,11 +53,17 @@ export async function createVehicleAction(formData: FormData) {
     redirectWithError("/account/garage/new", "invalid");
   }
 
+  const vehicleInput = await resolveVehicleInputForWrite(parsed.data);
+
+  if (!vehicleInput) {
+    redirectWithError("/account/garage/new", "invalid");
+  }
+
   try {
     const duplicateVehicle = await prisma.vehicle.findFirst({
       where: {
         userId: memberUser.id,
-        plateNumber: parsed.data.plateNumber,
+        plateNumber: vehicleInput.plateNumber,
         deletedAt: null,
       },
       select: {
@@ -76,15 +82,16 @@ export async function createVehicleAction(formData: FormData) {
         isPrimary: true,
       },
     });
-    const shouldBecomePrimary = parsed.data.isPrimary || activePrimaryCount === 0;
+    const shouldBecomePrimary = vehicleInput.isPrimary || activePrimaryCount === 0;
 
     const vehicleData = {
       userId: memberUser.id,
-      brand: parsed.data.brand,
-      model: parsed.data.model,
-      year: parsed.data.year,
-      plateNumber: parsed.data.plateNumber,
-      color: parsed.data.color,
+      vehicleDefinitionId: vehicleInput.vehicleDefinitionId,
+      brand: vehicleInput.brand,
+      model: vehicleInput.model,
+      year: vehicleInput.year,
+      plateNumber: vehicleInput.plateNumber,
+      color: vehicleInput.color,
       isPrimary: shouldBecomePrimary,
     };
 
@@ -148,6 +155,12 @@ export async function updateVehicleAction(vehicleId: string, formData: FormData)
     redirectWithError(`/account/garage/${vehicleId}`, "invalid");
   }
 
+  const vehicleInput = await resolveVehicleInputForWrite(parsed.data);
+
+  if (!vehicleInput) {
+    redirectWithError(`/account/garage/${vehicleId}`, "invalid");
+  }
+
   try {
     const existingVehicle = await prisma.vehicle.findFirst({
       where: {
@@ -168,7 +181,7 @@ export async function updateVehicleAction(vehicleId: string, formData: FormData)
     const duplicateVehicle = await prisma.vehicle.findFirst({
       where: {
         userId: memberUser.id,
-        plateNumber: parsed.data.plateNumber,
+        plateNumber: vehicleInput.plateNumber,
         deletedAt: null,
         id: {
           not: vehicleId,
@@ -184,14 +197,15 @@ export async function updateVehicleAction(vehicleId: string, formData: FormData)
     }
 
     const updateData = {
-      brand: parsed.data.brand,
-      model: parsed.data.model,
-      year: parsed.data.year,
-      plateNumber: parsed.data.plateNumber,
-      color: parsed.data.color,
+      vehicleDefinitionId: vehicleInput.vehicleDefinitionId,
+      brand: vehicleInput.brand,
+      model: vehicleInput.model,
+      year: vehicleInput.year,
+      plateNumber: vehicleInput.plateNumber,
+      color: vehicleInput.color,
     };
 
-    if (parsed.data.isPrimary && !existingVehicle.isPrimary) {
+    if (vehicleInput.isPrimary && !existingVehicle.isPrimary) {
       await prisma.$transaction([
         prisma.vehicle.updateMany({
           where: {
@@ -251,6 +265,43 @@ export async function updateVehicleAction(vehicleId: string, formData: FormData)
 
   revalidateGarage();
   redirect(`${garagePath}?garage=updated`);
+}
+
+export async function unlinkVehicleDefinitionAction(vehicleId: string) {
+  const memberUser = await requireCompleteMemberUser(`/account/garage/${vehicleId}`);
+
+  try {
+    const vehicle = await prisma.vehicle.updateMany({
+      where: {
+        id: vehicleId,
+        userId: memberUser.id,
+        deletedAt: null,
+      },
+      data: {
+        vehicleDefinitionId: null,
+      },
+    });
+
+    if (vehicle.count === 0) {
+      redirectWithError(garagePath, "not_found");
+    }
+
+    console.log("GARAGE_VEHICLE_TEMPLATE_UNLINKED", {
+      userId: memberUser.id,
+      vehicleId,
+      operation: "unlink_template",
+    });
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    logGarageFailure(memberUser.id, "unlink_template", error, vehicleId);
+    redirectWithError(`/account/garage/${vehicleId}`, "failed");
+  }
+
+  revalidateVehicleBuild(vehicleId);
+  redirect(`${garagePath}/${vehicleId}?garage=platform_unlinked#platform-match`);
 }
 
 export async function makePrimaryVehicleAction(vehicleId: string) {
@@ -709,6 +760,7 @@ export async function addVehicleModificationAction(
             select: {
               id: true,
               userId: true,
+              vehicleDefinitionId: true,
               brand: true,
               model: true,
               year: true,
@@ -977,6 +1029,50 @@ function redirectWithError(pathname: string, error: GarageError): never {
   redirect(`${url.pathname}${url.search}${url.hash}`);
 }
 
+async function resolveVehicleInputForWrite(
+  input: VehicleInput,
+): Promise<VehicleInput | null> {
+  if (!input.vehicleDefinitionId) {
+    return {
+      ...input,
+      vehicleDefinitionId: null,
+    };
+  }
+
+  const vehicleDefinition = await prisma.vehicleDefinition.findFirst({
+    where: {
+      id: input.vehicleDefinitionId,
+      active: true,
+    },
+    select: {
+      id: true,
+      brand: true,
+      model: true,
+      yearFrom: true,
+      yearTo: true,
+    },
+  });
+
+  if (!vehicleDefinition || input.year === null) {
+    return null;
+  }
+
+  if (vehicleDefinition.yearFrom !== null && input.year < vehicleDefinition.yearFrom) {
+    return null;
+  }
+
+  if (vehicleDefinition.yearTo !== null && input.year > vehicleDefinition.yearTo) {
+    return null;
+  }
+
+  return {
+    ...input,
+    vehicleDefinitionId: vehicleDefinition.id,
+    brand: vehicleDefinition.brand,
+    model: vehicleDefinition.model,
+  };
+}
+
 function errorCodeForVehicleWrite(error: unknown, fallback: GarageError): GarageError {
   if (!(error instanceof Prisma.PrismaClientKnownRequestError)) {
     return "failed";
@@ -1101,6 +1197,7 @@ const modificationDefinitionRuleSelect = {
       active: true,
       vehicleBrand: true,
       vehicleModel: true,
+      vehicleDefinitionId: true,
       yearFrom: true,
       yearTo: true,
     },

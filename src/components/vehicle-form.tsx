@@ -1,9 +1,14 @@
 import { TurkishPlateInput } from "@/components/turkish-plate-input";
+import {
+  VehicleTemplateFields,
+  type VehicleTemplateOption,
+} from "@/components/vehicle-template-fields";
 
 type VehicleFormProps = {
   action: (formData: FormData) => void | Promise<void>;
   submitLabel: string;
   vehicle?: {
+    vehicleDefinitionId?: string | null;
     brand: string;
     model: string;
     year: number | null;
@@ -13,6 +18,8 @@ type VehicleFormProps = {
   };
   showPrimaryOption?: boolean;
   returnTo?: string;
+  vehicleDefinitions?: VehicleTemplateOption[];
+  templateDefaultMode?: "catalog" | "manual";
 };
 
 export function VehicleForm({
@@ -21,6 +28,8 @@ export function VehicleForm({
   vehicle,
   showPrimaryOption = false,
   returnTo = "/account/garage",
+  vehicleDefinitions = [],
+  templateDefaultMode,
 }: VehicleFormProps) {
   return (
     <form
@@ -29,28 +38,13 @@ export function VehicleForm({
     >
       <input type="hidden" name="returnTo" value={returnTo} />
       <div className="grid gap-5 sm:grid-cols-2">
-        <VehicleField
-          label="Marka"
-          name="brand"
-          defaultValue={vehicle?.brand ?? ""}
-          autoComplete="off"
-          required
-        />
-        <VehicleField
-          label="Model"
-          name="model"
-          defaultValue={vehicle?.model ?? ""}
-          autoComplete="off"
-          required
-        />
-        <VehicleField
-          label="Model yılı"
-          name="year"
-          type="number"
-          defaultValue={vehicle?.year ? String(vehicle.year) : ""}
-          inputMode="numeric"
-          min="1950"
-          max={String(new Date().getFullYear() + 1)}
+        <VehicleTemplateFields
+          definitions={vehicleDefinitions}
+          currentVehicleDefinitionId={vehicle?.vehicleDefinitionId ?? null}
+          defaultBrand={vehicle?.brand ?? ""}
+          defaultModel={vehicle?.model ?? ""}
+          defaultYear={vehicle?.year ?? null}
+          defaultMode={templateDefaultMode}
         />
         <TurkishPlateInput
           label="Plaka"

@@ -7,10 +7,12 @@ import {
   makePrimaryVehicleAction,
   removeVehicleModificationAction,
   removeVehicleImageAction,
+  unlinkVehicleDefinitionAction,
   uploadVehicleImageAction,
   updateVehicleAction,
 } from "@/app/account/garage/actions";
 import { VehicleForm } from "@/components/vehicle-form";
+import { VehicleRatingCard } from "@/components/vehicle-rating-card";
 import {
   VehicleBuildModificationForm,
   type VehicleBuildCatalogGroup,
@@ -23,10 +25,12 @@ import {
   evaluateModificationAvailability,
   formatModificationDefinition,
   modificationCategoryLabels,
+  normalizeVehicleIdentity,
   orderedModificationCategories,
   vehicleBuildResultLabel,
 } from "@/lib/vehicle-build-rules";
 import { createOwnedVehicleImageSignedUrl } from "@/lib/vehicle-images";
+import { calculateVehiclePerformanceRating } from "@/lib/vehicle-performance-rating";
 
 type EditVehiclePageProps = {
   params: Promise<{
@@ -55,6 +59,10 @@ export default async function EditVehiclePage({
       select: {
         id: true,
         userId: true,
+        vehicleDefinitionId: true,
+        vehicleDefinition: {
+          select: vehicleDefinitionRatingSelect,
+        },
         brand: true,
         model: true,
         year: true,
@@ -84,10 +92,30 @@ export default async function EditVehiclePage({
             modificationDefinition: {
               select: {
                 id: true,
+                code: true,
                 category: true,
                 brand: true,
                 name: true,
                 variant: true,
+                powerImpact: true,
+                handlingImpact: true,
+                brakingImpact: true,
+                reliabilityImpact: true,
+                trackReadinessImpact: true,
+                modificationImpacts: {
+                  where: {
+                    active: true,
+                  },
+                  select: vehicleModificationImpactSelect,
+                },
+                compatibilities: {
+                  where: {
+                    active: true,
+                  },
+                  select: {
+                    id: true,
+                  },
+                },
               },
             },
           },
@@ -103,22 +131,53 @@ export default async function EditVehiclePage({
   const coverImageUrl = await measureServerTiming("GARAGE_SIGNED_URLS", () =>
     createOwnedVehicleImageSignedUrl(vehicle, memberUser.id),
   );
-  const catalog = await prisma.modificationDefinition.findMany({
-    where: {
-      active: true,
-    },
-    orderBy: [
-      {
-        category: "asc",
+  const [catalog, vehicleDefinitions] = await Promise.all([
+    prisma.modificationDefinition.findMany({
+      where: {
+        active: true,
       },
-      {
-        sortOrder: "asc",
+      orderBy: [
+        {
+          category: "asc",
+        },
+        {
+          sortOrder: "asc",
+        },
+        {
+          name: "asc",
+        },
+      ],
+      select: modificationDefinitionRuleSelect,
+    }),
+    prisma.vehicleDefinition.findMany({
+      where: {
+        active: true,
       },
-      {
-        name: "asc",
-      },
-    ],
-    select: modificationDefinitionRuleSelect,
+      orderBy: [
+        {
+          brand: "asc",
+        },
+        {
+          model: "asc",
+        },
+        {
+          sortOrder: "asc",
+        },
+      ],
+      select: vehicleDefinitionTemplateSelect,
+    }),
+  ]);
+  const safeVehicleDefinitions = safeVehicleDefinitionSuggestions(
+    vehicleDefinitions,
+    vehicle,
+  );
+  const vehicleFormDefinitions = withCurrentVehicleDefinition(
+    safeVehicleDefinitions,
+    vehicle.vehicleDefinition,
+  );
+  const rating = calculateVehiclePerformanceRating({
+    vehicleDefinition: vehicle.vehicleDefinition,
+    installedModifications: vehicle.modifications,
   });
   const catalogGroups = buildCatalogGroups({
     catalog,
@@ -130,6 +189,7 @@ export default async function EditVehiclePage({
   const archiveAction = archiveVehicleAction.bind(null, vehicle.id);
   const uploadImageAction = uploadVehicleImageAction.bind(null, vehicle.id);
   const removeImageAction = removeVehicleImageAction.bind(null, vehicle.id);
+  const unlinkTemplateAction = unlinkVehicleDefinitionAction.bind(null, vehicle.id);
   const addModificationAction = addSelectedVehicleModificationAction.bind(
     null,
     vehicle.id,
@@ -169,16 +229,27 @@ export default async function EditVehiclePage({
         label={`${vehicle.brand} ${vehicle.model}`}
       />
 
+      <PlatformMatchPanel
+        vehicleDefinition={vehicle.vehicleDefinition}
+        suggestionCount={vehicleFormDefinitions.length}
+        unlinkAction={unlinkTemplateAction}
+      />
+
       <VehicleForm
         action={updateAction}
         submitLabel="Değişiklikleri Kaydet"
         vehicle={vehicle}
+        vehicleDefinitions={vehicleFormDefinitions}
+        templateDefaultMode={vehicle.vehicleDefinitionId ? "catalog" : "manual"}
       />
+
+      <VehicleRatingCard rating={rating} className="mt-6" />
 
       <VehicleBuildProfile
         addAction={addModificationAction}
         catalogGroups={catalogGroups}
         vehicleId={vehicle.id}
+        vehicleDefinitionId={vehicle.vehicleDefinitionId}
         modifications={vehicle.modifications}
       />
 
@@ -210,15 +281,84 @@ export default async function EditVehiclePage({
   );
 }
 
+function PlatformMatchPanel({
+  vehicleDefinition,
+  suggestionCount,
+  unlinkAction,
+}: {
+  vehicleDefinition: {
+    brand: string;
+    model: string;
+    generation: string | null;
+    chassisCode: string | null;
+    variant: string | null;
+    ratingStatus: string;
+  } | null;
+  suggestionCount: number;
+  unlinkAction: () => void | Promise<void>;
+}) {
+  return (
+    <section
+      id="platform-match"
+      className="mb-6 scroll-mt-24 rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8"
+    >
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-blue">
+            Aracı platformla eşleştir
+          </p>
+          {vehicleDefinition ? (
+            <>
+              <h2 className="mt-3 text-2xl font-black text-ats-text">
+                {vehicleDefinitionLabel(vehicleDefinition)}
+              </h2>
+              <p className="mt-2 text-sm font-semibold text-ats-muted">
+                Rating durumu:{" "}
+                {vehicleDefinition.ratingStatus === "CALIBRATED"
+                  ? "Kalibre"
+                  : "Geçici kalibrasyon"}
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="mt-3 text-2xl font-black text-ats-text">
+                Araç platformu henüz doğrulanmadı.
+              </h2>
+              <p className="mt-2 text-sm font-semibold text-ats-muted">
+                {suggestionCount > 0
+                  ? "Güvenli katalog eşleşmeleri formda seçilebilir."
+                  : "Güvenli platform önerisi bulunamadı."}
+              </p>
+            </>
+          )}
+        </div>
+
+        {vehicleDefinition ? (
+          <form action={unlinkAction}>
+            <button
+              type="submit"
+              className="inline-flex h-11 items-center justify-center rounded-full border border-ats-border px-5 text-xs font-black uppercase tracking-[0.12em] text-ats-muted transition hover:border-red-300/60 hover:text-red-100"
+            >
+              Platform eşleşmesini kaldır
+            </button>
+          </form>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 function VehicleBuildProfile({
   addAction,
   catalogGroups,
   vehicleId,
+  vehicleDefinitionId,
   modifications,
 }: {
   addAction: (formData: FormData) => void | Promise<void>;
   catalogGroups: VehicleBuildCatalogGroup[];
   vehicleId: string;
+  vehicleDefinitionId: string | null;
   modifications: Array<{
     id: string;
     modificationDefinitionId: string;
@@ -231,6 +371,9 @@ function VehicleBuildProfile({
       brand: string | null;
       name: string;
       variant: string | null;
+      compatibilities: Array<{
+        id: string;
+      }>;
     };
   }>;
 }) {
@@ -285,6 +428,9 @@ function VehicleBuildProfile({
                       vehicleId,
                       modification.id,
                     );
+                    const needsCompatibilityReview =
+                      !vehicleDefinitionId &&
+                      modification.modificationDefinition.compatibilities.length > 0;
 
                     return (
                       <div
@@ -303,6 +449,11 @@ function VehicleBuildProfile({
                             ) : null}
                             {modification.customNotes ? (
                               <span className="break-words">{modification.customNotes}</span>
+                            ) : null}
+                            {needsCompatibilityReview ? (
+                              <span className="font-black text-amber-200">
+                                Uyumluluk yeniden doğrulanmalı
+                              </span>
                             ) : null}
                           </div>
                         </div>
@@ -488,6 +639,10 @@ function successMessage(value?: string) {
     return "Araç fotoğrafı kaldırıldı.";
   }
 
+  if (value === "platform_unlinked") {
+    return "Platform eşleşmesi kaldırıldı.";
+  }
+
   return null;
 }
 
@@ -577,6 +732,7 @@ function errorMessage(value?: string) {
 
 const modificationDefinitionLabelSelect = {
   id: true,
+  code: true,
   category: true,
   brand: true,
   name: true,
@@ -596,6 +752,7 @@ const modificationDefinitionRuleSelect = {
       active: true,
       vehicleBrand: true,
       vehicleModel: true,
+      vehicleDefinitionId: true,
       yearFrom: true,
       yearTo: true,
     },
@@ -639,6 +796,40 @@ const modificationDefinitionRuleSelect = {
   },
 } satisfies Prisma.ModificationDefinitionSelect;
 
+const vehicleDefinitionTemplateSelect = {
+  id: true,
+  brand: true,
+  model: true,
+  generation: true,
+  chassisCode: true,
+  variant: true,
+  yearFrom: true,
+  yearTo: true,
+} satisfies Prisma.VehicleDefinitionSelect;
+
+const vehicleDefinitionRatingSelect = {
+  ...vehicleDefinitionTemplateSelect,
+  powerRating: true,
+  handlingRating: true,
+  brakingRating: true,
+  reliabilityRating: true,
+  thermalRating: true,
+  trackReadinessRating: true,
+  weightPenalty: true,
+  ratingStatus: true,
+} satisfies Prisma.VehicleDefinitionSelect;
+
+const vehicleModificationImpactSelect = {
+  vehicleDefinitionId: true,
+  powerImpact: true,
+  handlingImpact: true,
+  brakingImpact: true,
+  reliabilityImpact: true,
+  thermalImpact: true,
+  trackReadinessImpact: true,
+  active: true,
+} satisfies Prisma.VehicleModificationImpactSelect;
+
 function buildCatalogGroups({
   catalog,
   vehicle,
@@ -652,6 +843,7 @@ function buildCatalogGroups({
   vehicle: {
     id: string;
     userId: string;
+    vehicleDefinitionId: string | null;
     brand: string;
     model: string;
     year: number | null;
@@ -678,6 +870,11 @@ function buildCatalogGroups({
       definition,
       installedModifications,
     });
+
+    if (!availability.ok && availability.code === "MODIFICATION_INCOMPATIBLE") {
+      continue;
+    }
+
     const group =
       groupsByKey.get(typeKey) ??
       {
@@ -733,4 +930,96 @@ function formatDate(date: Date) {
     month: "long",
     year: "numeric",
   }).format(date);
+}
+
+function safeVehicleDefinitionSuggestions(
+  definitions: Array<
+    Prisma.VehicleDefinitionGetPayload<{
+      select: typeof vehicleDefinitionTemplateSelect;
+    }>
+  >,
+  vehicle: {
+    brand: string;
+    model: string;
+    year: number | null;
+  },
+) {
+  const normalizedBrand = normalizeVehicleIdentity(vehicle.brand);
+  const normalizedModel = normalizeVehicleIdentity(vehicle.model);
+
+  return definitions.filter(
+    (definition) =>
+      normalizeVehicleIdentity(definition.brand) === normalizedBrand &&
+      normalizeVehicleIdentity(definition.model) === normalizedModel &&
+      yearMatchesDefinition(definition, vehicle.year),
+  );
+}
+
+function withCurrentVehicleDefinition(
+  definitions: Array<
+    Prisma.VehicleDefinitionGetPayload<{
+      select: typeof vehicleDefinitionTemplateSelect;
+    }>
+  >,
+  currentDefinition: Prisma.VehicleDefinitionGetPayload<{
+    select: typeof vehicleDefinitionRatingSelect;
+  }> | null,
+) {
+  if (!currentDefinition || definitions.some((definition) => definition.id === currentDefinition.id)) {
+    return definitions;
+  }
+
+  return [
+    {
+      id: currentDefinition.id,
+      brand: currentDefinition.brand,
+      model: currentDefinition.model,
+      generation: currentDefinition.generation,
+      chassisCode: currentDefinition.chassisCode,
+      variant: currentDefinition.variant,
+      yearFrom: currentDefinition.yearFrom,
+      yearTo: currentDefinition.yearTo,
+    },
+    ...definitions,
+  ];
+}
+
+function yearMatchesDefinition(
+  definition: {
+    yearFrom: number | null;
+    yearTo: number | null;
+  },
+  year: number | null,
+) {
+  if (year === null) {
+    return true;
+  }
+
+  if (definition.yearFrom !== null && year < definition.yearFrom) {
+    return false;
+  }
+
+  if (definition.yearTo !== null && year > definition.yearTo) {
+    return false;
+  }
+
+  return true;
+}
+
+function vehicleDefinitionLabel(definition: {
+  brand: string;
+  model: string;
+  generation: string | null;
+  chassisCode: string | null;
+  variant: string | null;
+}) {
+  return [
+    definition.brand,
+    definition.model,
+    definition.generation,
+    definition.chassisCode,
+    definition.variant,
+  ]
+    .filter(Boolean)
+    .join(" / ");
 }

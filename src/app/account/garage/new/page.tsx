@@ -3,6 +3,7 @@ import { createVehicleAction } from "@/app/account/garage/actions";
 import { VehicleForm } from "@/components/vehicle-form";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { normalizeMemberReturnTo } from "@/lib/member-auth";
+import { prisma } from "@/lib/prisma";
 
 type NewVehiclePageProps = {
   searchParams: Promise<{
@@ -15,6 +16,32 @@ export default async function NewVehiclePage({ searchParams }: NewVehiclePagePro
   await requireCompleteMemberUser("/account/garage/new");
   const params = await searchParams;
   const returnTo = normalizeMemberReturnTo(params.returnTo);
+  const vehicleDefinitions = await prisma.vehicleDefinition.findMany({
+    where: {
+      active: true,
+    },
+    orderBy: [
+      {
+        brand: "asc",
+      },
+      {
+        model: "asc",
+      },
+      {
+        sortOrder: "asc",
+      },
+    ],
+    select: {
+      id: true,
+      brand: true,
+      model: true,
+      generation: true,
+      chassisCode: true,
+      variant: true,
+      yearFrom: true,
+      yearTo: true,
+    },
+  });
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">
@@ -44,6 +71,8 @@ export default async function NewVehiclePage({ searchParams }: NewVehiclePagePro
         submitLabel="Aracı Kaydet"
         showPrimaryOption
         returnTo={returnTo}
+        vehicleDefinitions={vehicleDefinitions}
+        templateDefaultMode="catalog"
       />
     </section>
   );

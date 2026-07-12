@@ -1,8 +1,10 @@
 import Link from "next/link";
+import type { ModificationCategory, VehicleRatingStatus } from "@prisma/client";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { StatusBadge } from "@/components/admin/status-badge";
+import { VehicleRatingCard } from "@/components/vehicle-rating-card";
 import { formatDateTime, formatStatus } from "@/lib/admin-format";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { isMemberProfileComplete } from "@/lib/member-profile-validation";
@@ -12,6 +14,54 @@ import {
   modificationCategoryLabels,
   orderedModificationCategories,
 } from "@/lib/vehicle-build-rules";
+import { calculateVehiclePerformanceRating } from "@/lib/vehicle-performance-rating";
+
+const vehicleDefinitionRatingSelect = {
+  id: true,
+  code: true,
+  brand: true,
+  model: true,
+  generation: true,
+  chassisCode: true,
+  variant: true,
+  powerRating: true,
+  handlingRating: true,
+  brakingRating: true,
+  reliabilityRating: true,
+  thermalRating: true,
+  trackReadinessRating: true,
+  weightPenalty: true,
+  ratingStatus: true,
+} as const;
+
+const vehicleRatingModificationDefinitionSelect = {
+  id: true,
+  code: true,
+  category: true,
+  brand: true,
+  name: true,
+  variant: true,
+  powerImpact: true,
+  handlingImpact: true,
+  brakingImpact: true,
+  reliabilityImpact: true,
+  trackReadinessImpact: true,
+  modificationImpacts: {
+    where: {
+      active: true,
+    },
+    select: {
+      vehicleDefinitionId: true,
+      powerImpact: true,
+      handlingImpact: true,
+      brakingImpact: true,
+      reliabilityImpact: true,
+      thermalImpact: true,
+      trackReadinessImpact: true,
+      active: true,
+    },
+  },
+} as const;
 
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -70,6 +120,10 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
         ],
         select: {
           id: true,
+          vehicleDefinitionId: true,
+          vehicleDefinition: {
+            select: vehicleDefinitionRatingSelect,
+          },
           brand: true,
           model: true,
           year: true,
@@ -96,13 +150,7 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
               customNotes: true,
               installedAt: true,
               modificationDefinition: {
-                select: {
-                  id: true,
-                  category: true,
-                  brand: true,
-                  name: true,
-                  variant: true,
-                },
+                select: vehicleRatingModificationDefinitionSelect,
               },
             },
           },
@@ -334,6 +382,24 @@ function VehicleList({
   title: string;
   vehicles: Array<{
     id: string;
+    vehicleDefinitionId: string | null;
+    vehicleDefinition: {
+      id: string;
+      code: string;
+      brand: string;
+      model: string;
+      generation: string | null;
+      chassisCode: string | null;
+      variant: string | null;
+      powerRating: number;
+      handlingRating: number;
+      brakingRating: number;
+      reliabilityRating: number;
+      thermalRating: number;
+      trackReadinessRating: number;
+      weightPenalty: number;
+      ratingStatus: VehicleRatingStatus;
+    } | null;
     brand: string;
     model: string;
     year: number | null;
@@ -349,10 +415,26 @@ function VehicleList({
       installedAt: Date | null;
       modificationDefinition: {
         id: string;
-        category: (typeof orderedModificationCategories)[number];
+        code: string;
+        category: ModificationCategory;
         brand: string | null;
         name: string;
         variant: string | null;
+        powerImpact: number;
+        handlingImpact: number;
+        brakingImpact: number;
+        reliabilityImpact: number;
+        trackReadinessImpact: number;
+        modificationImpacts: Array<{
+          vehicleDefinitionId: string;
+          powerImpact: number;
+          handlingImpact: number;
+          brakingImpact: number;
+          reliabilityImpact: number;
+          thermalImpact: number;
+          trackReadinessImpact: number;
+          active: boolean;
+        }>;
       };
     }>;
   }>;
@@ -361,33 +443,61 @@ function VehicleList({
     <div className="mt-5 first:mt-0">
       <p className="text-sm font-black uppercase text-signal">{title}</p>
       <div className="mt-3 grid gap-3">
-        {vehicles.map((vehicle) => (
-          <article key={vehicle.id} className="rounded-md border border-white/10 bg-white/5 p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="font-black text-white">
-                  {vehicle.brand} {vehicle.model}
-                </p>
-                <p className="mt-1 text-xs font-semibold text-white/45">
-                  {vehicle.plateNumber} · {[vehicle.year, vehicle.color].filter(Boolean).join(" · ") || "Detay yok"}
-                </p>
+        {vehicles.map((vehicle) => {
+          const rating = calculateVehiclePerformanceRating({
+            vehicleDefinition: vehicle.vehicleDefinition,
+            installedModifications: vehicle.modifications,
+          });
+
+          return (
+            <article key={vehicle.id} className="rounded-md border border-white/10 bg-white/5 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="font-black text-white">
+                    {vehicle.brand} {vehicle.model}
+                  </p>
+                  <p className="mt-1 text-xs font-semibold text-white/45">
+                    {vehicle.plateNumber} · {[vehicle.year, vehicle.color].filter(Boolean).join(" · ") || "Detay yok"}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {vehicle.isPrimary ? <StatusBadge value="PRIMARY" /> : null}
+                  {vehicle.deletedAt ? <StatusBadge value="ARCHIVED" /> : null}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {vehicle.isPrimary ? <StatusBadge value="PRIMARY" /> : null}
-                {vehicle.deletedAt ? <StatusBadge value="ARCHIVED" /> : null}
-              </div>
-            </div>
-            <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-              <DetailRow
-                label="Fotoğraf"
-                value={vehicle.imagePath ? "Fotoğraf mevcut" : "Fotoğraf yok"}
-                compact
-              />
-              <DetailRow label="Oluşturma" value={formatDateTime(vehicle.createdAt)} compact />
-            </dl>
-            <AdminVehicleBuildProfile modifications={vehicle.modifications} />
-          </article>
-        ))}
+              <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                <DetailRow
+                  label="Fotoğraf"
+                  value={vehicle.imagePath ? "Fotoğraf mevcut" : "Fotoğraf yok"}
+                  compact
+                />
+                <DetailRow label="Oluşturma" value={formatDateTime(vehicle.createdAt)} compact />
+                <DetailRow
+                  label="Platform"
+                  value={
+                    vehicle.vehicleDefinition
+                      ? vehicleDefinitionLabel(vehicle.vehicleDefinition)
+                      : "Araç platformu henüz doğrulanmadı."
+                  }
+                  compact
+                />
+                <DetailRow
+                  label="Rating durumu"
+                  value={
+                    vehicle.vehicleDefinition
+                      ? vehicle.vehicleDefinition.ratingStatus === "CALIBRATED"
+                        ? "Kalibre"
+                        : "Geçici kalibrasyon"
+                      : "Yok"
+                  }
+                  compact
+                />
+              </dl>
+              <VehicleRatingCard rating={rating} compact className="mt-4" />
+              <AdminVehicleBuildProfile modifications={vehicle.modifications} />
+            </article>
+          );
+        })}
         {vehicles.length === 0 ? (
           <p className="rounded-md border border-white/10 bg-white/5 p-4 text-sm font-semibold text-white/60">
             Kayıt yok.
@@ -407,7 +517,7 @@ function AdminVehicleBuildProfile({
     installedAt: Date | null;
     modificationDefinition: {
       id: string;
-      category: (typeof orderedModificationCategories)[number];
+      category: ModificationCategory;
       brand: string | null;
       name: string;
       variant: string | null;
@@ -490,6 +600,24 @@ function formatRegistrationSource(value: string) {
   };
 
   return labels[value] ?? formatStatus(value);
+}
+
+function vehicleDefinitionLabel(definition: {
+  brand: string;
+  model: string;
+  generation: string | null;
+  chassisCode: string | null;
+  variant: string | null;
+}) {
+  return [
+    definition.brand,
+    definition.model,
+    definition.generation,
+    definition.chassisCode,
+    definition.variant,
+  ]
+    .filter(Boolean)
+    .join(" / ");
 }
 
 function ProfileStatusBadge({ complete }: { complete: boolean }) {
