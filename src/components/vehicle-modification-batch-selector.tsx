@@ -75,6 +75,8 @@ type TyreSpecificationSummary = {
   heatTolerance: number;
   trackConsistency: number;
   roadSuitability: number;
+  wearLongevity: number;
+  noiseComfort: number;
   roadLegal: boolean | null;
 };
 
@@ -511,6 +513,7 @@ function CatalogOptionDetails({
   const details: Array<[string, string | number]> = [
     ["Kullanım", usageClassLabel(option.usageClass)],
   ];
+  let warning: string | null = null;
 
   if (option.brakePadSpecification) {
     const spec = option.brakePadSpecification;
@@ -565,8 +568,15 @@ function CatalogOptionDetails({
       ["Isı", spec.heatTolerance],
       ["Stabilite", spec.trackConsistency],
       ["Yol", spec.roadSuitability],
+      ["Aşınma", spec.wearLongevity],
+      ["Konfor", spec.noiseComfort],
       ["Yol legal", spec.roadLegal === null ? "Belirsiz" : spec.roadLegal ? "Evet" : "Hayır"],
     );
+
+    if (spec.tyreClass === "SLICK") {
+      warning =
+        "Yarış lastiğidir. Yol kullanımı ve ıslak zemin uygunluğu sınırlıdır.";
+    }
   } else if (option.wheelSpecification) {
     const spec = option.wheelSpecification;
 
@@ -652,6 +662,11 @@ function CatalogOptionDetails({
       {option.wheelSpecification ? (
         <p className="mt-2 text-xs font-semibold leading-5 text-ats-muted">
           Jant uygunluğu araç, ebat, ET/ofset ve lastik ölçüsüne göre ayrıca doğrulanmalıdır.
+        </p>
+      ) : null}
+      {warning ? (
+        <p className="mt-2 rounded-md border border-amber-300/30 bg-amber-500/10 px-2 py-1 text-xs font-bold leading-5 text-amber-100">
+          {warning}
         </p>
       ) : null}
       {tuningNotes.length > 0 ? (

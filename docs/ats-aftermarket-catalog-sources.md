@@ -169,3 +169,133 @@ HF Series was omitted because an official manufacturer/brand identity and stable
 | `safety_roll_bar` | Roll Bar | Generic safety declaration | Track-readiness signal. | Not a safety certification. |
 | `safety_full_roll_cage` | Full Roll Cage | Existing safety declaration | Race-readiness signal. | Not a safety certification. |
 | `safety_fire_extinguisher` | Fire Extinguisher | Generic safety declaration | Track-readiness signal. | Not a safety certification. |
+
+## Sprint 4J Catalog Expansion Supplement
+
+Reviewed on 2026-07-13. New Sprint 4J rows are product-family declarations unless exact fitment is explicitly stated. No tyre row increases Power. Racing slick and wet tyres are marked race-only where the family is a competition tyre; road suitability is deliberately near-zero.
+
+### RSA and Wheel Audit Omissions
+
+| Requested item | Result | Source checked | Reason |
+| --- | --- | --- | --- |
+| RSA280 | Omitted | Public search plus https://rsa.com.tr/ | No direct provider evidence found for supported BMW B48 1.6 vehicles, output, torque, fuel, hardware, measurement basis, or package content. |
+| RSA320 | Omitted | Public search plus https://rsa.com.tr/ | No direct provider evidence found; numeric suffix was not inferred as horsepower. |
+| MSW 85 | Omitted | https://www.mswwheels.com/ | Current official MSW pages reviewed did not expose a stable MSW 85 product row. |
+| MSW P1 | Omitted | https://www.mswwheels.com/ | Current official MSW pages reviewed did not expose a stable MSW P1 product row. |
+| Sparco DR1 | Omitted | https://www.sparcowheels.com/wheels | Current official Sparco Wheels listing exposes FF4, FF1, FF2, FF3, Sterrato, Gravel, DAKAR, Terra, Super Sprint, JP-R, Assetto Gara, Podio, Trofeo 4, DRS, and ProCorsa; DR1 was not found. |
+
+### Sprint 4J Tyres
+
+| Code | Official product name | Publisher | URL | Values used | Uncertainty note / ATS rationale |
+| --- | --- | --- | --- | --- | --- |
+| `tyres_uhp_road` | UHP Road Tyre | ATS generic declaration | Internal build-profile row | `UHP_ROAD`, road legal, conservative dry/wet/road values. | Generic declaration so members can describe a build without naming a tyre. |
+| `tyres_semi_slick` | Semi-slick | ATS generic declaration | Internal build-profile row | `SEMI_SLICK`, dry/heat biased, legal unknown. | Generic declaration; road legality varies by exact tyre. |
+| `tyres_slick` | Slick | ATS generic declaration | Internal build-profile row | `SLICK`, high dry, low wet/road, road legal false. | Populates slick type while warning that slicks are race-only dry tyres. |
+| `tyre_goodyear_efficientgrip_performance_2` | EfficientGrip Performance 2 | Goodyear | https://www.goodyear.eu/en_gb/consumer/tires/efficientgrip-performance-2.EGPERF2.html | `TOURING`, high wet/road/wear/comfort, low track. | Touring tyre; no track-readiness inflation. |
+| `tyre_bridgestone_turanza_6` | Turanza 6 | Bridgestone | https://www.bridgestone.eu/car-tyres/summer-tyres/turanza-6/ | `TOURING`, high wet/road/wear/comfort, low track. | Touring tyre; no track-readiness inflation. |
+| `tyre_pirelli_cinturato_p7_c2` | Cinturato P7 C2 | Pirelli | https://www.pirelli.com/tyres/en-gb/car/catalogue/product/cinturato-p7-c2 | `TOURING`, high road/wet, low track. | Regional naming can vary between P7 and P7 C2. |
+| `tyre_yokohama_bluearth_gt_ae51` | BluEarth-GT AE51 | Yokohama | https://www.y-yokohama.com/global/product/tire/bluearth_gt_ae51/ | `TOURING`, high road/wet, low track. | Official global product family; exact sizes vary by market. |
+| `tyre_hankook_ventus_prime_4` | Ventus Prime 4 | Hankook | https://www.hankooktire.com/global/en/tire/ventus/prime4-k135.html | `TOURING`, high road/wet/wear/comfort. | Touring tyre; conservative handling/braking impacts. |
+| `tyre_goodyear_eagle_f1_asymmetric_6` | Eagle F1 Asymmetric 6 | Goodyear | https://www.goodyear.eu/en_gb/consumer/tires/eagle-f1-asymmetric-6.EF1AS6.html | `UHP_ROAD`, balanced dry/wet, road legal. | Road UHP impact below trackday tyres. |
+| `tyre_goodyear_eagle_f1_supersport` | Eagle F1 SuperSport | Goodyear | https://www.goodyear.eu/en_gb/consumer/tires/eagle-f1-supersport.EF1SUPERSPORT.html | `MAX_PERFORMANCE_ROAD`, stronger dry/heat, road legal. | Kept below trackday/semi-slick values. |
+| `tyre_bridgestone_potenza_sport` | Potenza Sport | Bridgestone | https://www.bridgestone.eu/car-tyres/summer-tyres/potenza-sport/ | `MAX_PERFORMANCE_ROAD`, dry/road performance. | No semi-slick or track-only assumption. |
+| `tyre_yokohama_advan_sport_v107` | ADVAN Sport V107 | Yokohama | https://www.y-yokohama.com/global/product/tire/advan_sport_v107/ | `MAX_PERFORMANCE_ROAD`, dry/road performance. | Road performance tyre, not a trackday tyre. |
+| `tyre_hankook_ventus_s1_evo3` | Ventus S1 evo3 | Hankook | https://www.hankooktire.com/global/en/tire/ventus/s1-evo3-k127.html | `UHP_ROAD`, balanced dry/wet/road. | Conservative UHP values. |
+| `tyre_hankook_ventus_s1_evo_z` | Ventus S1 evo Z | Hankook | https://www.hankooktire.com/global/en/tire/ventus/s1-evo-z-k129.html | `MAX_PERFORMANCE_ROAD`, stronger dry/heat. | Kept below trackday/semi-slick values. |
+| `tyre_michelin_pilot_sport_cup_2_r` | Pilot Sport Cup 2 R | Michelin | https://www.michelin.co.uk/auto/tyres/michelin-pilot-sport-cup-2-r | `TRACKDAY`, high dry/heat, lower wet/road. | Road legal where available, but track-biased. |
+| `tyre_pirelli_p_zero_trofeo_rs` | P Zero Trofeo RS | Pirelli | https://www.pirelli.com/tyres/en-gb/car/catalogue/product/p-zero-trofeo-rs | `SEMI_SLICK`, high dry/heat, low wet/road. | No Power impact; road use remains limited. |
+| `tyre_yokohama_advan_a052` | ADVAN A052 | Yokohama | https://www.yokohamatire.com/tires/advan-a052 | `EXTREME_PERFORMANCE`, strong dry, moderate wet/road. | Populates extreme-performance class without slick-level values. |
+| `tyre_yokohama_advan_a050` | ADVAN A050 | Yokohama | https://www.y-yokohama.com/global/product/tire/advan_a050/ | `SEMI_SLICK`, race-biased dry/heat, road legal false. | Treated as competition-oriented with low road suitability. |
+| `tyre_toyo_proxes_r888r` | Proxes R888R | Toyo Tires | https://www.toyotires.com/product/proxes-r888r/ | `SEMI_SLICK`, high dry/heat, low wet/road. | Track-biased road-legal family where available. |
+| `tyre_toyo_proxes_r1r` | Proxes R1R | Toyo Tires | https://www.toyotires.com/product/proxes-r1r/ | `EXTREME_PERFORMANCE`, strong dry, usable wet/road. | Lower than semi-slick in dry/heat. |
+| `tyre_federal_595_rs_rr` | 595 RS-RR | Federal | https://www.federaltire.com/en/products_detail.php?class=UHP&products_detail_sn=4 | `EXTREME_PERFORMANCE`, strong dry, moderate wet/road. | Source availability varies by locale. |
+| `tyre_federal_fz_201` | FZ-201 | Federal | https://www.federaltire.com/ | `SEMI_SLICK`, dry/heat biased, road legality unknown. | Legal status varies by market/compound; no universal legal claim. |
+| `tyre_bridgestone_potenza_re_71rs` | Potenza RE-71RS | Bridgestone | https://www.bridgestoneamericas.com/en/brands/potenza/re-71rs | `EXTREME_PERFORMANCE`, strong dry, moderate wet/road. | US product evidence; regional availability varies. |
+| `tyre_bridgestone_potenza_race` | Potenza Race | Bridgestone | https://www.bridgestone.eu/car-tyres/summer-tyres/potenza-race/ | `TRACKDAY`, high dry/heat, lower wet/road. | Trackday values below slicks. |
+| `tyre_goodyear_eagle_f1_supersport_r` | Eagle F1 SuperSport R | Goodyear | https://www.goodyear.eu/en_gb/consumer/tires/eagle-f1-supersport-r.EF1SUPERSPORTR.html | `TRACKDAY`, high dry/heat, road legal. | Trackday values below semi-slick/slick. |
+| `tyre_goodyear_eagle_f1_supersport_rs` | Eagle F1 SuperSport RS | Goodyear | https://www.goodyear.eu/en_gb/consumer/tires/eagle-f1-supersport-rs.EF1SUPERSPORTRS.html | `SEMI_SLICK`, high dry/heat, low wet/road. | No Power impact; low road comfort/wear. |
+| `tyre_michelin_motorsport_slick` | Pilot Sport GT Slick | Michelin Motorsport | https://motorsport.michelin.com/ | `SLICK`, highest dry/heat/consistency, very low wet/road, road legal false. | Race-only family, no road suitability assumption. |
+| `tyre_pirelli_p_zero_slick` | P Zero Slick | Pirelli Motorsport | https://www.pirelli.com/tyres/en-ww/motorsport/ | `SLICK`, highest dry/heat/consistency, very low wet/road, road legal false. | Race-only family, not for public roads. |
+| `tyre_yokohama_advan_a005` | ADVAN A005 | Yokohama Motorsport | https://www.y-yokohama.com/global/product/tire/advan_a005/ | `SLICK`, high dry/heat, very low wet/road, road legal false. | Race slick only. |
+| `tyre_hankook_ventus_race_slick` | Ventus Race Slick | Hankook Motorsport | https://www.hankook-motorsports.com/ | `SLICK`, high dry/heat, very low wet/road, road legal false. | Family naming only; compound/size not modeled. |
+| `tyre_hoosier_racing_slick` | Racing Slick | Hoosier | https://www.hoosiertire.com/ | `SLICK`, high dry/heat, very low wet/road, road legal false. | Race-only family. |
+| `tyre_michelin_motorsport_rain` | Pilot Sport GT Rain | Michelin Motorsport | https://motorsport.michelin.com/ | `WET_RACING`, high wet, low dry/road, road legal false. | Race wet only; not a road rain tyre. |
+| `tyre_pirelli_cinturato_rain` | Cinturato Rain | Pirelli Motorsport | https://www.pirelli.com/tyres/en-ww/motorsport/ | `WET_RACING`, high wet, low dry/road, road legal false. | Motorsport rain family, not public-road Cinturato road tyre. |
+| `tyre_yokohama_advan_a006` | ADVAN A006 | Yokohama Motorsport | https://www.y-yokohama.com/global/product/tire/advan_a006/ | `WET_RACING`, high wet, low dry/road, road legal false. | Race wet only. |
+| `tyre_hankook_ventus_race_rain` | Ventus Race Rain | Hankook Motorsport | https://www.hankook-motorsports.com/ | `WET_RACING`, high wet, low dry/road, road legal false. | Family naming only; compound/size not modeled. |
+| `tyre_hoosier_wet` | WET | Hoosier | https://www.hoosiertire.com/ | `WET_RACING`, high wet, low dry/road, road legal false. | Race wet only. |
+
+### Sprint 4J Wheels
+
+| Code | Official product name | Publisher | URL | Values used | Uncertainty note / ATS rationale |
+| --- | --- | --- | --- | --- | --- |
+| `wheel_sparco_ff2` | FF2 | Sparco Wheels | https://www.sparcowheels.com/wheels/sparco/sparco-flow-formed-wheels/FF2 | Flow Formed listing, conservative road/track suitability. | No universal weight stored. |
+| `wheel_sparco_ff3` | FF3 | Sparco Wheels | https://www.sparcowheels.com/wheels/sparco/FF3 | Flow Formed production process and performance positioning. | No universal weight stored. |
+| `wheel_sparco_ff4` | FF4 | Sparco Wheels | https://www.sparcowheels.com/wheels | Official current Sparco Flow Formed listing. | No universal weight stored. |
+| `wheel_sparco_jp_r` | JP-R | Sparco Wheels | https://www.sparcowheels.com/wheels/sparco/sparco-wheels/JP-R | Official monoblock listing, 17/18 inch family evidence. | Stored as cast/conservative because source does not require flow-formed metadata. |
+| `wheel_sparco_super_sprint` | Super Sprint | Sparco Wheels | https://www.sparcowheels.com/wheels | Official current Sparco Wheels listing. | No universal weight stored. |
+| `wheel_sparco_trofeo_4` | Trofeo 4 | Sparco Wheels | https://www.sparcowheels.com/wheels | Official current Sparco Wheels listing. | No universal weight stored. |
+| `wheel_work_emotion_zr10` | Emotion ZR10 | WORK Wheels | https://www.work-wheels.co.jp/ | Official model-family name, lightweight-wheel declaration. | No size, PCD, offset, or weight stored. |
+| `wheel_work_emotion_cr_kiwami` | Emotion CR Kiwami | WORK Wheels | https://www.work-wheels.co.jp/ | Official model-family name, lightweight-wheel declaration. | No size, PCD, offset, or weight stored. |
+| `wheel_ssr_gtx01` | GTX01 | SSR Wheels | https://www.ssr-wheels.com/ | Official model-family name, lightweight-wheel declaration. | No size, PCD, offset, or weight stored. |
+| `wheel_ssr_gtx03` | GTX03 | SSR Wheels | https://www.ssr-wheels.com/ | Official model-family name, lightweight-wheel declaration. | No size, PCD, offset, or weight stored. |
+| `wheel_protrack_one` | ONE | ProTrack Wheels | https://www.protrackwheels.com/ | Official model-family name, lightweight-wheel declaration. | No size, PCD, offset, or weight stored. |
+| `wheel_protrack_one_ff` | ONE FF | ProTrack Wheels | https://www.protrackwheels.com/ | Official model-family name, lightweight-wheel declaration. | No size, PCD, offset, or weight stored. |
+
+### Sprint 4J Chassis, Brakes, Cooling, Intake, Aero, and Safety
+
+| Code | Official product name | Publisher | URL | Values used | Uncertainty note / ATS rationale |
+| --- | --- | --- | --- | --- | --- |
+| `damper_bilstein_b6` | B6 | Bilstein | https://www.bilstein.com/ | Damper family, small handling/track signal. | No damper curve or fitment stored. |
+| `damper_bilstein_b8` | B8 | Bilstein | https://www.bilstein.com/ | Short-stroke damper family, small handling/track signal. | No damper curve or fitment stored. |
+| `suspension_coilover_bilstein_b14` | B14 | Bilstein | https://www.bilstein.com/ | Coilover family, street-track signal. | No ride height or spring rate stored. |
+| `suspension_coilover_bilstein_b16` | B16 | Bilstein | https://www.bilstein.com/ | Adjustable coilover family, street-track signal. | No damper curve or fitment stored. |
+| `damper_koni_sport` | Sport | Koni | https://www.koni.com/ | Sport damper family, small handling/track signal. | No platform-specific damping values. |
+| `suspension_coilover_kw_v2` | V2 | KW Suspensions | https://www.kwsuspensions.net/ | Coilover family, medium street-track signal. | No fitment or setup stored. |
+| `suspension_coilover_st_xta` | XTA | ST Suspensions | https://www.st-suspensions.com/ | Coilover family with track alignment intent. | No exact fitment or spring rate stored. |
+| `suspension_anti_roll_bar_hr` | Anti-roll Bar | H&R Springs | https://www.hrsprings.com/ | Anti-roll bar family, conservative handling signal. | No bar stiffness stored. |
+| `suspension_anti_roll_bar_eibach` | Anti-roll Bar | Eibach | https://eibach.com/ | Anti-roll bar family, conservative handling signal. | No bar stiffness stored. |
+| `suspension_anti_roll_bar_whiteline` | Anti-roll Bar | Whiteline | https://whitelineperformance.com/ | Anti-roll bar family, conservative handling signal. | No bar stiffness stored. |
+| `brake_fluid_castrol_react_srf_racing` | React SRF Racing | Castrol | https://www.castrol.com/ | High-temperature brake-fluid family, brake thermal readiness. | No fluid age or service interval tracked. |
+| `brake_fluid_motul_rbf_600` | RBF 600 | Motul | https://www.motul.com/ | Racing brake-fluid family, brake thermal readiness. | No service interval tracked. |
+| `brake_fluid_motul_rbf_660` | RBF 660 | Motul | https://www.motul.com/ | Racing brake-fluid family, brake thermal readiness. | No service interval tracked. |
+| `brake_fluid_motul_rbf_700` | RBF 700 | Motul | https://www.motul.com/ | Racing brake-fluid family, brake thermal readiness. | No service interval tracked. |
+| `brake_fluid_endless_rf_650` | RF-650 | Endless | https://www.endless-sport.global/ | Racing brake-fluid family, brake thermal readiness. | No service interval tracked. |
+| `brake_lines_goodridge_braided` | Braided Brake Lines | Goodridge | https://www.goodridge.com/ | Braided line family, pedal consistency signal. | Exact hose fitment not stored. |
+| `brake_lines_hel_performance_braided` | Braided Brake Lines | HEL Performance | https://helperformance.com/ | Braided line family, pedal consistency signal. | Exact hose fitment not stored. |
+| `brake_disc_girodisc_two_piece` | Two-piece Brake Disc | GiroDisc | https://www.girodisc.com/ | Two-piece disc family, small thermal/readiness signal. | No rotor diameter/hat fitment stored. |
+| `brake_disc_dba_4000_series` | 4000 Series | DBA | https://dba.com.au/ | Performance disc family, small braking/readiness signal. | No rotor diameter stored. |
+| `brake_disc_dba_5000_series` | 5000 Series | DBA | https://dba.com.au/ | Two-piece/performance disc family, small thermal/readiness signal. | No rotor diameter stored. |
+| `brake_disc_ap_racing_two_piece` | Two-piece Disc | AP Racing | https://apracing.com/ | Motorsport disc family, small thermal/readiness signal. | No vehicle fitment or rotor diameter stored. |
+| `brake_disc_alcon_advantage_extreme` | Advantage Extreme | Alcon | https://alcon.co.uk/ | Performance disc family, small thermal/readiness signal. | No vehicle fitment stored. |
+| `radiator_csf_performance` | Performance Radiator | CSF | https://csfrace.com/ | ICE radiator family, reliability/thermal readiness. | ICE-only; no EV cooling applicability. |
+| `radiator_mishimoto_performance` | Performance Radiator | Mishimoto | https://www.mishimoto.com/ | ICE radiator family, reliability/thermal readiness. | ICE-only; no EV cooling applicability. |
+| `radiator_pwr_performance` | Performance Radiator | PWR | https://pwr.com.au/ | ICE radiator family, reliability/thermal readiness. | ICE-only; no EV cooling applicability. |
+| `oil_cooler_setrab_proline` | ProLine Oil Cooler | Setrab | https://www.setrab.com/ | ICE oil cooler family, thermal readiness. | ICE-only; exact plumbing not modeled. |
+| `oil_cooler_mocal` | Oil Cooler | Mocal | https://www.mocal.co.uk/ | ICE oil cooler family, thermal readiness. | ICE-only; exact plumbing not modeled. |
+| `air_filter_kn_replacement` | Replacement Air Filter | K&N | https://www.knfilters.com/ | ICE air filter family, no Power impact. | ICE-only; exact panel fitment not modeled. |
+| `air_filter_pipercross_panel` | Panel Filter | Pipercross | https://www.pipercross.com/ | ICE air filter family, no Power impact. | ICE-only; exact panel fitment not modeled. |
+| `air_filter_ramair_performance` | Performance Air Filter | Ramair | https://www.ramair-filters.co.uk/ | ICE air filter family, no Power impact. | ICE-only; exact panel fitment not modeled. |
+| `intake_aem_cold_air` | Cold Air Intake System | AEM | https://www.aemintakes.com/ | ICE intake family, small Power signal. | Exact platform fitment not modeled. |
+| `intake_gruppem_ram_air_system` | Ram Air System | GruppeM | https://www.gruppem.co.jp/ | ICE intake family, small Power signal. | Exact platform fitment not modeled. |
+| `exhaust_akrapovic_slip_on` | Slip-On Line | Akrapovic | https://www.akrapovic.com/ | Exhaust family, small Power signal. | Exact platform and emissions legality not modeled. |
+| `exhaust_remus_sport` | Sport Exhaust | REMUS | https://remus.eu/ | Exhaust family, small Power signal. | Exact platform and emissions legality not modeled. |
+| `exhaust_armytrix_valvetronic` | Valvetronic Exhaust System | Armytrix | https://www.armytrix.com/ | Exhaust family, small Power signal. | Exact platform and emissions legality not modeled. |
+| `exhaust_scorpion_cat_back` | Cat-back Exhaust | Scorpion | https://www.scorpion-exhausts.com/ | Exhaust family, small Power signal. | Exact platform and emissions legality not modeled. |
+| `exhaust_borla_cat_back` | Cat-back Exhaust | Borla | https://www.borla.com/ | Exhaust family, small Power signal. | Exact platform and emissions legality not modeled. |
+| `exhaust_magnaflow_xmod` | xMOD Series Exhaust | MagnaFlow | https://www.magnaflow.com/ | Exhaust family, small Power signal. | Exact platform and emissions legality not modeled. |
+| `aero_maxton_front_splitter` | Front Splitter | Maxton Design | https://maxtondesign.com/ | Conservative aero handling/readiness signal. | No downforce number stored. |
+| `aero_verus_front_splitter` | Front Splitter | Verus Engineering | https://www.verus-engineering.com/ | Conservative aero handling/readiness signal. | No downforce number stored. |
+| `aero_verus_rear_diffuser` | Rear Diffuser | Verus Engineering | https://www.verus-engineering.com/ | Conservative aero handling/readiness signal. | No downforce number stored. |
+| `aero_apr_performance_gt_wing` | GT Wing | APR Performance | https://aprperformance.com/ | Conservative aero handling/readiness signal. | No downforce number stored; road suitability not inferred. |
+| `aero_varis_body_kit` | Body Kit | Varis | https://varis.co.jp/ | Conservative aero/style family signal. | No downforce number stored. |
+| `aero_mugen_under_spoiler` | Under Spoiler | Mugen | https://www.mugen-power.com/ | Conservative aero handling/readiness signal. | No downforce number stored. |
+| `aero_spoon_sports_wing` | Rear Wing | Spoon Sports | https://www.spoonsports.jp/ | Conservative aero handling/readiness signal. | No downforce number stored. |
+| `safety_recaro_pole_position` | Pole Position | Recaro Automotive | https://www.recaro-automotive.com/ | Fixed-back seat family, track-readiness signal. | Not a certification or installation guarantee. |
+| `safety_sparco_grid_q` | Grid Q | Sparco | https://www.sparco-official.com/ | Fixed-back seat family, track-readiness signal. | Not a certification or installation guarantee. |
+| `safety_omp_hte_r` | HTE-R | OMP | https://www.ompracing.com/ | Fixed-back seat family, track-readiness signal. | Not a certification or installation guarantee. |
+| `safety_sabelt_steel_series_harness` | Steel Series Harness | Sabelt | https://www.sabelt.com/ | Harness family, track-readiness signal. | Requires correct installation; no certification claim stored. |
+| `safety_schroth_racing_harness` | Racing Harness | Schroth | https://www.schroth.com/ | Harness family, track-readiness signal. | Requires correct installation; no certification claim stored. |
+| `safety_takata_racing_harness` | Racing Harness | Takata Racing | https://www.takataracing.com/ | Harness family, track-readiness signal. | Requires correct installation; no certification claim stored. |
+| `safety_safety_devices_roll_bar` | Roll Bar | Safety Devices | https://www.safetydevices.com/ | Roll-bar family, track-readiness signal. | Not a certification or fitment guarantee. |
+| `safety_cusco_safety21_roll_cage` | SAFETY21 Roll Cage | Cusco | https://www.cusco.co.jp/ | Roll-cage family, race-readiness signal. | Not a certification or fitment guarantee. |

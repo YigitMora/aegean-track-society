@@ -12,6 +12,14 @@ Sprint 4H adds provider-authentic `mapStageLabel` metadata on `TuningPackageSpec
 
 Eventuri intake and expanded wheel records add fitment/catalog metadata only. Their rating impact is intentionally small unless an exact vehicle-template override exists, and wheel construction never creates a large score gain without exact size and weight.
 
+## Sprint 4J Catalog Rating Safeguards
+
+Sprint 4J keeps the rating formula unchanged. RSA300 is still exact-template gated to Turkiye BMW B48 1.6 vehicle definitions, stores `RSA300` as package metadata only, and no longer stores an inferred claimed horsepower delta. The platform impact uses a strong but not dominant Power increase with Reliability and Thermal penalties, so Overall remains moderated unless the build also earns braking, cooling, tyre, and safety support from separate records.
+
+Tyre taxonomy uses the normalized `TyreClass` enum: `TOURING`, `UHP_ROAD`, `MAX_PERFORMANCE_ROAD`, `EXTREME_PERFORMANCE`, `TRACKDAY`, `SEMI_SLICK`, `SLICK`, and `WET_RACING`. Touring tyres receive road/wet/wear/comfort emphasis and little or no track-readiness; UHP and max-performance road tyres are moderate; extreme/trackday/semi-slick tyres improve handling/braking more strongly with lower wet/road/comfort scores; slicks get the highest dry score but extremely low wet and road suitability; wet racing tyres prioritize wet grip and stay race-only. No tyre row increases Power.
+
+Wheel rows remain conservative family metadata: construction affects the wheel detail summary, but no universal weight, diameter, offset, brake clearance, or fitment claim is converted into a large handling score. Aero rows do not store downforce claims and receive small handling/readiness values only. Safety rows represent build-preparation declarations, not certification or installation guarantees.
+
 ## Brake Pad Compounds
 
 | Code | Source title | Publisher | URL | Values used | Uncertainty note |
@@ -138,4 +146,4 @@ Eventuri intake and expanded wheel records add fitment/catalog metadata only. Th
 
 | Code | Source title | Publisher | URL | Values used | Uncertainty note |
 | --- | --- | --- | --- | --- | --- |
-| `engine_rsa300` | RSA300 BMW B48 platform tune documentation | RSA | https://rsa.com.tr/ | Platform-specific package naming and BMW 320i/420i B48 target family. | Public technical data is insufficient for a calibrated measured-power claim; seed impact is conservative and limited to exact Turkey-market BMW templates. |
+| `engine_rsa300` | RSA300 BMW B48 platform tune placeholder | ATS internal / RSA public search | https://rsa.com.tr/ | Platform-specific package label and exact BMW 320i/420i Turkiye B48 target family. | Public technical data is insufficient for a calibrated measured-power claim; no claimed output is stored and impact is limited to exact Turkey-market BMW templates. |
