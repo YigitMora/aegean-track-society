@@ -1,8 +1,18 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { VehicleModificationBatchActionState } from "@/app/account/garage/actions";
+import type {
+  VehicleModificationBatchActionState,
+  VehicleRatingPreviewState,
+} from "@/app/account/garage/actions";
+import {
+  formatRatingDelta,
+  ratingComponentRows,
+  ratingDelta,
+  ratingDeltaTone,
+  type RatingDeltaTone,
+} from "@/lib/vehicle-rating-deltas";
 
 export type ModificationCatalogGroup = {
   category: string;
@@ -24,6 +34,7 @@ type VehicleModificationBatchSelectorProps = {
     state: VehicleModificationBatchActionState,
     formData: FormData,
   ) => Promise<VehicleModificationBatchActionState>;
+  previewAction: (formData: FormData) => Promise<VehicleRatingPreviewState>;
   catalogGroups: ModificationCatalogGroup[];
 };
 
@@ -31,17 +42,22 @@ const initialState: VehicleModificationBatchActionState = {
   ok: false,
   code: null,
   message: null,
+  offendingDefinitionId: undefined,
   insertedCount: 0,
   submittedAt: 0,
 };
 
 export function VehicleModificationBatchSelector({
   action,
+  previewAction,
   catalogGroups,
 }: VehicleModificationBatchSelectorProps) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const [previewState, setPreviewState] = useState<VehicleRatingPreviewState | null>(null);
+  const [isPreviewPending, setIsPreviewPending] = useState(false);
   const [queuedDefinitionIds, setQueuedDefinitionIds] = useState<string[]>([]);
+  const previewRequestVersion = useRef(0);
   const [selectedCategory, setSelectedCategory] = useState(
     catalogGroups[0]?.category ?? "",
   );
@@ -82,6 +98,11 @@ export function VehicleModificationBatchSelector({
     Boolean(selectedOption) &&
     selectedOption?.availability === "AVAILABLE" &&
     !queuedDefinitionIdSet.has(selectedOption.definitionId);
+  const queueKey = queuedDefinitionIds.join("|");
+  const highlightedDefinitionId =
+    (!state.ok && state.offendingDefinitionId) ||
+    (!previewState?.ok && previewState?.offendingDefinitionId) ||
+    null;
 
   useEffect(() => {
     if (!state.ok || state.submittedAt === 0) {
@@ -89,8 +110,61 @@ export function VehicleModificationBatchSelector({
     }
 
     setQueuedDefinitionIds([]);
+    setPreviewState(null);
+    setIsPreviewPending(false);
     router.refresh();
   }, [router, state.ok, state.submittedAt]);
+
+  useEffect(() => {
+    previewRequestVersion.current += 1;
+    const requestVersion = previewRequestVersion.current;
+
+    if (queuedDefinitionIds.length === 0) {
+      setPreviewState(null);
+      setIsPreviewPending(false);
+      return;
+    }
+
+    setIsPreviewPending(true);
+
+    const timeoutId = window.setTimeout(() => {
+      const formData = new FormData();
+
+      for (const definitionId of queuedDefinitionIds) {
+        formData.append("modificationDefinitionIds", definitionId);
+      }
+
+      previewAction(formData)
+        .then((nextPreviewState) => {
+          if (previewRequestVersion.current !== requestVersion) {
+            return;
+          }
+
+          setPreviewState(nextPreviewState);
+        })
+        .catch(() => {
+          if (previewRequestVersion.current !== requestVersion) {
+            return;
+          }
+
+          setPreviewState({
+            ok: false,
+            code: "PREVIEW_FAILED",
+            message: "Tahmini rating hesaplanamadı.",
+            currentRating: null,
+            projectedRating: null,
+            submittedAt: Date.now(),
+          });
+        })
+        .finally(() => {
+          if (previewRequestVersion.current === requestVersion) {
+            setIsPreviewPending(false);
+          }
+        });
+    }, 320);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [previewAction, queueKey, queuedDefinitionIds]);
 
   if (catalogGroups.length === 0) {
     return (
@@ -161,9 +235,9 @@ export function VehicleModificationBatchSelector({
           }))}
         />
 
-        <button
-          type="button"
-          disabled={!canQueueSelected}
+          <button
+            type="button"
+            disabled={!canQueueSelected}
           onClick={() => {
             if (!selectedOption || !canQueueSelected) {
               return;
@@ -174,7 +248,7 @@ export function VehicleModificationBatchSelector({
               selectedOption.definitionId,
             ]);
           }}
-          className="h-11 rounded-full bg-ats-blue px-5 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover disabled:cursor-not-allowed disabled:border disabled:border-ats-border disabled:bg-ats-black disabled:text-ats-muted"
+          className="h-11 rounded-full bg-ats-blue px-5 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover disabled:cursor-not-allowed disabled:border disabled:border-ats-border disabled:bg-ats-black disabled:text-ats-muted lg:whitespace-nowrap"
         >
           Listeye ekle
         </button>
@@ -207,7 +281,7 @@ export function VehicleModificationBatchSelector({
           <button
             type="submit"
             disabled={queuedOptions.length === 0 || isPending}
-            className="inline-flex h-11 items-center justify-center rounded-full bg-ats-blue px-5 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover disabled:cursor-not-allowed disabled:border disabled:border-ats-border disabled:bg-ats-black disabled:text-ats-muted"
+            className="inline-flex h-11 w-full items-center justify-center rounded-full bg-ats-blue px-5 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover disabled:cursor-not-allowed disabled:border disabled:border-ats-border disabled:bg-ats-black disabled:text-ats-muted sm:w-auto"
           >
             {isPending
               ? "Parçalar ekleniyor..."
@@ -220,9 +294,13 @@ export function VehicleModificationBatchSelector({
             {queuedOptions.map((option) => (
               <li
                 key={option.definitionId}
-                className="grid gap-3 px-3 py-2 sm:grid-cols-[1fr_auto] sm:items-center"
+                className={`grid gap-3 px-3 py-2 sm:grid-cols-[1fr_auto] sm:items-center ${
+                  highlightedDefinitionId === option.definitionId
+                    ? "bg-red-500/10"
+                    : ""
+                }`}
               >
-                <span className="min-w-0 truncate text-sm font-black text-ats-text">
+                <span className="min-w-0 break-words text-sm font-black text-ats-text">
                   {option.label}
                 </span>
                 <button
@@ -248,6 +326,12 @@ export function VehicleModificationBatchSelector({
           </ul>
         ) : null}
 
+        <ProjectedRatingPreviewPanel
+          previewState={previewState}
+          isPending={isPreviewPending}
+          queuedCount={queuedOptions.length}
+        />
+
         {state.message ? (
           <p
             className={`mt-4 rounded-md border px-4 py-3 text-sm font-semibold ${
@@ -259,9 +343,166 @@ export function VehicleModificationBatchSelector({
             {state.message}
           </p>
         ) : null}
+        <p className="sr-only" aria-live="polite">
+          {isPending
+            ? "Parçalar ekleniyor..."
+            : isPreviewPending
+              ? "Tahmini rating hesaplanıyor..."
+              : state.message ?? previewState?.message ?? ""}
+        </p>
       </form>
     </div>
   );
+}
+
+function ProjectedRatingPreviewPanel({
+  previewState,
+  isPending,
+  queuedCount,
+}: {
+  previewState: VehicleRatingPreviewState | null;
+  isPending: boolean;
+  queuedCount: number;
+}) {
+  if (queuedCount === 0) {
+    return null;
+  }
+
+  if (isPending) {
+    return (
+      <div className="mt-4 rounded-md border border-ats-border bg-ats-surface p-4">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-ats-blue">
+          Projected Build Impact
+        </p>
+        <div className="mt-4 grid gap-2">
+          <div className="h-4 w-36 animate-pulse rounded bg-white/10" />
+          <div className="h-3 w-full animate-pulse rounded bg-white/10" />
+          <div className="h-3 w-4/5 animate-pulse rounded bg-white/10" />
+        </div>
+        <p className="mt-3 text-sm font-semibold text-ats-muted">
+          Tahmini rating hesaplanıyor...
+        </p>
+      </div>
+    );
+  }
+
+  if (!previewState) {
+    return null;
+  }
+
+  if (!previewState.ok) {
+    return (
+      <div className="mt-4 rounded-md border border-red-300/30 bg-red-500/10 p-4">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-red-100">
+          Projected Build Impact
+        </p>
+        <p className="mt-2 text-sm font-semibold leading-6 text-red-100">
+          {previewState.message ?? "Seçim çakışma içeriyor."}
+        </p>
+      </div>
+    );
+  }
+
+  if (!previewState.currentRating || !previewState.projectedRating) {
+    return (
+      <div className="mt-4 rounded-md border border-ats-border bg-ats-surface p-4">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-ats-blue">
+          Projected Build Impact
+        </p>
+        <p className="mt-2 text-sm font-semibold leading-6 text-ats-muted">
+          {previewState.message ??
+            "Bu araç platformu için tahmini ATS Rating mevcut değil."}
+        </p>
+      </div>
+    );
+  }
+
+  const overallDelta = ratingDelta(
+    previewState.currentRating.overall,
+    previewState.projectedRating.overall,
+  );
+
+  return (
+    <div className="mt-4 rounded-md border border-ats-blue/30 bg-ats-blue/10 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-ats-blue">
+            Projected Build Impact
+          </p>
+          <p className="mt-2 text-xs font-semibold text-ats-muted">
+            Tahmini değer. Build kaydedildikten sonra ATS Rating yeniden hesaplanır.
+          </p>
+        </div>
+        <div className="grid gap-2 rounded-md border border-ats-border bg-ats-black px-3 py-2 sm:min-w-[220px]">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-[11px] font-black uppercase tracking-[0.12em] text-ats-muted">
+              Mevcut ATS Rating
+            </span>
+            <span className="text-lg font-black text-ats-text">
+              {previewState.currentRating.overall}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-[11px] font-black uppercase tracking-[0.12em] text-ats-muted">
+              Tahmini ATS Rating
+            </span>
+            <span className="whitespace-nowrap text-lg font-black text-ats-text">
+              {previewState.projectedRating.overall} <DeltaBadge delta={overallDelta} />
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <dl className="mt-4 grid gap-2">
+        {ratingComponentRows.map(([label, key]) => {
+          const currentValue = previewState.currentRating![key];
+          const projectedValue = previewState.projectedRating![key];
+          const delta = ratingDelta(currentValue, projectedValue);
+
+          return (
+            <div
+              key={key}
+              className="grid gap-2 rounded border border-ats-border bg-ats-black px-3 py-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+            >
+              <dt className="min-w-0 text-xs font-black uppercase tracking-[0.12em] text-ats-muted">
+                {label}
+              </dt>
+              <dd className="flex flex-wrap items-center gap-2 text-sm font-black text-ats-text">
+                <span>{currentValue}</span>
+                <span className="text-ats-muted">→</span>
+                <span>{projectedValue}</span>
+                <DeltaBadge delta={delta} />
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+    </div>
+  );
+}
+
+function DeltaBadge({ delta }: { delta: number }) {
+  const tone = ratingDeltaTone(delta);
+
+  return (
+    <span
+      className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-black ${deltaToneClass(tone)}`}
+    >
+      {formatRatingDelta(delta)}
+    </span>
+  );
+}
+
+function deltaToneClass(tone: RatingDeltaTone) {
+  if (tone === "positive") {
+    return "border-emerald-300/30 bg-emerald-500/10 text-emerald-100";
+  }
+
+  if (tone === "negative") {
+    return "border-red-300/30 bg-red-500/10 text-red-100";
+  }
+
+  return "border-ats-border bg-ats-black text-ats-muted";
 }
 
 function SelectField({

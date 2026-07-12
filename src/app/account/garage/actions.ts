@@ -16,6 +16,11 @@ import {
   type VehicleBuildResultCode,
 } from "@/lib/vehicle-build-rules";
 import {
+  calculateProjectedVehiclePerformanceRating,
+  calculateVehiclePerformanceRating,
+  type VehiclePerformanceRating,
+} from "@/lib/vehicle-performance-rating";
+import {
   buildVehicleImagePath,
   validateVehicleImageFile,
   vehicleImagesBucket,
@@ -54,6 +59,28 @@ export type VehicleModificationBatchActionState = {
   message: string | null;
   offendingDefinitionId?: string;
   insertedCount: number;
+  submittedAt: number;
+};
+
+export type VehicleRatingPreviewState = {
+  ok: boolean;
+  code:
+    | null
+    | "PREVIEW_EMPTY"
+    | "PREVIEW_TOO_LARGE"
+    | "VEHICLE_NOT_FOUND"
+    | "RATING_UNAVAILABLE"
+    | "DEFINITION_NOT_FOUND"
+    | "DEFINITION_INACTIVE"
+    | "MODIFICATION_INCOMPATIBLE"
+    | "DUPLICATE_MODIFICATION"
+    | "MODIFICATION_CONFLICT"
+    | "MODIFICATION_REQUIREMENT_MISSING"
+    | "PREVIEW_FAILED";
+  message: string | null;
+  currentRating: VehiclePerformanceRating | null;
+  projectedRating: VehiclePerformanceRating | null;
+  offendingDefinitionId?: string;
   submittedAt: number;
 };
 
@@ -1039,6 +1066,157 @@ export async function addVehicleModificationsBatchAction(
   }
 }
 
+export async function previewVehicleModificationsRatingAction(
+  vehicleId: string,
+  formData: FormData,
+): Promise<VehicleRatingPreviewState> {
+  const startedAt = performance.now();
+  const memberUser = await requireCompleteMemberUser(
+    `/account/garage/${vehicleId}#build-profile`,
+  );
+  const requestedDefinitionIds = normalizeBatchDefinitionIds(formData);
+  const finishPreview = (state: VehicleRatingPreviewState) => {
+    logVehicleBuildRatingPreview({
+      userId: memberUser.id,
+      vehicleId,
+      queuedCount: requestedDefinitionIds.length,
+      resultCode: state.code,
+      startedAt,
+    });
+
+    return state;
+  };
+
+  if (requestedDefinitionIds.length === 0) {
+    return finishPreview(previewState("PREVIEW_EMPTY"));
+  }
+
+  if (requestedDefinitionIds.length > maxBatchModificationDefinitions) {
+    return finishPreview(previewState("PREVIEW_TOO_LARGE"));
+  }
+
+  try {
+    const vehicle = await prisma.vehicle.findFirst({
+      where: {
+        id: vehicleId,
+        userId: memberUser.id,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        userId: true,
+        vehicleDefinitionId: true,
+        brand: true,
+        model: true,
+        year: true,
+        deletedAt: true,
+        vehicleDefinition: {
+          select: vehicleDefinitionRatingSelect,
+        },
+      },
+    });
+
+    if (!vehicle) {
+      return finishPreview(previewState("VEHICLE_NOT_FOUND"));
+    }
+
+    const [definitions, installedModifications] = await Promise.all([
+      prisma.modificationDefinition.findMany({
+        where: {
+          id: {
+            in: requestedDefinitionIds,
+          },
+        },
+        select: modificationDefinitionPreviewSelect,
+      }),
+      prisma.vehicleModification.findMany({
+        where: {
+          vehicleId: vehicle.id,
+          deletedAt: null,
+        },
+        select: installedModificationPreviewSelect,
+      }),
+    ]);
+
+    const definitionsById = new Map(
+      definitions.map((definition) => [definition.id, definition]),
+    );
+    const missingDefinitionId = requestedDefinitionIds.find(
+      (definitionId) => !definitionsById.has(definitionId),
+    );
+
+    if (missingDefinitionId) {
+      return finishPreview(
+        previewState("DEFINITION_NOT_FOUND", {
+          offendingDefinitionId: missingDefinitionId,
+        }),
+      );
+    }
+
+    const orderedDefinitions = requestedDefinitionIds.map((definitionId) =>
+      definitionsById.get(definitionId)!,
+    );
+    const inactiveDefinition = orderedDefinitions.find(
+      (definition) => !definition.active,
+    );
+
+    if (inactiveDefinition) {
+      return finishPreview(
+        previewState("DEFINITION_INACTIVE", {
+          offendingDefinitionId: inactiveDefinition.id,
+          offendingDefinition: inactiveDefinition,
+        }),
+      );
+    }
+
+    const availability = evaluateModificationBatchAvailability({
+      vehicle,
+      definitions: orderedDefinitions,
+      installedModifications,
+    });
+
+    if (!availability.ok) {
+      const code = previewCodeForBatchCode(availability.code);
+
+      return finishPreview(
+        previewState(code, {
+          ...availability,
+          offendingDefinition: definitionsById.get(availability.offendingDefinitionId),
+        }),
+      );
+    }
+
+    const currentRating = calculateVehiclePerformanceRating({
+      vehicleDefinition: vehicle.vehicleDefinition,
+      installedModifications,
+    });
+    const projectedRating = calculateProjectedVehiclePerformanceRating({
+      vehicleDefinition: vehicle.vehicleDefinition,
+      installedModifications,
+      proposedModifications: orderedDefinitions.map((definition) => ({
+        modificationDefinitionId: definition.id,
+        modificationDefinition: definition,
+      })),
+    });
+
+    const state =
+      currentRating && projectedRating
+        ? previewState(null, {
+            currentRating,
+            projectedRating,
+          })
+        : previewState("RATING_UNAVAILABLE", {
+            ok: true,
+            currentRating: null,
+            projectedRating: null,
+          });
+
+    return finishPreview(state);
+  } catch {
+    return finishPreview(previewState("PREVIEW_FAILED"));
+  }
+}
+
 export async function removeVehicleModificationAction(
   vehicleId: string,
   vehicleModificationId: string,
@@ -1296,6 +1474,139 @@ function batchResultMessage(
   return "Parçalar toplu olarak eklenemedi. Lütfen tekrar deneyin.";
 }
 
+type VehicleRatingPreviewCode = NonNullable<VehicleRatingPreviewState["code"]>;
+
+type PreviewStateContext = {
+  ok?: boolean;
+  currentRating?: VehiclePerformanceRating | null;
+  projectedRating?: VehiclePerformanceRating | null;
+  offendingDefinitionId?: string;
+  offendingDefinition?: {
+    brand: string | null;
+    name: string;
+    variant: string | null;
+  };
+  conflictingModification?: {
+    modificationDefinition: {
+      brand: string | null;
+      name: string;
+      variant: string | null;
+    };
+  };
+  missingRequirement?: {
+    options: Array<{
+      requiredDefinition: {
+        brand: string | null;
+        name: string;
+        variant: string | null;
+      };
+    }>;
+  };
+};
+
+function previewState(
+  code: VehicleRatingPreviewState["code"],
+  context: PreviewStateContext = {},
+): VehicleRatingPreviewState {
+  return {
+    ok: context.ok ?? code === null,
+    code,
+    message: previewMessage(code, context),
+    currentRating: context.currentRating ?? null,
+    projectedRating: context.projectedRating ?? null,
+    offendingDefinitionId: context.offendingDefinitionId,
+    submittedAt: Date.now(),
+  };
+}
+
+function previewMessage(
+  code: VehicleRatingPreviewState["code"],
+  context: PreviewStateContext,
+) {
+  if (code === null) {
+    return "Tahmini rating hesaplandı.";
+  }
+
+  if (code === "RATING_UNAVAILABLE") {
+    return "Bu araç platformu için tahmini ATS Rating mevcut değil.";
+  }
+
+  if (code === "PREVIEW_EMPTY") {
+    return "Tahmini rating için listeye parça ekleyin.";
+  }
+
+  if (code === "PREVIEW_TOO_LARGE") {
+    return "Tek seferde en fazla 20 parça önizlenebilir.";
+  }
+
+  if (code === "VEHICLE_NOT_FOUND") {
+    return "Araç bulunamadı veya bu işlem için uygun değil.";
+  }
+
+  if (code === "DEFINITION_NOT_FOUND") {
+    return "Seçilen parçalardan biri katalogda bulunamadı.";
+  }
+
+  if (code === "DEFINITION_INACTIVE") {
+    return `${previewDefinitionName(context)} şu anda aktif değil.`;
+  }
+
+  if (code === "MODIFICATION_INCOMPATIBLE") {
+    return `${previewDefinitionName(context)} bu araç platformuyla uyumlu değil.`;
+  }
+
+  if (code === "DUPLICATE_MODIFICATION") {
+    return "Bu parça build profilinde zaten yüklü.";
+  }
+
+  if (code === "MODIFICATION_CONFLICT") {
+    const conflictingName = context.conflictingModification
+      ? formatModificationDefinition(
+          context.conflictingModification.modificationDefinition,
+        )
+      : null;
+
+    return conflictingName
+      ? `${previewDefinitionName(context)}, ${conflictingName} ile çakışıyor.`
+      : "Seçim çakışma içeriyor.";
+  }
+
+  if (code === "MODIFICATION_REQUIREMENT_MISSING") {
+    const requiredNames = context.missingRequirement?.options
+      .map((option) => formatModificationDefinition(option.requiredDefinition))
+      .join(" veya ");
+
+    return requiredNames
+      ? `${previewDefinitionName(context)} için önce ${requiredNames} gerekli.`
+      : "Seçilen parçalardan biri için gerekli parça eksik.";
+  }
+
+  return "Tahmini rating hesaplanamadı.";
+}
+
+function previewDefinitionName(context: PreviewStateContext) {
+  return context.offendingDefinition
+    ? formatModificationDefinition(context.offendingDefinition)
+    : "Seçilen parça";
+}
+
+function previewCodeForBatchCode(
+  code: Exclude<
+    VehicleBuildBatchResultCode,
+    | "BATCH_EMPTY"
+    | "BATCH_TOO_LARGE"
+    | "DEFINITION_NOT_FOUND"
+    | "VEHICLE_NOT_FOUND"
+    | "BATCH_WRITE_FAILED"
+  >,
+): VehicleRatingPreviewCode {
+  if (code === "DEFINITION_INACTIVE") {
+    return "DEFINITION_INACTIVE";
+  }
+
+  return code;
+}
+
 function vehicleBuildBatchCodeForWriteError(error: unknown): VehicleBuildBatchResultCode {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === "P2025") {
@@ -1335,6 +1646,32 @@ function logVehicleBuildBatchResult({
     requestedCount,
     insertedCount,
     code,
+    durationMs: Math.round(performance.now() - startedAt),
+  });
+}
+
+function logVehicleBuildRatingPreview({
+  userId,
+  vehicleId,
+  queuedCount,
+  resultCode,
+  startedAt,
+}: {
+  userId: string;
+  vehicleId: string;
+  queuedCount: number;
+  resultCode: VehicleRatingPreviewState["code"];
+  startedAt: number;
+}) {
+  if (process.env.NODE_ENV !== "development") {
+    return;
+  }
+
+  console.info("VEHICLE_BUILD_RATING_PREVIEW", {
+    userId,
+    vehicleId,
+    queuedCount,
+    resultCode,
     durationMs: Math.round(performance.now() - startedAt),
   });
 }
@@ -1551,11 +1888,85 @@ const modificationDefinitionRuleSelect = {
   },
 } satisfies Prisma.ModificationDefinitionSelect;
 
+const modificationDefinitionRatingSelect = {
+  id: true,
+  code: true,
+  category: true,
+  brand: true,
+  name: true,
+  variant: true,
+  powerImpact: true,
+  handlingImpact: true,
+  brakingImpact: true,
+  reliabilityImpact: true,
+  trackReadinessImpact: true,
+  modificationImpacts: {
+    where: {
+      active: true,
+    },
+    select: {
+      vehicleDefinitionId: true,
+      powerImpact: true,
+      handlingImpact: true,
+      brakingImpact: true,
+      reliabilityImpact: true,
+      thermalImpact: true,
+      trackReadinessImpact: true,
+      active: true,
+    },
+  },
+} satisfies Prisma.ModificationDefinitionSelect;
+
+const modificationDefinitionPreviewSelect = {
+  ...modificationDefinitionRuleSelect,
+  code: true,
+  powerImpact: true,
+  handlingImpact: true,
+  brakingImpact: true,
+  reliabilityImpact: true,
+  trackReadinessImpact: true,
+  modificationImpacts: {
+    where: {
+      active: true,
+    },
+    select: {
+      vehicleDefinitionId: true,
+      powerImpact: true,
+      handlingImpact: true,
+      brakingImpact: true,
+      reliabilityImpact: true,
+      thermalImpact: true,
+      trackReadinessImpact: true,
+      active: true,
+    },
+  },
+} satisfies Prisma.ModificationDefinitionSelect;
+
+const vehicleDefinitionRatingSelect = {
+  id: true,
+  powerRating: true,
+  handlingRating: true,
+  brakingRating: true,
+  reliabilityRating: true,
+  thermalRating: true,
+  trackReadinessRating: true,
+  weightPenalty: true,
+  ratingStatus: true,
+} satisfies Prisma.VehicleDefinitionSelect;
+
 const installedModificationLabelSelect = {
   id: true,
   modificationDefinitionId: true,
   modificationDefinition: {
     select: modificationDefinitionLabelSelect,
+  },
+} satisfies Prisma.VehicleModificationSelect;
+
+const installedModificationPreviewSelect = {
+  id: true,
+  modificationDefinitionId: true,
+  modificationDefinition: {
+    select: modificationDefinitionRatingSelect,
   },
 } satisfies Prisma.VehicleModificationSelect;
 
