@@ -956,6 +956,8 @@ export async function addVehicleModificationAction(
               vehicleDefinition: {
                 select: {
                   powertrain: true,
+                  platformFamilyId: true,
+                  engineFamilyId: true,
                 },
               },
               brand: true,
@@ -1119,6 +1121,8 @@ export async function addVehicleModificationsBatchAction(
             vehicleDefinition: {
               select: {
                 powertrain: true,
+                platformFamilyId: true,
+                engineFamilyId: true,
               },
             },
             brand: true,
@@ -2199,6 +2203,8 @@ const modificationDefinitionRuleSelect = {
       vehicleBrand: true,
       vehicleModel: true,
       vehicleDefinitionId: true,
+      platformFamilyId: true,
+      engineFamilyId: true,
       yearFrom: true,
       yearTo: true,
     },
@@ -2308,6 +2314,8 @@ const modificationDefinitionPreviewSelect = {
 const vehicleDefinitionRatingSelect = {
   id: true,
   powertrain: true,
+  platformFamilyId: true,
+  engineFamilyId: true,
   powerRating: true,
   handlingRating: true,
   brakingRating: true,

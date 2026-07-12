@@ -180,6 +180,42 @@ enum VehicleRatingStatus {
   UNAVAILABLE
 }
 
+enum EngineInductionType {
+  NATURALLY_ASPIRATED
+  TURBOCHARGED
+  SUPERCHARGED
+  TWIN_TURBO
+}
+
+enum EngineFuelType {
+  PETROL
+  DIESEL
+  FLEX_FUEL
+  HYBRID_PETROL
+  HYBRID_DIESEL
+}
+
+enum TuningPackageType {
+  ECU_FLASH
+  PIGGYBACK
+  ECU_TCU_BUNDLE
+  TCU_SOFTWARE
+  FLEX_FUEL_CALIBRATION
+  HARDWARE_SOFTWARE_PACKAGE
+}
+
+enum PowerMeasurementBasis {
+  CRANK
+  WHEEL
+  UNSPECIFIED
+}
+
+enum CalibrationConfidence {
+  HIGH
+  MEDIUM
+  LOW
+}
+
 model Event {
   id                      String         @id @default(cuid())
   code                    String         @unique
@@ -454,6 +490,10 @@ model VehicleDefinition {
   yearTo               Int?
   powertrain           VehiclePowertrain
   drivetrain           VehicleDrivetrain
+  platformFamilyId     String?
+  platformFamily       VehiclePlatformFamily?      @relation(fields: [platformFamilyId], references: [id], onDelete: SetNull)
+  engineFamilyId       String?
+  engineFamily         VehicleEngineFamily?        @relation(fields: [engineFamilyId], references: [id], onDelete: SetNull)
   powerRating          Int
   handlingRating       Int
   brakingRating        Int
@@ -472,40 +512,76 @@ model VehicleDefinition {
 
   @@index([brand, model, active])
   @@index([generation, variant, active])
+  @@index([platformFamilyId, active])
+  @@index([engineFamilyId, active])
+}
+
+model VehiclePlatformFamily {
+  id                 String                      @id @default(cuid())
+  code               String                      @unique
+  brand              String
+  name               String
+  generation         String?
+  active             Boolean                     @default(true)
+  vehicleDefinitions VehicleDefinition[]
+  compatibilities    ModificationCompatibility[]
+  createdAt          DateTime                    @default(now())
+  updatedAt          DateTime                    @updatedAt
+
+  @@index([brand, active])
+}
+
+model VehicleEngineFamily {
+  id                 String                      @id @default(cuid())
+  code               String                      @unique
+  manufacturer       String
+  name               String
+  displacementCc     Int?
+  cylinderCount      Int?
+  inductionType      EngineInductionType?
+  fuelType           EngineFuelType?
+  active             Boolean                     @default(true)
+  vehicleDefinitions VehicleDefinition[]
+  compatibilities    ModificationCompatibility[]
+  createdAt          DateTime                    @default(now())
+  updatedAt          DateTime                    @updatedAt
+
+  @@index([manufacturer, active])
 }
 
 model ModificationDefinition {
-  id                        String                             @id @default(cuid())
-  code                      String                             @unique
-  category                  ModificationCategory
-  brand                     String?
-  name                      String
-  variant                   String?
-  componentTypeCode         String?
-  usageClass                ModificationUsageClass?
-  description               String?                            @db.Text
-  powerImpact               Int                                @default(0)
-  handlingImpact            Int                                @default(0)
-  brakingImpact             Int                                @default(0)
-  reliabilityImpact         Int                                @default(0)
-  trackReadinessImpact      Int                                @default(0)
-  active                    Boolean                            @default(true)
-  sortOrder                 Int                                @default(0)
-  vehicleModifications      VehicleModification[]
-  modificationImpacts       VehicleModificationImpact[]
-  compatibilities           ModificationCompatibility[]
-  powertrainApplicabilities ModificationDefinitionPowertrain[]
-  brakePadSpecification     BrakePadSpecification?
-  sportSpringSpecification  SportSpringSpecification?
-  bigBrakeKitSpecification  BigBrakeKitSpecification?
-  tyreSpecification         TyreSpecification?
-  wheelSpecification        WheelSpecification?
-  rulesAsSource             ModificationRule[]                 @relation("ModificationRuleSource")
-  rulesAsTarget             ModificationRule[]                 @relation("ModificationRuleTarget")
-  requirementGroups         ModificationRequirementGroup[]     @relation("ModificationRequirementSource")
-  requirementOptions        ModificationRequirementOption[]    @relation("ModificationRequirementOptionDefinition")
-  createdAt                 DateTime                           @default(now())
-  updatedAt                 DateTime                           @updatedAt
+  id                         String                             @id @default(cuid())
+  code                       String                             @unique
+  category                   ModificationCategory
+  brand                      String?
+  name                       String
+  variant                    String?
+  componentTypeCode          String?
+  usageClass                 ModificationUsageClass?
+  description                String?                            @db.Text
+  powerImpact                Int                                @default(0)
+  handlingImpact             Int                                @default(0)
+  brakingImpact              Int                                @default(0)
+  reliabilityImpact          Int                                @default(0)
+  trackReadinessImpact       Int                                @default(0)
+  active                     Boolean                            @default(true)
+  sortOrder                  Int                                @default(0)
+  vehicleModifications       VehicleModification[]
+  modificationImpacts        VehicleModificationImpact[]
+  compatibilities            ModificationCompatibility[]
+  powertrainApplicabilities  ModificationDefinitionPowertrain[]
+  tuningPackageSpecification TuningPackageSpecification?
+  brakePadSpecification      BrakePadSpecification?
+  sportSpringSpecification   SportSpringSpecification?
+  bigBrakeKitSpecification   BigBrakeKitSpecification?
+  tyreSpecification          TyreSpecification?
+  wheelSpecification         WheelSpecification?
+  rulesAsSource              ModificationRule[]                 @relation("ModificationRuleSource")
+  rulesAsTarget              ModificationRule[]                 @relation("ModificationRuleTarget")
+  requirementGroups          ModificationRequirementGroup[]     @relation("ModificationRequirementSource")
+  requirementOptions         ModificationRequirementOption[]    @relation("ModificationRequirementOptionDefinition")
+  createdAt                  DateTime                           @default(now())
+  updatedAt                  DateTime                           @updatedAt
 
   @@index([category, active, sortOrder])
   @@index([category, componentTypeCode, active])
@@ -616,6 +692,28 @@ model WheelSpecification {
   updatedAt                DateTime               @updatedAt
 }
 
+model TuningPackageSpecification {
+  id                        String                 @id @default(cuid())
+  modificationDefinitionId  String                 @unique
+  modificationDefinition    ModificationDefinition @relation(fields: [modificationDefinitionId], references: [id], onDelete: Cascade)
+  tuneType                  TuningPackageType
+  measurementBasis          PowerMeasurementBasis?
+  claimedPowerMinHp         Int?
+  claimedPowerMaxHp         Int?
+  claimedTorqueMinNm        Int?
+  claimedTorqueMaxNm        Int?
+  minimumFuelOctaneRon      Int?
+  requiredFuelNote          String?
+  hardwareRequirementNote   String?
+  transmissionLimitNote     String?
+  coolingRecommendationNote String?
+  sourceNote                String?
+  confidence                CalibrationConfidence
+  active                    Boolean                @default(true)
+  createdAt                 DateTime               @default(now())
+  updatedAt                 DateTime               @updatedAt
+}
+
 model VehicleModification {
   id                       String                 @id @default(cuid())
   vehicleId                String
@@ -685,6 +783,10 @@ model VehicleModificationImpact {
   reliabilityImpact        Int                    @default(0)
   thermalImpact            Int                    @default(0)
   trackReadinessImpact     Int                    @default(0)
+  confidence               CalibrationConfidence  @default(LOW)
+  sourceNote               String?
+  claimedPowerDeltaHp      Int?
+  claimedTorqueDeltaNm     Int?
   active                   Boolean                @default(true)
 
   @@unique([vehicleDefinitionId, modificationDefinitionId])
@@ -697,6 +799,10 @@ model ModificationCompatibility {
   modificationDefinition   ModificationDefinition @relation(fields: [modificationDefinitionId], references: [id], onDelete: Cascade)
   vehicleDefinitionId      String?
   vehicleDefinition        VehicleDefinition?     @relation(fields: [vehicleDefinitionId], references: [id], onDelete: Cascade)
+  platformFamilyId         String?
+  platformFamily           VehiclePlatformFamily? @relation(fields: [platformFamilyId], references: [id], onDelete: Cascade)
+  engineFamilyId           String?
+  engineFamily             VehicleEngineFamily?   @relation(fields: [engineFamilyId], references: [id], onDelete: Cascade)
   vehicleBrand             String?
   vehicleModel             String?
   yearFrom                 Int?
@@ -704,8 +810,12 @@ model ModificationCompatibility {
   active                   Boolean                @default(true)
 
   @@unique([modificationDefinitionId, vehicleDefinitionId])
+  @@unique([modificationDefinitionId, platformFamilyId])
+  @@unique([modificationDefinitionId, engineFamilyId])
   @@index([modificationDefinitionId, active])
   @@index([vehicleDefinitionId, active])
+  @@index([platformFamilyId, active])
+  @@index([engineFamilyId, active])
   @@index([vehicleBrand, vehicleModel, active])
 }
 

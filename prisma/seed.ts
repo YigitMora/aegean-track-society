@@ -2,9 +2,14 @@ import {
   Prisma,
   PrismaClient,
   type BigBrakeKitAxle,
+  type CalibrationConfidence,
   type CaliperType,
+  type EngineFuelType,
+  type EngineInductionType,
   type ModificationUsageClass,
+  type PowerMeasurementBasis,
   type RotorConstruction,
+  type TuningPackageType,
   type TyreClass,
   type VehicleDrivetrain,
   type VehiclePowertrain,
@@ -706,6 +711,94 @@ const modificationCatalog = [
     usageClass: "FAST_ROAD",
     active: false,
     sortOrder: 10,
+  },
+  {
+    code: "tune_mhd_b58_stage_1",
+    category: "ECU",
+    brand: "MHD",
+    name: "ECU Software",
+    variant: "B58 Stage 1",
+    componentTypeCode: "ecu_software",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 110,
+  },
+  {
+    code: "tune_mhd_s55_stage_1",
+    category: "ECU",
+    brand: "MHD",
+    name: "ECU Software",
+    variant: "S55 Stage 1",
+    componentTypeCode: "ecu_software",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 120,
+  },
+  {
+    code: "tune_mhd_s58_stage_1",
+    category: "ECU",
+    brand: "MHD",
+    name: "ECU Software",
+    variant: "S58 Stage 1",
+    componentTypeCode: "ecu_software",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 130,
+  },
+  {
+    code: "tune_apr_ea888_gen3_stage_1",
+    category: "ECU",
+    brand: "APR",
+    name: "ECU Software",
+    variant: "EA888 Gen 3 Stage 1",
+    componentTypeCode: "ecu_software",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 140,
+  },
+  {
+    code: "tune_apr_ea888_gen4_stage_1",
+    category: "ECU",
+    brand: "APR",
+    name: "ECU Software",
+    variant: "EA888 Gen 4 Stage 1",
+    componentTypeCode: "ecu_software",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 150,
+  },
+  {
+    code: "tune_cobb_focus_rs_mk3_stage_1",
+    category: "ECU",
+    brand: "COBB",
+    name: "Accessport OTS Map",
+    variant: "Focus RS Mk3 Stage 1",
+    componentTypeCode: "ecu_software",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 160,
+  },
+  {
+    code: "tune_ktuner_fk8_stage_1",
+    category: "ECU",
+    brand: "KTuner",
+    name: "ECU Software",
+    variant: "Civic Type R FK8 Stage 1",
+    componentTypeCode: "ecu_software",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 170,
+  },
+  {
+    code: "tune_hondata_fl5_flashpro_stage_1",
+    category: "ECU",
+    brand: "Hondata",
+    name: "FlashPro Calibration",
+    variant: "Civic Type R FL5 Stage 1",
+    componentTypeCode: "ecu_software",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 180,
   },
   {
     code: "cooling_intercooler_upgrade",
@@ -1514,6 +1607,17 @@ const modificationCatalog = [
     usageClass: "FAST_ROAD",
     active: false,
     sortOrder: 20,
+  },
+  {
+    code: "tune_xhp_bmw_zf8_stage_2",
+    category: "DRIVETRAIN",
+    brand: "xHP",
+    name: "Transmission Software",
+    variant: "BMW ZF8 Stage 2",
+    componentTypeCode: "transmission_software",
+    usageClass: "FAST_ROAD",
+    trackReadinessImpact: 1,
+    sortOrder: 25,
   },
   {
     code: "drivetrain_performance_clutch",
@@ -4390,6 +4494,105 @@ const vehicleDefinitions = [
   ...expandedPerformanceVehicleDefinitions,
 ] as const;
 
+const vehiclePlatformFamilies = [
+  platformFamily("mazda_nd", "Mazda", "MX-5", "ND"),
+  platformFamily("hyundai_bc3_i20n", "Hyundai", "i20 N", "BC3"),
+  platformFamily("hyundai_e_gmp_n", "Hyundai", "E-GMP N", "NE"),
+  platformFamily("bmw_g20_g22", "BMW", "3/4 Series", "G20/G22"),
+  platformFamily("vw_mqb_evo_mk85", "Volkswagen", "Golf", "Mk8.5 MQB Evo"),
+  platformFamily("honda_fk2", "Honda", "Civic Type R", "FK2"),
+  platformFamily("honda_fk8", "Honda", "Civic Type R", "FK8"),
+  platformFamily("honda_fl5", "Honda", "Civic Type R", "FL5"),
+  platformFamily("tesla_model_y", "Tesla", "Model Y", null),
+  platformFamily("togg_t10x", "Togg", "T10X", null),
+  platformFamily("ford_b2e_fiesta", "Ford", "Fiesta ST", "Mk7/Mk8"),
+  platformFamily("ford_c1_focus", "Ford", "Focus ST", "C1"),
+  platformFamily("ford_c2_focus", "Ford", "Focus ST", "C2"),
+  platformFamily("ford_c1_focus_rs", "Ford", "Focus RS", "C1"),
+  platformFamily("ford_s550", "Ford", "Mustang", "S550"),
+  platformFamily("ford_s650", "Ford", "Mustang", "S650"),
+  platformFamily("mercedes_mfa2", "Mercedes-Benz", "MFA2 Compact", "W177/C118"),
+  platformFamily("mercedes_mra_w205", "Mercedes-Benz", "C-Class", "W205"),
+  platformFamily("mercedes_mra2_w206", "Mercedes-Benz", "C-Class", "W206"),
+  platformFamily("audi_mqb_8v", "Audi", "MQB", "8V"),
+  platformFamily("audi_mqb_evo_8y", "Audi", "MQB Evo", "8Y"),
+  platformFamily("audi_mlb_b9", "Audi", "MLB Evo", "B9"),
+  platformFamily("audi_tt_8s", "Audi", "TT", "8S"),
+  platformFamily("toyota_gr_yaris", "Toyota", "GR Yaris", "XP210"),
+  platformFamily("toyota_zn8", "Toyota", "GR86", "ZN8"),
+  platformFamily("toyota_zn6", "Toyota", "GT86", "ZN6"),
+  platformFamily("toyota_a90", "Toyota", "GR Supra", "A90"),
+  platformFamily("renault_x98", "Renault Sport", "Clio RS", "X98"),
+  platformFamily("renault_cmf_cd", "Renault Sport", "Megane RS", "Mk4"),
+  platformFamily("alpine_a110", "Alpine", "A110", "A110"),
+  platformFamily("porsche_982", "Porsche", "718 Cayman", "982"),
+  platformFamily("porsche_992", "Porsche", "911", "992"),
+  platformFamily("bmw_f40", "BMW", "1 Series", "F40"),
+  platformFamily("bmw_f2x", "BMW", "1/2 Series", "F20/F22"),
+  platformFamily("bmw_g42", "BMW", "2 Series", "G42"),
+  platformFamily("bmw_f8x", "BMW M", "M2/M3/M4", "F8x"),
+  platformFamily("bmw_g8x", "BMW M", "M2/M3/M4", "G8x"),
+  platformFamily("hyundai_n_k3", "Hyundai", "N Performance", "CN7/OS"),
+  platformFamily("honda_ap1", "Honda", "S2000", "AP1"),
+  platformFamily("honda_dc2", "Honda", "Integra Type R", "DC2"),
+  platformFamily("honda_ep3", "Honda", "Civic Type R", "EP3"),
+  platformFamily("vw_mqb_mk7", "Volkswagen", "Golf", "Mk7 MQB"),
+  platformFamily("vw_mqb_evo_mk8", "Volkswagen", "Golf", "Mk8 MQB Evo"),
+  platformFamily("cupra_mqb_evo", "Cupra", "MQB Evo Performance", "KL/KM"),
+  platformFamily("subaru_zn8", "Subaru", "BRZ", "ZN8"),
+  platformFamily("mitsubishi_ct9a", "Mitsubishi", "Lancer Evolution", "CT9A"),
+  platformFamily("nissan_r35", "Nissan", "GT-R", "R35"),
+] as const;
+
+const vehicleEngineFamilies = [
+  engineFamily("mazda_skyactiv_g", "Mazda", "Skyactiv-G", 1998, 4, "NATURALLY_ASPIRATED", "PETROL"),
+  engineFamily("hyundai_g4fp_i20n", "Hyundai", "G4FP 1.6 T-GDi", 1598, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("bmw_b48", "BMW", "B48 2.0", 1998, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("bmw_b48_turkiye_16", "BMW", "B48 1.6 Türkiye", 1598, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("bmw_b58", "BMW", "B58", 2998, 6, "TURBOCHARGED", "PETROL"),
+  engineFamily("bmw_s55", "BMW M", "S55", 2979, 6, "TWIN_TURBO", "PETROL"),
+  engineFamily("bmw_s58", "BMW M", "S58", 2993, 6, "TWIN_TURBO", "PETROL"),
+  engineFamily("vag_ea211_evo", "Volkswagen Group", "EA211 Evo", 1498, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("vag_ea888_gen3", "Volkswagen Group", "EA888 Gen 3", 1984, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("vag_ea888_gen4", "Volkswagen Group", "EA888 Gen 4", 1984, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("vag_ea855_evo", "Volkswagen Group", "EA855 Evo", 2480, 5, "TURBOCHARGED", "PETROL"),
+  engineFamily("honda_k20c1_fk2", "Honda", "K20C1 FK2", 1996, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("honda_k20c1_fk8", "Honda", "K20C1 FK8", 1996, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("honda_k20c1_fl5", "Honda", "K20C1 FL5", 1996, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("ford_ecoboost_16", "Ford", "EcoBoost 1.6", 1596, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("ford_ecoboost_15", "Ford", "EcoBoost 1.5", 1497, 3, "TURBOCHARGED", "PETROL"),
+  engineFamily("ford_ecoboost_20", "Ford", "EcoBoost 2.0", 1999, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("ford_ecoboost_23_focus_st", "Ford", "EcoBoost 2.3 Focus ST", 2261, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("ford_ecoboost_23_focus_rs", "Ford", "EcoBoost 2.3 Focus RS", 2261, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("ford_ecoboost_23_mustang", "Ford", "EcoBoost 2.3 Mustang", 2261, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("ford_coyote_v8", "Ford", "Coyote 5.0 V8", 5038, 8, "NATURALLY_ASPIRATED", "PETROL"),
+  engineFamily("volvo_b5254t", "Volvo/Ford", "B5254T", 2521, 5, "TURBOCHARGED", "PETROL"),
+  engineFamily("mercedes_m282", "Mercedes-Benz", "M282", 1332, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("mercedes_m260", "Mercedes-Benz", "M260", 1991, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("mercedes_m139", "Mercedes-AMG", "M139", 1991, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("mercedes_m139_hybrid", "Mercedes-AMG", "M139 Hybrid", 1991, 4, "TURBOCHARGED", "HYBRID_PETROL"),
+  engineFamily("mercedes_m254", "Mercedes-Benz", "M254", 1496, 4, "TURBOCHARGED", "HYBRID_PETROL"),
+  engineFamily("mercedes_m177", "Mercedes-AMG", "M177", 3982, 8, "TWIN_TURBO", "PETROL"),
+  engineFamily("audi_ea839_v6", "Audi", "EA839 V6", 2995, 6, "TURBOCHARGED", "PETROL"),
+  engineFamily("audi_ea839_v6_biturbo", "Audi Sport", "EA839 V6 BiTurbo", 2894, 6, "TWIN_TURBO", "PETROL"),
+  engineFamily("toyota_g16e_gts", "Toyota", "G16E-GTS", 1618, 3, "TURBOCHARGED", "PETROL"),
+  engineFamily("subaru_toyota_fa24", "Subaru/Toyota", "FA24", 2387, 4, "NATURALLY_ASPIRATED", "PETROL"),
+  engineFamily("subaru_toyota_fa20", "Subaru/Toyota", "FA20", 1998, 4, "NATURALLY_ASPIRATED", "PETROL"),
+  engineFamily("renault_m5mt", "Renault", "M5Mt", 1618, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("renault_m5pt", "Renault", "M5Pt", 1798, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("alpine_m5p", "Alpine/Renault", "M5P", 1798, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("porsche_982_turbo_flat4", "Porsche", "982 Turbo Flat-4", 2497, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("porsche_982_gt_flat6", "Porsche", "982 4.0 Flat-6", 3995, 6, "NATURALLY_ASPIRATED", "PETROL"),
+  engineFamily("porsche_992_turbo_flat6", "Porsche", "992 3.0 Turbo Flat-6", 2981, 6, "TWIN_TURBO", "PETROL"),
+  engineFamily("porsche_992_gt_flat6", "Porsche", "992 GT3 Flat-6", 3996, 6, "NATURALLY_ASPIRATED", "PETROL"),
+  engineFamily("hyundai_theta2_tgdi_n", "Hyundai", "Theta II 2.0 T-GDi N", 1998, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("honda_f20c", "Honda", "F20C", 1997, 4, "NATURALLY_ASPIRATED", "PETROL"),
+  engineFamily("honda_b18c", "Honda", "B18C", 1797, 4, "NATURALLY_ASPIRATED", "PETROL"),
+  engineFamily("honda_k20a", "Honda", "K20A", 1998, 4, "NATURALLY_ASPIRATED", "PETROL"),
+  engineFamily("mitsubishi_4g63t", "Mitsubishi", "4G63T", 1997, 4, "TURBOCHARGED", "PETROL"),
+  engineFamily("nissan_vr38dett", "Nissan", "VR38DETT", 3799, 6, "TWIN_TURBO", "PETROL"),
+] as const;
+
 const bmwGlobalB48Codes = [
   "bmw_g20_320i_pre_lci",
   "bmw_g20_320i_lci",
@@ -4403,6 +4606,120 @@ const bmwTurkeyB48Codes = [
   "bmw_g22_420i_tr_lci",
 ] as const;
 const bmwB48Codes = [...bmwGlobalB48Codes, ...bmwTurkeyB48Codes] as const;
+const bmwB58Codes = ["bmw_m140i_f20", "bmw_m240i_g42", "toyota_supra_a90_30"] as const;
+const bmwS55Codes = ["bmw_m2_f87", "bmw_m3_f80", "bmw_m4_f82"] as const;
+const bmwS58Codes = ["bmw_m2_g87", "bmw_m3_g80", "bmw_m4_g82"] as const;
+const vagEa888Gen3Codes = [
+  "audi_s3_8v",
+  "audi_tts_8s",
+  "vw_golf_gti_mk7",
+  "vw_golf_r_mk7",
+] as const;
+const vagEa888Gen4Codes = [
+  "audi_s3_8y",
+  "vw_golf_gti_mk8",
+  "vw_golf_gti_mk85",
+  "vw_golf_gti_clubsport_mk85",
+  "vw_golf_r_mk8",
+  "vw_golf_r_mk85",
+  "cupra_leon_vz",
+] as const;
+const bmwZf8PlatformCodes = [
+  ...bmwB48Codes,
+  ...bmwB58Codes,
+  ...bmwS58Codes,
+] as const;
+const vehicleDefinitionFamilyLinks = [
+  familyLink("mazda_mx5_nd_15", "mazda_nd", "mazda_skyactiv_g"),
+  familyLink("mazda_mx5_nd_20", "mazda_nd", "mazda_skyactiv_g"),
+  familyLink("hyundai_i20n", "hyundai_bc3_i20n", "hyundai_g4fp_i20n"),
+  familyLink("hyundai_ioniq_5n", "hyundai_e_gmp_n", null),
+  ...bmwGlobalB48Codes.map((vehicleCode) => familyLink(vehicleCode, "bmw_g20_g22", "bmw_b48")),
+  ...bmwTurkeyB48Codes.map((vehicleCode) =>
+    familyLink(vehicleCode, "bmw_g20_g22", "bmw_b48_turkiye_16"),
+  ),
+  familyLink("vw_golf_gti_mk85", "vw_mqb_evo_mk85", "vag_ea888_gen4"),
+  familyLink("vw_golf_gti_clubsport_mk85", "vw_mqb_evo_mk85", "vag_ea888_gen4"),
+  familyLink("vw_golf_r_mk85", "vw_mqb_evo_mk85", "vag_ea888_gen4"),
+  familyLink("honda_civic_type_r_fk2", "honda_fk2", "honda_k20c1_fk2"),
+  familyLink("honda_civic_type_r_fk8", "honda_fk8", "honda_k20c1_fk8"),
+  familyLink("honda_civic_type_r_fl5", "honda_fl5", "honda_k20c1_fl5"),
+  familyLink("tesla_model_y_rwd", "tesla_model_y", null),
+  familyLink("tesla_model_y_long_range_awd", "tesla_model_y", null),
+  familyLink("tesla_model_y_performance", "tesla_model_y", null),
+  familyLink("togg_t10x_rwd", "togg_t10x", null),
+  familyLink("togg_t10x_awd", "togg_t10x", null),
+  familyLink("ford_fiesta_st_mk7", "ford_b2e_fiesta", "ford_ecoboost_16"),
+  familyLink("ford_fiesta_st_mk8", "ford_b2e_fiesta", "ford_ecoboost_15"),
+  familyLink("ford_focus_st_mk3", "ford_c1_focus", "ford_ecoboost_20"),
+  familyLink("ford_focus_st_mk4", "ford_c2_focus", "ford_ecoboost_23_focus_st"),
+  familyLink("ford_focus_rs_mk2", "ford_c1_focus_rs", "volvo_b5254t"),
+  familyLink("ford_focus_rs_mk3", "ford_c1_focus_rs", "ford_ecoboost_23_focus_rs"),
+  familyLink("ford_mustang_ecoboost_s550", "ford_s550", "ford_ecoboost_23_mustang"),
+  familyLink("ford_mustang_gt_s550", "ford_s550", "ford_coyote_v8"),
+  familyLink("ford_mustang_dark_horse_s650", "ford_s650", "ford_coyote_v8"),
+  familyLink("mercedes_a200_w177", "mercedes_mfa2", "mercedes_m282"),
+  familyLink("mercedes_amg_a35_w177", "mercedes_mfa2", "mercedes_m260"),
+  familyLink("mercedes_amg_a45_s_w177", "mercedes_mfa2", "mercedes_m139"),
+  familyLink("mercedes_amg_cla35_c118", "mercedes_mfa2", "mercedes_m260"),
+  familyLink("mercedes_amg_cla45_s_c118", "mercedes_mfa2", "mercedes_m139"),
+  familyLink("mercedes_c200_w206", "mercedes_mra2_w206", "mercedes_m254"),
+  familyLink("mercedes_amg_c43_w206", "mercedes_mra2_w206", "mercedes_m139_hybrid"),
+  familyLink("mercedes_amg_c63_s_w205", "mercedes_mra_w205", "mercedes_m177"),
+  familyLink("mercedes_amg_c63_s_e_performance_w206", "mercedes_mra2_w206", "mercedes_m139_hybrid"),
+  familyLink("audi_a3_35_tfsi_8y", "audi_mqb_evo_8y", "vag_ea211_evo"),
+  familyLink("audi_s3_8v", "audi_mqb_8v", "vag_ea888_gen3"),
+  familyLink("audi_s3_8y", "audi_mqb_evo_8y", "vag_ea888_gen4"),
+  familyLink("audi_rs3_8v", "audi_mqb_8v", "vag_ea855_evo"),
+  familyLink("audi_rs3_8y", "audi_mqb_evo_8y", "vag_ea855_evo"),
+  familyLink("audi_s4_b9", "audi_mlb_b9", "audi_ea839_v6"),
+  familyLink("audi_rs4_b9", "audi_mlb_b9", "audi_ea839_v6_biturbo"),
+  familyLink("audi_tts_8s", "audi_tt_8s", "vag_ea888_gen3"),
+  familyLink("audi_tt_rs_8s", "audi_tt_8s", "vag_ea855_evo"),
+  familyLink("toyota_gr_yaris_gen1", "toyota_gr_yaris", "toyota_g16e_gts"),
+  familyLink("toyota_gr_yaris_gen2", "toyota_gr_yaris", "toyota_g16e_gts"),
+  familyLink("toyota_gr86_zn8", "toyota_zn8", "subaru_toyota_fa24"),
+  familyLink("toyota_supra_a90_20", "toyota_a90", "bmw_b48"),
+  familyLink("toyota_supra_a90_30", "toyota_a90", "bmw_b58"),
+  familyLink("renault_clio_rs_200", "renault_x98", "renault_m5mt"),
+  familyLink("renault_clio_rs_trophy", "renault_x98", "renault_m5mt"),
+  familyLink("renault_megane_rs_280", "renault_cmf_cd", "renault_m5pt"),
+  familyLink("renault_megane_rs_trophy", "renault_cmf_cd", "renault_m5pt"),
+  familyLink("renault_megane_rs_trophy_r", "renault_cmf_cd", "renault_m5pt"),
+  familyLink("alpine_a110", "alpine_a110", "alpine_m5p"),
+  familyLink("alpine_a110_s", "alpine_a110", "alpine_m5p"),
+  familyLink("alpine_a110_r", "alpine_a110", "alpine_m5p"),
+  familyLink("porsche_718_cayman_s", "porsche_982", "porsche_982_turbo_flat4"),
+  familyLink("porsche_718_cayman_gts_40", "porsche_982", "porsche_982_gt_flat6"),
+  familyLink("porsche_718_cayman_gt4", "porsche_982", "porsche_982_gt_flat6"),
+  familyLink("porsche_911_carrera_992", "porsche_992", "porsche_992_turbo_flat6"),
+  familyLink("porsche_911_carrera_s_992", "porsche_992", "porsche_992_turbo_flat6"),
+  familyLink("porsche_911_gt3_992", "porsche_992", "porsche_992_gt_flat6"),
+  familyLink("bmw_m135i_f40", "bmw_f40", "bmw_b48"),
+  familyLink("bmw_m140i_f20", "bmw_f2x", "bmw_b58"),
+  familyLink("bmw_m240i_g42", "bmw_g42", "bmw_b58"),
+  familyLink("bmw_m2_f87", "bmw_f8x", "bmw_s55"),
+  familyLink("bmw_m2_g87", "bmw_g8x", "bmw_s58"),
+  familyLink("bmw_m3_f80", "bmw_f8x", "bmw_s55"),
+  familyLink("bmw_m3_g80", "bmw_g8x", "bmw_s58"),
+  familyLink("bmw_m4_f82", "bmw_f8x", "bmw_s55"),
+  familyLink("bmw_m4_g82", "bmw_g8x", "bmw_s58"),
+  familyLink("hyundai_elantra_n", "hyundai_n_k3", "hyundai_theta2_tgdi_n"),
+  familyLink("hyundai_kona_n", "hyundai_n_k3", "hyundai_theta2_tgdi_n"),
+  familyLink("honda_s2000_ap1", "honda_ap1", "honda_f20c"),
+  familyLink("honda_integra_type_r_dc2", "honda_dc2", "honda_b18c"),
+  familyLink("honda_civic_type_r_ep3", "honda_ep3", "honda_k20a"),
+  familyLink("vw_golf_gti_mk7", "vw_mqb_mk7", "vag_ea888_gen3"),
+  familyLink("vw_golf_gti_mk8", "vw_mqb_evo_mk8", "vag_ea888_gen4"),
+  familyLink("vw_golf_r_mk7", "vw_mqb_mk7", "vag_ea888_gen3"),
+  familyLink("vw_golf_r_mk8", "vw_mqb_evo_mk8", "vag_ea888_gen4"),
+  familyLink("cupra_leon_vz", "cupra_mqb_evo", "vag_ea888_gen4"),
+  familyLink("cupra_formentor_vz5", "cupra_mqb_evo", "vag_ea855_evo"),
+  familyLink("subaru_brz_zn8", "subaru_zn8", "subaru_toyota_fa24"),
+  familyLink("toyota_gt86_zn6", "toyota_zn6", "subaru_toyota_fa20"),
+  familyLink("mitsubishi_lancer_evo_ix", "mitsubishi_ct9a", "mitsubishi_4g63t"),
+  familyLink("nissan_gtr_r35", "nissan_r35", "nissan_vr38dett"),
+] as const;
 const expandedTurboIceCodes = [
   "ford_fiesta_st_mk7",
   "ford_fiesta_st_mk8",
@@ -4545,6 +4862,14 @@ const iceOnlyModificationCodes = [
   "ecu_stage_1",
   "ecu_stage_2",
   "engine_rsa300",
+  "tune_mhd_b58_stage_1",
+  "tune_mhd_s55_stage_1",
+  "tune_mhd_s58_stage_1",
+  "tune_apr_ea888_gen3_stage_1",
+  "tune_apr_ea888_gen4_stage_1",
+  "tune_cobb_focus_rs_mk3_stage_1",
+  "tune_ktuner_fk8_stage_1",
+  "tune_hondata_fl5_flashpro_stage_1",
   "cooling_intercooler_upgrade",
   "cooling_oil_cooler",
   "intercooler_airtec_motorsport_upgrade",
@@ -4575,6 +4900,7 @@ const iceOnlyModificationCodes = [
   "engine_flex_fuel",
   "engine_turbo_upgrade",
   "drivetrain_transmission_software",
+  "tune_xhp_bmw_zf8_stage_2",
 ] as const;
 
 const modificationPowertrainApplicabilities = iceOnlyModificationCodes.map(
@@ -4605,12 +4931,122 @@ const platformModificationCompatibilities = [
   })),
 ] as const;
 
+const engineFamilyModificationCompatibilities = [
+  familyCompatibility("tune_mhd_b58_stage_1", "bmw_b58"),
+  familyCompatibility("tune_mhd_s55_stage_1", "bmw_s55"),
+  familyCompatibility("tune_mhd_s58_stage_1", "bmw_s58"),
+  familyCompatibility("tune_apr_ea888_gen3_stage_1", "vag_ea888_gen3"),
+  familyCompatibility("tune_apr_ea888_gen4_stage_1", "vag_ea888_gen4"),
+  familyCompatibility("tune_cobb_focus_rs_mk3_stage_1", "ford_ecoboost_23_focus_rs"),
+  familyCompatibility("tune_ktuner_fk8_stage_1", "honda_k20c1_fk8"),
+  familyCompatibility("tune_hondata_fl5_flashpro_stage_1", "honda_k20c1_fl5"),
+] as const;
+
+const platformFamilyModificationCompatibilities = [
+  platformCompatibility("tune_xhp_bmw_zf8_stage_2", "bmw_g20_g22"),
+  platformCompatibility("tune_xhp_bmw_zf8_stage_2", "bmw_f2x"),
+  platformCompatibility("tune_xhp_bmw_zf8_stage_2", "bmw_g42"),
+  platformCompatibility("tune_xhp_bmw_zf8_stage_2", "bmw_g8x"),
+  platformCompatibility("tune_xhp_bmw_zf8_stage_2", "toyota_a90"),
+] as const;
+
+const tuningPackageSpecifications = [
+  tuningPackageSpec("engine_rsa300", {
+    tuneType: "HARDWARE_SOFTWARE_PACKAGE",
+    measurementBasis: "UNSPECIFIED",
+    minimumFuelOctaneRon: 95,
+    requiredFuelNote: "Türkiye B48 1.6 kalibrasyonu için yakıt ve donanım doğrulaması gerekir.",
+    hardwareRequirementNote: "Araç özelinde RSA300 paket içeriği doğrulanmalıdır.",
+    coolingRecommendationNote: "Tekrarlı pist kullanımında intercooler ve yağ sıcaklığı izlenmelidir.",
+    sourceNote: "ATS internal RSA300 placeholder; exact supplier evidence required before high confidence.",
+    confidence: "LOW",
+  }),
+  tuningPackageSpec("tune_mhd_b58_stage_1", {
+    tuneType: "ECU_FLASH",
+    measurementBasis: "UNSPECIFIED",
+    minimumFuelOctaneRon: 95,
+    requiredFuelNote: "MHD B58 OTS haritaları yakıt kalitesine göre seçilmelidir.",
+    coolingRecommendationNote: "Pist kullanımında charge-air ve yağ sıcaklığı izlenmelidir.",
+    sourceNote: "MHD official product navigation lists F+G-Series B58 flasher support.",
+    confidence: "MEDIUM",
+  }),
+  tuningPackageSpec("tune_mhd_s55_stage_1", {
+    tuneType: "ECU_FLASH",
+    measurementBasis: "UNSPECIFIED",
+    minimumFuelOctaneRon: 95,
+    requiredFuelNote: "MHD S55 OTS haritaları yakıt kalitesine göre seçilmelidir.",
+    coolingRecommendationNote: "Pist kullanımında charge-air ve yağ sıcaklığı izlenmelidir.",
+    sourceNote: "MHD official product navigation lists F-Series S55 flasher support.",
+    confidence: "MEDIUM",
+  }),
+  tuningPackageSpec("tune_mhd_s58_stage_1", {
+    tuneType: "ECU_FLASH",
+    measurementBasis: "UNSPECIFIED",
+    minimumFuelOctaneRon: 95,
+    requiredFuelNote: "MHD S58 OTS haritaları yakıt kalitesine göre seçilmelidir.",
+    coolingRecommendationNote: "Pist kullanımında charge-air ve yağ sıcaklığı izlenmelidir.",
+    sourceNote: "MHD official product navigation lists F+G-Series S58 flasher support.",
+    confidence: "MEDIUM",
+  }),
+  tuningPackageSpec("tune_apr_ea888_gen3_stage_1", {
+    tuneType: "ECU_FLASH",
+    measurementBasis: "UNSPECIFIED",
+    minimumFuelOctaneRon: 95,
+    requiredFuelNote: "APR EA888 Gen 3 Stage 1 programı yakıt oktanına göre seçilmelidir.",
+    sourceNote: "APR official ECU Upgrade page lists EA888 Gen 3 MQB 2.0T applications.",
+    confidence: "MEDIUM",
+  }),
+  tuningPackageSpec("tune_apr_ea888_gen4_stage_1", {
+    tuneType: "ECU_FLASH",
+    measurementBasis: "UNSPECIFIED",
+    minimumFuelOctaneRon: 95,
+    requiredFuelNote: "APR EA888 Gen 4 Stage 1 programı yakıt oktanına göre seçilmelidir.",
+    sourceNote: "APR official ECU Upgrade page lists EA888 Gen 4 Mk8 GTI/Golf R/S3 applications.",
+    confidence: "MEDIUM",
+  }),
+  tuningPackageSpec("tune_cobb_focus_rs_mk3_stage_1", {
+    tuneType: "ECU_FLASH",
+    measurementBasis: "UNSPECIFIED",
+    minimumFuelOctaneRon: 95,
+    requiredFuelNote: "COBB OTS haritası 91/93 AKI yakıt seçimine göre uygulanmalıdır.",
+    hardwareRequirementNote: "Stage 1 için seri donanım varsayılır; Stage 2 donanım istemleri ayrı tutulur.",
+    sourceNote: "COBB official Focus RS Accessport page lists 2016-2018 Focus RS and OTS maps.",
+    confidence: "HIGH",
+  }),
+  tuningPackageSpec("tune_ktuner_fk8_stage_1", {
+    tuneType: "ECU_FLASH",
+    measurementBasis: "UNSPECIFIED",
+    minimumFuelOctaneRon: 95,
+    requiredFuelNote: "KTuner haritası yakıt kalitesine ve ECU uyumluluğuna göre seçilmelidir.",
+    sourceNote: "KTuner official application list includes 2017-2021 Civic Type-R.",
+    confidence: "MEDIUM",
+  }),
+  tuningPackageSpec("tune_hondata_fl5_flashpro_stage_1", {
+    tuneType: "ECU_FLASH",
+    measurementBasis: "UNSPECIFIED",
+    minimumFuelOctaneRon: 95,
+    requiredFuelNote: "Hondata kalibrasyonu yakıt kalitesine ve ECU uyumluluğuna göre seçilmelidir.",
+    sourceNote: "Hondata FlashPro FL5 support is seeded as provisional until source review is refreshed.",
+    confidence: "LOW",
+  }),
+  tuningPackageSpec("tune_xhp_bmw_zf8_stage_2", {
+    tuneType: "TCU_SOFTWARE",
+    measurementBasis: "UNSPECIFIED",
+    transmissionLimitNote: "ZF8 uyumluluğu, araç yazılım versiyonu ve tork limiti araç özelinde doğrulanmalıdır.",
+    sourceNote: "xHP/xAutomotive official product navigation lists BMW/MINI/Toyota Supra 8-speed support.",
+    confidence: "MEDIUM",
+  }),
+] as const;
+
 const platformModificationImpacts = [
   ...bmwTurkeyB48Codes.map((vehicleCode) =>
     impact(vehicleCode, "engine_rsa300", {
       powerImpact: 16,
       reliabilityImpact: -3,
       thermalImpact: -4,
+      confidence: "LOW",
+      sourceNote: "ATS internal RSA300 placeholder; exact dyno evidence required before high confidence.",
+      claimedPowerDeltaHp: 70,
     }),
   ),
   ...bmwB48Codes.flatMap((vehicleCode) => [
@@ -4635,6 +5071,96 @@ const platformModificationImpacts = [
   ...dsgAutomaticCodes.map((vehicleCode) =>
     impact(vehicleCode, "drivetrain_transmission_software", { powerImpact: 2, trackReadinessImpact: 2 }),
   ),
+  ...bmwB58Codes.map((vehicleCode) =>
+    impact(vehicleCode, "tune_mhd_b58_stage_1", {
+      powerImpact: 9,
+      reliabilityImpact: -1,
+      thermalImpact: -1,
+      confidence: "MEDIUM",
+      sourceNote: "MHD official B58 support; ATS impact is conservative and not a dyno claim.",
+      claimedPowerDeltaHp: 55,
+      claimedTorqueDeltaNm: 85,
+    }),
+  ),
+  ...bmwS55Codes.map((vehicleCode) =>
+    impact(vehicleCode, "tune_mhd_s55_stage_1", {
+      powerImpact: 8,
+      reliabilityImpact: -1,
+      thermalImpact: -1,
+      confidence: "MEDIUM",
+      sourceNote: "MHD official S55 support; ATS impact is conservative and not a dyno claim.",
+      claimedPowerDeltaHp: 60,
+      claimedTorqueDeltaNm: 90,
+    }),
+  ),
+  ...bmwS58Codes.map((vehicleCode) =>
+    impact(vehicleCode, "tune_mhd_s58_stage_1", {
+      powerImpact: 7,
+      reliabilityImpact: -1,
+      thermalImpact: -1,
+      confidence: "MEDIUM",
+      sourceNote: "MHD official S58 support; ATS impact is conservative and not a dyno claim.",
+      claimedPowerDeltaHp: 60,
+      claimedTorqueDeltaNm: 90,
+    }),
+  ),
+  ...bmwZf8PlatformCodes.map((vehicleCode) =>
+    impact(vehicleCode, "tune_xhp_bmw_zf8_stage_2", {
+      handlingImpact: 1,
+      trackReadinessImpact: 2,
+      confidence: "MEDIUM",
+      sourceNote: "xHP official ZF8 support; ATS impact reflects shift behavior only.",
+    }),
+  ),
+  ...vagEa888Gen3Codes.map((vehicleCode) =>
+    impact(vehicleCode, "tune_apr_ea888_gen3_stage_1", {
+      powerImpact: 8,
+      reliabilityImpact: -1,
+      thermalImpact: -1,
+      confidence: "MEDIUM",
+      sourceNote: "APR official EA888 Gen 3 ECU Upgrade applications; ATS impact is conservative.",
+      claimedPowerDeltaHp: 45,
+      claimedTorqueDeltaNm: 70,
+    }),
+  ),
+  ...vagEa888Gen4Codes.map((vehicleCode) =>
+    impact(vehicleCode, "tune_apr_ea888_gen4_stage_1", {
+      powerImpact: 8,
+      reliabilityImpact: -1,
+      thermalImpact: -1,
+      confidence: "MEDIUM",
+      sourceNote: "APR official EA888 Gen 4 ECU Upgrade applications; ATS impact is conservative.",
+      claimedPowerDeltaHp: 45,
+      claimedTorqueDeltaNm: 70,
+    }),
+  ),
+  impact("ford_focus_rs_mk3", "tune_cobb_focus_rs_mk3_stage_1", {
+    powerImpact: 8,
+    reliabilityImpact: -1,
+    thermalImpact: -1,
+    confidence: "HIGH",
+    sourceNote: "COBB official Focus RS Accessport OTS map listing; ATS impact is conservative.",
+    claimedPowerDeltaHp: 28,
+    claimedTorqueDeltaNm: 65,
+  }),
+  impact("honda_civic_type_r_fk8", "tune_ktuner_fk8_stage_1", {
+    powerImpact: 6,
+    reliabilityImpact: -1,
+    thermalImpact: -1,
+    confidence: "MEDIUM",
+    sourceNote: "KTuner official Civic Type-R support; ATS impact is conservative.",
+    claimedPowerDeltaHp: 35,
+    claimedTorqueDeltaNm: 55,
+  }),
+  impact("honda_civic_type_r_fl5", "tune_hondata_fl5_flashpro_stage_1", {
+    powerImpact: 5,
+    reliabilityImpact: -1,
+    thermalImpact: -1,
+    confidence: "LOW",
+    sourceNote: "Hondata FL5 FlashPro support seeded provisionally pending refreshed source review.",
+    claimedPowerDeltaHp: 25,
+    claimedTorqueDeltaNm: 45,
+  }),
   ...["mazda_mx5_nd_15", "mazda_mx5_nd_20"].flatMap((vehicleCode) => [
     impact(vehicleCode, "drivetrain_aftermarket_lsd", { handlingImpact: 6, trackReadinessImpact: 5 }),
     impact(vehicleCode, "suspension_coilover_kw_v3", { handlingImpact: 8, trackReadinessImpact: 6 }),
@@ -4655,6 +5181,10 @@ function impact(
     reliabilityImpact?: number;
     thermalImpact?: number;
     trackReadinessImpact?: number;
+    confidence?: CalibrationConfidence;
+    sourceNote?: string;
+    claimedPowerDeltaHp?: number;
+    claimedTorqueDeltaNm?: number;
   },
 ) {
   return {
@@ -4733,6 +5263,52 @@ type WheelSpecSeed = {
   active?: boolean;
 };
 
+type VehiclePlatformFamilySeed = {
+  code: string;
+  brand: string;
+  name: string;
+  generation: string | null;
+};
+
+type VehicleEngineFamilySeed = {
+  code: string;
+  manufacturer: string;
+  name: string;
+  displacementCc: number | null;
+  cylinderCount: number | null;
+  inductionType: EngineInductionType | null;
+  fuelType: EngineFuelType | null;
+};
+
+type VehicleDefinitionFamilyLinkSeed = {
+  vehicleCode: string;
+  platformFamilyCode: string | null;
+  engineFamilyCode: string | null;
+};
+
+type FamilyModificationCompatibilitySeed = {
+  modificationCode: string;
+  familyCode: string;
+};
+
+type TuningPackageSpecificationSeed = {
+  modificationCode: string;
+  tuneType: TuningPackageType;
+  measurementBasis?: PowerMeasurementBasis;
+  claimedPowerMinHp?: number;
+  claimedPowerMaxHp?: number;
+  claimedTorqueMinNm?: number;
+  claimedTorqueMaxNm?: number;
+  minimumFuelOctaneRon?: number;
+  requiredFuelNote?: string;
+  hardwareRequirementNote?: string;
+  transmissionLimitNote?: string;
+  coolingRecommendationNote?: string;
+  sourceNote?: string;
+  confidence: CalibrationConfidence;
+  active?: boolean;
+};
+
 type PerformanceVehicleDefinitionSeed = {
   code: string;
   brand: string;
@@ -4764,6 +5340,82 @@ function brakePadSpec(
   modificationCode: string,
   values: Omit<BrakePadSpecSeed, "modificationCode">,
 ): BrakePadSpecSeed {
+  return {
+    modificationCode,
+    ...values,
+  };
+}
+
+function platformFamily(
+  code: string,
+  brand: string,
+  name: string,
+  generation: string | null,
+): VehiclePlatformFamilySeed {
+  return {
+    code,
+    brand,
+    name,
+    generation,
+  };
+}
+
+function engineFamily(
+  code: string,
+  manufacturer: string,
+  name: string,
+  displacementCc: number | null,
+  cylinderCount: number | null,
+  inductionType: EngineInductionType | null,
+  fuelType: EngineFuelType | null,
+): VehicleEngineFamilySeed {
+  return {
+    code,
+    manufacturer,
+    name,
+    displacementCc,
+    cylinderCount,
+    inductionType,
+    fuelType,
+  };
+}
+
+function familyLink(
+  vehicleCode: string,
+  platformFamilyCode: string | null,
+  engineFamilyCode: string | null,
+): VehicleDefinitionFamilyLinkSeed {
+  return {
+    vehicleCode,
+    platformFamilyCode,
+    engineFamilyCode,
+  };
+}
+
+function familyCompatibility(
+  modificationCode: string,
+  familyCode: string,
+): FamilyModificationCompatibilitySeed {
+  return {
+    modificationCode,
+    familyCode,
+  };
+}
+
+function platformCompatibility(
+  modificationCode: string,
+  familyCode: string,
+): FamilyModificationCompatibilitySeed {
+  return {
+    modificationCode,
+    familyCode,
+  };
+}
+
+function tuningPackageSpec(
+  modificationCode: string,
+  values: Omit<TuningPackageSpecificationSeed, "modificationCode">,
+): TuningPackageSpecificationSeed {
   return {
     modificationCode,
     ...values,
@@ -4963,16 +5615,31 @@ async function main() {
   await seedBigBrakeKitSpecifications(definitionsByCode);
   await seedTyreSpecifications(definitionsByCode);
   await seedWheelSpecifications(definitionsByCode);
+  await seedTuningPackageSpecifications(definitionsByCode);
   await seedModificationConflicts(definitionsByCode);
   await seedModificationRequirements(definitionsByCode);
+  const platformFamiliesByCode = await seedVehiclePlatformFamilies();
+  const engineFamiliesByCode = await seedVehicleEngineFamilies();
   const vehicleDefinitionsByCode = await seedVehicleDefinitions();
+  await seedVehicleDefinitionFamilyLinks(
+    vehicleDefinitionsByCode,
+    platformFamiliesByCode,
+    engineFamiliesByCode,
+  );
   await seedPlatformCompatibilities(definitionsByCode, vehicleDefinitionsByCode);
+  await seedFamilyCompatibilities(
+    definitionsByCode,
+    platformFamiliesByCode,
+    engineFamiliesByCode,
+  );
   await seedPlatformImpacts(definitionsByCode, vehicleDefinitionsByCode);
   await deactivateBroadProductFamilyRestrictions(definitionsByCode);
   await reactivatePlatformDefinitions(definitionsByCode);
 
   console.log(`Seeded ${event.name} with ${links.length} package-day links.`);
   console.log(`Seeded ${modificationCatalog.length} modification definitions.`);
+  console.log(`Seeded ${vehiclePlatformFamilies.length} platform families.`);
+  console.log(`Seeded ${vehicleEngineFamilies.length} engine families.`);
   console.log(`Seeded ${vehicleDefinitions.length} vehicle definitions.`);
 }
 
@@ -5037,6 +5704,76 @@ async function seedModificationCatalog() {
   }
 
   return definitionsByCode;
+}
+
+async function seedVehiclePlatformFamilies() {
+  const familiesByCode = new Map<string, { id: string }>();
+
+  for (const item of vehiclePlatformFamilies) {
+    const family = await prisma.vehiclePlatformFamily.upsert({
+      where: {
+        code: item.code,
+      },
+      update: {
+        brand: item.brand,
+        name: item.name,
+        generation: item.generation,
+        active: true,
+      },
+      create: {
+        code: item.code,
+        brand: item.brand,
+        name: item.name,
+        generation: item.generation,
+        active: true,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    familiesByCode.set(item.code, family);
+  }
+
+  return familiesByCode;
+}
+
+async function seedVehicleEngineFamilies() {
+  const familiesByCode = new Map<string, { id: string }>();
+
+  for (const item of vehicleEngineFamilies) {
+    const family = await prisma.vehicleEngineFamily.upsert({
+      where: {
+        code: item.code,
+      },
+      update: {
+        manufacturer: item.manufacturer,
+        name: item.name,
+        displacementCc: item.displacementCc,
+        cylinderCount: item.cylinderCount,
+        inductionType: item.inductionType,
+        fuelType: item.fuelType,
+        active: true,
+      },
+      create: {
+        code: item.code,
+        manufacturer: item.manufacturer,
+        name: item.name,
+        displacementCc: item.displacementCc,
+        cylinderCount: item.cylinderCount,
+        inductionType: item.inductionType,
+        fuelType: item.fuelType,
+        active: true,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    familiesByCode.set(item.code, family);
+  }
+
+  return familiesByCode;
 }
 
 async function seedVehicleDefinitions() {
@@ -5108,6 +5845,50 @@ async function seedVehicleDefinitions() {
   }
 
   return vehicleDefinitionsByCode;
+}
+
+async function seedVehicleDefinitionFamilyLinks(
+  vehicleDefinitionsByCode: Map<string, { id: string }>,
+  platformFamiliesByCode: Map<string, { id: string }>,
+  engineFamiliesByCode: Map<string, { id: string }>,
+) {
+  const linksByVehicleCode = new Map(
+    vehicleDefinitionFamilyLinks.map((link) => [link.vehicleCode, link]),
+  );
+
+  for (const item of vehicleDefinitions) {
+    const vehicleDefinition = vehicleDefinitionsByCode.get(item.code);
+
+    if (!vehicleDefinition) {
+      throw new Error(`Missing vehicle definition for family link ${item.code}`);
+    }
+
+    const link = linksByVehicleCode.get(item.code);
+    const platformFamily = link?.platformFamilyCode
+      ? platformFamiliesByCode.get(link.platformFamilyCode)
+      : null;
+    const engineFamily = link?.engineFamilyCode
+      ? engineFamiliesByCode.get(link.engineFamilyCode)
+      : null;
+
+    if (link?.platformFamilyCode && !platformFamily) {
+      throw new Error(`Missing platform family ${link.platformFamilyCode}`);
+    }
+
+    if (link?.engineFamilyCode && !engineFamily) {
+      throw new Error(`Missing engine family ${link.engineFamilyCode}`);
+    }
+
+    await prisma.vehicleDefinition.update({
+      where: {
+        id: vehicleDefinition.id,
+      },
+      data: {
+        platformFamilyId: platformFamily?.id ?? null,
+        engineFamilyId: engineFamily?.id ?? null,
+      },
+    });
+  }
 }
 
 async function seedModificationPowertrainApplicabilities(
@@ -5441,6 +6222,46 @@ async function seedWheelSpecifications(definitionsByCode: Map<string, { id: stri
   });
 }
 
+async function seedTuningPackageSpecifications(
+  definitionsByCode: Map<string, { id: string }>,
+) {
+  const activeDefinitionIds = new Set<string>();
+
+  for (const spec of tuningPackageSpecifications) {
+    const modificationDefinition = definitionsByCode.get(spec.modificationCode);
+
+    if (!modificationDefinition) {
+      throw new Error(
+        `Missing modification definition for tuning package specification ${spec.modificationCode}`,
+      );
+    }
+
+    activeDefinitionIds.add(modificationDefinition.id);
+
+    await prisma.tuningPackageSpecification.upsert({
+      where: {
+        modificationDefinitionId: modificationDefinition.id,
+      },
+      update: tuningPackageSpecificationData(spec),
+      create: {
+        modificationDefinitionId: modificationDefinition.id,
+        ...tuningPackageSpecificationData(spec),
+      },
+    });
+  }
+
+  await prisma.tuningPackageSpecification.updateMany({
+    where: {
+      modificationDefinitionId: {
+        notIn: [...activeDefinitionIds],
+      },
+    },
+    data: {
+      active: false,
+    },
+  });
+}
+
 function tyreSpecificationData(spec: TyreSpecSeed) {
   return {
     tyreClass: spec.tyreClass,
@@ -5467,6 +6288,25 @@ function wheelSpecificationData(spec: WheelSpecSeed) {
     trackSuitability: clampCatalogScore(spec.trackSuitability),
     roadSuitability: clampCatalogScore(spec.roadSuitability),
     sourceNote: spec.sourceNote ?? null,
+    active: spec.active ?? true,
+  };
+}
+
+function tuningPackageSpecificationData(spec: TuningPackageSpecificationSeed) {
+  return {
+    tuneType: spec.tuneType,
+    measurementBasis: spec.measurementBasis ?? null,
+    claimedPowerMinHp: spec.claimedPowerMinHp ?? null,
+    claimedPowerMaxHp: spec.claimedPowerMaxHp ?? null,
+    claimedTorqueMinNm: spec.claimedTorqueMinNm ?? null,
+    claimedTorqueMaxNm: spec.claimedTorqueMaxNm ?? null,
+    minimumFuelOctaneRon: spec.minimumFuelOctaneRon ?? null,
+    requiredFuelNote: spec.requiredFuelNote ?? null,
+    hardwareRequirementNote: spec.hardwareRequirementNote ?? null,
+    transmissionLimitNote: spec.transmissionLimitNote ?? null,
+    coolingRecommendationNote: spec.coolingRecommendationNote ?? null,
+    sourceNote: spec.sourceNote ?? null,
+    confidence: spec.confidence,
     active: spec.active ?? true,
   };
 }
@@ -5503,6 +6343,8 @@ async function seedPlatformCompatibilities(
       update: {
         vehicleBrand: null,
         vehicleModel: null,
+        platformFamilyId: null,
+        engineFamilyId: null,
         yearFrom: null,
         yearTo: null,
         active: true,
@@ -5510,6 +6352,8 @@ async function seedPlatformCompatibilities(
       create: {
         modificationDefinitionId: modificationDefinition.id,
         vehicleDefinitionId: vehicleDefinition.id,
+        platformFamilyId: null,
+        engineFamilyId: null,
         active: true,
       },
     });
@@ -5539,6 +6383,149 @@ async function seedPlatformCompatibilities(
       },
     });
   }
+}
+
+async function seedFamilyCompatibilities(
+  definitionsByCode: Map<string, { id: string }>,
+  platformFamiliesByCode: Map<string, { id: string }>,
+  engineFamiliesByCode: Map<string, { id: string }>,
+) {
+  const activeCompatibilityIdsByDefinitionId = new Map<string, Set<string>>();
+
+  for (const compatibility of engineFamilyModificationCompatibilities) {
+    const modificationDefinition = definitionsByCode.get(compatibility.modificationCode);
+    const engineFamily = engineFamiliesByCode.get(compatibility.familyCode);
+
+    if (!modificationDefinition || !engineFamily) {
+      throw new Error(
+        `Missing engine family compatibility ${compatibility.modificationCode}:${compatibility.familyCode}`,
+      );
+    }
+
+    const row = await prisma.modificationCompatibility.upsert({
+      where: {
+        modificationDefinitionId_engineFamilyId: {
+          modificationDefinitionId: modificationDefinition.id,
+          engineFamilyId: engineFamily.id,
+        },
+      },
+      update: {
+        vehicleDefinitionId: null,
+        vehicleBrand: null,
+        vehicleModel: null,
+        platformFamilyId: null,
+        yearFrom: null,
+        yearTo: null,
+        active: true,
+      },
+      create: {
+        modificationDefinitionId: modificationDefinition.id,
+        engineFamilyId: engineFamily.id,
+        active: true,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    addActiveCompatibilityId(
+      activeCompatibilityIdsByDefinitionId,
+      modificationDefinition.id,
+      row.id,
+    );
+  }
+
+  for (const compatibility of platformFamilyModificationCompatibilities) {
+    const modificationDefinition = definitionsByCode.get(compatibility.modificationCode);
+    const platformFamily = platformFamiliesByCode.get(compatibility.familyCode);
+
+    if (!modificationDefinition || !platformFamily) {
+      throw new Error(
+        `Missing platform family compatibility ${compatibility.modificationCode}:${compatibility.familyCode}`,
+      );
+    }
+
+    const row = await prisma.modificationCompatibility.upsert({
+      where: {
+        modificationDefinitionId_platformFamilyId: {
+          modificationDefinitionId: modificationDefinition.id,
+          platformFamilyId: platformFamily.id,
+        },
+      },
+      update: {
+        vehicleDefinitionId: null,
+        vehicleBrand: null,
+        vehicleModel: null,
+        engineFamilyId: null,
+        yearFrom: null,
+        yearTo: null,
+        active: true,
+      },
+      create: {
+        modificationDefinitionId: modificationDefinition.id,
+        platformFamilyId: platformFamily.id,
+        active: true,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    addActiveCompatibilityId(
+      activeCompatibilityIdsByDefinitionId,
+      modificationDefinition.id,
+      row.id,
+    );
+  }
+
+  for (const [
+    modificationDefinitionId,
+    activeCompatibilityIds,
+  ] of activeCompatibilityIdsByDefinitionId) {
+    await prisma.modificationCompatibility.updateMany({
+      where: {
+        modificationDefinitionId,
+        active: true,
+        vehicleDefinitionId: null,
+        vehicleBrand: null,
+        vehicleModel: null,
+        id: {
+          notIn: [...activeCompatibilityIds],
+        },
+        OR: [
+          {
+            platformFamilyId: {
+              not: null,
+            },
+          },
+          {
+            engineFamilyId: {
+              not: null,
+            },
+          },
+        ],
+      },
+      data: {
+        active: false,
+      },
+    });
+  }
+}
+
+function addActiveCompatibilityId(
+  activeCompatibilityIdsByDefinitionId: Map<string, Set<string>>,
+  modificationDefinitionId: string,
+  compatibilityId: string,
+) {
+  const activeCompatibilityIds =
+    activeCompatibilityIdsByDefinitionId.get(modificationDefinitionId) ??
+    new Set<string>();
+
+  activeCompatibilityIds.add(compatibilityId);
+  activeCompatibilityIdsByDefinitionId.set(
+    modificationDefinitionId,
+    activeCompatibilityIds,
+  );
 }
 
 async function seedPlatformImpacts(
@@ -5577,6 +6564,10 @@ async function seedPlatformImpacts(
         reliabilityImpact: impactValue.reliabilityImpact ?? 0,
         thermalImpact: impactValue.thermalImpact ?? 0,
         trackReadinessImpact: impactValue.trackReadinessImpact ?? 0,
+        confidence: impactValue.confidence ?? "LOW",
+        sourceNote: impactValue.sourceNote ?? null,
+        claimedPowerDeltaHp: impactValue.claimedPowerDeltaHp ?? null,
+        claimedTorqueDeltaNm: impactValue.claimedTorqueDeltaNm ?? null,
         active: true,
       },
       create: {
@@ -5588,6 +6579,10 @@ async function seedPlatformImpacts(
         reliabilityImpact: impactValue.reliabilityImpact ?? 0,
         thermalImpact: impactValue.thermalImpact ?? 0,
         trackReadinessImpact: impactValue.trackReadinessImpact ?? 0,
+        confidence: impactValue.confidence ?? "LOW",
+        sourceNote: impactValue.sourceNote ?? null,
+        claimedPowerDeltaHp: impactValue.claimedPowerDeltaHp ?? null,
+        claimedTorqueDeltaNm: impactValue.claimedTorqueDeltaNm ?? null,
         active: true,
       },
     });

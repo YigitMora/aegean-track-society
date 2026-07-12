@@ -811,6 +811,24 @@ const modificationDefinitionRuleSelect = {
       roadSuitability: true,
     },
   },
+  tuningPackageSpecification: {
+    select: {
+      active: true,
+      tuneType: true,
+      measurementBasis: true,
+      claimedPowerMinHp: true,
+      claimedPowerMaxHp: true,
+      claimedTorqueMinNm: true,
+      claimedTorqueMaxNm: true,
+      minimumFuelOctaneRon: true,
+      requiredFuelNote: true,
+      hardwareRequirementNote: true,
+      transmissionLimitNote: true,
+      coolingRecommendationNote: true,
+      confidence: true,
+      sourceNote: true,
+    },
+  },
   compatibilities: {
     where: {
       active: true,
@@ -820,6 +838,8 @@ const modificationDefinitionRuleSelect = {
       vehicleBrand: true,
       vehicleModel: true,
       vehicleDefinitionId: true,
+      platformFamilyId: true,
+      engineFamilyId: true,
       yearFrom: true,
       yearTo: true,
     },
@@ -886,6 +906,8 @@ const vehicleDefinitionTemplateSelect = {
 const vehicleDefinitionRatingSelect = {
   ...vehicleDefinitionTemplateSelect,
   powertrain: true,
+  platformFamilyId: true,
+  engineFamilyId: true,
   powerRating: true,
   handlingRating: true,
   brakingRating: true,
@@ -923,6 +945,8 @@ function buildCatalogGroups({
     vehicleDefinitionId: string | null;
     vehicleDefinition?: {
       powertrain: VehiclePowertrain;
+      platformFamilyId: string | null;
+      engineFamilyId: string | null;
     } | null;
     brand: string;
     model: string;
@@ -992,6 +1016,9 @@ function buildCatalogGroups({
         : null,
       wheelSpecification: definition.wheelSpecification?.active
         ? definition.wheelSpecification
+        : null,
+      tuningPackageSpecification: definition.tuningPackageSpecification?.active
+        ? definition.tuningPackageSpecification
         : null,
       fitmentNote: fitmentNoteForDefinition(definition),
       availability: availability.ok
@@ -1129,6 +1156,15 @@ function fitmentNoteForDefinition(definition: {
     componentTypeCode === "forged_wheel"
   ) {
     return "Jant ailesi kaydıdır. Ölçü, bijon düzeni, merkez deliği, ET ve kaliper açıklığını ayrıca doğrulayın.";
+  }
+
+  if (
+    componentTypeCode === "ecu_software" ||
+    componentTypeCode === "platform_tune_package" ||
+    componentTypeCode === "transmission_software" ||
+    componentTypeCode === "flex_fuel"
+  ) {
+    return "Kalibrasyon kaydıdır. ECU/TCU yazılım versiyonu, yakıt, donanım ve tork limitini ayrıca doğrulayın.";
   }
 
   if (
