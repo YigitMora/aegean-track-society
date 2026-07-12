@@ -201,6 +201,7 @@ export const singleInstanceComponentTypes = new Set([
   "exhaust_manifold",
   "turbo_upgrade",
   "flex_fuel",
+  "flex_fuel_hardware",
   "sport_springs",
   "coilover",
   "damper",

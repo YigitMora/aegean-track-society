@@ -1131,6 +1131,7 @@ function modificationTypeLabel(definition: {
     ecu_software: "ECU Yazılımı",
     platform_tune_package: "Platform Tune Paketi",
     transmission_software: "Şanzıman Yazılımı",
+    flex_fuel_hardware: "Flex Fuel Donanımı",
     air_filter: "Hava Filtresi",
     intake: "Emiş",
     turbo_inlet: "Turbo Inlet",
@@ -1207,6 +1208,10 @@ function fitmentNoteForDefinition(definition: {
     componentTypeCode === "flex_fuel"
   ) {
     return "Kalibrasyon kaydıdır. ECU/TCU yazılım versiyonu, yakıt, donanım ve tork limitini ayrıca doğrulayın.";
+  }
+
+  if (componentTypeCode === "flex_fuel_hardware") {
+    return "Donanım kaydıdır. Sensör, yakıt hattı, yazılım ve ethanol kalibrasyonu uyumluluğunu ayrıca doğrulayın.";
   }
 
   if (

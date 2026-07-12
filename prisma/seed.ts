@@ -1716,8 +1716,8 @@ const modificationCatalog = [
   {
     code: "engine_flex_fuel",
     category: "ENGINE",
-    name: "Flex Fuel",
-    componentTypeCode: "flex_fuel",
+    name: "Flex Fuel Hardware",
+    componentTypeCode: "flex_fuel_hardware",
     usageClass: "STREET_TRACK",
     active: false,
     sortOrder: 20,
@@ -3455,6 +3455,9 @@ const modificationCatalog = [
 const coiloverCodes = modificationCatalog
   .filter((item) => item.name === "Coilover")
   .map((item) => item.code);
+const damperCodes = modificationCatalog
+  .filter((item) => "componentTypeCode" in item && item.componentTypeCode === "damper")
+  .map((item) => item.code);
 const sportSpringCodes = modificationCatalog
   .filter(
     (item) => "componentTypeCode" in item && item.componentTypeCode === "sport_springs",
@@ -3478,7 +3481,11 @@ const modificationConflictCodePairs = [
   ...sportSpringCodes.flatMap((sportSpringCode) =>
     coiloverCodes.map((coiloverCode) => [sportSpringCode, coiloverCode] as const),
   ),
+  ...damperCodes.flatMap((damperCode) =>
+    coiloverCodes.map((coiloverCode) => [damperCode, coiloverCode] as const),
+  ),
   ...pairwise(sportSpringCodes),
+  ...pairwise(damperCodes),
   ...pairwise(coiloverCodes),
   ...pairwise(brakePadCodes),
   ...pairwise(bigBrakeKitCodes),
@@ -3487,48 +3494,22 @@ const modificationConflictCodePairs = [
 ] as const;
 
 const modificationRequirementGroups = [
-  {
-    code: "req_ecu_stage_2_downpipe",
-    sourceCode: "ecu_stage_2",
-    description: "ECU Stage 2 requires a high-flow downpipe.",
-    optionCodes: ["intake_exhaust_high_flow_downpipe"],
-    sortOrder: 10,
-  },
-  {
-    code: "req_flex_fuel_ecu",
-    sourceCode: "engine_flex_fuel",
-    description: "Flex fuel requires ECU Stage 1 or ECU Stage 2.",
-    optionCodes: ["ecu_stage_1", "ecu_stage_2"],
-    sortOrder: 20,
-  },
-  {
-    code: "req_mhd_n55_stage_2_airflow",
-    sourceCode: "tune_mhd_n55_stage_2",
-    description: "MHD N55 Stage 2 requires upgraded intercooler or high-flow downpipe.",
-    optionCodes: ["cooling_intercooler_upgrade", "intake_exhaust_high_flow_downpipe"],
-    sortOrder: 30,
-  },
-  {
-    code: "req_mhd_n55_stage_2_plus_downpipe",
-    sourceCode: "tune_mhd_n55_stage_2_plus",
-    description: "MHD N55 Stage 2+ requires a high-flow downpipe.",
-    optionCodes: ["intake_exhaust_high_flow_downpipe"],
-    sortOrder: 40,
-  },
-  {
-    code: "req_mhd_n55_stage_2_plus_intercooler",
-    sourceCode: "tune_mhd_n55_stage_2_plus",
-    description: "MHD N55 Stage 2+ requires an upgraded intercooler.",
-    optionCodes: ["cooling_intercooler_upgrade"],
-    sortOrder: 50,
-  },
-  {
-    code: "req_bootmod3_b58_flexfuel_hardware",
-    sourceCode: "tune_bootmod3_b58_flexfuel",
-    description: "bootmod3 FlexFuel map requires compatible flex-fuel hardware.",
-    optionCodes: ["engine_flex_fuel"],
-    sortOrder: 60,
-  },
+  ...damperCodes.map((damperCode, index) => ({
+    code: `req_${damperCode}_sport_springs`,
+    sourceCode: damperCode,
+    description: "Damper requires sport springs.",
+    optionCodes: sportSpringCodes,
+    sortOrder: 10 + index,
+  })),
+];
+
+const inactiveRequirementGroupCodes = [
+  "req_ecu_stage_2_downpipe",
+  "req_flex_fuel_ecu",
+  "req_mhd_n55_stage_2_airflow",
+  "req_mhd_n55_stage_2_plus_downpipe",
+  "req_mhd_n55_stage_2_plus_intercooler",
+  "req_bootmod3_b58_flexfuel_hardware",
 ] as const;
 
 const brakePadSpecifications = [
@@ -8581,7 +8562,7 @@ const platformModificationImpacts = [
   ...bmwN55B58Codes.flatMap((vehicleCode) => [
     impact(vehicleCode, "ecu_stage_1", { powerImpact: 8, reliabilityImpact: -1, thermalImpact: -1 }),
     impact(vehicleCode, "ecu_stage_2", { powerImpact: 13, reliabilityImpact: -2, thermalImpact: -2, trackReadinessImpact: 1 }),
-    impact(vehicleCode, "engine_flex_fuel", { powerImpact: 5, reliabilityImpact: -1, thermalImpact: -1 }),
+    impact(vehicleCode, "engine_flex_fuel", { trackReadinessImpact: 1 }),
     impact(vehicleCode, "cooling_intercooler_upgrade", { reliabilityImpact: 2, thermalImpact: 5, trackReadinessImpact: 3 }),
     impact(vehicleCode, "intake_exhaust_intake", { powerImpact: 1 }),
     impact(vehicleCode, "intake_exhaust_high_flow_downpipe", { powerImpact: 3, thermalImpact: 1 }),
@@ -8591,7 +8572,7 @@ const platformModificationImpacts = [
   ...["hyundai_i20n", "vw_golf_gti_mk85", "vw_golf_gti_clubsport_mk85", "vw_golf_r_mk85", "honda_civic_type_r_fk2", "honda_civic_type_r_fk8", "honda_civic_type_r_fl5"].flatMap((vehicleCode) => [
     impact(vehicleCode, "ecu_stage_1", { powerImpact: 7, reliabilityImpact: -1, thermalImpact: -1 }),
     impact(vehicleCode, "ecu_stage_2", { powerImpact: 12, reliabilityImpact: -2, thermalImpact: -2, trackReadinessImpact: 1 }),
-    impact(vehicleCode, "engine_flex_fuel", { powerImpact: 4, reliabilityImpact: -1 }),
+    impact(vehicleCode, "engine_flex_fuel", { trackReadinessImpact: 1 }),
     impact(vehicleCode, "cooling_intercooler_upgrade", { reliabilityImpact: 2, thermalImpact: 5, trackReadinessImpact: 3 }),
     impact(vehicleCode, "intake_exhaust_intake", { powerImpact: 2 }),
     impact(vehicleCode, "intake_exhaust_high_flow_downpipe", { powerImpact: 3, thermalImpact: 1 }),
@@ -9285,6 +9266,7 @@ async function main() {
   await seedTuningPackageSpecifications(definitionsByCode);
   await seedModificationConflicts(definitionsByCode);
   await seedModificationRequirements(definitionsByCode);
+  await deactivateInactiveRequirementGroups();
   const platformFamiliesByCode = await seedVehiclePlatformFamilies();
   const engineFamiliesByCode = await seedVehicleEngineFamilies();
   const vehicleDefinitionsByCode = await seedVehicleDefinitions();
@@ -10440,6 +10422,20 @@ async function seedModificationRequirements(
       },
     });
   }
+}
+
+async function deactivateInactiveRequirementGroups() {
+  await prisma.modificationRequirementGroup.updateMany({
+    where: {
+      code: {
+        in: [...inactiveRequirementGroupCodes],
+      },
+      active: true,
+    },
+    data: {
+      active: false,
+    },
+  });
 }
 
 function pairwise<T>(items: readonly T[]) {
