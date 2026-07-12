@@ -30,6 +30,7 @@ export type ModificationCatalogGroup = {
       bigBrakeKitSpecification?: BigBrakeKitSpecificationSummary | null;
       tyreSpecification?: TyreSpecificationSummary | null;
       wheelSpecification?: WheelSpecificationSummary | null;
+      tuningPackageSpecification?: TuningPackageSpecificationSummary | null;
       fitmentNote?: string;
       reason?: string;
     }>;
@@ -78,6 +79,22 @@ type WheelSpecificationSummary = {
   construction: string;
   trackSuitability: number;
   roadSuitability: number;
+};
+
+type TuningPackageSpecificationSummary = {
+  tuneType: string;
+  measurementBasis: string | null;
+  claimedPowerMinHp: number | null;
+  claimedPowerMaxHp: number | null;
+  claimedTorqueMinNm: number | null;
+  claimedTorqueMaxNm: number | null;
+  minimumFuelOctaneRon: number | null;
+  requiredFuelNote: string | null;
+  hardwareRequirementNote: string | null;
+  transmissionLimitNote: string | null;
+  coolingRecommendationNote: string | null;
+  confidence: string;
+  sourceNote: string | null;
 };
 
 type VehicleModificationBatchSelectorProps = {
@@ -550,9 +567,44 @@ function CatalogOptionDetails({
       ["Yol", spec.roadSuitability],
       ["Pist", spec.trackSuitability],
     );
+  } else if (option.tuningPackageSpecification) {
+    const spec = option.tuningPackageSpecification;
+
+    details.push(
+      ["Paket", tuningPackageTypeLabel(spec.tuneType)],
+      ["Ölçüm", powerMeasurementBasisLabel(spec.measurementBasis)],
+      ["Güven", calibrationConfidenceLabel(spec.confidence)],
+    );
+
+    if (spec.claimedPowerMinHp !== null || spec.claimedPowerMaxHp !== null) {
+      details.push([
+        "Üretici güç beyanı",
+        formatRange(spec.claimedPowerMinHp, spec.claimedPowerMaxHp, "hp"),
+      ]);
+    }
+
+    if (spec.claimedTorqueMinNm !== null || spec.claimedTorqueMaxNm !== null) {
+      details.push([
+        "Üretici tork beyanı",
+        formatRange(spec.claimedTorqueMinNm, spec.claimedTorqueMaxNm, "Nm"),
+      ]);
+    }
+
+    if (spec.minimumFuelOctaneRon !== null) {
+      details.push(["Yakıt", `${spec.minimumFuelOctaneRon} RON+`]);
+    }
   } else {
     return null;
   }
+
+  const tuningNotes = option.tuningPackageSpecification
+    ? [
+        option.tuningPackageSpecification.requiredFuelNote,
+        option.tuningPackageSpecification.hardwareRequirementNote,
+        option.tuningPackageSpecification.transmissionLimitNote,
+        option.tuningPackageSpecification.coolingRecommendationNote,
+      ].filter((note): note is string => Boolean(note))
+    : [];
 
   return (
     <div className="rounded-md border border-ats-border bg-ats-black px-4 py-3">
@@ -567,6 +619,18 @@ function CatalogOptionDetails({
       {option.fitmentNote ? (
         <p className="mt-2 text-xs font-semibold leading-5 text-ats-muted">
           {option.fitmentNote}
+        </p>
+      ) : null}
+      {tuningNotes.length > 0 ? (
+        <ul className="mt-2 grid gap-1 text-xs font-semibold leading-5 text-ats-muted">
+          {tuningNotes.map((note) => (
+            <li key={note}>{note}</li>
+          ))}
+        </ul>
+      ) : null}
+      {option.tuningPackageSpecification ? (
+        <p className="mt-2 text-xs font-semibold leading-5 text-ats-muted">
+          Üretici beyanı ve ATS kalibrasyon verisidir; dyno sonucu veya garanti edilen güç değildir.
         </p>
       ) : null}
     </div>
@@ -805,6 +869,50 @@ function usageClassLabel(value?: string | null) {
   };
 
   return value ? labels[value] ?? value : "Belirtilmedi";
+}
+
+function tuningPackageTypeLabel(value: string) {
+  const labels: Record<string, string> = {
+    ECU_FLASH: "ECU flash",
+    PIGGYBACK: "Piggyback",
+    ECU_TCU_BUNDLE: "ECU + TCU",
+    TCU_SOFTWARE: "TCU yazılımı",
+    FLEX_FUEL_CALIBRATION: "Flex fuel kalibrasyon",
+    HARDWARE_SOFTWARE_PACKAGE: "Donanım + yazılım",
+  };
+
+  return labels[value] ?? value;
+}
+
+function powerMeasurementBasisLabel(value?: string | null) {
+  if (!value || value === "UNSPECIFIED") {
+    return "Belirtilmedi";
+  }
+
+  const labels: Record<string, string> = {
+    CRANK: "Krank",
+    WHEEL: "Teker",
+  };
+
+  return labels[value] ?? value;
+}
+
+function calibrationConfidenceLabel(value: string) {
+  const labels: Record<string, string> = {
+    HIGH: "Yüksek",
+    MEDIUM: "Orta",
+    LOW: "Düşük",
+  };
+
+  return labels[value] ?? value;
+}
+
+function formatRange(min: number | null, max: number | null, unit: string) {
+  if (min !== null && max !== null && min !== max) {
+    return `${min}-${max} ${unit}`;
+  }
+
+  return `${min ?? max ?? "-"} ${unit}`;
 }
 
 function tyreClassLabel(value: string) {

@@ -1,5 +1,9 @@
 import Link from "next/link";
-import type { ModificationCategory, VehicleRatingStatus } from "@prisma/client";
+import type {
+  CalibrationConfidence,
+  ModificationCategory,
+  VehicleRatingStatus,
+} from "@prisma/client";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
@@ -32,6 +36,21 @@ const vehicleDefinitionRatingSelect = {
   trackReadinessRating: true,
   weightPenalty: true,
   ratingStatus: true,
+  platformFamily: {
+    select: {
+      code: true,
+      brand: true,
+      name: true,
+      generation: true,
+    },
+  },
+  engineFamily: {
+    select: {
+      code: true,
+      manufacturer: true,
+      name: true,
+    },
+  },
 } as const;
 
 const vehicleRatingModificationDefinitionSelect = {
@@ -60,7 +79,24 @@ const vehicleRatingModificationDefinitionSelect = {
       reliabilityImpact: true,
       thermalImpact: true,
       trackReadinessImpact: true,
+      confidence: true,
+      sourceNote: true,
+      claimedPowerDeltaHp: true,
+      claimedTorqueDeltaNm: true,
       active: true,
+    },
+  },
+  tuningPackageSpecification: {
+    select: {
+      active: true,
+      tuneType: true,
+      minimumFuelOctaneRon: true,
+      requiredFuelNote: true,
+      hardwareRequirementNote: true,
+      transmissionLimitNote: true,
+      coolingRecommendationNote: true,
+      confidence: true,
+      sourceNote: true,
     },
   },
 } as const;
@@ -401,6 +437,17 @@ function VehicleList({
       trackReadinessRating: number;
       weightPenalty: number;
       ratingStatus: VehicleRatingStatus;
+      platformFamily: {
+        code: string;
+        brand: string;
+        name: string;
+        generation: string | null;
+      } | null;
+      engineFamily: {
+        code: string;
+        manufacturer: string;
+        name: string;
+      } | null;
     } | null;
     brand: string;
     model: string;
@@ -437,8 +484,23 @@ function VehicleList({
           reliabilityImpact: number;
           thermalImpact: number;
           trackReadinessImpact: number;
+          confidence: CalibrationConfidence;
+          sourceNote: string | null;
+          claimedPowerDeltaHp: number | null;
+          claimedTorqueDeltaNm: number | null;
           active: boolean;
         }>;
+        tuningPackageSpecification: {
+          active: boolean;
+          tuneType: string;
+          minimumFuelOctaneRon: number | null;
+          requiredFuelNote: string | null;
+          hardwareRequirementNote: string | null;
+          transmissionLimitNote: string | null;
+          coolingRecommendationNote: string | null;
+          confidence: CalibrationConfidence;
+          sourceNote: string | null;
+        } | null;
       };
     }>;
   }>;
@@ -496,9 +558,30 @@ function VehicleList({
                   }
                   compact
                 />
+                <DetailRow
+                  label="Platform ailesi"
+                  value={
+                    vehicle.vehicleDefinition?.platformFamily
+                      ? vehiclePlatformFamilyLabel(vehicle.vehicleDefinition.platformFamily)
+                      : "-"
+                  }
+                  compact
+                />
+                <DetailRow
+                  label="Motor ailesi"
+                  value={
+                    vehicle.vehicleDefinition?.engineFamily
+                      ? vehicleEngineFamilyLabel(vehicle.vehicleDefinition.engineFamily)
+                      : "-"
+                  }
+                  compact
+                />
               </dl>
               <VehiclePerformanceRatingCard rating={rating} compact className="mt-4" />
-              <AdminVehicleBuildProfile modifications={vehicle.modifications} />
+              <AdminVehicleBuildProfile
+                modifications={vehicle.modifications}
+                vehicleDefinitionId={vehicle.vehicleDefinitionId}
+              />
             </article>
           );
         })}
@@ -514,17 +597,47 @@ function VehicleList({
 
 function AdminVehicleBuildProfile({
   modifications,
+  vehicleDefinitionId,
 }: {
+  vehicleDefinitionId: string | null;
   modifications: Array<{
     id: string;
     customNotes: string | null;
     installedAt: Date | null;
     modificationDefinition: {
       id: string;
+      code: string;
       category: ModificationCategory;
       brand: string | null;
       name: string;
       variant: string | null;
+      componentTypeCode: string | null;
+      usageClass: string | null;
+      modificationImpacts: Array<{
+        vehicleDefinitionId: string;
+        powerImpact: number;
+        handlingImpact: number;
+        brakingImpact: number;
+        reliabilityImpact: number;
+        thermalImpact: number;
+        trackReadinessImpact: number;
+        confidence: CalibrationConfidence;
+        sourceNote: string | null;
+        claimedPowerDeltaHp: number | null;
+        claimedTorqueDeltaNm: number | null;
+        active: boolean;
+      }>;
+      tuningPackageSpecification: {
+        active: boolean;
+        tuneType: string;
+        minimumFuelOctaneRon: number | null;
+        requiredFuelNote: string | null;
+        hardwareRequirementNote: string | null;
+        transmissionLimitNote: string | null;
+        coolingRecommendationNote: string | null;
+        confidence: CalibrationConfidence;
+        sourceNote: string | null;
+      } | null;
     };
   }>;
 }) {
@@ -558,28 +671,81 @@ function AdminVehicleBuildProfile({
                 {modificationCategoryLabels[category]}
               </p>
               <div className="mt-2 grid gap-2">
-                {categoryModifications.map((modification) => (
-                  <div
-                    key={modification.id}
-                    className="rounded-md border border-white/10 bg-asphalt p-3"
-                  >
-                    <p className="text-xs font-black text-white">
-                      {formatModificationDefinition(
-                        modification.modificationDefinition,
-                      )}
-                    </p>
-                    {modification.customNotes ? (
-                      <p className="mt-1 text-xs font-semibold leading-5 text-white/55">
-                        {modification.customNotes}
+                {categoryModifications.map((modification) => {
+                  const definition = modification.modificationDefinition;
+                  const tuningSpecification =
+                    definition.tuningPackageSpecification?.active
+                      ? definition.tuningPackageSpecification
+                      : null;
+                  const vehicleImpact = vehicleDefinitionId
+                    ? definition.modificationImpacts.find(
+                        (impact) => impact.vehicleDefinitionId === vehicleDefinitionId,
+                      )
+                    : null;
+
+                  return (
+                    <div
+                      key={modification.id}
+                      className="rounded-md border border-white/10 bg-asphalt p-3"
+                    >
+                      <p className="text-xs font-black text-white">
+                        {formatModificationDefinition(definition)}
                       </p>
-                    ) : null}
-                    {modification.installedAt ? (
-                      <p className="mt-1 text-[11px] font-bold uppercase text-white/40">
-                        Montaj: {formatDateTime(modification.installedAt)}
-                      </p>
-                    ) : null}
-                  </div>
-                ))}
+                      {modification.customNotes ? (
+                        <p className="mt-1 text-xs font-semibold leading-5 text-white/55">
+                          {modification.customNotes}
+                        </p>
+                      ) : null}
+                      {tuningSpecification ? (
+                        <dl className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold text-white/55">
+                          <div>
+                            <dt className="inline font-black uppercase text-white/35">
+                              Kalibrasyon
+                            </dt>{" "}
+                            <dd className="inline">
+                              {tuningPackageTypeLabel(tuningSpecification.tuneType)}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="inline font-black uppercase text-white/35">
+                              Güven
+                            </dt>{" "}
+                            <dd className="inline">
+                              {calibrationConfidenceLabel(
+                                tuningSpecification.confidence,
+                              )}
+                            </dd>
+                          </div>
+                          {tuningSpecification.minimumFuelOctaneRon ? (
+                            <div>
+                              <dt className="inline font-black uppercase text-white/35">
+                                Yakıt
+                              </dt>{" "}
+                              <dd className="inline">
+                                {tuningSpecification.minimumFuelOctaneRon} RON+
+                              </dd>
+                            </div>
+                          ) : null}
+                        </dl>
+                      ) : null}
+                      {vehicleImpact ? (
+                        <p className="mt-2 text-[11px] font-semibold leading-5 text-white/50">
+                          ATS etki: {formatImpactSummary(vehicleImpact)}
+                        </p>
+                      ) : null}
+                      {tuningSpecification?.sourceNote ? (
+                        <p className="mt-1 text-[11px] font-semibold leading-5 text-white/40">
+                          Kaynak: {tuningSpecification.sourceNote}
+                        </p>
+                      ) : null}
+                      {modification.installedAt ? (
+                        <p className="mt-1 text-[11px] font-bold uppercase text-white/40">
+                          Montaj: {formatDateTime(modification.installedAt)}
+                        </p>
+                      ) : null}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
@@ -622,6 +788,87 @@ function vehicleDefinitionLabel(definition: {
   ]
     .filter(Boolean)
     .join(" / ");
+}
+
+function vehiclePlatformFamilyLabel(family: {
+  code: string;
+  brand: string;
+  name: string;
+  generation: string | null;
+}) {
+  return [family.brand, family.name, family.generation, family.code]
+    .filter(Boolean)
+    .join(" / ");
+}
+
+function vehicleEngineFamilyLabel(family: {
+  code: string;
+  manufacturer: string;
+  name: string;
+}) {
+  return [family.manufacturer, family.name, family.code].filter(Boolean).join(" / ");
+}
+
+function tuningPackageTypeLabel(value: string) {
+  const labels: Record<string, string> = {
+    ECU_FLASH: "ECU flash",
+    PIGGYBACK: "Piggyback",
+    ECU_TCU_BUNDLE: "ECU + TCU",
+    TCU_SOFTWARE: "TCU yazılımı",
+    FLEX_FUEL_CALIBRATION: "Flex fuel kalibrasyon",
+    HARDWARE_SOFTWARE_PACKAGE: "Donanım + yazılım",
+  };
+
+  return labels[value] ?? value;
+}
+
+function calibrationConfidenceLabel(value: CalibrationConfidence) {
+  const labels: Record<CalibrationConfidence, string> = {
+    HIGH: "Yüksek",
+    MEDIUM: "Orta",
+    LOW: "Düşük",
+  };
+
+  return labels[value] ?? value;
+}
+
+function formatImpactSummary(impact: {
+  powerImpact: number;
+  handlingImpact: number;
+  brakingImpact: number;
+  reliabilityImpact: number;
+  thermalImpact: number;
+  trackReadinessImpact: number;
+  confidence: CalibrationConfidence;
+  claimedPowerDeltaHp: number | null;
+  claimedTorqueDeltaNm: number | null;
+}) {
+  const components = [
+    ["Güç", impact.powerImpact],
+    ["Yol tutuş", impact.handlingImpact],
+    ["Fren", impact.brakingImpact],
+    ["Güvenilirlik", impact.reliabilityImpact],
+    ["Termal", impact.thermalImpact],
+    ["Pist", impact.trackReadinessImpact],
+  ]
+    .filter(([, value]) => value !== 0)
+    .map(([label, value]) => `${label} ${formatSignedNumber(value as number)}`);
+  const claims = [
+    impact.claimedPowerDeltaHp ? `+${impact.claimedPowerDeltaHp} hp üretici beyanı` : null,
+    impact.claimedTorqueDeltaNm
+      ? `+${impact.claimedTorqueDeltaNm} Nm üretici beyanı`
+      : null,
+  ].filter((value): value is string => Boolean(value));
+
+  return [
+    components.join(", ") || "nötr",
+    ...claims,
+    `${calibrationConfidenceLabel(impact.confidence)} güven`,
+  ].join(" · ");
+}
+
+function formatSignedNumber(value: number) {
+  return value > 0 ? `+${value}` : value.toString();
 }
 
 function ProfileStatusBadge({ complete }: { complete: boolean }) {
