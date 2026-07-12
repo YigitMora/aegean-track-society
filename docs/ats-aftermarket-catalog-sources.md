@@ -2,7 +2,7 @@
 
 Accessed date for this sprint: 2026-07-12.
 
-Seeded product metadata is normalized for ATS filtering and preview only. Suitability scores are descriptive ATS values, not manufacturer test scores. Sport springs and big brake kits are not universal; active selection requires exact `VehicleDefinition` compatibility rows.
+Seeded product metadata is normalized for ATS filtering and preview only. Suitability scores are descriptive ATS values, not manufacturer test scores. Sport springs and big brake kits are visible as product-family declarations; members must verify physical fitment outside ATS.
 
 ## Sport Springs
 
@@ -11,7 +11,7 @@ Seeded product metadata is normalized for ATS filtering and preview only. Suitab
 | `sport_springs_eibach_pro_kit` | Pro-Kit | Eibach | https://eibach.com/products/pro-kit | Product family name, road-focused lowering spring positioning. | Vehicle-specific lowering is not generalized. |
 | `sport_springs_eibach_sportline` | Sportline | Eibach | https://eibach.com/products/sportline | Product family name, more aggressive lowering spring positioning. | Exact lowering remains null without size/platform fitment. |
 | `sport_springs_hr_sport_springs` | Sport Springs | H&R Springs | https://www.hrsprings.com/products/springs/ | Product family name and spring category. | Vehicle-specific lowering is not generalized. |
-| `sport_springs_hr_super_sport_springs` | Super Sport Springs | H&R Springs | https://www.hrsprings.com/products/springs/ | Official naming and more aggressive spring family. | Fitment remains exact-template gated. |
+| `sport_springs_hr_super_sport_springs` | Super Sport Springs | H&R Springs | https://www.hrsprings.com/products/springs/ | Official naming and more aggressive spring family. | No exact platform fitment claim. |
 | `sport_springs_st_suspensions` | Sport Springs / Lowering Springs | ST Suspensions | https://www.st-suspensions.com/ | Product-family naming and road-sport use. | Public naming varies by region; seeded as provisional family metadata. |
 | `sport_springs_vogtland` | Sport Springs | Vogtland | https://www.vogtland.com/ | Product-family naming and lowering spring category. | Public fitment details are not embedded. |
 
@@ -21,16 +21,16 @@ XT springs were omitted because an official manufacturer identity and stable pro
 
 | Code | Official product name | Publisher | URL | Values used | Uncertainty note |
 | --- | --- | --- | --- | --- | --- |
-| `bbk_ebc_apollo_4_pot` | Apollo 4 Pot | EBC Brakes | https://www.ebcbrakes.com/ | Apollo naming, fixed multi-piston BBK family. | Exact fitment rows only; rotor dimensions left null. |
+| `bbk_ebc_apollo_4_pot` | Apollo 4 Pot | EBC Brakes | https://www.ebcbrakes.com/ | Apollo naming, fixed multi-piston BBK family. | No exact fitment claim; rotor dimensions left null. |
 | `bbk_ebc_apollo_6_pot` | Apollo 6 Pot | EBC Brakes | https://www.ebcbrakes.com/ | Apollo naming, fixed multi-piston BBK family. | Six-piston label is descriptive only. |
-| `bbk_alcon_4_pot` | 4 Pot Big Brake Kit | Alcon | https://alcon.co.uk/ | Alcon brake-kit/caliper family naming. | Exact fitment rows only. |
-| `bbk_alcon_6_pot` | 6 Pot Big Brake Kit | Alcon | https://alcon.co.uk/ | Alcon brake-kit/caliper family naming. | Exact fitment rows only. |
-| `bbk_ap_racing_4_pot` | 4 Pot Big Brake Kit | AP Racing | https://apracing.com/race-car/brake-calipers | AP Racing caliper/conversion family naming. | Exact fitment rows only. |
-| `bbk_ap_racing_6_pot` | 6 Pot Big Brake Kit | AP Racing | https://apracing.com/race-car/brake-calipers | AP Racing caliper/conversion family naming. | Exact fitment rows only. |
-| `bbk_brembo_gt_4_piston` | GT 4 Piston | Brembo | https://www.brembo.com/ | Brembo GT kit naming and fixed-caliper positioning. | Exact fitment rows only. |
+| `bbk_alcon_4_pot` | 4 Pot Big Brake Kit | Alcon | https://alcon.co.uk/ | Alcon brake-kit/caliper family naming. | No exact fitment claim. |
+| `bbk_alcon_6_pot` | 6 Pot Big Brake Kit | Alcon | https://alcon.co.uk/ | Alcon brake-kit/caliper family naming. | No exact fitment claim. |
+| `bbk_ap_racing_4_pot` | 4 Pot Big Brake Kit | AP Racing | https://apracing.com/race-car/brake-calipers | AP Racing caliper/conversion family naming. | No exact fitment claim. |
+| `bbk_ap_racing_6_pot` | 6 Pot Big Brake Kit | AP Racing | https://apracing.com/race-car/brake-calipers | AP Racing caliper/conversion family naming. | No exact fitment claim. |
+| `bbk_brembo_gt_4_piston` | GT 4 Piston | Brembo | https://www.brembo.com/ | Brembo GT kit naming and fixed-caliper positioning. | No exact fitment claim. |
 | `bbk_brembo_gt_6_piston` | GT 6 Piston | Brembo | https://www.brembo.com/ | Brembo GT kit naming and fixed-caliper positioning. | Piston count is not treated as a universal rating multiplier. |
-| `bbk_wilwood_4_piston` | 4 Piston Big Brake Kit | Wilwood | https://www.wilwood.com/ | Wilwood kit and caliper family naming. | Exact fitment rows only. |
-| `bbk_wilwood_6_piston` | 6 Piston Big Brake Kit | Wilwood | https://www.wilwood.com/ | Wilwood kit and caliper family naming. | Exact fitment rows only. |
+| `bbk_wilwood_4_piston` | 4 Piston Big Brake Kit | Wilwood | https://www.wilwood.com/ | Wilwood kit and caliper family naming. | No exact fitment claim. |
+| `bbk_wilwood_6_piston` | 6 Piston Big Brake Kit | Wilwood | https://www.wilwood.com/ | Wilwood kit and caliper family naming. | No exact fitment claim. |
 
 ## Tyres
 
@@ -73,6 +73,42 @@ XT springs were omitted because an official manufacturer identity and stable pro
 | `wheel_rotiform_dtm` | DTM | Rotiform | https://www.rotiform.com/ | Official model name. | Styling wheel impact remains conservative. |
 | `wheel_msw_30` | MSW 30 | MSW Wheels | https://www.mswwheels.com/ | Official MSW model naming. | Weight remains null without exact size. |
 | `wheel_msw_42` | MSW 42 | MSW Wheels | https://www.mswwheels.com/ | Official MSW model naming. | Weight remains null without exact size. |
+| `wheel_sparco_assetto_gara` | Assetto Gara | Sparco Wheels | https://www.sparcowheels.com/ | Official model naming, Sparco/OZ wheel family. | Construction kept conservative; weight remains null without exact size. |
+| `wheel_sparco_terra` | Terra | Sparco Wheels | https://www.sparcowheels.com/ | Official model naming, Sparco/OZ wheel family. | Construction kept conservative; weight remains null without exact size. |
+| `wheel_sparco_pista` | Pista | Sparco Wheels | https://www.sparcowheels.com/ | Official model naming, Sparco/OZ wheel family. | Construction kept conservative; weight remains null without exact size. |
+| `wheel_sparco_podio` | Podio | Sparco Wheels | https://www.sparcowheels.com/ | Official model naming, Sparco/OZ wheel family. | Construction kept conservative; weight remains null without exact size. |
+
+## Sprint 4F Intake, Cooling, Exhaust, and Powertrain Applicability
+
+Definitions below are product-family declarations, not physical fitment guarantees. Powertrain applicability is seeded explicitly. `ICE` means visible only when a matched vehicle template has ICE powertrain; unmatched manual vehicles do not see these definitions.
+
+| Code | Official brand | Official product/family name | Category | Publisher | Official URL | Powertrain applicability | Uncertainty note |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `intercooler_airtec_motorsport_upgrade` | AIRTEC Motorsport | Intercooler Upgrade | Intercooler | AIRTEC Motorsport | https://www.airtecmotorsport.com/ | ICE | Platform-specific size and pipework not modeled. |
+| `intercooler_forge_motorsport` | Forge Motorsport | Intercooler Kit | Intercooler | Forge Motorsport | https://www.forgemotorsport.co.uk/ | ICE | Product family varies by vehicle. |
+| `intercooler_burger_motorsports_performance` | Burger Motorsports | Performance Intercooler | Intercooler | Burger Motorsports | https://burgertuning.com/ | ICE | Product family varies by vehicle. |
+| `intercooler_hks_kit` | HKS | Intercooler Kit | Intercooler | HKS | https://www.hks-power.co.jp/en/ | ICE | Product family varies by vehicle. |
+| `intercooler_wagner_tuning_competition` | Wagner Tuning | Competition Intercooler | Intercooler | Wagner Tuning | https://www.wagner-tuning.com/ | ICE | Product family varies by vehicle. |
+| `oil_cooler_airtec_motorsport` | AIRTEC Motorsport | Oil Cooler Kit | Oil Cooler | AIRTEC Motorsport | https://www.airtecmotorsport.com/ | ICE | Engine-oil cooler declaration; not EV cooling. |
+| `oil_cooler_hel_performance` | HEL Performance | Oil Cooler Kit | Oil Cooler | HEL Performance | https://helperformance.com/ | ICE | HEL official site access is inconsistent; retained as provisional official brand record. |
+| `oil_cooler_forge_motorsport` | Forge Motorsport | Oil Cooler Kit | Oil Cooler | Forge Motorsport | https://www.forgemotorsport.co.uk/ | ICE | Engine-oil cooler declaration; not EV cooling. |
+| `oil_cooler_hks_kit` | HKS | Oil Cooler Kit | Oil Cooler | HKS | https://www.hks-power.co.jp/en/ | ICE | Product family varies by vehicle. |
+| `intake_airtec_motorsport_induction_kit` | AIRTEC Motorsport | Induction Kit | Intake | AIRTEC Motorsport | https://www.airtecmotorsport.com/ | ICE | Combustion-engine intake declaration. |
+| `intake_forge_motorsport_induction_kit` | Forge Motorsport | Induction Kit | Intake | Forge Motorsport | https://www.forgemotorsport.co.uk/ | ICE | Combustion-engine intake declaration. |
+| `intake_burger_motorsports_bms_elite` | Burger Motorsports | BMS Elite Intake | Intake | Burger Motorsports | https://burgertuning.com/ | ICE | Product family varies by platform. |
+| `intake_hks_racing_suction` | HKS | Racing Suction | Intake | HKS | https://www.hks-power.co.jp/en/ | ICE | Product family varies by platform. |
+| `intake_wagner_tuning_carbon_intake` | Wagner Tuning | Carbon Intake System | Intake | Wagner Tuning | https://www.wagner-tuning.com/ | ICE | Added only as a verified engine intake family. |
+| `exhaust_milltek_sport_cat_back` | Milltek Sport | Cat-back Exhaust | Exhaust | Milltek Sport | https://www.millteksport.com/ | ICE | Exhaust fitment and emissions legality vary by platform. |
+| `exhaust_milltek_sport_axle_back` | Milltek Sport | Axle-back Exhaust | Exhaust | Milltek Sport | https://www.millteksport.com/ | ICE | Exhaust fitment and emissions legality vary by platform. |
+| `downpipe_milltek_sport` | Milltek Sport | Downpipe | Exhaust | Milltek Sport | https://www.millteksport.com/ | ICE | Downpipe legality and tune requirements vary by platform. |
+| `exhaust_hks_hi_power_spec_l_ii` | HKS | Hi-Power SPEC-L II | Exhaust | HKS | https://www.hks-power.co.jp/en/ | ICE | Product family varies by platform. |
+| `exhaust_hks_super_turbo_muffler` | HKS | Super Turbo Muffler | Exhaust | HKS | https://www.hks-power.co.jp/en/ | ICE | Product family varies by platform. |
+| `exhaust_hks_exhaust_manifold` | HKS | Exhaust Manifold | Exhaust | HKS | https://www.hks-power.co.jp/en/ | ICE | Exact manifold fitment not modeled. |
+| `turbo_inlet_forge_motorsport` | Forge Motorsport | Turbo Inlet Adaptor | Turbo inlet | Forge Motorsport | https://www.forgemotorsport.co.uk/ | ICE | Turbo-specific pipework declaration. |
+| `charge_pipe_burger_motorsports` | Burger Motorsports | Charge Pipe | Charge pipe | Burger Motorsports | https://burgertuning.com/ | ICE | Turbo-specific pipework declaration. |
+| `charge_pipe_wagner_tuning` | Wagner Tuning | Charge Pipe Kit | Charge pipe | Wagner Tuning | https://www.wagner-tuning.com/ | ICE | Turbo-specific pipework declaration. |
+
+HF Series was omitted because an official manufacturer/brand identity and stable product-category source were not verified for this sprint.
 
 ## Conceptual Cleanup Definitions
 
