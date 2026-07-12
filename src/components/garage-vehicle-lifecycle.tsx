@@ -10,9 +10,17 @@ import {
   permanentlyDeleteArchivedVehiclesBatchAction,
   restoreVehicleAction,
 } from "@/app/account/garage/actions";
+import { ratingComponentRows } from "@/lib/vehicle-rating-deltas";
+import { ratingToneForScore } from "@/lib/vehicle-rating-tone";
 
 type GarageRating = {
   overall: number;
+  power: number;
+  handling: number;
+  braking: number;
+  reliability: number;
+  thermal: number;
+  trackReadiness: number;
   status: string;
 } | null;
 
@@ -268,6 +276,7 @@ function GarageLifecycleCard({
           <input
             type="checkbox"
             checked={selected}
+            aria-label={`${vehicleSummary(vehicle)} seç`}
             onChange={(event) => onSelectionChange(event.target.checked)}
             className="h-4 w-4 rounded border-ats-border bg-ats-black accent-ats-blue"
           />
@@ -297,7 +306,7 @@ function GarageLifecycleCard({
         ) : null}
       </div>
 
-      <CompactRating rating={vehicle.rating} />
+      <CompactRating rating={vehicle.rating} showBars={mode === "active"} />
 
       <div className="flex flex-wrap gap-3 p-6">
         {mode === "active" ? (
@@ -410,7 +419,13 @@ function VehicleCoverPreview({
   );
 }
 
-function CompactRating({ rating }: { rating: GarageRating }) {
+function CompactRating({
+  rating,
+  showBars,
+}: {
+  rating: GarageRating;
+  showBars: boolean;
+}) {
   if (!rating) {
     return (
       <div className="mx-6 mt-5 rounded-md border border-ats-border bg-ats-black p-4">
@@ -419,19 +434,90 @@ function CompactRating({ rating }: { rating: GarageRating }) {
     );
   }
 
+  const tone = ratingToneForScore(rating.overall);
+
   return (
-    <div className="mx-6 mt-5 rounded-md border border-ats-border bg-ats-black p-4">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-ats-muted">
-        ATS Rating
-      </p>
-      <div className="mt-1 flex items-end justify-between gap-3">
-        <p className="text-3xl font-black leading-none text-ats-text">{rating.overall}</p>
-        <span className="text-[11px] font-black uppercase tracking-[0.12em] text-ats-blue">
-          {rating.status === "CALIBRATED" ? "Kalibre" : "Provisional"}
-        </span>
+    <section
+      className="mx-6 mt-5 rounded-md border p-4"
+      style={{
+        borderColor: tone.border,
+        background: `linear-gradient(135deg, ${tone.background}, rgba(10,10,14,0.92))`,
+      }}
+      aria-label={`ATS Rating ${clampRatingScore(rating.overall)} / 100`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-ats-muted">
+            ATS Rating
+          </p>
+          <p className="mt-1 text-3xl font-black leading-none text-ats-text">
+            {clampRatingScore(rating.overall)}
+          </p>
+        </div>
+        <RatingStatusBadge status={rating.status} />
       </div>
-    </div>
+
+      {showBars ? <CompactRatingBars rating={rating} /> : null}
+    </section>
   );
+}
+
+function CompactRatingBars({ rating }: { rating: NonNullable<GarageRating> }) {
+  return (
+    <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+      {ratingComponentRows.map(([label, key]) => {
+        const score = clampRatingScore(rating[key]);
+        const tone = ratingToneForScore(score);
+
+        return (
+          <div key={key} className="min-w-0">
+            <div className="flex items-center justify-between gap-3">
+              <dt className="min-w-0 text-[11px] font-black uppercase tracking-[0.1em] text-ats-muted">
+                {label}
+              </dt>
+              <dd className="shrink-0 text-xs font-black text-ats-text">{score}</dd>
+            </div>
+            <div
+              className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10"
+              role="meter"
+              aria-label={`${label}: ${score} / 100`}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={score}
+            >
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${score}%`,
+                  backgroundColor: tone.color,
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </dl>
+  );
+}
+
+function RatingStatusBadge({ status }: { status: string }) {
+  const isCalibrated = status === "CALIBRATED";
+
+  return (
+    <span
+      className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] ${
+        isCalibrated
+          ? "border-ats-blue/40 bg-ats-blue/10 text-ats-blue"
+          : "border-ats-border bg-ats-black text-ats-muted"
+      }`}
+    >
+      {isCalibrated ? "Kalibre" : "Provisional"}
+    </span>
+  );
+}
+
+function clampRatingScore(score: number) {
+  return Math.max(0, Math.min(100, Math.round(score)));
 }
 
 function vehicleSummary(vehicle: GarageLifecycleVehicle) {
