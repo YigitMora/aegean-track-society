@@ -5,6 +5,7 @@ import {
   addVehicleModificationsBatchAction,
   archiveVehicleAction,
   makePrimaryVehicleAction,
+  previewVehicleModificationsRatingAction,
   removeVehicleModificationAction,
   removeVehicleImageAction,
   unlinkVehicleDefinitionAction,
@@ -194,6 +195,10 @@ export default async function EditVehiclePage({
     null,
     vehicle.id,
   );
+  const previewRatingAction = previewVehicleModificationsRatingAction.bind(
+    null,
+    vehicle.id,
+  );
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">
@@ -247,6 +252,7 @@ export default async function EditVehiclePage({
 
       <VehicleBuildProfile
         addAction={addBatchModificationAction}
+        previewAction={previewRatingAction}
         catalogGroups={catalogGroups}
         vehicleId={vehicle.id}
         vehicleDefinitionId={vehicle.vehicleDefinitionId}
@@ -350,12 +356,14 @@ function PlatformMatchPanel({
 
 function VehicleBuildProfile({
   addAction,
+  previewAction,
   catalogGroups,
   vehicleId,
   vehicleDefinitionId,
   modifications,
 }: {
   addAction: Parameters<typeof VehicleModificationBatchSelector>[0]["action"];
+  previewAction: Parameters<typeof VehicleModificationBatchSelector>[0]["previewAction"];
   catalogGroups: ModificationCatalogGroup[];
   vehicleId: string;
   vehicleDefinitionId: string | null;
@@ -487,6 +495,7 @@ function VehicleBuildProfile({
         {catalogGroups.length > 0 ? (
           <VehicleModificationBatchSelector
             action={addAction}
+            previewAction={previewAction}
             catalogGroups={catalogGroups}
           />
         ) : (

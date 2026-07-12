@@ -2,21 +2,13 @@ import {
   type VehiclePerformanceRating,
   vehicleRatingDisclaimer,
 } from "@/lib/vehicle-performance-rating";
+import { ratingComponentRows } from "@/lib/vehicle-rating-deltas";
 
 type VehiclePerformanceRatingCardProps = {
   rating: VehiclePerformanceRating | null;
   className?: string;
   compact?: boolean;
 };
-
-const componentLabels = [
-  ["Güç", "power"],
-  ["Yol tutuş", "handling"],
-  ["Fren", "braking"],
-  ["Güvenilirlik", "reliability"],
-  ["Termal yönetim", "thermal"],
-  ["Pist hazırlığı", "trackReadiness"],
-] as const;
 
 export function VehiclePerformanceRatingCard({
   rating,
@@ -229,7 +221,7 @@ function RatingBars({
 }) {
   return (
     <dl className={`grid gap-3 ${className}`}>
-      {componentLabels.map(([label, key]) => {
+      {ratingComponentRows.map(([label, key]) => {
         const score = clampScore(rating[key]);
         const tone = ratingToneForScore(score);
 

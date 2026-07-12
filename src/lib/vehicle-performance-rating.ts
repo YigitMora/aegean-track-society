@@ -29,7 +29,9 @@ export type VehicleRatingDefinitionInput = {
 };
 
 export type VehicleRatingModificationInput = {
+  modificationDefinitionId?: string;
   modificationDefinition: {
+    id?: string;
     code: string;
     category: ModificationCategory;
     powerImpact: number;
@@ -123,6 +125,35 @@ export function calculateVehiclePerformanceRating({
     overall: weightedOverall(rating),
     status: vehicleDefinition.ratingStatus,
   };
+}
+
+export function calculateProjectedVehiclePerformanceRating({
+  vehicleDefinition,
+  installedModifications,
+  proposedModifications,
+}: {
+  vehicleDefinition: VehicleRatingDefinitionInput | null;
+  installedModifications: VehicleRatingModificationInput[];
+  proposedModifications: VehicleRatingModificationInput[];
+}): VehiclePerformanceRating | null {
+  const mergedModificationsById = new Map<string, VehicleRatingModificationInput>();
+
+  for (const modification of installedModifications) {
+    mergedModificationsById.set(ratingModificationKey(modification), modification);
+  }
+
+  for (const modification of proposedModifications) {
+    const key = ratingModificationKey(modification);
+
+    if (!mergedModificationsById.has(key)) {
+      mergedModificationsById.set(key, modification);
+    }
+  }
+
+  return calculateVehiclePerformanceRating({
+    vehicleDefinition,
+    installedModifications: Array.from(mergedModificationsById.values()),
+  });
 }
 
 const ratingComponents = [
@@ -247,4 +278,12 @@ function emptyImpactTotals(): ImpactTotals {
 
 function clampRating(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function ratingModificationKey(modification: VehicleRatingModificationInput) {
+  return (
+    modification.modificationDefinitionId ??
+    modification.modificationDefinition.id ??
+    modification.modificationDefinition.code
+  );
 }
