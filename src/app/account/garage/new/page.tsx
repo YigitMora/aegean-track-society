@@ -15,7 +15,9 @@ type NewVehiclePageProps = {
 export default async function NewVehiclePage({ searchParams }: NewVehiclePageProps) {
   await requireCompleteMemberUser("/account/garage/new");
   const params = await searchParams;
-  const returnTo = normalizeMemberReturnTo(params.returnTo);
+  const returnTo = params.returnTo
+    ? normalizeMemberReturnTo(params.returnTo)
+    : "/account/garage";
   const vehicleDefinitions = await prisma.vehicleDefinition.findMany({
     where: {
       active: true,

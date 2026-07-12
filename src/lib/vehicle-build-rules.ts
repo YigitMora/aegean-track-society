@@ -41,6 +41,7 @@ export type VehicleBuildResultCode =
   | "MODIFICATION_INACTIVE"
   | "VEHICLE_NOT_FOUND"
   | "DUPLICATE_MODIFICATION"
+  | "COMPONENT_SLOT_OCCUPIED"
   | "MODIFICATION_INCOMPATIBLE"
   | "MODIFICATION_CONFLICT"
   | "MODIFICATION_REQUIREMENT_MISSING"
@@ -53,6 +54,7 @@ export type VehicleBuildBatchResultCode =
   | "DEFINITION_NOT_FOUND"
   | "DEFINITION_INACTIVE"
   | "DUPLICATE_MODIFICATION"
+  | "COMPONENT_SLOT_OCCUPIED"
   | "MODIFICATION_CONFLICT"
   | "MODIFICATION_REQUIREMENT_MISSING"
   | "MODIFICATION_INCOMPATIBLE"
@@ -182,6 +184,116 @@ export function normalizeVehicleIdentity(value: string | null | undefined) {
   return value?.trim().replace(/\s+/g, " ").toLocaleLowerCase("tr-TR") ?? "";
 }
 
+export const genericEcuFallbackCodes = new Set(["ecu_stage_1", "ecu_stage_2"]);
+
+export const singleInstanceComponentTypes = new Set([
+  "air_filter",
+  "intake",
+  "turbo_inlet",
+  "charge_pipe",
+  "intercooler",
+  "oil_cooler",
+  "downpipe",
+  "cat_back_exhaust",
+  "axle_back_exhaust",
+  "exhaust_manifold",
+  "turbo_upgrade",
+  "flex_fuel",
+  "sport_springs",
+  "coilover",
+  "damper",
+  "big_brake_kit",
+  "brake_pad",
+  "brake_fluid",
+  "braided_brake_line",
+  "tyre_touring",
+  "tyre_uhp_road",
+  "tyre_trackday",
+  "tyre_semi_slick",
+  "tyre_slick",
+  "wheel",
+  "lightweight_wheel",
+  "forged_wheel",
+  "ecu_software",
+  "platform_tune_package",
+  "transmission_software",
+  "clutch",
+  "flywheel",
+  "lsd",
+]);
+
+const tyreSlotComponentTypes = new Set([
+  "tyre_touring",
+  "tyre_uhp_road",
+  "tyre_trackday",
+  "tyre_semi_slick",
+  "tyre_slick",
+]);
+const wheelSlotComponentTypes = new Set(["wheel", "lightweight_wheel", "forged_wheel"]);
+const ecuTuneSlotComponentTypes = new Set(["ecu_software", "platform_tune_package"]);
+
+export function componentSlotKeyForDefinition(definition: {
+  componentTypeCode?: string | null;
+}) {
+  const componentTypeCode = definition.componentTypeCode ?? null;
+
+  if (!componentTypeCode || !singleInstanceComponentTypes.has(componentTypeCode)) {
+    return null;
+  }
+
+  if (tyreSlotComponentTypes.has(componentTypeCode)) {
+    return "tyre";
+  }
+
+  if (wheelSlotComponentTypes.has(componentTypeCode)) {
+    return "wheel";
+  }
+
+  if (ecuTuneSlotComponentTypes.has(componentTypeCode)) {
+    return "ecu_software";
+  }
+
+  return componentTypeCode;
+}
+
+export function isGenericEcuFallbackDefinition(definition: { code?: string }) {
+  return Boolean(definition.code && genericEcuFallbackCodes.has(definition.code));
+}
+
+export function isNamedProviderEcuTuneDefinition(definition: VehicleBuildDefinitionForRules) {
+  if (!definition.active || isGenericEcuFallbackDefinition(definition)) {
+    return false;
+  }
+
+  if (!definition.brand || definition.brand === "Generic") {
+    return false;
+  }
+
+  return componentSlotKeyForDefinition(definition) === "ecu_software";
+}
+
+export function hasNamedProviderEcuTuneForVehicle({
+  vehicle,
+  definitions,
+}: {
+  vehicle: VehicleBuildVehicle;
+  definitions: VehicleBuildDefinitionForRules[];
+}) {
+  if (!vehicle.vehicleDefinitionId) {
+    return false;
+  }
+
+  return definitions.some(
+    (definition) =>
+      isNamedProviderEcuTuneDefinition(definition) &&
+      isModificationApplicableToVehiclePowertrain(
+        definition,
+        vehicle.vehicleDefinition?.powertrain ?? null,
+      ) &&
+      isModificationCompatible(vehicle, definition.compatibilities),
+  );
+}
+
 export function formatModificationDefinition(definition: {
   code?: string;
   brand: string | null;
@@ -206,10 +318,12 @@ export function evaluateModificationAvailability({
   vehicle,
   definition,
   installedModifications,
+  hasNamedProviderEcuTune = false,
 }: {
   vehicle: VehicleBuildVehicle;
   definition: VehicleBuildDefinitionForRules;
   installedModifications: VehicleBuildInstalledModification[];
+  hasNamedProviderEcuTune?: boolean;
 }): VehicleModificationAvailability {
   if (!definition.active) {
     return {
@@ -237,6 +351,13 @@ export function evaluateModificationAvailability({
     };
   }
 
+  if (isGenericEcuFallbackDefinition(definition) && hasNamedProviderEcuTune) {
+    return {
+      ok: false,
+      code: "MODIFICATION_INCOMPATIBLE",
+    };
+  }
+
   const installedDefinitionIds = new Set(
     installedModifications.map((modification) => modification.modificationDefinitionId),
   );
@@ -245,6 +366,19 @@ export function evaluateModificationAvailability({
     return {
       ok: false,
       code: "DUPLICATE_MODIFICATION",
+    };
+  }
+
+  const slotConflictingModification = findComponentSlotConflictingModification({
+    definition,
+    installedModifications,
+  });
+
+  if (slotConflictingModification) {
+    return {
+      ok: false,
+      code: "COMPONENT_SLOT_OCCUPIED",
+      conflictingModification: slotConflictingModification,
     };
   }
 
@@ -337,10 +471,12 @@ export function evaluateModificationBatchAvailability({
   vehicle,
   definitions,
   installedModifications,
+  hasNamedProviderEcuTune = false,
 }: {
   vehicle: VehicleBuildVehicle;
   definitions: VehicleBuildDefinitionForRules[];
   installedModifications: VehicleBuildInstalledModification[];
+  hasNamedProviderEcuTune?: boolean;
 }): VehicleModificationBatchAvailability {
   const installedDefinitionIds = new Set(
     installedModifications.map((modification) => modification.modificationDefinitionId),
@@ -384,11 +520,38 @@ export function evaluateModificationBatchAvailability({
       };
     }
 
+    if (isGenericEcuFallbackDefinition(definition) && hasNamedProviderEcuTune) {
+      return {
+        ok: false,
+        code: "MODIFICATION_INCOMPATIBLE",
+        offendingDefinitionId: definition.id,
+      };
+    }
+
     if (installedDefinitionIds.has(definition.id)) {
       return {
         ok: false,
         code: "DUPLICATE_MODIFICATION",
         offendingDefinitionId: definition.id,
+      };
+    }
+
+    const slotConflictingModification = findComponentSlotConflictingModification({
+      definition,
+      installedModifications: [
+        ...installedModifications,
+        ...proposedModifications.filter(
+          (modification) => modification.modificationDefinitionId !== definition.id,
+        ),
+      ],
+    });
+
+    if (slotConflictingModification) {
+      return {
+        ok: false,
+        code: "COMPONENT_SLOT_OCCUPIED",
+        offendingDefinitionId: definition.id,
+        conflictingModification: slotConflictingModification,
       };
     }
 
@@ -461,6 +624,18 @@ export function vehicleBuildResultLabel(
 
   if (code === "DUPLICATE_MODIFICATION") {
     return "Bu parça build profiline zaten eklenmiş.";
+  }
+
+  if (code === "COMPONENT_SLOT_OCCUPIED") {
+    const conflictingName = context?.conflictingModification
+      ? formatModificationDefinition(
+          context.conflictingModification.modificationDefinition,
+        )
+      : null;
+
+    return conflictingName
+      ? `Bu parça tipinde başka bir ürün zaten yüklü: ${conflictingName}.`
+      : "Bu parça tipinde başka bir ürün zaten yüklü.";
   }
 
   if (code === "MODIFICATION_INCOMPATIBLE") {
@@ -643,5 +818,24 @@ function findConflictingModification({
     (modification) =>
       sourceConflictTargetIds.has(modification.modificationDefinitionId) ||
       targetConflictSourceIds.has(modification.modificationDefinitionId),
+  );
+}
+
+function findComponentSlotConflictingModification({
+  definition,
+  installedModifications,
+}: {
+  definition: VehicleBuildDefinitionForRules;
+  installedModifications: VehicleBuildInstalledModification[];
+}) {
+  const slotKey = componentSlotKeyForDefinition(definition);
+
+  if (!slotKey) {
+    return undefined;
+  }
+
+  return installedModifications.find(
+    (modification) =>
+      componentSlotKeyForDefinition(modification.modificationDefinition) === slotKey,
   );
 }
