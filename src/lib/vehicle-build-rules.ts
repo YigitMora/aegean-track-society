@@ -65,6 +65,8 @@ export type VehicleBuildVehicle = {
   vehicleDefinitionId: string | null;
   vehicleDefinition?: {
     powertrain: VehiclePowertrain;
+    platformFamilyId?: string | null;
+    engineFamilyId?: string | null;
   } | null;
   brand: string;
   model: string;
@@ -85,6 +87,8 @@ export type VehicleBuildDefinitionLabel = {
 type VehicleBuildCompatibility = {
   active: boolean;
   vehicleDefinitionId: string | null;
+  platformFamilyId?: string | null;
+  engineFamilyId?: string | null;
   vehicleBrand: string | null;
   vehicleModel: string | null;
   yearFrom: number | null;
@@ -542,8 +546,37 @@ function isModificationCompatible(
     }
   }
 
+  const vehicleEngineFamilyId = vehicle.vehicleDefinition?.engineFamilyId ?? null;
+
+  if (vehicleEngineFamilyId) {
+    const hasEngineFamilyMatch = activeCompatibilities.some(
+      (compatibility) => compatibility.engineFamilyId === vehicleEngineFamilyId,
+    );
+
+    if (hasEngineFamilyMatch) {
+      return true;
+    }
+  }
+
+  const vehiclePlatformFamilyId = vehicle.vehicleDefinition?.platformFamilyId ?? null;
+
+  if (vehiclePlatformFamilyId) {
+    const hasPlatformFamilyMatch = activeCompatibilities.some(
+      (compatibility) => compatibility.platformFamilyId === vehiclePlatformFamilyId,
+    );
+
+    if (hasPlatformFamilyMatch) {
+      return true;
+    }
+  }
+
   return activeCompatibilities
-    .filter((compatibility) => compatibility.vehicleDefinitionId === null)
+    .filter(
+      (compatibility) =>
+        compatibility.vehicleDefinitionId === null &&
+        !compatibility.engineFamilyId &&
+        !compatibility.platformFamilyId,
+    )
     .some((compatibility) => matchesCompatibility(vehicle, compatibility));
 }
 
