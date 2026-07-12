@@ -6,7 +6,7 @@ Reviewed on 2026-07-13.
 
 | Seed code | Product family | Source | Evidence used | ATS limitation |
 | --- | --- | --- | --- | --- |
-| `engine_rsa300` | RSA300 B48 Turkiye package | ATS internal placeholder | Retains existing exact-template BMW Turkiye 1.6 B48 gating. | Low confidence until supplier source and dyno evidence are attached. |
+| `engine_rsa300` | RSA300 B48 Turkiye package | ATS internal placeholder | Retains exact-template BMW Turkiye 1.6 B48 gating and stores `RSA300` as package/map label only. | Low confidence; no claimed output is stored until supplier source and dyno evidence are attached. |
 | `tune_mhd_b58_stage_1` | MHD B58 Gen 1 Stage 1 | https://mhdtuning.com/products/mhd-super-license-for-b58 | Official MHD B58 page lists B58 Gen 1 Stage 1 OTS maps. | Map label stored separately from ATS impact; fuel program remains owner-selected. |
 | `tune_mhd_b58_stage_2` | MHD B58 Gen 1 Stage 2 | https://mhdtuning.com/products/mhd-super-license-for-b58 | Official MHD B58 page lists B58 Gen 1 Stage 2 maps for Full Bolt Ons. | Higher power impact is offset by thermal/reliability penalties. |
 | `tune_mhd_b58_stage_2_hpfp` | MHD B58 Gen 1 Stage 2 HPFP | https://mhdtuning.com/products/mhd-super-license-for-b58 | Official MHD B58 page lists Stage 2 HPFP with upgraded HPFP from B58 Gen 2 or better. | Hardware note only; ATS does not infer installed HPFP unless member adds supporting records. |
@@ -43,3 +43,18 @@ BMW/Toyota vehicle codes below use official BMW Group press material, Toyota GR 
 | `bmw_m140i_f20`, `bmw_m140i_f21`, `bmw_f22_m240i`, `bmw_f23_m240i_convertible`, `bmw_f30_340i`, `bmw_f31_340i`, `bmw_f32_440i`, `bmw_f33_440i`, `bmw_f36_440i_gran_coupe`, `bmw_g30_540i_early`, `bmw_g31_540i_touring_early`, `bmw_g11_740i`, `bmw_g12_740li`, `toyota_supra_a90_30` | https://mhdtuning.com/products/mhd-super-license-for-b58 | `bmw_b58` | Early F/G/Toyota B58 Gen 1 applications | `440i` uses B58 Gen 1; no N55 leakage. |
 | `bmw_g20_m340i`, `bmw_g21_m340i_touring`, `bmw_g22_m440i`, `bmw_g23_m440i_convertible`, `bmw_g26_m440i_gran_coupe`, `bmw_g29_z4_m40i`, `toyota_supra_a90_30_later`, `bmw_g30_540i_lci`, `bmw_g31_540i_touring_lci`, `bmw_g01_x3_m40i`, `bmw_g02_x4_m40i`, `bmw_g14_840i`, `bmw_g15_840i`, `bmw_g16_840i_gran_coupe` | https://mhdtuning.com/products/mhd-super-license-for-b58 | `bmw_b58tu` | Later B58TU applications | M340i/M440i do not use generic early B58. |
 | `bmw_m240i_g42`, `bmw_g60_540i` | https://www.press.bmwgroup.com/ | `bmw_b58tu2` | G42/G60 later B58 revision | G60 is hybrid-gated and does not receive ICE-only tune visibility. |
+
+## Sprint 4J RSA BMW B48 Turkiye Review
+
+Reviewed on 2026-07-13. The Sprint 4J search did not find direct provider evidence for RSA280 or RSA320 with supported BMW G20/G22 Turkiye B48 1.6 templates, claimed power/torque, fuel, hardware, ECU/TCU requirements, cooling requirements, measurement basis, or software-only versus hardware-plus-software scope. Those packages are therefore not seeded.
+
+The existing `engine_rsa300` row remains seeded and exact-template compatible only with:
+
+| Vehicle code | Template | Compatibility behavior |
+| --- | --- | --- |
+| `bmw_g20_320i_tr_pre_lci` | BMW G20 320i Turkiye 1.6 pre-LCI | Exact `VehicleDefinition` row only. |
+| `bmw_g20_320i_tr_lci` | BMW G20 320i Turkiye 1.6 LCI | Exact `VehicleDefinition` row only. |
+| `bmw_g22_420i_tr_pre_lci` | BMW G22 420i Turkiye 1.6 pre-LCI | Exact `VehicleDefinition` row only. |
+| `bmw_g22_420i_tr_lci` | BMW G22 420i Turkiye 1.6 LCI | Exact `VehicleDefinition` row only. |
+
+`engine_rsa300` is ICE-only, occupies the ECU software slot through `platform_tune_package`, and cannot coexist with generic Stage 1/Stage 2 ECU software or named ECU software. It is not exposed to unmatched vehicles, BMW B58/N55 templates, EV templates, unrelated B48 templates, or hybrid templates. The numeric label is not interpreted as horsepower; `claimedPower*` and `claimedTorque*` remain null.
