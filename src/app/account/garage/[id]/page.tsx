@@ -1021,12 +1021,15 @@ function buildCatalogGroups({
       };
 
     type.options.push({
+      code: definition.code,
       definitionId: definition.id,
       label: optionLabelForDefinition(definition),
       brand: definition.brand,
       name: definition.name,
       variant: definition.variant,
+      componentTypeCode: definition.componentTypeCode,
       usageClass: definition.usageClass,
+      description: definition.description,
       brakePadSpecification: definition.brakePadSpecification?.active
         ? definition.brakePadSpecification
         : null,
@@ -1148,9 +1151,15 @@ function modificationTypeLabel(definition: {
     coilover: "Coilover",
     damper: "Amortisör",
     camber_hardware: "Kamber Donanımı",
+    camber_plate: "Kamber Plakası",
+    adjustable_ball_joint: "Ayarlı Rotil",
+    adjustable_control_arm: "Ayarlı Kontrol Kolu",
     anti_roll_bar: "Anti-roll Bar",
+    anti_roll_bar_front: "Ön Anti-roll Bar",
+    anti_roll_bar_rear: "Arka Anti-roll Bar",
     bushings: "Burç",
     strut_brace: "Kule Gergisi",
+    chassis_brace: "Şasi Gergisi",
     tyre_touring: "Touring Lastik",
     tyre_uhp_road: "UHP Yol Lastiği",
     tyre_max_performance_road: "Max Performance Lastik",
@@ -1230,6 +1239,23 @@ function fitmentNoteForDefinition(definition: {
 
   if (componentTypeCode === "sport_springs") {
     return "Ürün ailesi kaydıdır. Aracınıza fiziksel uyumluluğu ayrıca doğrulayın.";
+  }
+
+  if (componentTypeCode === "damper") {
+    return "Spor yay ile kullanılmalıdır. Damper boyu, yay oranı ve araç uyumluluğunu ayrıca doğrulayın.";
+  }
+
+  if (
+    componentTypeCode === "anti_roll_bar_front" ||
+    componentTypeCode === "anti_roll_bar_rear" ||
+    componentTypeCode === "camber_plate" ||
+    componentTypeCode === "adjustable_ball_joint" ||
+    componentTypeCode === "adjustable_control_arm" ||
+    componentTypeCode === "bushings" ||
+    componentTypeCode === "strut_brace" ||
+    componentTypeCode === "chassis_brace"
+  ) {
+    return "Şasi donanımı kaydıdır. Parça, aks, geometri ve bağlantı uyumluluğunu ayrıca doğrulayın.";
   }
 
   return undefined;
