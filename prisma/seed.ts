@@ -29,7 +29,6 @@ const modificationCatalog = [
     usageClass: "FAST_ROAD",
     handlingImpact: 2,
     trackReadinessImpact: 1,
-    active: false,
     sortOrder: 10,
   },
   {
@@ -42,7 +41,6 @@ const modificationCatalog = [
     usageClass: "FAST_ROAD",
     handlingImpact: 2,
     trackReadinessImpact: 1,
-    active: false,
     sortOrder: 11,
   },
   {
@@ -56,7 +54,6 @@ const modificationCatalog = [
     handlingImpact: 3,
     reliabilityImpact: -1,
     trackReadinessImpact: 2,
-    active: false,
     sortOrder: 12,
   },
   {
@@ -69,7 +66,6 @@ const modificationCatalog = [
     usageClass: "FAST_ROAD",
     handlingImpact: 2,
     trackReadinessImpact: 1,
-    active: false,
     sortOrder: 13,
   },
   {
@@ -83,7 +79,6 @@ const modificationCatalog = [
     handlingImpact: 3,
     reliabilityImpact: -1,
     trackReadinessImpact: 2,
-    active: false,
     sortOrder: 14,
   },
   {
@@ -96,7 +91,6 @@ const modificationCatalog = [
     usageClass: "FAST_ROAD",
     handlingImpact: 2,
     trackReadinessImpact: 1,
-    active: false,
     sortOrder: 15,
   },
   {
@@ -109,7 +103,6 @@ const modificationCatalog = [
     usageClass: "FAST_ROAD",
     handlingImpact: 2,
     trackReadinessImpact: 1,
-    active: false,
     sortOrder: 16,
   },
   {
@@ -359,7 +352,6 @@ const modificationCatalog = [
     usageClass: "TRACK",
     brakingImpact: 8,
     trackReadinessImpact: 6,
-    active: false,
     sortOrder: 50,
   },
   {
@@ -372,7 +364,6 @@ const modificationCatalog = [
     usageClass: "STREET_TRACK",
     brakingImpact: 4,
     trackReadinessImpact: 3,
-    active: false,
     sortOrder: 51,
   },
   {
@@ -385,7 +376,6 @@ const modificationCatalog = [
     usageClass: "TRACK",
     brakingImpact: 5,
     trackReadinessImpact: 4,
-    active: false,
     sortOrder: 52,
   },
   {
@@ -398,7 +388,6 @@ const modificationCatalog = [
     usageClass: "STREET_TRACK",
     brakingImpact: 4,
     trackReadinessImpact: 3,
-    active: false,
     sortOrder: 53,
   },
   {
@@ -411,7 +400,6 @@ const modificationCatalog = [
     usageClass: "TRACK",
     brakingImpact: 5,
     trackReadinessImpact: 4,
-    active: false,
     sortOrder: 54,
   },
   {
@@ -424,7 +412,6 @@ const modificationCatalog = [
     usageClass: "STREET_TRACK",
     brakingImpact: 4,
     trackReadinessImpact: 3,
-    active: false,
     sortOrder: 55,
   },
   {
@@ -437,7 +424,6 @@ const modificationCatalog = [
     usageClass: "TRACK",
     brakingImpact: 5,
     trackReadinessImpact: 4,
-    active: false,
     sortOrder: 56,
   },
   {
@@ -450,7 +436,6 @@ const modificationCatalog = [
     usageClass: "STREET_TRACK",
     brakingImpact: 4,
     trackReadinessImpact: 3,
-    active: false,
     sortOrder: 57,
   },
   {
@@ -463,7 +448,6 @@ const modificationCatalog = [
     usageClass: "TRACK",
     brakingImpact: 5,
     trackReadinessImpact: 4,
-    active: false,
     sortOrder: 58,
   },
   {
@@ -476,7 +460,6 @@ const modificationCatalog = [
     usageClass: "STREET_TRACK",
     brakingImpact: 4,
     trackReadinessImpact: 3,
-    active: false,
     sortOrder: 59,
   },
   {
@@ -489,7 +472,6 @@ const modificationCatalog = [
     usageClass: "TRACK",
     brakingImpact: 5,
     trackReadinessImpact: 4,
-    active: false,
     sortOrder: 60,
   },
   {
@@ -732,7 +714,6 @@ const modificationCatalog = [
     variant: "Upgrade",
     componentTypeCode: "intercooler",
     usageClass: "STREET_TRACK",
-    active: false,
     sortOrder: 10,
   },
   {
@@ -746,13 +727,175 @@ const modificationCatalog = [
     sortOrder: 20,
   },
   {
+    code: "intercooler_airtec_motorsport_upgrade",
+    category: "COOLING",
+    brand: "AIRTEC Motorsport",
+    name: "Intercooler",
+    variant: "Intercooler Upgrade",
+    componentTypeCode: "intercooler",
+    usageClass: "STREET_TRACK",
+    reliabilityImpact: 1,
+    trackReadinessImpact: 2,
+    sortOrder: 30,
+  },
+  {
+    code: "intercooler_forge_motorsport",
+    category: "COOLING",
+    brand: "Forge Motorsport",
+    name: "Intercooler",
+    variant: "Intercooler Kit",
+    componentTypeCode: "intercooler",
+    usageClass: "STREET_TRACK",
+    reliabilityImpact: 1,
+    trackReadinessImpact: 2,
+    sortOrder: 40,
+  },
+  {
+    code: "intercooler_burger_motorsports_performance",
+    category: "COOLING",
+    brand: "Burger Motorsports",
+    name: "Intercooler",
+    variant: "Performance Intercooler",
+    componentTypeCode: "intercooler",
+    usageClass: "STREET_TRACK",
+    reliabilityImpact: 1,
+    trackReadinessImpact: 2,
+    sortOrder: 50,
+  },
+  {
+    code: "intercooler_hks_kit",
+    category: "COOLING",
+    brand: "HKS",
+    name: "Intercooler",
+    variant: "Intercooler Kit",
+    componentTypeCode: "intercooler",
+    usageClass: "STREET_TRACK",
+    reliabilityImpact: 1,
+    trackReadinessImpact: 2,
+    sortOrder: 60,
+  },
+  {
+    code: "intercooler_wagner_tuning_competition",
+    category: "COOLING",
+    brand: "Wagner Tuning",
+    name: "Intercooler",
+    variant: "Competition",
+    componentTypeCode: "intercooler",
+    usageClass: "STREET_TRACK",
+    reliabilityImpact: 1,
+    trackReadinessImpact: 2,
+    sortOrder: 70,
+  },
+  {
+    code: "oil_cooler_airtec_motorsport",
+    category: "COOLING",
+    brand: "AIRTEC Motorsport",
+    name: "Oil Cooler",
+    variant: "Oil Cooler Kit",
+    componentTypeCode: "oil_cooler",
+    usageClass: "STREET_TRACK",
+    reliabilityImpact: 2,
+    trackReadinessImpact: 2,
+    sortOrder: 80,
+  },
+  {
+    code: "oil_cooler_hel_performance",
+    category: "COOLING",
+    brand: "HEL Performance",
+    name: "Oil Cooler",
+    variant: "Oil Cooler Kit",
+    componentTypeCode: "oil_cooler",
+    usageClass: "STREET_TRACK",
+    reliabilityImpact: 2,
+    trackReadinessImpact: 2,
+    sortOrder: 90,
+  },
+  {
+    code: "oil_cooler_forge_motorsport",
+    category: "COOLING",
+    brand: "Forge Motorsport",
+    name: "Oil Cooler",
+    variant: "Oil Cooler Kit",
+    componentTypeCode: "oil_cooler",
+    usageClass: "STREET_TRACK",
+    reliabilityImpact: 2,
+    trackReadinessImpact: 2,
+    sortOrder: 100,
+  },
+  {
+    code: "oil_cooler_hks_kit",
+    category: "COOLING",
+    brand: "HKS",
+    name: "Oil Cooler",
+    variant: "Oil Cooler Kit",
+    componentTypeCode: "oil_cooler",
+    usageClass: "STREET_TRACK",
+    reliabilityImpact: 2,
+    trackReadinessImpact: 2,
+    sortOrder: 110,
+  },
+  {
     code: "intake_exhaust_intake",
     category: "INTAKE_EXHAUST",
     name: "Intake",
     componentTypeCode: "intake",
     usageClass: "FAST_ROAD",
-    active: false,
     sortOrder: 10,
+  },
+  {
+    code: "intake_airtec_motorsport_induction_kit",
+    category: "INTAKE_EXHAUST",
+    brand: "AIRTEC Motorsport",
+    name: "Intake",
+    variant: "Induction Kit",
+    componentTypeCode: "intake",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 11,
+  },
+  {
+    code: "intake_forge_motorsport_induction_kit",
+    category: "INTAKE_EXHAUST",
+    brand: "Forge Motorsport",
+    name: "Intake",
+    variant: "Induction Kit",
+    componentTypeCode: "intake",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 12,
+  },
+  {
+    code: "intake_burger_motorsports_bms_elite",
+    category: "INTAKE_EXHAUST",
+    brand: "Burger Motorsports",
+    name: "Intake",
+    variant: "BMS Elite Intake",
+    componentTypeCode: "intake",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 13,
+  },
+  {
+    code: "intake_hks_racing_suction",
+    category: "INTAKE_EXHAUST",
+    brand: "HKS",
+    name: "Intake",
+    variant: "Racing Suction",
+    componentTypeCode: "intake",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 14,
+  },
+  {
+    code: "intake_wagner_tuning_carbon_intake",
+    category: "INTAKE_EXHAUST",
+    brand: "Wagner Tuning",
+    name: "Intake",
+    variant: "Carbon Intake System",
+    componentTypeCode: "intake",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 15,
   },
   {
     code: "intake_exhaust_high_flow_downpipe",
@@ -761,8 +904,102 @@ const modificationCatalog = [
     variant: "High-flow",
     componentTypeCode: "downpipe",
     usageClass: "STREET_TRACK",
-    active: false,
     sortOrder: 20,
+  },
+  {
+    code: "exhaust_milltek_sport_cat_back",
+    category: "INTAKE_EXHAUST",
+    brand: "Milltek Sport",
+    name: "Cat-back Exhaust",
+    componentTypeCode: "cat_back_exhaust",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 30,
+  },
+  {
+    code: "exhaust_milltek_sport_axle_back",
+    category: "INTAKE_EXHAUST",
+    brand: "Milltek Sport",
+    name: "Axle-back Exhaust",
+    componentTypeCode: "axle_back_exhaust",
+    usageClass: "FAST_ROAD",
+    sortOrder: 40,
+  },
+  {
+    code: "downpipe_milltek_sport",
+    category: "INTAKE_EXHAUST",
+    brand: "Milltek Sport",
+    name: "Downpipe",
+    componentTypeCode: "downpipe",
+    usageClass: "STREET_TRACK",
+    powerImpact: 1,
+    trackReadinessImpact: 1,
+    sortOrder: 50,
+  },
+  {
+    code: "exhaust_hks_hi_power_spec_l_ii",
+    category: "INTAKE_EXHAUST",
+    brand: "HKS",
+    name: "Cat-back Exhaust",
+    variant: "Hi-Power SPEC-L II",
+    componentTypeCode: "cat_back_exhaust",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 60,
+  },
+  {
+    code: "exhaust_hks_super_turbo_muffler",
+    category: "INTAKE_EXHAUST",
+    brand: "HKS",
+    name: "Cat-back Exhaust",
+    variant: "Super Turbo Muffler",
+    componentTypeCode: "cat_back_exhaust",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 70,
+  },
+  {
+    code: "exhaust_hks_exhaust_manifold",
+    category: "INTAKE_EXHAUST",
+    brand: "HKS",
+    name: "Exhaust Manifold",
+    componentTypeCode: "exhaust_manifold",
+    usageClass: "STREET_TRACK",
+    powerImpact: 1,
+    sortOrder: 80,
+  },
+  {
+    code: "turbo_inlet_forge_motorsport",
+    category: "INTAKE_EXHAUST",
+    brand: "Forge Motorsport",
+    name: "Turbo Inlet",
+    variant: "Turbo Inlet Adaptor",
+    componentTypeCode: "turbo_inlet",
+    usageClass: "FAST_ROAD",
+    powerImpact: 1,
+    sortOrder: 90,
+  },
+  {
+    code: "charge_pipe_burger_motorsports",
+    category: "INTAKE_EXHAUST",
+    brand: "Burger Motorsports",
+    name: "Charge Pipe",
+    variant: "Charge Pipe",
+    componentTypeCode: "charge_pipe",
+    usageClass: "FAST_ROAD",
+    trackReadinessImpact: 1,
+    sortOrder: 100,
+  },
+  {
+    code: "charge_pipe_wagner_tuning",
+    category: "INTAKE_EXHAUST",
+    brand: "Wagner Tuning",
+    name: "Charge Pipe",
+    variant: "Charge Pipe Kit",
+    componentTypeCode: "charge_pipe",
+    usageClass: "FAST_ROAD",
+    trackReadinessImpact: 1,
+    sortOrder: 110,
   },
   {
     code: "engine_flex_fuel",
@@ -1219,6 +1456,46 @@ const modificationCatalog = [
     componentTypeCode: "wheel",
     usageClass: "FAST_ROAD",
     sortOrder: 260,
+  },
+  {
+    code: "wheel_sparco_assetto_gara",
+    category: "WHEELS",
+    brand: "Sparco",
+    name: "Wheel",
+    variant: "Assetto Gara",
+    componentTypeCode: "wheel",
+    usageClass: "FAST_ROAD",
+    sortOrder: 270,
+  },
+  {
+    code: "wheel_sparco_terra",
+    category: "WHEELS",
+    brand: "Sparco",
+    name: "Wheel",
+    variant: "Terra",
+    componentTypeCode: "wheel",
+    usageClass: "FAST_ROAD",
+    sortOrder: 280,
+  },
+  {
+    code: "wheel_sparco_pista",
+    category: "WHEELS",
+    brand: "Sparco",
+    name: "Wheel",
+    variant: "Pista",
+    componentTypeCode: "wheel",
+    usageClass: "FAST_ROAD",
+    sortOrder: 290,
+  },
+  {
+    code: "wheel_sparco_podio",
+    category: "WHEELS",
+    brand: "Sparco",
+    name: "Wheel",
+    variant: "Podio",
+    componentTypeCode: "wheel",
+    usageClass: "FAST_ROAD",
+    sortOrder: 300,
   },
   {
     code: "drivetrain_aftermarket_lsd",
@@ -1935,6 +2212,10 @@ const wheelSpecifications = [
   wheelSpec("wheel_rotiform_dtm", "CAST", 56, 84, "Rotiform official DTM naming; styling wheel impact remains conservative."),
   wheelSpec("wheel_msw_30", "CAST", 54, 84, "MSW official MSW 30 naming; no universal weight stored."),
   wheelSpec("wheel_msw_42", "CAST", 54, 84, "MSW official MSW 42 naming; no universal weight stored."),
+  wheelSpec("wheel_sparco_assetto_gara", "CAST", 54, 84, "Sparco Wheels official Assetto Gara naming; no universal weight stored."),
+  wheelSpec("wheel_sparco_terra", "CAST", 54, 84, "Sparco Wheels official Terra naming; no universal weight stored."),
+  wheelSpec("wheel_sparco_pista", "CAST", 54, 84, "Sparco Wheels official Pista naming; no universal weight stored."),
+  wheelSpec("wheel_sparco_podio", "CAST", 54, 84, "Sparco Wheels official Podio naming; no universal weight stored."),
 ] as const;
 
 const baseVehicleDefinitions = [
@@ -4229,19 +4510,6 @@ const lsdSupportedCodes = [
   "cupra_leon_vz",
   "subaru_brz_zn8",
 ] as const;
-const sportSpringFitmentCodes = [
-  "mazda_mx5_nd_15",
-  "mazda_mx5_nd_20",
-  "vw_golf_gti_mk7",
-  "vw_golf_gti_mk8",
-  "vw_golf_gti_mk85",
-  "vw_golf_r_mk7",
-  "vw_golf_r_mk8",
-  "vw_golf_r_mk85",
-  "bmw_g20_320i_lci",
-  "bmw_g22_420i_lci",
-] as const;
-
 const sportSpringProductCodes = [
   "sport_springs_eibach_pro_kit",
   "sport_springs_eibach_sportline",
@@ -4251,35 +4519,80 @@ const sportSpringProductCodes = [
   "sport_springs_vogtland",
 ] as const;
 
-const exactBigBrakeKitCompatibilities = [
-  { modificationCode: "bbk_ebc_apollo_4_pot", vehicleCode: "vw_golf_gti_mk7" },
-  { modificationCode: "bbk_ebc_apollo_4_pot", vehicleCode: "vw_golf_gti_mk8" },
-  { modificationCode: "bbk_alcon_6_pot", vehicleCode: "nissan_gtr_r35" },
-  { modificationCode: "bbk_ap_racing_4_pot", vehicleCode: "mazda_mx5_nd_20" },
-  { modificationCode: "bbk_brembo_gt_4_piston", vehicleCode: "honda_civic_type_r_fl5" },
-  { modificationCode: "bbk_wilwood_4_piston", vehicleCode: "honda_integra_type_r_dc2" },
-  { modificationCode: "bbk_wilwood_4_piston", vehicleCode: "honda_civic_type_r_ep3" },
+const bigBrakeKitProductCodes = [
+  "brakes_big_brake_kit",
+  "bbk_ebc_apollo_4_pot",
+  "bbk_ebc_apollo_6_pot",
+  "bbk_alcon_4_pot",
+  "bbk_alcon_6_pot",
+  "bbk_ap_racing_4_pot",
+  "bbk_ap_racing_6_pot",
+  "bbk_brembo_gt_4_piston",
+  "bbk_brembo_gt_6_piston",
+  "bbk_wilwood_4_piston",
+  "bbk_wilwood_6_piston",
 ] as const;
+
+const broadProductFamilyCompatibilityCodes = [
+  ...sportSpringProductCodes,
+  ...bigBrakeKitProductCodes,
+  "cooling_intercooler_upgrade",
+  "intake_exhaust_intake",
+  "intake_exhaust_high_flow_downpipe",
+] as const;
+
+const iceOnlyModificationCodes = [
+  "ecu_stage_1",
+  "ecu_stage_2",
+  "engine_rsa300",
+  "cooling_intercooler_upgrade",
+  "cooling_oil_cooler",
+  "intercooler_airtec_motorsport_upgrade",
+  "intercooler_forge_motorsport",
+  "intercooler_burger_motorsports_performance",
+  "intercooler_hks_kit",
+  "intercooler_wagner_tuning_competition",
+  "oil_cooler_airtec_motorsport",
+  "oil_cooler_hel_performance",
+  "oil_cooler_forge_motorsport",
+  "oil_cooler_hks_kit",
+  "intake_exhaust_intake",
+  "intake_airtec_motorsport_induction_kit",
+  "intake_forge_motorsport_induction_kit",
+  "intake_burger_motorsports_bms_elite",
+  "intake_hks_racing_suction",
+  "intake_wagner_tuning_carbon_intake",
+  "intake_exhaust_high_flow_downpipe",
+  "exhaust_milltek_sport_cat_back",
+  "exhaust_milltek_sport_axle_back",
+  "downpipe_milltek_sport",
+  "exhaust_hks_hi_power_spec_l_ii",
+  "exhaust_hks_super_turbo_muffler",
+  "exhaust_hks_exhaust_manifold",
+  "turbo_inlet_forge_motorsport",
+  "charge_pipe_burger_motorsports",
+  "charge_pipe_wagner_tuning",
+  "engine_flex_fuel",
+  "engine_turbo_upgrade",
+  "drivetrain_transmission_software",
+] as const;
+
+const modificationPowertrainApplicabilities = iceOnlyModificationCodes.map(
+  (modificationCode) => ({
+    modificationCode,
+    powertrains: ["ICE"] as const,
+  }),
+);
 
 const platformModificationCompatibilities = [
   ...bmwTurkeyB48Codes.map((vehicleCode) => ({
     modificationCode: "engine_rsa300",
     vehicleCode,
   })),
-  ...sportSpringProductCodes.flatMap((modificationCode) =>
-    sportSpringFitmentCodes.map((vehicleCode) => ({
-      modificationCode,
-      vehicleCode,
-    })),
-  ),
-  ...exactBigBrakeKitCompatibilities,
   ...turboIceCodes.flatMap((vehicleCode) => [
     { modificationCode: "ecu_stage_1", vehicleCode },
     { modificationCode: "ecu_stage_2", vehicleCode },
     { modificationCode: "engine_flex_fuel", vehicleCode },
-    { modificationCode: "cooling_intercooler_upgrade", vehicleCode },
-    { modificationCode: "intake_exhaust_intake", vehicleCode },
-    { modificationCode: "intake_exhaust_high_flow_downpipe", vehicleCode },
     { modificationCode: "engine_turbo_upgrade", vehicleCode },
   ]),
   ...dsgAutomaticCodes.map((vehicleCode) => ({
@@ -4298,41 +4611,6 @@ const platformModificationImpacts = [
       powerImpact: 16,
       reliabilityImpact: -3,
       thermalImpact: -4,
-    }),
-  ),
-  ...sportSpringFitmentCodes.flatMap((vehicleCode) => [
-    impact(vehicleCode, "sport_springs_eibach_pro_kit", {
-      handlingImpact: 2,
-      trackReadinessImpact: 1,
-    }),
-    impact(vehicleCode, "sport_springs_eibach_sportline", {
-      handlingImpact: 3,
-      reliabilityImpact: -1,
-      trackReadinessImpact: 2,
-    }),
-    impact(vehicleCode, "sport_springs_hr_sport_springs", {
-      handlingImpact: 2,
-      trackReadinessImpact: 1,
-    }),
-    impact(vehicleCode, "sport_springs_hr_super_sport_springs", {
-      handlingImpact: 3,
-      reliabilityImpact: -1,
-      trackReadinessImpact: 2,
-    }),
-    impact(vehicleCode, "sport_springs_st_suspensions", {
-      handlingImpact: 2,
-      trackReadinessImpact: 1,
-    }),
-    impact(vehicleCode, "sport_springs_vogtland", {
-      handlingImpact: 2,
-      trackReadinessImpact: 1,
-    }),
-  ]),
-  ...exactBigBrakeKitCompatibilities.map(({ modificationCode, vehicleCode }) =>
-    impact(vehicleCode, modificationCode, {
-      brakingImpact: 5,
-      thermalImpact: 4,
-      trackReadinessImpact: 3,
     }),
   ),
   ...bmwB48Codes.flatMap((vehicleCode) => [
@@ -4679,6 +4957,7 @@ async function main() {
   }
 
   const definitionsByCode = await seedModificationCatalog();
+  await seedModificationPowertrainApplicabilities(definitionsByCode);
   await seedBrakePadSpecifications(definitionsByCode);
   await seedSportSpringSpecifications(definitionsByCode);
   await seedBigBrakeKitSpecifications(definitionsByCode);
@@ -4689,6 +4968,7 @@ async function main() {
   const vehicleDefinitionsByCode = await seedVehicleDefinitions();
   await seedPlatformCompatibilities(definitionsByCode, vehicleDefinitionsByCode);
   await seedPlatformImpacts(definitionsByCode, vehicleDefinitionsByCode);
+  await deactivateBroadProductFamilyRestrictions(definitionsByCode);
   await reactivatePlatformDefinitions(definitionsByCode);
 
   console.log(`Seeded ${event.name} with ${links.length} package-day links.`);
@@ -4828,6 +5108,81 @@ async function seedVehicleDefinitions() {
   }
 
   return vehicleDefinitionsByCode;
+}
+
+async function seedModificationPowertrainApplicabilities(
+  definitionsByCode: Map<string, { id: string }>,
+) {
+  const activePowertrainsByDefinitionId = new Map<string, Set<VehiclePowertrain>>();
+
+  for (const applicability of modificationPowertrainApplicabilities) {
+    const modificationDefinition = definitionsByCode.get(applicability.modificationCode);
+
+    if (!modificationDefinition) {
+      throw new Error(
+        `Missing modification definition for powertrain applicability ${applicability.modificationCode}`,
+      );
+    }
+
+    const activePowertrains =
+      activePowertrainsByDefinitionId.get(modificationDefinition.id) ??
+      new Set<VehiclePowertrain>();
+
+    for (const powertrain of applicability.powertrains) {
+      activePowertrains.add(powertrain);
+
+      await prisma.modificationDefinitionPowertrain.upsert({
+        where: {
+          modificationDefinitionId_powertrain: {
+            modificationDefinitionId: modificationDefinition.id,
+            powertrain,
+          },
+        },
+        update: {
+          active: true,
+        },
+        create: {
+          modificationDefinitionId: modificationDefinition.id,
+          powertrain,
+          active: true,
+        },
+      });
+    }
+
+    activePowertrainsByDefinitionId.set(modificationDefinition.id, activePowertrains);
+  }
+
+  for (const [
+    modificationDefinitionId,
+    activePowertrains,
+  ] of activePowertrainsByDefinitionId) {
+    await prisma.modificationDefinitionPowertrain.updateMany({
+      where: {
+        modificationDefinitionId,
+        active: true,
+        powertrain: {
+          notIn: [...activePowertrains],
+        },
+      },
+      data: {
+        active: false,
+      },
+    });
+  }
+
+  const activeRestrictedDefinitionIds = new Set(activePowertrainsByDefinitionId.keys());
+
+  await prisma.modificationDefinitionPowertrain.updateMany({
+    where: {
+      modificationDefinitionId: {
+        notIn: [...activeRestrictedDefinitionIds],
+      },
+      active: true,
+    },
+    data: {
+      active: false,
+    },
+  });
 }
 
 async function seedBrakePadSpecifications(
@@ -5255,6 +5610,44 @@ async function seedPlatformImpacts(
       },
     });
   }
+}
+
+async function deactivateBroadProductFamilyRestrictions(
+  definitionsByCode: Map<string, { id: string }>,
+) {
+  const definitionIds = broadProductFamilyCompatibilityCodes.map((modificationCode) => {
+    const definition = definitionsByCode.get(modificationCode);
+
+    if (!definition) {
+      throw new Error(`Missing broad product-family definition ${modificationCode}`);
+    }
+
+    return definition.id;
+  });
+
+  await prisma.modificationCompatibility.updateMany({
+    where: {
+      modificationDefinitionId: {
+        in: definitionIds,
+      },
+      active: true,
+    },
+    data: {
+      active: false,
+    },
+  });
+
+  await prisma.vehicleModificationImpact.updateMany({
+    where: {
+      modificationDefinitionId: {
+        in: definitionIds,
+      },
+      active: true,
+    },
+    data: {
+      active: false,
+    },
+  });
 }
 
 async function reactivatePlatformDefinitions(

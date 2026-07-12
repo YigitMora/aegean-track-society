@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Prisma } from "@prisma/client";
+import { Prisma, type VehiclePowertrain } from "@prisma/client";
 import { redirect } from "next/navigation";
 import {
   addVehicleModificationsBatchAction,
@@ -824,6 +824,15 @@ const modificationDefinitionRuleSelect = {
       yearTo: true,
     },
   },
+  powertrainApplicabilities: {
+    where: {
+      active: true,
+    },
+    select: {
+      active: true,
+      powertrain: true,
+    },
+  },
   requirementGroups: {
     where: {
       active: true,
@@ -876,6 +885,7 @@ const vehicleDefinitionTemplateSelect = {
 
 const vehicleDefinitionRatingSelect = {
   ...vehicleDefinitionTemplateSelect,
+  powertrain: true,
   powerRating: true,
   handlingRating: true,
   brakingRating: true,
@@ -911,6 +921,9 @@ function buildCatalogGroups({
     id: string;
     userId: string;
     vehicleDefinitionId: string | null;
+    vehicleDefinition?: {
+      powertrain: VehiclePowertrain;
+    } | null;
     brand: string;
     model: string;
     year: number | null;
@@ -980,6 +993,7 @@ function buildCatalogGroups({
       wheelSpecification: definition.wheelSpecification?.active
         ? definition.wheelSpecification
         : null,
+      fitmentNote: fitmentNoteForDefinition(definition),
       availability: availability.ok
         ? "AVAILABLE"
         : availability.code === "DUPLICATE_MODIFICATION"
@@ -1054,8 +1068,10 @@ function modificationTypeLabel(definition: {
     air_filter: "Hava Filtresi",
     intake: "Emiş",
     turbo_inlet: "Turbo Inlet",
+    charge_pipe: "Charge Pipe",
     downpipe: "Downpipe",
     cat_back_exhaust: "Cat-back Egzoz",
+    axle_back_exhaust: "Axle-back Egzoz",
     exhaust_manifold: "Egzoz Manifoldu",
     intercooler: "Intercooler",
     oil_cooler: "Yağ Soğutucu",
@@ -1092,6 +1108,48 @@ function modificationTypeLabel(definition: {
   return definition.componentTypeCode
     ? labels[definition.componentTypeCode] ?? definition.name
     : definition.name;
+}
+
+function fitmentNoteForDefinition(definition: {
+  componentTypeCode?: string | null;
+}) {
+  const componentTypeCode = definition.componentTypeCode;
+
+  if (!componentTypeCode) {
+    return undefined;
+  }
+
+  if (componentTypeCode === "big_brake_kit") {
+    return "Kit ailesi kaydıdır. Disk ölçüsü, kaliper braketi, jant açıklığı ve araç uyumluluğunu ayrıca doğrulayın.";
+  }
+
+  if (
+    componentTypeCode === "wheel" ||
+    componentTypeCode === "lightweight_wheel" ||
+    componentTypeCode === "forged_wheel"
+  ) {
+    return "Jant ailesi kaydıdır. Ölçü, bijon düzeni, merkez deliği, ET ve kaliper açıklığını ayrıca doğrulayın.";
+  }
+
+  if (
+    componentTypeCode === "intake" ||
+    componentTypeCode === "intercooler" ||
+    componentTypeCode === "oil_cooler" ||
+    componentTypeCode === "downpipe" ||
+    componentTypeCode === "cat_back_exhaust" ||
+    componentTypeCode === "axle_back_exhaust" ||
+    componentTypeCode === "exhaust_manifold" ||
+    componentTypeCode === "turbo_inlet" ||
+    componentTypeCode === "charge_pipe"
+  ) {
+    return "Ürün ailesi kaydıdır. Motor, şasi ve bağlantı uyumluluğunu ayrıca doğrulayın.";
+  }
+
+  if (componentTypeCode === "sport_springs") {
+    return "Ürün ailesi kaydıdır. Aracınıza fiziksel uyumluluğu ayrıca doğrulayın.";
+  }
+
+  return undefined;
 }
 
 function formatDate(date: Date) {
