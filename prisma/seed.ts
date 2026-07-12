@@ -4,6 +4,8 @@ const prisma = new PrismaClient();
 
 const eventSlug = "kula-mytrack-2026";
 const sep20 = new Date("2026-09-20T00:00:00.000Z");
+// Platform-specific definitions remain inactive until template-based compatibility
+// is introduced in Sprint 4B.
 const modificationCatalog = [
   {
     code: "suspension_sport_springs_generic",
@@ -135,24 +137,28 @@ const modificationCatalog = [
     code: "ecu_stage_1",
     category: "ECU",
     name: "ECU Stage 1",
+    active: false,
     sortOrder: 10,
   },
   {
     code: "ecu_stage_2",
     category: "ECU",
     name: "ECU Stage 2",
+    active: false,
     sortOrder: 20,
   },
   {
     code: "engine_rsa300",
     category: "ENGINE",
     name: "RSA300",
+    active: false,
     sortOrder: 10,
   },
   {
     code: "cooling_intercooler_upgrade",
     category: "COOLING",
     name: "Intercooler upgrade",
+    active: false,
     sortOrder: 10,
   },
   {
@@ -165,24 +171,28 @@ const modificationCatalog = [
     code: "intake_exhaust_intake",
     category: "INTAKE_EXHAUST",
     name: "Intake",
+    active: false,
     sortOrder: 10,
   },
   {
     code: "intake_exhaust_high_flow_downpipe",
     category: "INTAKE_EXHAUST",
     name: "High-flow downpipe",
+    active: false,
     sortOrder: 20,
   },
   {
     code: "engine_flex_fuel",
     category: "ENGINE",
     name: "Flex fuel",
+    active: false,
     sortOrder: 20,
   },
   {
     code: "engine_turbo_upgrade",
     category: "ENGINE",
     name: "Turbo upgrade",
+    active: false,
     sortOrder: 30,
   },
   {
@@ -213,12 +223,14 @@ const modificationCatalog = [
     code: "drivetrain_aftermarket_lsd",
     category: "DRIVETRAIN",
     name: "Aftermarket LSD",
+    active: false,
     sortOrder: 10,
   },
   {
     code: "drivetrain_transmission_software",
     category: "DRIVETRAIN",
     name: "Transmission software",
+    active: false,
     sortOrder: 20,
   },
   {
@@ -397,7 +409,7 @@ async function seedModificationCatalog() {
         name: item.name,
         variant: "variant" in item ? item.variant : null,
         description: null,
-        active: true,
+        active: "active" in item ? item.active : true,
         sortOrder: item.sortOrder,
       },
       create: {
@@ -407,7 +419,7 @@ async function seedModificationCatalog() {
         name: item.name,
         variant: "variant" in item ? item.variant : null,
         description: null,
-        active: true,
+        active: "active" in item ? item.active : true,
         sortOrder: item.sortOrder,
       },
       select: {
