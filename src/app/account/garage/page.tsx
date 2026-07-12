@@ -1,11 +1,8 @@
 import Link from "next/link";
-import type { ModificationCategory, VehicleRatingStatus } from "@prisma/client";
 import {
-  archiveVehicleAction,
-  makePrimaryVehicleAction,
-  restoreVehicleAction,
-} from "@/app/account/garage/actions";
-import { VehiclePerformanceRatingCard } from "@/components/vehicle-rating-card";
+  GarageVehicleLifecycle,
+  type GarageLifecycleVehicle,
+} from "@/components/garage-vehicle-lifecycle";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
 import { measureServerTiming } from "@/lib/server-timing";
@@ -135,6 +132,8 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
     ...vehicle,
     coverImageUrl: null,
   }));
+  const activeLifecycleVehicles = activeVehicleCards.map(toGarageLifecycleVehicle);
+  const archivedLifecycleVehicles = archivedVehicleCards.map(toGarageLifecycleVehicle);
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">
@@ -161,247 +160,47 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
 
       <GarageMessage garage={params.garage} garageError={params.garageError} />
 
-      {activeVehicleCards.length > 0 ? (
-        <div className="mt-10 grid gap-5 lg:grid-cols-2">
-          {activeVehicleCards.map((vehicle) => (
-            <VehicleCard key={vehicle.id} vehicle={vehicle} />
-          ))}
-        </div>
-      ) : (
-        <div className="mt-10 rounded-lg border border-ats-border bg-ats-surface p-8 shadow-soft">
-          <p className="text-2xl font-black text-ats-text">Garajınız henüz boş.</p>
-          <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-ats-muted">
-            İlk aracınızı eklediğinizde otomatik olarak birincil aracınız olur.
-          </p>
-          <Link
-            href="/account/garage/new"
-            className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-ats-blue px-6 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover"
-          >
-            İlk aracımı ekle
-          </Link>
-        </div>
-      )}
-
-      {archivedVehicleCards.length > 0 ? (
-        <section className="mt-16 border-t border-ats-border pt-10">
-          <div className="max-w-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-muted">
-              Arşiv
-            </p>
-            <h2 className="mt-3 text-3xl font-black text-ats-text">
-              Arşivlenen araçlar
-            </h2>
-          </div>
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            {archivedVehicleCards.map((vehicle) => (
-              <ArchivedVehicleCard key={vehicle.id} vehicle={vehicle} />
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <GarageVehicleLifecycle
+        activeVehicles={activeLifecycleVehicles}
+        archivedVehicles={archivedLifecycleVehicles}
+      />
     </section>
   );
 }
 
-function VehicleCoverPreview({
-  coverImageUrl,
-  label,
-}: {
+function toGarageLifecycleVehicle(vehicle: {
+  id: string;
+  brand: string;
+  model: string;
+  year: number | null;
+  plateNumber: string;
+  color: string | null;
+  isPrimary: boolean;
   coverImageUrl: string | null;
-  label: string;
-}) {
-  return (
-    <div className="relative aspect-[16/9] overflow-hidden bg-ats-black">
-      {coverImageUrl ? (
-        <>
-          <img
-            src={coverImageUrl}
-            alt=""
-            aria-hidden="true"
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-2xl"
-          />
-          <div className="absolute inset-0 bg-ats-black/55" />
-          <img
-            src={coverImageUrl}
-            alt={`${label} araç fotoğrafı`}
-            loading="lazy"
-            decoding="async"
-            className="relative z-10 h-full w-full object-contain p-2 sm:p-3"
-          />
-        </>
-      ) : (
-        <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_50%_30%,rgba(76,201,240,0.16),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))]">
-          <div className="text-center">
-            <p className="text-xs font-black uppercase tracking-[0.28em] text-ats-blue">
-              Aegean Track Society
-            </p>
-            <p className="mt-2 text-sm font-semibold text-ats-muted">
-              Araç fotoğrafı eklenmedi
-            </p>
-          </div>
-        </div>
-      )}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-20 bg-gradient-to-t from-ats-black/55 to-transparent" />
-    </div>
-  );
-}
-
-function VehicleCard({
-  vehicle,
-}: {
-  vehicle: {
-    id: string;
-    brand: string;
-    model: string;
-    year: number | null;
-    plateNumber: string;
-    color: string | null;
-    isPrimary: boolean;
-    coverImageUrl: string | null;
-    vehicleDefinition: {
-      id: string;
-      powerRating: number;
-      handlingRating: number;
-      brakingRating: number;
-      reliabilityRating: number;
-      thermalRating: number;
-      trackReadinessRating: number;
-      weightPenalty: number;
-      ratingStatus: VehicleRatingStatus;
-    } | null;
-    modifications: Array<{
-      modificationDefinition: {
-        code: string;
-        category: ModificationCategory;
-        powerImpact: number;
-        handlingImpact: number;
-        brakingImpact: number;
-        reliabilityImpact: number;
-        trackReadinessImpact: number;
-        modificationImpacts: Array<{
-          vehicleDefinitionId: string;
-          powerImpact: number;
-          handlingImpact: number;
-          brakingImpact: number;
-          reliabilityImpact: number;
-          thermalImpact: number;
-          trackReadinessImpact: number;
-          active: boolean;
-        }>;
-      };
-    }>;
-  };
-}) {
-  const makePrimaryAction = makePrimaryVehicleAction.bind(null, vehicle.id);
-  const archiveAction = archiveVehicleAction.bind(null, vehicle.id);
+  vehicleDefinition: Parameters<typeof calculateVehiclePerformanceRating>[0]["vehicleDefinition"];
+  modifications: Parameters<typeof calculateVehiclePerformanceRating>[0]["installedModifications"];
+}): GarageLifecycleVehicle {
   const rating = calculateVehiclePerformanceRating({
     vehicleDefinition: vehicle.vehicleDefinition,
     installedModifications: vehicle.modifications,
   });
 
-  return (
-    <article className="overflow-hidden rounded-lg border border-ats-border bg-ats-surface shadow-soft">
-      <VehicleCoverPreview
-        coverImageUrl={vehicle.coverImageUrl}
-        label={`${vehicle.brand} ${vehicle.model}`}
-      />
-      <div className="flex flex-wrap items-start justify-between gap-4 p-6 pb-0">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-ats-muted">
-            {vehicle.plateNumber}
-          </p>
-          <h2 className="mt-3 text-3xl font-black text-ats-text">
-            {vehicle.brand} {vehicle.model}
-          </h2>
-          <p className="mt-3 text-sm font-semibold text-ats-muted">
-            {[vehicle.year, vehicle.color].filter(Boolean).join(" · ") || "Detay eklenmedi"}
-          </p>
-        </div>
-        {vehicle.isPrimary ? (
-          <span className="rounded-full border border-ats-blue/40 bg-ats-blue/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-ats-blue">
-            Birincil
-          </span>
-        ) : null}
-      </div>
-
-      <VehiclePerformanceRatingCard rating={rating} compact className="mx-6 mt-5" />
-
-      <div className="flex flex-wrap gap-3 p-6">
-        <Link
-          href={`/account/garage/${vehicle.id}`}
-          className="inline-flex h-11 items-center justify-center rounded-full border border-ats-border px-5 text-xs font-black uppercase tracking-[0.12em] text-ats-text transition hover:border-ats-blue hover:text-ats-blue"
-        >
-          Aracı düzenle
-        </Link>
-        {!vehicle.isPrimary ? (
-          <form action={makePrimaryAction}>
-            <button
-              type="submit"
-              className="inline-flex h-11 items-center justify-center rounded-full border border-ats-blue/50 px-5 text-xs font-black uppercase tracking-[0.12em] text-ats-blue transition hover:bg-ats-blue hover:text-ats-black"
-            >
-              Birincil araç yap
-            </button>
-          </form>
-        ) : null}
-        <form action={archiveAction}>
-          <button
-            type="submit"
-            className="inline-flex h-11 items-center justify-center rounded-full border border-ats-border px-5 text-xs font-black uppercase tracking-[0.12em] text-ats-muted transition hover:border-red-300/60 hover:text-red-100"
-          >
-            Aracı arşivle
-          </button>
-        </form>
-      </div>
-    </article>
-  );
-}
-
-function ArchivedVehicleCard({
-  vehicle,
-}: {
-  vehicle: {
-    id: string;
-    brand: string;
-    model: string;
-    year: number | null;
-    plateNumber: string;
-    color: string | null;
-    coverImageUrl: string | null;
+  return {
+    id: vehicle.id,
+    brand: vehicle.brand,
+    model: vehicle.model,
+    year: vehicle.year,
+    plateNumber: vehicle.plateNumber,
+    color: vehicle.color,
+    isPrimary: vehicle.isPrimary,
+    coverImageUrl: vehicle.coverImageUrl,
+    rating: rating
+      ? {
+          overall: rating.overall,
+          status: rating.status,
+        }
+      : null,
   };
-}) {
-  const restoreAction = restoreVehicleAction.bind(null, vehicle.id);
-
-  return (
-    <article className="overflow-hidden rounded-lg border border-ats-border bg-ats-black">
-      <VehicleCoverPreview
-        coverImageUrl={vehicle.coverImageUrl}
-        label={`${vehicle.brand} ${vehicle.model}`}
-      />
-      <div className="flex flex-wrap items-start justify-between gap-4 p-5">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-ats-muted">
-            {vehicle.plateNumber}
-          </p>
-          <h3 className="mt-2 text-xl font-black text-ats-text">
-            {vehicle.brand} {vehicle.model}
-          </h3>
-          <p className="mt-2 text-xs font-semibold text-ats-muted">
-            {[vehicle.year, vehicle.color].filter(Boolean).join(" · ") || "Arşivde"}
-          </p>
-        </div>
-        <form action={restoreAction}>
-          <button
-            type="submit"
-            className="inline-flex h-10 items-center justify-center rounded-full border border-ats-border px-4 text-xs font-black uppercase tracking-[0.12em] text-ats-text transition hover:border-ats-blue hover:text-ats-blue"
-          >
-            Aracı geri yükle
-          </button>
-        </form>
-      </div>
-    </article>
-  );
 }
 
 function GarageMessage({
@@ -451,8 +250,20 @@ function successMessage(value?: string) {
     return "Araç arşivlendi.";
   }
 
+  if (value === "archived_batch") {
+    return "Seçilen araçlar arşivlendi.";
+  }
+
   if (value === "restored") {
     return "Araç geri yüklendi.";
+  }
+
+  if (value === "deleted") {
+    return "Araç kalıcı olarak silindi. Geçmiş etkinlik kayıtları korundu.";
+  }
+
+  if (value === "deleted_batch") {
+    return "Seçilen araçlar kalıcı olarak silindi. Geçmiş etkinlik kayıtları korundu.";
   }
 
   if (value === "image_uploaded") {
@@ -485,6 +296,26 @@ function errorMessage(value?: string) {
 
   if (value === "archive_failed") {
     return "Araç arşivlenemedi. Lütfen tekrar deneyin.";
+  }
+
+  if (value === "batch_empty") {
+    return "İşlem için en az bir araç seçin.";
+  }
+
+  if (value === "batch_too_large") {
+    return "Tek seferde en fazla 50 araç seçilebilir.";
+  }
+
+  if (value === "delete_failed") {
+    return "Araç kalıcı olarak silinemedi. Lütfen tekrar deneyin.";
+  }
+
+  if (value === "active_delete_forbidden") {
+    return "Aktif araçlar kalıcı olarak silinemez. Önce arşivleyin.";
+  }
+
+  if (value === "confirmation_required") {
+    return "Kalıcı silme için onayı işaretleyin.";
   }
 
   if (value === "primary_conflict") {

@@ -32,6 +32,11 @@ type GarageError =
   | "duplicate_plate"
   | "not_found"
   | "archive_failed"
+  | "batch_empty"
+  | "batch_too_large"
+  | "delete_failed"
+  | "active_delete_forbidden"
+  | "confirmation_required"
   | "restore_conflict"
   | "primary_conflict"
   | "unsupported_format"
@@ -52,6 +57,7 @@ type GarageError =
 const garagePath = "/account/garage";
 const maxModificationNoteLength = 280;
 const maxBatchModificationDefinitions = 20;
+const maxBatchVehicleLifecycleIds = 50;
 
 export type VehicleModificationBatchActionState = {
   ok: boolean;
@@ -609,6 +615,152 @@ export async function restoreVehicleAction(vehicleId: string) {
   redirect(`${garagePath}?garage=restored`);
 }
 
+export async function archiveVehiclesBatchAction(formData: FormData) {
+  const memberUser = await requireCompleteMemberUser(garagePath);
+  const vehicleIds = normalizeVehicleIds(formData);
+
+  if (vehicleIds.length === 0) {
+    redirectWithError(garagePath, "batch_empty");
+  }
+
+  if (vehicleIds.length > maxBatchVehicleLifecycleIds) {
+    redirectWithError(garagePath, "batch_too_large");
+  }
+
+  try {
+    const result = await prisma.$transaction(
+      async (tx) => {
+        const vehicles = await tx.vehicle.findMany({
+          where: {
+            id: {
+              in: vehicleIds,
+            },
+            userId: memberUser.id,
+          },
+          select: {
+            id: true,
+            deletedAt: true,
+            isPrimary: true,
+          },
+        });
+
+        if (vehicles.length !== vehicleIds.length) {
+          return {
+            ok: false as const,
+            code: "not_found" as const,
+          };
+        }
+
+        if (vehicles.some((vehicle) => vehicle.deletedAt !== null)) {
+          return {
+            ok: false as const,
+            code: "archive_failed" as const,
+          };
+        }
+
+        const archivedPrimary = vehicles.some((vehicle) => vehicle.isPrimary);
+        const now = new Date();
+        const archived = await tx.vehicle.updateMany({
+          where: {
+            id: {
+              in: vehicleIds,
+            },
+            userId: memberUser.id,
+            deletedAt: null,
+          },
+          data: {
+            deletedAt: now,
+            isPrimary: false,
+          },
+        });
+
+        if (archived.count !== vehicleIds.length) {
+          return {
+            ok: false as const,
+            code: "archive_failed" as const,
+          };
+        }
+
+        if (archivedPrimary) {
+          const nextPrimaryVehicle = await tx.vehicle.findFirst({
+            where: {
+              userId: memberUser.id,
+              deletedAt: null,
+            },
+            orderBy: [
+              {
+                createdAt: "asc",
+              },
+              {
+                id: "asc",
+              },
+            ],
+            select: {
+              id: true,
+            },
+          });
+
+          if (nextPrimaryVehicle) {
+            await tx.vehicle.update({
+              where: {
+                id: nextPrimaryVehicle.id,
+                userId: memberUser.id,
+                deletedAt: null,
+              },
+              data: {
+                isPrimary: true,
+              },
+              select: {
+                id: true,
+              },
+            });
+          }
+        }
+
+        return {
+          ok: true as const,
+          count: archived.count,
+        };
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      },
+    );
+
+    if (!result.ok) {
+      redirectWithError(garagePath, result.code);
+    }
+
+    console.log("GARAGE_VEHICLES_ARCHIVED_BATCH", {
+      userId: memberUser.id,
+      vehicleCount: result.count,
+      operation: "archive_batch",
+    });
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    logGarageFailure(memberUser.id, "archive_batch", error);
+    redirectWithError(garagePath, "archive_failed");
+  }
+
+  revalidateGarage();
+  redirect(`${garagePath}?garage=archived_batch`);
+}
+
+export async function permanentlyDeleteArchivedVehicleAction(
+  vehicleId: string,
+  formData: FormData,
+) {
+  await permanentlyDeleteArchivedVehicles([vehicleId], formData, "deleted");
+}
+
+export async function permanentlyDeleteArchivedVehiclesBatchAction(formData: FormData) {
+  const vehicleIds = normalizeVehicleIds(formData);
+  await permanentlyDeleteArchivedVehicles(vehicleIds, formData, "deleted_batch");
+}
+
 export async function uploadVehicleImageAction(vehicleId: string, formData: FormData) {
   const memberUser = await requireCompleteMemberUser(`/account/garage/${vehicleId}`);
   const fileValue = formData.get("image");
@@ -801,6 +953,11 @@ export async function addVehicleModificationAction(
               id: true,
               userId: true,
               vehicleDefinitionId: true,
+              vehicleDefinition: {
+                select: {
+                  powertrain: true,
+                },
+              },
               brand: true,
               model: true,
               year: true,
@@ -959,6 +1116,11 @@ export async function addVehicleModificationsBatchAction(
             id: true,
             userId: true,
             vehicleDefinitionId: true,
+            vehicleDefinition: {
+              select: {
+                powertrain: true,
+              },
+            },
             brand: true,
             model: true,
             year: true,
@@ -1369,30 +1531,171 @@ function normalizeBatchDefinitionIds(formData: FormData) {
   return Array.from(new Set(ids));
 }
 
+function normalizeVehicleIds(formData: FormData) {
+  const ids = formData
+    .getAll("vehicleIds")
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return Array.from(new Set(ids));
+}
+
+async function permanentlyDeleteArchivedVehicles(
+  vehicleIds: string[],
+  formData: FormData,
+  successStatus: "deleted" | "deleted_batch",
+) {
+  const memberUser = await requireCompleteMemberUser(garagePath);
+
+  if (formData.get("confirmPermanentDelete") !== "yes") {
+    redirectWithError(garagePath, "confirmation_required");
+  }
+
+  if (vehicleIds.length === 0) {
+    redirectWithError(garagePath, "batch_empty");
+  }
+
+  if (vehicleIds.length > maxBatchVehicleLifecycleIds) {
+    redirectWithError(garagePath, "batch_too_large");
+  }
+
+  let imagePaths: string[] = [];
+
+  try {
+    const result = await prisma.$transaction(
+      async (tx) => {
+        const vehicles = await tx.vehicle.findMany({
+          where: {
+            id: {
+              in: vehicleIds,
+            },
+            userId: memberUser.id,
+          },
+          select: {
+            id: true,
+            deletedAt: true,
+            imagePath: true,
+          },
+        });
+
+        if (vehicles.length !== vehicleIds.length) {
+          return {
+            ok: false as const,
+            code: "not_found" as const,
+            imagePaths: [] as string[],
+          };
+        }
+
+        if (vehicles.some((vehicle) => vehicle.deletedAt === null)) {
+          return {
+            ok: false as const,
+            code: "active_delete_forbidden" as const,
+            imagePaths: [] as string[],
+          };
+        }
+
+        await tx.registration.updateMany({
+          where: {
+            vehicleId: {
+              in: vehicleIds,
+            },
+          },
+          data: {
+            vehicleId: null,
+          },
+        });
+
+        await tx.vehicleModification.deleteMany({
+          where: {
+            vehicleId: {
+              in: vehicleIds,
+            },
+          },
+        });
+
+        const deletedVehicles = await tx.vehicle.deleteMany({
+          where: {
+            id: {
+              in: vehicleIds,
+            },
+            userId: memberUser.id,
+            deletedAt: {
+              not: null,
+            },
+          },
+        });
+
+        if (deletedVehicles.count !== vehicleIds.length) {
+          return {
+            ok: false as const,
+            code: "delete_failed" as const,
+            imagePaths: [] as string[],
+          };
+        }
+
+        return {
+          ok: true as const,
+          count: deletedVehicles.count,
+          imagePaths: vehicles.flatMap((vehicle) =>
+            vehicle.imagePath ? [vehicle.imagePath] : [],
+          ),
+        };
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      },
+    );
+
+    if (!result.ok) {
+      redirectWithError(garagePath, result.code);
+    }
+
+    imagePaths = result.imagePaths;
+
+    console.log("GARAGE_VEHICLES_PERMANENTLY_DELETED", {
+      userId: memberUser.id,
+      vehicleCount: result.count,
+      operation: successStatus === "deleted" ? "delete_permanent" : "delete_permanent_batch",
+    });
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    logGarageFailure(memberUser.id, "delete_permanent", error);
+    redirectWithError(garagePath, "delete_failed");
+  }
+
+  await deleteVehicleImageObjects(imagePaths, memberUser.id, "permanent_delete_cleanup");
+  revalidateGarage();
+  redirect(`${garagePath}?garage=${successStatus}`);
+}
+
 type BatchActionStateContext = {
-    insertedCount?: number;
-    offendingDefinitionId?: string;
-    conflictingModification?: {
-      modificationDefinition: {
+  insertedCount?: number;
+  offendingDefinitionId?: string;
+  conflictingModification?: {
+    modificationDefinition: {
+      code?: string;
+      brand: string | null;
+      name: string;
+      variant: string | null;
+      componentTypeCode?: string | null;
+    };
+  };
+  missingRequirement?: {
+    options: Array<{
+      requiredDefinition: {
         code?: string;
         brand: string | null;
         name: string;
         variant: string | null;
         componentTypeCode?: string | null;
       };
-    };
-    missingRequirement?: {
-      options: Array<{
-        requiredDefinition: {
-          code?: string;
-          brand: string | null;
-          name: string;
-          variant: string | null;
-          componentTypeCode?: string | null;
-        };
-      }>;
-    };
+    }>;
   };
+};
 
 function batchActionState(
   code: VehicleBuildBatchResultCode | null,
@@ -1805,6 +2108,41 @@ async function deleteVehicleImageObject(
   }
 }
 
+async function deleteVehicleImageObjects(
+  imagePaths: string[],
+  userId: string,
+  operation: string,
+) {
+  const uniqueImagePaths = Array.from(new Set(imagePaths.filter(Boolean)));
+
+  if (uniqueImagePaths.length === 0) {
+    return;
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.storage
+      .from(vehicleImagesBucket)
+      .remove(uniqueImagePaths);
+
+    if (error) {
+      console.warn("VEHICLE_IMAGE_CLEANUP_FAILED", {
+        userId,
+        vehicleCount: uniqueImagePaths.length,
+        operation,
+        errorCode: safeErrorCode(error),
+      });
+    }
+  } catch (error) {
+    console.warn("VEHICLE_IMAGE_CLEANUP_FAILED", {
+      userId,
+      vehicleCount: uniqueImagePaths.length,
+      operation,
+      errorCode: safeErrorCode(error),
+    });
+  }
+}
+
 function logVehicleImageFailure(
   userId: string,
   vehicleId: string,
@@ -1863,6 +2201,15 @@ const modificationDefinitionRuleSelect = {
       vehicleDefinitionId: true,
       yearFrom: true,
       yearTo: true,
+    },
+  },
+  powertrainApplicabilities: {
+    where: {
+      active: true,
+    },
+    select: {
+      active: true,
+      powertrain: true,
     },
   },
   requirementGroups: {
@@ -1960,6 +2307,7 @@ const modificationDefinitionPreviewSelect = {
 
 const vehicleDefinitionRatingSelect = {
   id: true,
+  powertrain: true,
   powerRating: true,
   handlingRating: true,
   brakingRating: true,
