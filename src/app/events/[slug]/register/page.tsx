@@ -6,6 +6,7 @@ import { RegistrationForm } from "@/components/registration-form";
 import { ensureMemberUser, getVerifiedSupabaseUser } from "@/lib/member-auth";
 import { isMemberProfileComplete } from "@/lib/member-profile-validation";
 import { prisma } from "@/lib/prisma";
+import { measureServerTiming } from "@/lib/server-timing";
 
 type RegisterPageProps = {
   params: Promise<{
@@ -18,21 +19,24 @@ export const dynamic = "force-dynamic";
 export default async function RegisterPage({ params }: RegisterPageProps) {
   const { slug } = await params;
   const returnTo = `/events/${slug}/register`;
-  const eventPromise = prisma.event.findUnique({
-    where: { slug },
-    include: {
-      days: {
-        orderBy: { date: "asc" },
-      },
-      packages: {
-        where: {
-          code: "SEP20",
-          active: true,
+  const eventPromise = measureServerTiming("EVENT_QUERY", () =>
+    prisma.event.findUnique({
+      where: { slug },
+      select: {
+        venue: true,
+        packages: {
+          where: {
+            code: "SEP20",
+            active: true,
+          },
+          take: 1,
+          select: {
+            name: true,
+          },
         },
-        take: 1,
       },
-    },
-  });
+    }),
+  );
   const supabaseUserPromise = getVerifiedSupabaseUser().catch(() => null);
   const [event, supabaseUser] = await Promise.all([
     eventPromise,
@@ -57,30 +61,32 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
   }
 
   const vehicles = activeMemberUser
-    ? await prisma.vehicle.findMany({
-        where: {
-          userId: activeMemberUser.id,
-          deletedAt: null,
-        },
-        orderBy: [
-          {
-            isPrimary: "desc",
+    ? await measureServerTiming("GARAGE_QUERY", () =>
+        prisma.vehicle.findMany({
+          where: {
+            userId: activeMemberUser.id,
+            deletedAt: null,
           },
-          {
-            createdAt: "asc",
+          orderBy: [
+            {
+              isPrimary: "desc",
+            },
+            {
+              createdAt: "asc",
+            },
+            {
+              id: "asc",
+            },
+          ],
+          select: {
+            id: true,
+            brand: true,
+            model: true,
+            plateNumber: true,
+            isPrimary: true,
           },
-          {
-            id: "asc",
-          },
-        ],
-        select: {
-          id: true,
-          brand: true,
-          model: true,
-          plateNumber: true,
-          isPrimary: true,
-        },
-      })
+        }),
+      )
     : [];
 
   const defaultVehicle = vehicles.find((vehicle) => vehicle.isPrimary) ?? vehicles[0];

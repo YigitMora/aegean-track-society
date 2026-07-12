@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { normalizeEmail, normalizeTurkishPhone } from "@/lib/registration-validation";
 import { prisma } from "@/lib/prisma";
+import { measureServerTiming } from "@/lib/server-timing";
 import { createOptionalSupabaseServerClient, createSupabaseServerClient } from "@/lib/supabase/server";
 
 const uuidRegex =
@@ -37,6 +38,18 @@ type MemberSignupMetadataInput = {
   memberMarketingConsentAt: Date | null;
   memberConsentIpAddress: string | null;
 };
+
+type RequestMemberUserResult =
+  | {
+      status: "unauthenticated";
+    }
+  | {
+      status: "unavailable";
+    }
+  | {
+      status: "ok";
+      memberUser: AtsMemberUser;
+    };
 
 export type RequiredMemberSignupMetadataInput = {
   fullName: string;
@@ -189,23 +202,46 @@ export async function ensureMemberUser(supabaseUser?: SupabaseUser | null) {
   }
 }
 
-export const requireMemberUser = cache(async (returnTo = "/account") => {
-  const supabaseUser = await getVerifiedSupabaseUser();
+const getRequestMemberUser = cache(async (): Promise<RequestMemberUserResult> =>
+  measureServerTiming("AUTH_LOOKUP", async () => {
+    const supabaseUser = await getVerifiedSupabaseUser();
 
-  if (!supabaseUser) {
+    if (!supabaseUser) {
+      return {
+        status: "unauthenticated",
+      };
+    }
+
+    const memberUser = await ensureMemberUser(supabaseUser);
+
+    if (memberUser.status !== "ACTIVE" || memberUser.deletedAt) {
+      return {
+        status: "unavailable",
+      };
+    }
+
+    return {
+      status: "ok",
+      memberUser,
+    };
+  }),
+);
+
+export async function requireMemberUser(returnTo = "/account") {
+  const result = await getRequestMemberUser();
+
+  if (result.status === "unauthenticated") {
     redirect(
       `/auth/login?returnTo=${encodeURIComponent(normalizeMemberReturnTo(returnTo))}`,
     );
   }
 
-  const memberUser = await ensureMemberUser(supabaseUser);
-
-  if (memberUser.status !== "ACTIVE" || memberUser.deletedAt) {
+  if (result.status === "unavailable") {
     redirect("/auth/login?error=account_unavailable");
   }
 
-  return memberUser;
-});
+  return result.memberUser;
+}
 
 export function normalizeMemberReturnTo(value: FormDataEntryValue | string | null | undefined) {
   const returnTo = typeof value === "string" ? value.trim() : "";

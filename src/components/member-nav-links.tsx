@@ -15,9 +15,9 @@ export function MemberNavLinks() {
     try {
       const supabase = createSupabaseBrowserClient();
 
-      supabase.auth.getUser().then(({ data, error }) => {
+      supabase.auth.getSession().then(({ data, error }) => {
         if (mounted) {
-          setSessionState(!error && data.user ? "signed-in" : "signed-out");
+          setSessionState(!error && data.session?.user ? "signed-in" : "signed-out");
         }
       });
 

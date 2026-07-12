@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
+import { measureServerTiming } from "@/lib/server-timing";
 
 type AccountRegistrationDetailPageProps = {
   params: Promise<{
@@ -15,37 +16,49 @@ export default async function AccountRegistrationDetailPage({
 }: AccountRegistrationDetailPageProps) {
   const { id } = await params;
   const memberUser = await requireCompleteMemberUser(`/account/registrations/${id}`);
-  const registration = await prisma.registration.findFirst({
-    where: {
-      id,
-      userId: memberUser.id,
-      deletedAt: null,
-    },
-    include: {
-      event: {
-        select: {
-          name: true,
-          startsAt: true,
-          venue: true,
+  const registration = await measureServerTiming("REGISTRATIONS_QUERY", () =>
+    prisma.registration.findFirst({
+      where: {
+        id,
+        userId: memberUser.id,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        carBrandModel: true,
+        plateNumber: true,
+        experienceLevel: true,
+        emergencyContactName: true,
+        emergencyContactPhone: true,
+        status: true,
+        paymentStatus: true,
+        participantCode: true,
+        createdAt: true,
+        event: {
+          select: {
+            name: true,
+            startsAt: true,
+            venue: true,
+          },
+        },
+        package: {
+          select: {
+            name: true,
+          },
+        },
+        checkIns: {
+          select: {
+            eventDate: true,
+            status: true,
+            checkedInAt: true,
+          },
+          orderBy: {
+            eventDate: "asc",
+          },
         },
       },
-      package: {
-        select: {
-          name: true,
-        },
-      },
-      checkIns: {
-        select: {
-          eventDate: true,
-          status: true,
-          checkedInAt: true,
-        },
-        orderBy: {
-          eventDate: "asc",
-        },
-      },
-    },
-  });
+    }),
+  );
 
   if (!registration) {
     notFound();

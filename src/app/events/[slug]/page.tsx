@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { FooterCredit } from "@/components/footer-credit";
 import { PublicNav } from "@/components/public-nav";
 import { prisma } from "@/lib/prisma";
+import { measureServerTiming } from "@/lib/server-timing";
 
 type EventPageProps = {
   params: Promise<{
@@ -11,7 +12,7 @@ type EventPageProps = {
   }>;
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat("tr-TR", {
@@ -72,24 +73,43 @@ const eventGalleryImages = [
 
 export default async function EventDetailPage({ params }: EventPageProps) {
   const { slug } = await params;
-  const event = await prisma.event.findUnique({
-    where: { slug },
-    include: {
-      days: {
-        orderBy: { date: "asc" },
-      },
-      packages: {
-        include: {
-          days: {
-            include: {
-              eventDay: true,
-            },
+  const event = await measureServerTiming("EVENT_QUERY", () =>
+    prisma.event.findUnique({
+      where: { slug },
+      select: {
+        slug: true,
+        venue: true,
+        status: true,
+        days: {
+          orderBy: { date: "asc" },
+          select: {
+            id: true,
+            date: true,
           },
         },
-        orderBy: { name: "asc" },
+        packages: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            capacity: true,
+            price: true,
+            currency: true,
+            days: {
+              select: {
+                eventDay: {
+                  select: {
+                    date: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: { name: "asc" },
+        },
       },
-    },
-  });
+    }),
+  );
 
   if (!event) {
     notFound();
