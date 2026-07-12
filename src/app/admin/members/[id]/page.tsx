@@ -90,6 +90,13 @@ const vehicleRatingModificationDefinitionSelect = {
     select: {
       active: true,
       tuneType: true,
+      measurementBasis: true,
+      mapStageLabel: true,
+      mapProgramCode: true,
+      claimedPowerMinHp: true,
+      claimedPowerMaxHp: true,
+      claimedTorqueMinNm: true,
+      claimedTorqueMaxNm: true,
       minimumFuelOctaneRon: true,
       requiredFuelNote: true,
       hardwareRequirementNote: true,
@@ -493,6 +500,13 @@ function VehicleList({
         tuningPackageSpecification: {
           active: boolean;
           tuneType: string;
+          measurementBasis: string | null;
+          mapStageLabel: string | null;
+          mapProgramCode: string | null;
+          claimedPowerMinHp: number | null;
+          claimedPowerMaxHp: number | null;
+          claimedTorqueMinNm: number | null;
+          claimedTorqueMaxNm: number | null;
           minimumFuelOctaneRon: number | null;
           requiredFuelNote: string | null;
           hardwareRequirementNote: string | null;
@@ -630,6 +644,13 @@ function AdminVehicleBuildProfile({
       tuningPackageSpecification: {
         active: boolean;
         tuneType: string;
+        measurementBasis: string | null;
+        mapStageLabel: string | null;
+        mapProgramCode: string | null;
+        claimedPowerMinHp: number | null;
+        claimedPowerMaxHp: number | null;
+        claimedTorqueMinNm: number | null;
+        claimedTorqueMaxNm: number | null;
         minimumFuelOctaneRon: number | null;
         requiredFuelNote: string | null;
         hardwareRequirementNote: string | null;
@@ -706,6 +727,26 @@ function AdminVehicleBuildProfile({
                               {tuningPackageTypeLabel(tuningSpecification.tuneType)}
                             </dd>
                           </div>
+                          {tuningSpecification.mapStageLabel ? (
+                            <div>
+                              <dt className="inline font-black uppercase text-white/35">
+                                Harita
+                              </dt>{" "}
+                              <dd className="inline">
+                                {tuningSpecification.mapStageLabel}
+                              </dd>
+                            </div>
+                          ) : null}
+                          {tuningSpecification.mapProgramCode ? (
+                            <div>
+                              <dt className="inline font-black uppercase text-white/35">
+                                Program
+                              </dt>{" "}
+                              <dd className="inline">
+                                {tuningSpecification.mapProgramCode}
+                              </dd>
+                            </div>
+                          ) : null}
                           <div>
                             <dt className="inline font-black uppercase text-white/35">
                               Güven
@@ -723,6 +764,36 @@ function AdminVehicleBuildProfile({
                               </dt>{" "}
                               <dd className="inline">
                                 {tuningSpecification.minimumFuelOctaneRon} RON+
+                              </dd>
+                            </div>
+                          ) : null}
+                          {tuningSpecification.claimedPowerMinHp !== null ||
+                          tuningSpecification.claimedPowerMaxHp !== null ? (
+                            <div>
+                              <dt className="inline font-black uppercase text-white/35">
+                                Güç
+                              </dt>{" "}
+                              <dd className="inline">
+                                {formatRange(
+                                  tuningSpecification.claimedPowerMinHp,
+                                  tuningSpecification.claimedPowerMaxHp,
+                                  "hp",
+                                )}
+                              </dd>
+                            </div>
+                          ) : null}
+                          {tuningSpecification.claimedTorqueMinNm !== null ||
+                          tuningSpecification.claimedTorqueMaxNm !== null ? (
+                            <div>
+                              <dt className="inline font-black uppercase text-white/35">
+                                Tork
+                              </dt>{" "}
+                              <dd className="inline">
+                                {formatRange(
+                                  tuningSpecification.claimedTorqueMinNm,
+                                  tuningSpecification.claimedTorqueMaxNm,
+                                  "Nm",
+                                )}
                               </dd>
                             </div>
                           ) : null}
@@ -830,6 +901,14 @@ function calibrationConfidenceLabel(value: CalibrationConfidence) {
   };
 
   return labels[value] ?? value;
+}
+
+function formatRange(min: number | null, max: number | null, unit: string) {
+  if (min !== null && max !== null && min !== max) {
+    return `${min}-${max} ${unit}`;
+  }
+
+  return `${min ?? max ?? "-"} ${unit}`;
 }
 
 function formatImpactSummary(impact: {

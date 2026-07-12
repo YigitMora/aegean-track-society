@@ -1,6 +1,6 @@
 # ATS Aftermarket Catalog Sources
 
-Accessed date for this sprint: 2026-07-12.
+Accessed date for this sprint: 2026-07-13.
 
 Seeded product metadata is normalized for ATS filtering and preview only. Suitability scores are descriptive ATS values, not manufacturer test scores. Sport springs and big brake kits are visible as product-family declarations; members must verify physical fitment outside ATS.
 
@@ -62,17 +62,48 @@ XT springs were omitted because an official manufacturer identity and stable pro
 | `wheel_oz_leggera_hlt` | Leggera HLT | OZ Racing | https://www.ozracing.com/ | Official model name and HLT family positioning. | Weight remains null without exact size. |
 | `wheel_oz_superturismo_lm` | Superturismo LM | OZ Racing | https://www.ozracing.com/ | Official model name. | Conservative impact because no size/weight selected. |
 | `wheel_oz_hyper_gt_hlt` | Hyper GT HLT | OZ Racing | https://www.ozracing.com/ | Official model name and HLT family positioning. | Weight remains null without exact size. |
+| `wheel_oz_estrema_gt_hlt` | Estrema GT HLT | OZ Racing | https://www.ozracing.com/ | Official naming verified from OZ current site/catalog references. | No "Estrema" shorthand stored; weight remains null. |
+| `wheel_oz_formula_hlt` | Formula HLT | OZ Racing | https://www.ozracing.com/ | Official model name and HLT family positioning. | Weight remains null without exact size. |
 | `wheel_rays_volk_te37` | Volk Racing TE37 | RAYS | https://www.rayswheels.co.jp/ | Official model family name and forged construction. | Forged construction alone does not create large rating gain. |
 | `wheel_rays_volk_ce28` | Volk Racing CE28 | RAYS | https://www.rayswheels.co.jp/ | Official model family name and forged construction. | Weight remains null without exact size. |
+| `wheel_rays_volk_te37_saga_s_plus` | Volk Racing TE37 SAGA S-plus | RAYS | https://www.rayswheels.co.jp/en/ | Official Volk Racing listing includes TE37 SAGA S-plus. | Forged construction only; no universal weight. |
+| `wheel_rays_volk_ce28n_plus` | Volk Racing CE28N-plus | RAYS | https://www.rayswheels.co.jp/en/ | Official Volk Racing listing includes CE28N-plus. | No universal weight. |
+| `wheel_rays_volk_ze40` | Volk Racing ZE40 | RAYS | https://www.rayswheels.co.jp/en/ | Official Volk Racing listing includes ZE40. | No universal weight. |
+| `wheel_rays_volk_g025` | Volk Racing G025 | RAYS | https://www.rayswheels.co.jp/en/ | Official Volk Racing listing includes G025. | No universal weight. |
 | `wheel_rays_gram_lights_57cr` | Gram Lights 57CR | RAYS | https://www.rayswheels.co.jp/ | Official model family name. | Conservative impact without exact size/weight. |
 | `wheel_rays_gram_lights_57dr` | Gram Lights 57DR | RAYS | https://www.rayswheels.co.jp/ | Official model family name. | Conservative impact without exact size/weight. |
 | `wheel_rays_gram_lights_57fxz` | Gram Lights 57FXZ | RAYS | https://www.rayswheels.co.jp/ | Official model family name. | Conservative impact without exact size/weight. |
+| `wheel_rays_gram_lights_57nr` | Gram Lights 57NR | RAYS | https://www.rayswheels.co.jp/en/ | Official gramLIGHTS listing includes 57NR. | Conservative impact without exact size/weight. |
+| `wheel_rays_gram_lights_57xr` | Gram Lights 57XR | RAYS | https://www.rayswheels.co.jp/en/ | Official gramLIGHTS listing includes 57XR. | Conservative impact without exact size/weight. |
 | `wheel_rotiform_rse` | RSE | Rotiform | https://www.rotiform.com/ | Official model name. | Styling wheel impact remains conservative. |
 | `wheel_rotiform_las_r` | LAS-R | Rotiform | https://www.rotiform.com/ | Official model name. | Styling wheel impact remains conservative. |
 | `wheel_rotiform_kps` | KPS | Rotiform | https://www.rotiform.com/ | Official model name. | Styling wheel impact remains conservative. |
 | `wheel_rotiform_dtm` | DTM | Rotiform | https://www.rotiform.com/ | Official model name. | Styling wheel impact remains conservative. |
 | `wheel_msw_30` | MSW 30 | MSW Wheels | https://www.mswwheels.com/ | Official MSW model naming. | Weight remains null without exact size. |
 | `wheel_msw_42` | MSW 42 | MSW Wheels | https://www.mswwheels.com/ | Official MSW model naming. | Weight remains null without exact size. |
+| `wheel_msw_51` | MSW 51 | MSW Wheels | https://www.mswwheels.com/ | Official MSW current catalog naming. | Cast wheel; no weight stored. |
+| `wheel_msw_54` | MSW 54 | MSW Wheels | https://www.mswwheels.com/ | Official MSW current catalog naming. | Cast wheel; no weight stored. |
+| `wheel_msw_83` | MSW 83 | MSW Wheels | https://www.mswwheels.com/ | Official MSW current catalog naming. | Cast wheel; no weight stored. |
+| `wheel_bbs_ci_r` | CI-R | BBS | https://www.bbs.com/en/home | Official Flow Form model listing. | No size-specific weight; conservative impact. |
+| `wheel_bbs_cc_r` | CC-R | BBS | https://www.bbs.com/en/home | Official Flow Form model listing. | No size-specific weight; conservative impact. |
+| `wheel_bbs_ch_r` | CH-R | BBS | https://www.bbs.com/en/home | Official Flow Form model listing. | No size-specific weight; conservative impact. |
+| `wheel_bbs_ch_r_ii` | CH-R II | BBS | https://www.bbs.com/en/home | Official Flow Form model listing. | No size-specific weight; conservative impact. |
+| `wheel_enkei_rpf1` | RPF1 | Enkei | https://enkei.com/ | Official Enkei model naming. | MAT/flow-formed family; no universal weight. |
+| `wheel_enkei_nt03rr` | NT03RR | Enkei | https://enkei.com/ | Official Enkei model naming. | No universal weight. |
+| `wheel_enkei_pf01` | PF01 | Enkei | https://enkei.com/ | Official Enkei model naming. | No universal weight. |
+| `wheel_apex_vs_5rs` | VS-5RS | APEX | https://apexwheels.com/ | Official forged Sprint line listing. | No size-specific weight stored. |
+| `wheel_apex_sm_10rs` | SM-10RS | APEX | https://apexwheels.com/ | Official forged Sprint line listing. | No size-specific weight stored. |
+| `wheel_apex_arc_8` | ARC-8 | APEX | https://apexwheels.com/ | Official flow-formed Classic line listing. | No size-specific weight stored. |
+| `wheel_apex_sm_10` | SM-10 | APEX | https://apexwheels.com/ | Official flow-formed Evolution line listing. | No size-specific weight stored. |
+| `wheel_advan_racing_tc_4` | ADVAN Racing TC-4 | Yokohama Wheel | https://www.yokohamawheel.jp/ | Official ADVAN Racing model family. | Source access varies by locale; no weight stored. |
+| `wheel_advan_racing_rsiii` | ADVAN Racing RSIII | Yokohama Wheel | https://www.yokohamawheel.jp/ | Official ADVAN Racing model family. | Source access varies by locale; no weight stored. |
+| `wheel_advan_racing_rz_f2` | ADVAN Racing RZ-F2 | Yokohama Wheel | https://www.yokohamawheel.jp/ | Official ADVAN Racing forged model family. | No universal weight. |
+| `wheel_titan7_t_m20` | T-M20 | Titan 7 | https://titan-7.com/ | Official Titan 7 forged model listing. | Fully forged claim recorded only as construction. |
+| `wheel_titan7_t_p10` | T-P10 | Titan 7 | https://titan-7.com/ | Official Titan 7 forged model listing. | No size-specific weight stored. |
+| `wheel_titan7_t_c5` | T-C5 | Titan 7 | https://titan-7.com/ | Official Titan 7 forged model listing. | No size-specific weight stored. |
+| `wheel_team_dynamics_pro_race_1_2` | Pro Race 1.2 | Team Dynamics | https://teamdynamicsmotorsport.com/ | Official Team Dynamics wheel family. | Public wheel catalog access varies; conservative impact. |
+| `wheel_motec_ultralight` | Ultralight | Motec | https://www.motec-wheels.de/en/ | Official Motec wheel program naming. | No size-specific weight stored. |
+| `wheel_motec_nitro` | Nitro | Motec | https://www.motec-wheels.de/en/ | Official Motec wheel program naming. | Cast wheel; conservative impact. |
 | `wheel_sparco_assetto_gara` | Assetto Gara | Sparco Wheels | https://www.sparcowheels.com/ | Official model naming, Sparco/OZ wheel family. | Construction kept conservative; weight remains null without exact size. |
 | `wheel_sparco_terra` | Terra | Sparco Wheels | https://www.sparcowheels.com/ | Official model naming, Sparco/OZ wheel family. | Construction kept conservative; weight remains null without exact size. |
 | `wheel_sparco_pista` | Pista | Sparco Wheels | https://www.sparcowheels.com/ | Official model naming, Sparco/OZ wheel family. | Construction kept conservative; weight remains null without exact size. |
@@ -98,6 +129,12 @@ Definitions below are product-family declarations, not physical fitment guarante
 | `intake_burger_motorsports_bms_elite` | Burger Motorsports | BMS Elite Intake | Intake | Burger Motorsports | https://burgertuning.com/ | ICE | Product family varies by platform. |
 | `intake_hks_racing_suction` | HKS | Racing Suction | Intake | HKS | https://www.hks-power.co.jp/en/ | ICE | Product family varies by platform. |
 | `intake_wagner_tuning_carbon_intake` | Wagner Tuning | Carbon Intake System | Intake | Wagner Tuning | https://www.wagner-tuning.com/ | ICE | Added only as a verified engine intake family. |
+| `intake_eventuri_bmw_g20_b58` | Eventuri | BMW G20 B58 Carbon Intake System | Intake | Eventuri | https://www.eventuri.net/product/bmw-g20-b58/ | ICE | Exact-template only for verified G20/G22 B58 applications; no universal Eventuri row. |
+| `intake_eventuri_toyota_gr_supra_a90` | Eventuri | Toyota GR Supra Carbon Intake System | Intake | Eventuri | https://www.eventuri.net/ | ICE | Exact Supra A90 3.0 templates only until product page details are refreshed. |
+| `intake_eventuri_bmw_g8x_s58` | Eventuri | BMW G8X M3/M4 Black Carbon Intake | Intake | Eventuri | https://www.eventuri.net/product/bmw-g8x-m3-m4/ | ICE | Exact G80/G82 S58 templates only. |
+| `intake_eventuri_honda_fk8_type_r` | Eventuri | Honda Civic FK8 Type R Carbon Intake System | Intake | Eventuri | https://www.eventuri.net/product/honda-civic-fk8-type-r/ | ICE | FK8 only; FL5 not inferred. |
+| `intake_eventuri_audi_8v_s3` | Eventuri | Audi 8V S3 / VAG 2.0 TFSI Carbon Intake System | Intake | Eventuri | https://www.eventuri.net/product/audi-8v-s3/ | ICE | 8V S3/Golf 7 R exact rows only. |
+| `intake_eventuri_toyota_gr_yaris` | Eventuri | Toyota GR Yaris Carbon Intake System | Intake | Eventuri | https://www.eventuri.net/product/toyota-gr-yaris/ | ICE | Gen 1 exact-template row only. |
 | `exhaust_milltek_sport_cat_back` | Milltek Sport | Cat-back Exhaust | Exhaust | Milltek Sport | https://www.millteksport.com/ | ICE | Exhaust fitment and emissions legality vary by platform. |
 | `exhaust_milltek_sport_axle_back` | Milltek Sport | Axle-back Exhaust | Exhaust | Milltek Sport | https://www.millteksport.com/ | ICE | Exhaust fitment and emissions legality vary by platform. |
 | `downpipe_milltek_sport` | Milltek Sport | Downpipe | Exhaust | Milltek Sport | https://www.millteksport.com/ | ICE | Downpipe legality and tune requirements vary by platform. |

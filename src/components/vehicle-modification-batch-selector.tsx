@@ -20,10 +20,13 @@ export type ModificationCatalogGroup = {
   types: Array<{
     typeKey: string;
     typeLabel: string;
-    options: Array<{
-      definitionId: string;
-      label: string;
-      availability: "AVAILABLE" | "INSTALLED" | "BLOCKED";
+      options: Array<{
+        definitionId: string;
+        label: string;
+        brand: string | null;
+        name: string;
+        variant: string | null;
+        availability: "AVAILABLE" | "INSTALLED" | "BLOCKED";
       usageClass?: string | null;
       brakePadSpecification?: BrakePadSpecificationSummary | null;
       sportSpringSpecification?: SportSpringSpecificationSummary | null;
@@ -77,6 +80,9 @@ type TyreSpecificationSummary = {
 
 type WheelSpecificationSummary = {
   construction: string;
+  nominalDiameterInches: number | null;
+  nominalWidthInches: number | null;
+  weightKg: number | null;
   trackSuitability: number;
   roadSuitability: number;
 };
@@ -84,6 +90,8 @@ type WheelSpecificationSummary = {
 type TuningPackageSpecificationSummary = {
   tuneType: string;
   measurementBasis: string | null;
+  mapStageLabel: string | null;
+  mapProgramCode: string | null;
   claimedPowerMinHp: number | null;
   claimedPowerMaxHp: number | null;
   claimedTorqueMinNm: number | null;
@@ -563,18 +571,38 @@ function CatalogOptionDetails({
     const spec = option.wheelSpecification;
 
     details.push(
+      ["Marka", option.brand ?? "Belirsiz"],
+      ["Model", option.variant ?? option.name],
       ["Yapı", wheelConstructionLabel(spec.construction)],
       ["Yol", spec.roadSuitability],
       ["Pist", spec.trackSuitability],
     );
+
+    if (spec.nominalDiameterInches !== null || spec.nominalWidthInches !== null) {
+      details.push([
+        "Ölçü",
+        `${spec.nominalDiameterInches ?? "-"}x${spec.nominalWidthInches ?? "-"} in`,
+      ]);
+    }
+
+    if (spec.weightKg !== null) {
+      details.push(["Ağırlık", `${spec.weightKg.toFixed(2)} kg`]);
+    }
   } else if (option.tuningPackageSpecification) {
     const spec = option.tuningPackageSpecification;
 
     details.push(
+      ["Sağlayıcı", option.brand ?? "Belirsiz"],
+      ["Ürün", option.name],
       ["Paket", tuningPackageTypeLabel(spec.tuneType)],
+      ["Harita", spec.mapStageLabel ?? "Belirtilmedi"],
       ["Ölçüm", powerMeasurementBasisLabel(spec.measurementBasis)],
       ["Güven", calibrationConfidenceLabel(spec.confidence)],
     );
+
+    if (spec.mapProgramCode) {
+      details.push(["Program", spec.mapProgramCode]);
+    }
 
     if (spec.claimedPowerMinHp !== null || spec.claimedPowerMaxHp !== null) {
       details.push([
@@ -619,6 +647,11 @@ function CatalogOptionDetails({
       {option.fitmentNote ? (
         <p className="mt-2 text-xs font-semibold leading-5 text-ats-muted">
           {option.fitmentNote}
+        </p>
+      ) : null}
+      {option.wheelSpecification ? (
+        <p className="mt-2 text-xs font-semibold leading-5 text-ats-muted">
+          Jant uygunluğu araç, ebat, ET/ofset ve lastik ölçüsüne göre ayrıca doğrulanmalıdır.
         </p>
       ) : null}
       {tuningNotes.length > 0 ? (
