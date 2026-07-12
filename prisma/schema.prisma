@@ -118,6 +118,24 @@ enum ModificationRuleType {
   REQUIRES
 }
 
+enum VehiclePowertrain {
+  ICE
+  HYBRID
+  ELECTRIC
+}
+
+enum VehicleDrivetrain {
+  FWD
+  RWD
+  AWD
+}
+
+enum VehicleRatingStatus {
+  CALIBRATED
+  PROVISIONAL
+  UNAVAILABLE
+}
+
 model Event {
   id                      String         @id @default(cuid())
   code                    String         @unique
@@ -356,25 +374,60 @@ model User {
 }
 
 model Vehicle {
-  id            String                @id @default(cuid())
-  userId        String                @db.Uuid
-  user          User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
-  brand         String
-  model         String
-  year          Int?
-  plateNumber   String
-  color         String?
-  isPrimary     Boolean               @default(false)
-  imagePath     String?
-  deletedAt     DateTime?
-  registrations Registration[]
-  modifications VehicleModification[]
-  createdAt     DateTime              @default(now())
-  updatedAt     DateTime              @updatedAt
+  id                  String                @id @default(cuid())
+  userId              String                @db.Uuid
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  vehicleDefinitionId String?
+  vehicleDefinition   VehicleDefinition?    @relation(fields: [vehicleDefinitionId], references: [id], onDelete: SetNull)
+  brand               String
+  model               String
+  year                Int?
+  plateNumber         String
+  color               String?
+  isPrimary           Boolean               @default(false)
+  imagePath           String?
+  deletedAt           DateTime?
+  registrations       Registration[]
+  modifications       VehicleModification[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 
   @@index([userId, deletedAt])
   @@index([userId, isPrimary, deletedAt])
+  @@index([vehicleDefinitionId])
   @@index([plateNumber])
+}
+
+model VehicleDefinition {
+  id                   String                      @id @default(cuid())
+  code                 String                      @unique
+  brand                String
+  model                String
+  generation           String?
+  chassisCode          String?
+  variant              String?
+  yearFrom             Int?
+  yearTo               Int?
+  powertrain           VehiclePowertrain
+  drivetrain           VehicleDrivetrain
+  powerRating          Int
+  handlingRating       Int
+  brakingRating        Int
+  reliabilityRating    Int
+  thermalRating        Int
+  trackReadinessRating Int
+  weightPenalty        Int                         @default(0)
+  ratingStatus         VehicleRatingStatus         @default(PROVISIONAL)
+  active               Boolean                     @default(true)
+  sortOrder            Int                         @default(0)
+  vehicles             Vehicle[]
+  modificationImpacts  VehicleModificationImpact[]
+  compatibilities      ModificationCompatibility[]
+  createdAt            DateTime                    @default(now())
+  updatedAt            DateTime                    @updatedAt
+
+  @@index([brand, model, active])
+  @@index([generation, variant, active])
 }
 
 model ModificationDefinition {
@@ -393,6 +446,7 @@ model ModificationDefinition {
   active               Boolean                         @default(true)
   sortOrder            Int                             @default(0)
   vehicleModifications VehicleModification[]
+  modificationImpacts  VehicleModificationImpact[]
   compatibilities      ModificationCompatibility[]
   rulesAsSource        ModificationRule[]              @relation("ModificationRuleSource")
   rulesAsTarget        ModificationRule[]              @relation("ModificationRuleTarget")
@@ -462,17 +516,39 @@ model ModificationRequirementOption {
   @@index([requiredDefinitionId])
 }
 
+model VehicleModificationImpact {
+  id                       String                 @id @default(cuid())
+  vehicleDefinitionId      String
+  vehicleDefinition        VehicleDefinition      @relation(fields: [vehicleDefinitionId], references: [id], onDelete: Cascade)
+  modificationDefinitionId String
+  modificationDefinition   ModificationDefinition @relation(fields: [modificationDefinitionId], references: [id], onDelete: Cascade)
+  powerImpact              Int                    @default(0)
+  handlingImpact           Int                    @default(0)
+  brakingImpact            Int                    @default(0)
+  reliabilityImpact        Int                    @default(0)
+  thermalImpact            Int                    @default(0)
+  trackReadinessImpact     Int                    @default(0)
+  active                   Boolean                @default(true)
+
+  @@unique([vehicleDefinitionId, modificationDefinitionId])
+  @@index([modificationDefinitionId, active])
+}
+
 model ModificationCompatibility {
   id                       String                 @id @default(cuid())
   modificationDefinitionId String
   modificationDefinition   ModificationDefinition @relation(fields: [modificationDefinitionId], references: [id], onDelete: Cascade)
+  vehicleDefinitionId      String?
+  vehicleDefinition        VehicleDefinition?     @relation(fields: [vehicleDefinitionId], references: [id], onDelete: Cascade)
   vehicleBrand             String?
   vehicleModel             String?
   yearFrom                 Int?
   yearTo                   Int?
   active                   Boolean                @default(true)
 
+  @@unique([modificationDefinitionId, vehicleDefinitionId])
   @@index([modificationDefinitionId, active])
+  @@index([vehicleDefinitionId, active])
   @@index([vehicleBrand, vehicleModel, active])
 }
 

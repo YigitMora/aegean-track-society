@@ -4,6 +4,7 @@ const currentYear = new Date().getFullYear();
 const maxVehicleYear = currentYear + 1;
 
 export type VehicleInput = {
+  vehicleDefinitionId: string | null;
   brand: string;
   model: string;
   year: number | null;
@@ -24,6 +25,10 @@ export type VehicleValidationResult =
 export function parseVehicleForm(formData: FormData): VehicleValidationResult {
   const brand = normalizeText(formData.get("brand"), 60);
   const model = normalizeText(formData.get("model"), 80);
+  const vehicleDefinitionId = normalizeOptionalText(
+    formData.get("vehicleDefinitionId"),
+    80,
+  );
   const plateNumber = normalizeVehiclePlate(formData.get("plateNumber"));
   const color = normalizeOptionalText(formData.get("color"), 40);
   const year = parseVehicleYear(formData.get("year"));
@@ -34,6 +39,7 @@ export function parseVehicleForm(formData: FormData): VehicleValidationResult {
     brand.length < 2 ||
     !model ||
     !plateNumber ||
+    vehicleDefinitionId === undefined ||
     year === undefined ||
     color === undefined
   ) {
@@ -47,6 +53,7 @@ export function parseVehicleForm(formData: FormData): VehicleValidationResult {
     data: {
       brand,
       model,
+      vehicleDefinitionId: vehicleDefinitionId ?? null,
       year,
       plateNumber,
       color,

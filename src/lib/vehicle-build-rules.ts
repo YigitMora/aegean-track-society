@@ -46,6 +46,7 @@ export type VehicleBuildResultCode =
 type VehicleBuildVehicle = {
   id: string;
   userId: string;
+  vehicleDefinitionId: string | null;
   brand: string;
   model: string;
   year: number | null;
@@ -62,6 +63,7 @@ export type VehicleBuildDefinitionLabel = {
 
 type VehicleBuildCompatibility = {
   active: boolean;
+  vehicleDefinitionId: string | null;
   vehicleBrand: string | null;
   vehicleModel: string | null;
   yearFrom: number | null;
@@ -329,9 +331,20 @@ function isModificationCompatible(
     return true;
   }
 
-  return activeCompatibilities.some((compatibility) =>
-    matchesCompatibility(vehicle, compatibility),
-  );
+  if (vehicle.vehicleDefinitionId) {
+    const hasExactTemplateMatch = activeCompatibilities.some(
+      (compatibility) =>
+        compatibility.vehicleDefinitionId === vehicle.vehicleDefinitionId,
+    );
+
+    if (hasExactTemplateMatch) {
+      return true;
+    }
+  }
+
+  return activeCompatibilities
+    .filter((compatibility) => compatibility.vehicleDefinitionId === null)
+    .some((compatibility) => matchesCompatibility(vehicle, compatibility));
 }
 
 function matchesCompatibility(

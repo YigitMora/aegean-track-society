@@ -1,12 +1,15 @@
 import Link from "next/link";
+import type { ModificationCategory, VehicleRatingStatus } from "@prisma/client";
 import {
   archiveVehicleAction,
   makePrimaryVehicleAction,
   restoreVehicleAction,
 } from "@/app/account/garage/actions";
+import { VehicleRatingCard } from "@/components/vehicle-rating-card";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
 import { measureServerTiming } from "@/lib/server-timing";
+import { calculateVehiclePerformanceRating } from "@/lib/vehicle-performance-rating";
 import { createOwnedVehicleImageSignedUrl } from "@/lib/vehicle-images";
 
 type GaragePageProps = {
@@ -16,6 +19,47 @@ type GaragePageProps = {
   }>;
 };
 
+const vehicleDefinitionRatingSelect = {
+  id: true,
+  powerRating: true,
+  handlingRating: true,
+  brakingRating: true,
+  reliabilityRating: true,
+  thermalRating: true,
+  trackReadinessRating: true,
+  weightPenalty: true,
+  ratingStatus: true,
+} as const;
+
+const vehicleRatingModificationSelect = {
+  modificationDefinition: {
+    select: {
+      code: true,
+      category: true,
+      powerImpact: true,
+      handlingImpact: true,
+      brakingImpact: true,
+      reliabilityImpact: true,
+      trackReadinessImpact: true,
+      modificationImpacts: {
+        where: {
+          active: true,
+        },
+        select: {
+          vehicleDefinitionId: true,
+          powerImpact: true,
+          handlingImpact: true,
+          brakingImpact: true,
+          reliabilityImpact: true,
+          thermalImpact: true,
+          trackReadinessImpact: true,
+          active: true,
+        },
+      },
+    },
+  },
+} as const;
+
 export default async function GaragePage({ searchParams }: GaragePageProps) {
   const [memberUser, params] = await Promise.all([
     requireCompleteMemberUser("/account/garage"),
@@ -24,6 +68,10 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
   const vehicleSelect = {
     id: true,
     userId: true,
+    vehicleDefinitionId: true,
+    vehicleDefinition: {
+      select: vehicleDefinitionRatingSelect,
+    },
     brand: true,
     model: true,
     year: true,
@@ -32,6 +80,12 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
     isPrimary: true,
     imagePath: true,
     deletedAt: true,
+    modifications: {
+      where: {
+        deletedAt: null,
+      },
+      select: vehicleRatingModificationSelect,
+    },
   } as const;
   const [activeVehicles, archivedVehicles] = await measureServerTiming(
     "GARAGE_QUERY",
@@ -206,10 +260,46 @@ function VehicleCard({
     color: string | null;
     isPrimary: boolean;
     coverImageUrl: string | null;
+    vehicleDefinition: {
+      id: string;
+      powerRating: number;
+      handlingRating: number;
+      brakingRating: number;
+      reliabilityRating: number;
+      thermalRating: number;
+      trackReadinessRating: number;
+      weightPenalty: number;
+      ratingStatus: VehicleRatingStatus;
+    } | null;
+    modifications: Array<{
+      modificationDefinition: {
+        code: string;
+        category: ModificationCategory;
+        powerImpact: number;
+        handlingImpact: number;
+        brakingImpact: number;
+        reliabilityImpact: number;
+        trackReadinessImpact: number;
+        modificationImpacts: Array<{
+          vehicleDefinitionId: string;
+          powerImpact: number;
+          handlingImpact: number;
+          brakingImpact: number;
+          reliabilityImpact: number;
+          thermalImpact: number;
+          trackReadinessImpact: number;
+          active: boolean;
+        }>;
+      };
+    }>;
   };
 }) {
   const makePrimaryAction = makePrimaryVehicleAction.bind(null, vehicle.id);
   const archiveAction = archiveVehicleAction.bind(null, vehicle.id);
+  const rating = calculateVehiclePerformanceRating({
+    vehicleDefinition: vehicle.vehicleDefinition,
+    installedModifications: vehicle.modifications,
+  });
 
   return (
     <article className="overflow-hidden rounded-lg border border-ats-border bg-ats-surface shadow-soft">
@@ -235,6 +325,8 @@ function VehicleCard({
           </span>
         ) : null}
       </div>
+
+      <VehicleRatingCard rating={rating} compact className="mx-6 mt-5" />
 
       <div className="flex flex-wrap gap-3 p-6">
         <Link
