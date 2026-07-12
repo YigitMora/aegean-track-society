@@ -367,7 +367,7 @@ function ManifestoFooter() {
         </div>
         <div className="space-y-2 text-xs font-semibold uppercase tracking-[0.14em] text-ats-muted md:text-right">
           <p>
-            Proudly developed by <span className="text-ats-text">MORA Engineering</span>
+            Developed by <span className="text-ats-text">MORA ENGINEERING</span>
           </p>
           <p>© 2026 Aegean Track Society</p>
         </div>

@@ -21,7 +21,7 @@ export function FooterCredit() {
           </div>
         </div>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ats-muted md:text-right">
-          Proudly developed by <span className="text-ats-text">MORA Engineering</span>
+          Developed by <span className="text-ats-text">MORA ENGINEERING</span>
         </p>
       </div>
     </footer>
