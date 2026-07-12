@@ -688,10 +688,10 @@ export async function addVehicleModificationAction(
   formData: FormData,
 ) {
   const memberUser = await requireCompleteMemberUser(
-    `/account/garage/${vehicleId}/modifications`,
+    `/account/garage/${vehicleId}#build-profile`,
   );
   const returnTo = normalizeMemberReturnTo(
-    formData.get("returnTo") ?? `${garagePath}/${vehicleId}/modifications`,
+    formData.get("returnTo") ?? `${garagePath}/${vehicleId}#build-profile`,
   );
   const customNotes = normalizeModificationNotes(formData.get("customNotes"));
   const installedAt = parseInstalledAt(formData.get("installedAt"));
@@ -816,6 +816,23 @@ export async function addVehicleModificationAction(
 
   revalidateVehicleBuild(vehicleId);
   redirect(withBuildStatus(returnTo, "modification_added"));
+}
+
+export async function addSelectedVehicleModificationAction(
+  vehicleId: string,
+  formData: FormData,
+) {
+  const modificationDefinitionId = formData.get("modificationDefinitionId");
+  const returnTo = normalizeMemberReturnTo(
+    formData.get("returnTo") ?? `${garagePath}/${vehicleId}#build-profile`,
+  );
+
+  if (typeof modificationDefinitionId !== "string" || !modificationDefinitionId.trim()) {
+    await requireCompleteMemberUser(returnTo);
+    redirectWithError(returnTo, "modification_not_found");
+  }
+
+  await addVehicleModificationAction(vehicleId, modificationDefinitionId.trim(), formData);
 }
 
 export async function removeVehicleModificationAction(
@@ -957,7 +974,7 @@ function redirectWithError(pathname: string, error: GarageError): never {
   url.searchParams.set("garageError", error);
   url.searchParams.delete("build");
 
-  redirect(`${url.pathname}${url.search}`);
+  redirect(`${url.pathname}${url.search}${url.hash}`);
 }
 
 function errorCodeForVehicleWrite(error: unknown, fallback: GarageError): GarageError {
@@ -1265,7 +1282,7 @@ function withBuildStatus(pathname: string, value: string) {
   url.searchParams.set("build", value);
   url.searchParams.delete("garageError");
 
-  return `${url.pathname}${url.search}`;
+  return `${url.pathname}${url.search}${url.hash}`;
 }
 
 function safeErrorCode(error: unknown) {

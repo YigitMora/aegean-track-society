@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import {
+  addSelectedVehicleModificationAction,
   archiveVehicleAction,
   makePrimaryVehicleAction,
   removeVehicleModificationAction,
@@ -9,14 +11,20 @@ import {
   updateVehicleAction,
 } from "@/app/account/garage/actions";
 import { VehicleForm } from "@/components/vehicle-form";
+import {
+  VehicleBuildModificationForm,
+  type VehicleBuildCatalogGroup,
+} from "@/components/vehicle-build-modification-form";
 import { VehicleImageSubmitButton } from "@/components/vehicle-image-submit-button";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
 import { measureServerTiming } from "@/lib/server-timing";
 import {
+  evaluateModificationAvailability,
   formatModificationDefinition,
   modificationCategoryLabels,
   orderedModificationCategories,
+  vehicleBuildResultLabel,
 } from "@/lib/vehicle-build-rules";
 import { createOwnedVehicleImageSignedUrl } from "@/lib/vehicle-images";
 
@@ -95,11 +103,37 @@ export default async function EditVehiclePage({
   const coverImageUrl = await measureServerTiming("GARAGE_SIGNED_URLS", () =>
     createOwnedVehicleImageSignedUrl(vehicle, memberUser.id),
   );
+  const catalog = await prisma.modificationDefinition.findMany({
+    where: {
+      active: true,
+    },
+    orderBy: [
+      {
+        category: "asc",
+      },
+      {
+        sortOrder: "asc",
+      },
+      {
+        name: "asc",
+      },
+    ],
+    select: modificationDefinitionRuleSelect,
+  });
+  const catalogGroups = buildCatalogGroups({
+    catalog,
+    vehicle,
+    installedModifications: vehicle.modifications,
+  });
   const updateAction = updateVehicleAction.bind(null, vehicle.id);
   const makePrimaryAction = makePrimaryVehicleAction.bind(null, vehicle.id);
   const archiveAction = archiveVehicleAction.bind(null, vehicle.id);
   const uploadImageAction = uploadVehicleImageAction.bind(null, vehicle.id);
   const removeImageAction = removeVehicleImageAction.bind(null, vehicle.id);
+  const addModificationAction = addSelectedVehicleModificationAction.bind(
+    null,
+    vehicle.id,
+  );
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">
@@ -142,6 +176,8 @@ export default async function EditVehiclePage({
       />
 
       <VehicleBuildProfile
+        addAction={addModificationAction}
+        catalogGroups={catalogGroups}
         vehicleId={vehicle.id}
         modifications={vehicle.modifications}
       />
@@ -175,9 +211,13 @@ export default async function EditVehiclePage({
 }
 
 function VehicleBuildProfile({
+  addAction,
+  catalogGroups,
   vehicleId,
   modifications,
 }: {
+  addAction: (formData: FormData) => void | Promise<void>;
+  catalogGroups: VehicleBuildCatalogGroup[];
   vehicleId: string;
   modifications: Array<{
     id: string;
@@ -195,7 +235,10 @@ function VehicleBuildProfile({
   }>;
 }) {
   return (
-    <section className="mt-6 rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8">
+    <section
+      id="build-profile"
+      className="mt-6 scroll-mt-24 rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8"
+    >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-blue">
@@ -209,12 +252,9 @@ function VehicleBuildProfile({
             snapshotları değişmez.
           </p>
         </div>
-        <Link
-          href={`/account/garage/${vehicleId}/modifications`}
-          className="inline-flex h-11 items-center justify-center rounded-full bg-ats-blue px-5 text-xs font-black uppercase tracking-[0.12em] text-ats-black transition hover:bg-ats-blue-hover"
-        >
-          Parça ekle
-        </Link>
+        <span className="inline-flex h-9 items-center rounded-full border border-ats-blue/40 bg-ats-blue/10 px-3 text-xs font-black uppercase tracking-[0.12em] text-ats-blue">
+          {modifications.length} parça
+        </span>
       </div>
 
       {modifications.length === 0 ? (
@@ -222,7 +262,7 @@ function VehicleBuildProfile({
           Build profiline henüz parça eklenmedi.
         </p>
       ) : (
-        <div className="mt-8 space-y-8">
+        <div className="mt-6 space-y-6">
           {orderedModificationCategories.map((category) => {
             const categoryModifications = modifications.filter(
               (modification) =>
@@ -234,11 +274,11 @@ function VehicleBuildProfile({
             }
 
             return (
-              <div key={category}>
+              <div key={category} className="border-t border-ats-border pt-4 first:border-t-0 first:pt-0">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-ats-muted">
                   {modificationCategoryLabels[category]}
                 </p>
-                <div className="mt-3 grid gap-3">
+                <div className="mt-2 divide-y divide-ats-border rounded-md border border-ats-border bg-ats-black">
                   {categoryModifications.map((modification) => {
                     const removeAction = removeVehicleModificationAction.bind(
                       null,
@@ -247,43 +287,39 @@ function VehicleBuildProfile({
                     );
 
                     return (
-                      <article
+                      <div
                         key={modification.id}
-                        className="rounded-md border border-ats-border bg-ats-black p-4"
+                        className="grid gap-3 px-4 py-3 sm:grid-cols-[1fr_auto] sm:items-center"
                       >
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
-                            <p className="font-black text-ats-text">
-                              {formatModificationDefinition(
-                                modification.modificationDefinition,
-                              )}
-                            </p>
-                            {modification.customNotes ? (
-                              <p className="mt-2 text-sm font-semibold leading-6 text-ats-muted">
-                                {modification.customNotes}
-                              </p>
-                            ) : null}
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-black text-ats-text">
+                            {formatModificationDefinition(
+                              modification.modificationDefinition,
+                            )}
+                          </p>
+                          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-ats-muted">
                             {modification.installedAt ? (
-                              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-ats-muted">
-                                Montaj: {formatDate(modification.installedAt)}
-                              </p>
+                              <span>Montaj: {formatDate(modification.installedAt)}</span>
+                            ) : null}
+                            {modification.customNotes ? (
+                              <span className="break-words">{modification.customNotes}</span>
                             ) : null}
                           </div>
-                          <form action={removeAction}>
-                            <input
-                              type="hidden"
-                              name="returnTo"
-                              value={`/account/garage/${vehicleId}`}
-                            />
-                            <button
-                              type="submit"
-                              className="inline-flex h-10 items-center justify-center rounded-full border border-red-300/40 px-4 text-xs font-black uppercase tracking-[0.12em] text-red-100 transition hover:bg-red-300 hover:text-ats-black"
-                            >
-                              Parçayı kaldır
-                            </button>
-                          </form>
                         </div>
-                      </article>
+                        <form action={removeAction}>
+                          <input
+                            type="hidden"
+                            name="returnTo"
+                            value={`/account/garage/${vehicleId}#build-profile`}
+                          />
+                          <button
+                            type="submit"
+                            className="inline-flex h-9 items-center justify-center rounded-full border border-red-300/40 px-3 text-xs font-black uppercase tracking-[0.12em] text-red-100 transition hover:bg-red-300 hover:text-ats-black"
+                          >
+                            Kaldır
+                          </button>
+                        </form>
+                      </div>
                     );
                   })}
                 </div>
@@ -292,6 +328,25 @@ function VehicleBuildProfile({
           })}
         </div>
       )}
+
+      <div className="mt-8 border-t border-ats-border pt-6">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-ats-blue">
+          Parça ekle
+        </p>
+        {catalogGroups.length > 0 ? (
+          <div className="mt-4">
+            <VehicleBuildModificationForm
+              action={addAction}
+              catalogGroups={catalogGroups}
+              returnTo={`/account/garage/${vehicleId}#build-profile`}
+            />
+          </div>
+        ) : (
+          <p className="mt-4 rounded-md border border-ats-border bg-ats-black p-4 text-sm font-semibold text-ats-muted">
+            Eklenebilir katalog parçası bulunamadı.
+          </p>
+        )}
+      </div>
     </section>
   );
 }
@@ -518,6 +573,158 @@ function errorMessage(value?: string) {
   }
 
   return null;
+}
+
+const modificationDefinitionLabelSelect = {
+  id: true,
+  category: true,
+  brand: true,
+  name: true,
+  variant: true,
+} satisfies Prisma.ModificationDefinitionSelect;
+
+const modificationDefinitionRuleSelect = {
+  ...modificationDefinitionLabelSelect,
+  active: true,
+  description: true,
+  sortOrder: true,
+  compatibilities: {
+    where: {
+      active: true,
+    },
+    select: {
+      active: true,
+      vehicleBrand: true,
+      vehicleModel: true,
+      yearFrom: true,
+      yearTo: true,
+    },
+  },
+  requirementGroups: {
+    where: {
+      active: true,
+    },
+    select: {
+      active: true,
+      description: true,
+      options: {
+        select: {
+          requiredDefinitionId: true,
+          requiredDefinition: {
+            select: modificationDefinitionLabelSelect,
+          },
+        },
+      },
+    },
+  },
+  rulesAsSource: {
+    where: {
+      active: true,
+    },
+    select: {
+      active: true,
+      targetDefinitionId: true,
+      ruleType: true,
+    },
+  },
+  rulesAsTarget: {
+    where: {
+      active: true,
+    },
+    select: {
+      active: true,
+      sourceDefinitionId: true,
+      ruleType: true,
+    },
+  },
+} satisfies Prisma.ModificationDefinitionSelect;
+
+function buildCatalogGroups({
+  catalog,
+  vehicle,
+  installedModifications,
+}: {
+  catalog: Array<
+    Prisma.ModificationDefinitionGetPayload<{
+      select: typeof modificationDefinitionRuleSelect;
+    }>
+  >;
+  vehicle: {
+    id: string;
+    userId: string;
+    brand: string;
+    model: string;
+    year: number | null;
+    deletedAt: Date | null;
+  };
+  installedModifications: Array<{
+    id: string;
+    modificationDefinitionId: string;
+    modificationDefinition: {
+      id: string;
+      category: (typeof orderedModificationCategories)[number];
+      brand: string | null;
+      name: string;
+      variant: string | null;
+    };
+  }>;
+}): VehicleBuildCatalogGroup[] {
+  const groupsByKey = new Map<string, VehicleBuildCatalogGroup>();
+
+  for (const definition of catalog) {
+    const typeKey = `${definition.category}:${definition.name.toLocaleLowerCase("tr-TR")}`;
+    const availability = evaluateModificationAvailability({
+      vehicle,
+      definition,
+      installedModifications,
+    });
+    const group =
+      groupsByKey.get(typeKey) ??
+      {
+        category: definition.category,
+        categoryLabel: modificationCategoryLabels[definition.category],
+        typeKey,
+        typeLabel: definition.name,
+        options: [],
+      };
+
+    group.options.push({
+      definitionId: definition.id,
+      label: optionLabelForDefinition(definition),
+      available: availability.ok,
+      reason: availability.ok
+        ? null
+        : availability.code === "DUPLICATE_MODIFICATION"
+          ? "Zaten yüklü"
+          : vehicleBuildResultLabel(availability.code, availability),
+    });
+    groupsByKey.set(typeKey, group);
+  }
+
+  return Array.from(groupsByKey.values()).sort((firstGroup, secondGroup) => {
+    const firstCategoryOrder = orderedModificationCategories.indexOf(
+      firstGroup.category as (typeof orderedModificationCategories)[number],
+    );
+    const secondCategoryOrder = orderedModificationCategories.indexOf(
+      secondGroup.category as (typeof orderedModificationCategories)[number],
+    );
+
+    if (firstCategoryOrder !== secondCategoryOrder) {
+      return firstCategoryOrder - secondCategoryOrder;
+    }
+
+    return firstGroup.typeLabel.localeCompare(secondGroup.typeLabel, "tr-TR");
+  });
+}
+
+function optionLabelForDefinition(definition: {
+  brand: string | null;
+  name: string;
+  variant: string | null;
+}) {
+  const optionLabel = [definition.brand, definition.variant].filter(Boolean).join(" ");
+
+  return optionLabel || formatModificationDefinition(definition);
 }
 
 function formatDate(date: Date) {
