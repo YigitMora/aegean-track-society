@@ -1,31 +1,41 @@
 import Link from "next/link";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
+import { measureServerTiming } from "@/lib/server-timing";
 
 export default async function AccountRegistrationsPage() {
   const memberUser = await requireCompleteMemberUser("/account/registrations");
-  const registrations = await prisma.registration.findMany({
-    where: {
-      userId: memberUser.id,
-      deletedAt: null,
-    },
-    include: {
-      event: {
-        select: {
-          name: true,
-          startsAt: true,
+  const registrations = await measureServerTiming("REGISTRATIONS_QUERY", () =>
+    prisma.registration.findMany({
+      where: {
+        userId: memberUser.id,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        carBrandModel: true,
+        plateNumber: true,
+        status: true,
+        paymentStatus: true,
+        participantCode: true,
+        createdAt: true,
+        event: {
+          select: {
+            name: true,
+            startsAt: true,
+          },
+        },
+        package: {
+          select: {
+            name: true,
+          },
         },
       },
-      package: {
-        select: {
-          name: true,
-        },
+      orderBy: {
+        createdAt: "desc",
       },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+    }),
+  );
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">

@@ -7,21 +7,33 @@ import { requireAdminSession } from "@/lib/admin-auth";
 import { kulaCheckInDate, kulaEventSlug, kulaPackageCode } from "@/lib/event-config";
 import { prisma } from "@/lib/prisma";
 import { getAdminReadinessWarnings } from "@/lib/production-readiness";
+import { measureServerTiming } from "@/lib/server-timing";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
   await requireAdminSession();
 
-  const event = await prisma.event.findUnique({
-    where: { slug: kulaEventSlug },
-    include: {
-      packages: {
-        where: { code: kulaPackageCode },
-        take: 1,
+  const event = await measureServerTiming("ADMIN_DASHBOARD_QUERY", () =>
+    prisma.event.findUnique({
+      where: { slug: kulaEventSlug },
+      select: {
+        id: true,
+        status: true,
+        packages: {
+          where: { code: kulaPackageCode },
+          take: 1,
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            capacity: true,
+            price: true,
+          },
+        },
       },
-    },
-  });
+    }),
+  );
 
   const eventPackage = event?.packages[0];
 
@@ -131,7 +143,9 @@ export default async function AdminDashboardPage() {
       membersWithActiveVehicle,
       membersWithRegistration,
     ],
-  ] = await Promise.all([eventMetricsPromise, memberMetricsPromise]);
+  ] = await measureServerTiming("ADMIN_DASHBOARD_QUERY", () =>
+    Promise.all([eventMetricsPromise, memberMetricsPromise]),
+  );
 
   const remainingCapacity =
     eventPackage.capacity > 0 ? Math.max(eventPackage.capacity - reservedCount, 0) : null;

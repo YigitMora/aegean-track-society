@@ -4,6 +4,7 @@ import { logoutAction } from "@/app/auth/actions";
 import { requireMemberUser } from "@/lib/member-auth";
 import { isMemberProfileComplete } from "@/lib/member-profile-validation";
 import { prisma } from "@/lib/prisma";
+import { measureServerTiming } from "@/lib/server-timing";
 
 type AccountPageProps = {
   searchParams: Promise<{
@@ -23,32 +24,35 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     redirect("/account/onboarding");
   }
 
-  const [activeVehicleCount, primaryVehicle, activeRegistrationCount] = await Promise.all([
-    prisma.vehicle.count({
-      where: {
-        userId: memberUser.id,
-        deletedAt: null,
-      },
-    }),
-    prisma.vehicle.findFirst({
-      where: {
-        userId: memberUser.id,
-        deletedAt: null,
-        isPrimary: true,
-      },
-      select: {
-        brand: true,
-        model: true,
-        plateNumber: true,
-      },
-    }),
-    prisma.registration.count({
-      where: {
-        userId: memberUser.id,
-        deletedAt: null,
-      },
-    }),
-  ]);
+  const [activeVehicleCount, primaryVehicle, activeRegistrationCount] =
+    await measureServerTiming("ACCOUNT_SUMMARY_QUERY", () =>
+      Promise.all([
+        prisma.vehicle.count({
+          where: {
+            userId: memberUser.id,
+            deletedAt: null,
+          },
+        }),
+        prisma.vehicle.findFirst({
+          where: {
+            userId: memberUser.id,
+            deletedAt: null,
+            isPrimary: true,
+          },
+          select: {
+            brand: true,
+            model: true,
+            plateNumber: true,
+          },
+        }),
+        prisma.registration.count({
+          where: {
+            userId: memberUser.id,
+            deletedAt: null,
+          },
+        }),
+      ]),
+    );
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">

@@ -5,6 +5,7 @@ import { formatDateTime } from "@/lib/admin-format";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { isMemberProfileComplete } from "@/lib/member-profile-validation";
 import { prisma } from "@/lib/prisma";
+import { measureServerTiming } from "@/lib/server-timing";
 
 const pageSize = 25;
 const maxQueryLength = 100;
@@ -45,47 +46,49 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
   const orderBy = orderByForSort(sort);
   const skip = (page - 1) * pageSize;
 
-  const [totalMembers, members] = await prisma.$transaction([
-    prisma.user.count({ where }),
-    prisma.user.findMany({
-      where,
-      orderBy,
-      skip,
-      take: pageSize,
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        status: true,
-        memberKvkkAcceptedAt: true,
-        memberTermsAcceptedAt: true,
-        memberMarketingConsentAt: true,
-        memberMarketingConsentRevokedAt: true,
-        createdAt: true,
-        profile: {
-          select: {
-            fullName: true,
-            displayName: true,
-            phone: true,
-          },
-        },
-        _count: {
-          select: {
-            vehicles: {
-              where: {
-                deletedAt: null,
-              },
-            },
-            registrations: {
-              where: {
-                deletedAt: null,
-              },
+  const [totalMembers, members] = await measureServerTiming("ADMIN_MEMBERS_QUERY", () =>
+    prisma.$transaction([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        orderBy,
+        skip,
+        take: pageSize,
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          status: true,
+          memberKvkkAcceptedAt: true,
+          memberTermsAcceptedAt: true,
+          memberMarketingConsentAt: true,
+          memberMarketingConsentRevokedAt: true,
+          createdAt: true,
+          profile: {
+            select: {
+              fullName: true,
+              displayName: true,
+              phone: true,
             },
           },
+          _count: {
+            select: {
+              vehicles: {
+                where: {
+                  deletedAt: null,
+                },
+              },
+              registrations: {
+                where: {
+                  deletedAt: null,
+                },
+              },
+            },
+          },
         },
-      },
-    }),
-  ]);
+      }),
+    ]),
+  );
 
   const totalPages = Math.max(Math.ceil(totalMembers / pageSize), 1);
   const startRow = totalMembers === 0 ? 0 : skip + 1;

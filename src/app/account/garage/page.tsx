@@ -6,6 +6,7 @@ import {
 } from "@/app/account/garage/actions";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
+import { measureServerTiming } from "@/lib/server-timing";
 import { createOwnedVehicleImageSignedUrl } from "@/lib/vehicle-images";
 
 type GaragePageProps = {
@@ -20,41 +21,61 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
     requireCompleteMemberUser("/account/garage"),
     searchParams,
   ]);
-  const [activeVehicles, archivedVehicles] = await Promise.all([
-    prisma.vehicle.findMany({
-      where: {
-        userId: memberUser.id,
-        deletedAt: null,
-      },
-      orderBy: [
-        {
-          isPrimary: "desc",
-        },
-        {
-          createdAt: "asc",
-        },
-        {
-          id: "asc",
-        },
-      ],
-    }),
-    prisma.vehicle.findMany({
-      where: {
-        userId: memberUser.id,
-        deletedAt: {
-          not: null,
-        },
-      },
-      orderBy: {
-        deletedAt: "desc",
-      },
-    }),
-  ]);
-  const activeVehicleCards = await Promise.all(
-    activeVehicles.map(async (vehicle) => ({
-      ...vehicle,
-      coverImageUrl: await createOwnedVehicleImageSignedUrl(vehicle, memberUser.id),
-    })),
+  const vehicleSelect = {
+    id: true,
+    userId: true,
+    brand: true,
+    model: true,
+    year: true,
+    plateNumber: true,
+    color: true,
+    isPrimary: true,
+    imagePath: true,
+    deletedAt: true,
+  } as const;
+  const [activeVehicles, archivedVehicles] = await measureServerTiming(
+    "GARAGE_QUERY",
+    () =>
+      Promise.all([
+        prisma.vehicle.findMany({
+          where: {
+            userId: memberUser.id,
+            deletedAt: null,
+          },
+          orderBy: [
+            {
+              isPrimary: "desc",
+            },
+            {
+              createdAt: "asc",
+            },
+            {
+              id: "asc",
+            },
+          ],
+          select: vehicleSelect,
+        }),
+        prisma.vehicle.findMany({
+          where: {
+            userId: memberUser.id,
+            deletedAt: {
+              not: null,
+            },
+          },
+          orderBy: {
+            deletedAt: "desc",
+          },
+          select: vehicleSelect,
+        }),
+      ]),
+  );
+  const activeVehicleCards = await measureServerTiming("GARAGE_SIGNED_URLS", () =>
+    Promise.all(
+      activeVehicles.map(async (vehicle) => ({
+        ...vehicle,
+        coverImageUrl: await createOwnedVehicleImageSignedUrl(vehicle, memberUser.id),
+      })),
+    ),
   );
   const archivedVehicleCards = archivedVehicles.map((vehicle) => ({
     ...vehicle,
@@ -143,12 +164,16 @@ function VehicleCoverPreview({
             src={coverImageUrl}
             alt=""
             aria-hidden="true"
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-2xl"
           />
           <div className="absolute inset-0 bg-ats-black/55" />
           <img
             src={coverImageUrl}
             alt={`${label} araç fotoğrafı`}
+            loading="lazy"
+            decoding="async"
             className="relative z-10 h-full w-full object-contain p-2 sm:p-3"
           />
         </>

@@ -15,12 +15,15 @@ const statusFilters = [
   { value: "archived", label: "Archived" },
 ] as const;
 const paymentStatuses = ["UNPAID", "PENDING", "PAID", "FAILED", "REFUNDED", "REVIEW"] as const;
+const pageSize = 50;
+const maxQueryLength = 100;
 
 type ParticipantsPageProps = {
   searchParams: Promise<{
     q?: string;
     status?: string;
     paymentStatus?: string;
+    page?: string;
   }>;
 };
 
@@ -30,9 +33,11 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
   await requireAdminSession();
 
   const filters = await searchParams;
-  const query = filters.q?.trim() ?? "";
+  const query = normalizeQuery(filters.q);
   const status = isStatusFilter(filters.status) ? filters.status : "active";
   const paymentStatus = isPaymentStatus(filters.paymentStatus) ? filters.paymentStatus : undefined;
+  const page = normalizePage(filters.page);
+  const skip = (page - 1) * pageSize;
 
   const where: Prisma.RegistrationWhereInput = {
     event: {
@@ -74,23 +79,31 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
     ];
   }
 
-  const participants = await prisma.registration.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      participantCode: true,
-      fullName: true,
-      phone: true,
-      email: true,
-      carBrandModel: true,
-      plateNumber: true,
-      status: true,
-      paymentStatus: true,
-      deletedAt: true,
-      createdAt: true,
-    },
-  });
+  const [totalParticipants, participants] = await prisma.$transaction([
+    prisma.registration.count({ where }),
+    prisma.registration.findMany({
+      where,
+      orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+      skip,
+      take: pageSize,
+      select: {
+        id: true,
+        participantCode: true,
+        fullName: true,
+        phone: true,
+        email: true,
+        carBrandModel: true,
+        plateNumber: true,
+        status: true,
+        paymentStatus: true,
+        deletedAt: true,
+        createdAt: true,
+      },
+    }),
+  ]);
+  const totalPages = Math.max(Math.ceil(totalParticipants / pageSize), 1);
+  const startRow = totalParticipants === 0 ? 0 : skip + 1;
+  const endRow = Math.min(skip + participants.length, totalParticipants);
 
   return (
     <AdminShell
@@ -165,7 +178,8 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
       <section className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-white/10">
         <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4">
           <p className="text-sm font-black uppercase text-signal">
-            {participants.length} participants · {statusFilters.find((item) => item.value === status)?.label}
+            {totalParticipants} participants · {startRow}-{endRow} ·{" "}
+            {statusFilters.find((item) => item.value === status)?.label}
           </p>
           <p className="text-xs font-semibold text-white/45">
             QR token hashes are not shown.
@@ -249,6 +263,31 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
           </table>
         </div>
       </section>
+
+      <nav className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-white/55">
+          Page {page} / {totalPages}
+        </p>
+        <div className="flex gap-3">
+          <PaginationLink
+            href={participantsHref({ query, status, paymentStatus, page: Math.max(page - 1, 1) })}
+            disabled={page <= 1}
+          >
+            Previous
+          </PaginationLink>
+          <PaginationLink
+            href={participantsHref({
+              query,
+              status,
+              paymentStatus,
+              page: Math.min(page + 1, totalPages),
+            })}
+            disabled={page >= totalPages}
+          >
+            Next
+          </PaginationLink>
+        </div>
+      </nav>
     </AdminShell>
   );
 }
@@ -259,4 +298,78 @@ function isStatusFilter(value?: string): value is (typeof statusFilters)[number]
 
 function isPaymentStatus(value?: string): value is (typeof paymentStatuses)[number] {
   return Boolean(value && paymentStatuses.includes(value as (typeof paymentStatuses)[number]));
+}
+
+function PaginationLink({
+  href,
+  disabled,
+  children,
+}: {
+  href: string;
+  disabled: boolean;
+  children: string;
+}) {
+  if (disabled) {
+    return (
+      <span className="inline-flex h-11 items-center rounded-full border border-white/10 px-5 text-sm font-black text-white/25">
+        {children}
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-black text-white/75 transition hover:border-white hover:text-white"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function participantsHref({
+  query,
+  status,
+  paymentStatus,
+  page,
+}: {
+  query: string;
+  status: (typeof statusFilters)[number]["value"];
+  paymentStatus?: (typeof paymentStatuses)[number];
+  page: number;
+}) {
+  const params = new URLSearchParams();
+
+  if (query) {
+    params.set("q", query);
+  }
+
+  if (status !== "active") {
+    params.set("status", status);
+  }
+
+  if (paymentStatus) {
+    params.set("paymentStatus", paymentStatus);
+  }
+
+  if (page > 1) {
+    params.set("page", String(page));
+  }
+
+  const search = params.toString();
+  return search ? `/admin/participants?${search}` : "/admin/participants";
+}
+
+function normalizeQuery(value?: string) {
+  return value?.trim().slice(0, maxQueryLength) ?? "";
+}
+
+function normalizePage(value?: string) {
+  const parsed = Number.parseInt(value ?? "", 10);
+
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    return 1;
+  }
+
+  return parsed;
 }

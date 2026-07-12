@@ -11,6 +11,7 @@ import { VehicleForm } from "@/components/vehicle-form";
 import { VehicleImageSubmitButton } from "@/components/vehicle-image-submit-button";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
+import { measureServerTiming } from "@/lib/server-timing";
 import { createOwnedVehicleImageSignedUrl } from "@/lib/vehicle-images";
 
 type EditVehiclePageProps = {
@@ -27,22 +28,37 @@ export default async function EditVehiclePage({
   params,
   searchParams,
 }: EditVehiclePageProps) {
-  const { id } = await params;
+  const [{ id }, query] = await Promise.all([params, searchParams]);
   const memberUser = await requireCompleteMemberUser(`/account/garage/${id}`);
-  const query = await searchParams;
-  const vehicle = await prisma.vehicle.findFirst({
-    where: {
-      id,
-      userId: memberUser.id,
-      deletedAt: null,
-    },
-  });
+  const vehicle = await measureServerTiming("GARAGE_QUERY", () =>
+    prisma.vehicle.findFirst({
+      where: {
+        id,
+        userId: memberUser.id,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        userId: true,
+        brand: true,
+        model: true,
+        year: true,
+        plateNumber: true,
+        color: true,
+        isPrimary: true,
+        imagePath: true,
+        deletedAt: true,
+      },
+    }),
+  );
 
   if (!vehicle) {
     redirect("/account/garage?garageError=not_found");
   }
 
-  const coverImageUrl = await createOwnedVehicleImageSignedUrl(vehicle, memberUser.id);
+  const coverImageUrl = await measureServerTiming("GARAGE_SIGNED_URLS", () =>
+    createOwnedVehicleImageSignedUrl(vehicle, memberUser.id),
+  );
   const updateAction = updateVehicleAction.bind(null, vehicle.id);
   const makePrimaryAction = makePrimaryVehicleAction.bind(null, vehicle.id);
   const archiveAction = archiveVehicleAction.bind(null, vehicle.id);
@@ -135,12 +151,16 @@ function VehicleCoverPanel({
               src={coverImageUrl}
               alt=""
               aria-hidden="true"
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-2xl"
             />
             <div className="absolute inset-0 bg-ats-black/55" />
             <img
               src={coverImageUrl}
               alt={`${label} araç fotoğrafı`}
+              loading="lazy"
+              decoding="async"
               className="relative z-10 h-full w-full object-contain p-3 sm:p-5"
             />
           </>
