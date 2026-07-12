@@ -26,6 +26,10 @@ export type ModificationCatalogGroup = {
       availability: "AVAILABLE" | "INSTALLED" | "BLOCKED";
       usageClass?: string | null;
       brakePadSpecification?: BrakePadSpecificationSummary | null;
+      sportSpringSpecification?: SportSpringSpecificationSummary | null;
+      bigBrakeKitSpecification?: BigBrakeKitSpecificationSummary | null;
+      tyreSpecification?: TyreSpecificationSummary | null;
+      wheelSpecification?: WheelSpecificationSummary | null;
       reason?: string;
     }>;
   }>;
@@ -38,6 +42,41 @@ type BrakePadSpecificationSummary = {
   streetSuitability: number;
   rotorWear: number;
   noiseLevel: number;
+};
+
+type SportSpringSpecificationSummary = {
+  approximateLoweringFrontMm: number | null;
+  approximateLoweringRearMm: number | null;
+  progressiveRate: boolean | null;
+  roadSuitability: number;
+  trackSuitability: number;
+};
+
+type BigBrakeKitSpecificationSummary = {
+  frontOrRear: string;
+  pistonCount: number | null;
+  rotorDiameterMm: number | null;
+  rotorConstruction: string | null;
+  roadSuitability: number;
+  trackSuitability: number;
+  thermalCapacity: number;
+};
+
+type TyreSpecificationSummary = {
+  tyreClass: string;
+  dryGrip: number;
+  wetGrip: number;
+  coldPerformance: number;
+  heatTolerance: number;
+  trackConsistency: number;
+  roadSuitability: number;
+  roadLegal: boolean | null;
+};
+
+type WheelSpecificationSummary = {
+  construction: string;
+  trackSuitability: number;
+  roadSuitability: number;
 };
 
 type VehicleModificationBatchSelectorProps = {
@@ -277,7 +316,7 @@ export function VehicleModificationBatchSelector({
         </p>
       ) : null}
 
-      <BrakePadOptionDetails option={selectedOption} />
+      <CatalogOptionDetails option={selectedOption} />
 
       <form action={formAction} className="rounded-md border border-ats-border bg-ats-black p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -368,25 +407,85 @@ export function VehicleModificationBatchSelector({
   );
 }
 
-function BrakePadOptionDetails({
+function CatalogOptionDetails({
   option,
 }: {
   option: ModificationCatalogGroup["types"][number]["options"][number] | null;
 }) {
-  if (!option?.brakePadSpecification) {
+  if (!option) {
     return null;
   }
 
-  const spec = option.brakePadSpecification;
   const details: Array<[string, string | number]> = [
     ["Kullanım", usageClassLabel(option.usageClass)],
-    ["Soğuk", spec.coldPerformance],
-    ["Sıcak", spec.hotPerformance],
-    ["Fade", spec.fadeResistance],
-    ["Yol", spec.streetSuitability],
-    ["Disk aşındırma", spec.rotorWear],
-    ["Gürültü", spec.noiseLevel],
   ];
+
+  if (option.brakePadSpecification) {
+    const spec = option.brakePadSpecification;
+
+    details.push(
+      ["Soğuk", spec.coldPerformance],
+      ["Sıcak", spec.hotPerformance],
+      ["Fade", spec.fadeResistance],
+      ["Yol", spec.streetSuitability],
+      ["Disk aşındırma", spec.rotorWear],
+      ["Gürültü", spec.noiseLevel],
+    );
+  } else if (option.sportSpringSpecification) {
+    const spec = option.sportSpringSpecification;
+
+    details.push(
+      ["Yol", spec.roadSuitability],
+      ["Pist", spec.trackSuitability],
+      ["Progresif", spec.progressiveRate === null ? "Belirsiz" : spec.progressiveRate ? "Evet" : "Hayır"],
+    );
+
+    if (
+      spec.approximateLoweringFrontMm !== null ||
+      spec.approximateLoweringRearMm !== null
+    ) {
+      details.push([
+        "Alçaltma",
+        `${spec.approximateLoweringFrontMm ?? "-"} / ${
+          spec.approximateLoweringRearMm ?? "-"
+        } mm`,
+      ]);
+    }
+  } else if (option.bigBrakeKitSpecification) {
+    const spec = option.bigBrakeKitSpecification;
+
+    details.push(
+      ["Aks", bigBrakeKitAxleLabel(spec.frontOrRear)],
+      ["Piston", spec.pistonCount ?? "Belirsiz"],
+      ["Disk", spec.rotorDiameterMm ? `${spec.rotorDiameterMm} mm` : "Belirsiz"],
+      ["Disk yapı", rotorConstructionLabel(spec.rotorConstruction)],
+      ["Termal", spec.thermalCapacity],
+      ["Pist", spec.trackSuitability],
+    );
+  } else if (option.tyreSpecification) {
+    const spec = option.tyreSpecification;
+
+    details.push(
+      ["Sınıf", tyreClassLabel(spec.tyreClass)],
+      ["Kuru", spec.dryGrip],
+      ["Islak", spec.wetGrip],
+      ["Soğuk", spec.coldPerformance],
+      ["Isı", spec.heatTolerance],
+      ["Stabilite", spec.trackConsistency],
+      ["Yol", spec.roadSuitability],
+      ["Yol legal", spec.roadLegal === null ? "Belirsiz" : spec.roadLegal ? "Evet" : "Hayır"],
+    );
+  } else if (option.wheelSpecification) {
+    const spec = option.wheelSpecification;
+
+    details.push(
+      ["Yapı", wheelConstructionLabel(spec.construction)],
+      ["Yol", spec.roadSuitability],
+      ["Pist", spec.trackSuitability],
+    );
+  } else {
+    return null;
+  }
 
   return (
     <div className="rounded-md border border-ats-border bg-ats-black px-4 py-3">
@@ -634,4 +733,53 @@ function usageClassLabel(value?: string | null) {
   };
 
   return value ? labels[value] ?? value : "Belirtilmedi";
+}
+
+function tyreClassLabel(value: string) {
+  const labels: Record<string, string> = {
+    TOURING: "Touring",
+    UHP_ROAD: "UHP yol",
+    MAX_PERFORMANCE_ROAD: "Max performance",
+    EXTREME_PERFORMANCE: "Extreme performance",
+    TRACKDAY: "Trackday",
+    SEMI_SLICK: "Semi-slick",
+    SLICK: "Slick",
+    WET_RACING: "Yağmur yarış",
+  };
+
+  return labels[value] ?? value;
+}
+
+function wheelConstructionLabel(value: string) {
+  const labels: Record<string, string> = {
+    CAST: "Döküm",
+    FLOW_FORMED: "Flow formed",
+    FORGED: "Dövme",
+    MULTI_PIECE: "Çok parçalı",
+  };
+
+  return labels[value] ?? value;
+}
+
+function bigBrakeKitAxleLabel(value: string) {
+  const labels: Record<string, string> = {
+    FRONT: "Ön",
+    REAR: "Arka",
+    BOTH: "Ön / arka",
+  };
+
+  return labels[value] ?? value;
+}
+
+function rotorConstructionLabel(value?: string | null) {
+  if (!value) {
+    return "Belirsiz";
+  }
+
+  const labels: Record<string, string> = {
+    ONE_PIECE: "Tek parça",
+    TWO_PIECE_FLOATING: "İki parçalı floating",
+  };
+
+  return labels[value] ?? value;
 }
