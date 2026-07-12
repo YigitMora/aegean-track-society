@@ -2,6 +2,10 @@
 
 Accessed date for this sprint: 2026-07-12.
 
+## Sprint 4G Tuning Evidence
+
+Platform-specific tuning packages now store calibration confidence, source notes, and optional manufacturer-claimed power or torque deltas on `VehicleModificationImpact`. These fields are evidence metadata only. The ATS rating formula remains unchanged, and tuning impacts stay conservative until exact vehicle-template evidence is stronger. See `docs/ats-platform-tuning-sources.md` for product-family source rows and compatibility precedence.
+
 ## Brake Pad Compounds
 
 | Code | Source title | Publisher | URL | Values used | Uncertainty note |
