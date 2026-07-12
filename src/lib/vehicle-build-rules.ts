@@ -1,6 +1,10 @@
 import "server-only";
 
-import { ModificationCategory, ModificationRuleType } from "@prisma/client";
+import {
+  ModificationCategory,
+  ModificationRuleType,
+  type VehiclePowertrain,
+} from "@prisma/client";
 
 export const orderedModificationCategories = [
   ModificationCategory.ENGINE,
@@ -59,6 +63,9 @@ export type VehicleBuildVehicle = {
   id: string;
   userId: string;
   vehicleDefinitionId: string | null;
+  vehicleDefinition?: {
+    powertrain: VehiclePowertrain;
+  } | null;
   brand: string;
   model: string;
   year: number | null;
@@ -93,8 +100,14 @@ type VehicleBuildRequirementGroup = {
   }>;
 };
 
+type VehicleBuildPowertrainApplicability = {
+  active: boolean;
+  powertrain: VehiclePowertrain;
+};
+
 export type VehicleBuildDefinitionForRules = VehicleBuildDefinitionLabel & {
   active: boolean;
+  powertrainApplicabilities: VehicleBuildPowertrainApplicability[];
   compatibilities: VehicleBuildCompatibility[];
   requirementGroups: VehicleBuildRequirementGroup[];
   rulesAsSource: Array<{
@@ -198,6 +211,18 @@ export function evaluateModificationAvailability({
     return {
       ok: false,
       code: "MODIFICATION_INACTIVE",
+    };
+  }
+
+  if (
+    !isModificationApplicableToVehiclePowertrain(
+      definition,
+      vehicle.vehicleDefinition?.powertrain ?? null,
+    )
+  ) {
+    return {
+      ok: false,
+      code: "MODIFICATION_INCOMPATIBLE",
     };
   }
 
@@ -334,6 +359,19 @@ export function evaluateModificationBatchAvailability({
       };
     }
 
+    if (
+      !isModificationApplicableToVehiclePowertrain(
+        definition,
+        vehicle.vehicleDefinition?.powertrain ?? null,
+      )
+    ) {
+      return {
+        ok: false,
+        code: "MODIFICATION_INCOMPATIBLE",
+        offendingDefinitionId: definition.id,
+      };
+    }
+
     if (!isModificationCompatible(vehicle, definition.compatibilities)) {
       return {
         ok: false,
@@ -458,6 +496,29 @@ export function vehicleBuildResultLabel(
   }
 
   return "Build profili güncellenemedi. Lütfen tekrar deneyin.";
+}
+
+export function isModificationApplicableToVehiclePowertrain(
+  definition: {
+    powertrainApplicabilities: VehicleBuildPowertrainApplicability[];
+  },
+  vehiclePowertrain: VehiclePowertrain | null,
+) {
+  const activeApplicabilities = definition.powertrainApplicabilities.filter(
+    (applicability) => applicability.active,
+  );
+
+  if (activeApplicabilities.length === 0) {
+    return true;
+  }
+
+  if (!vehiclePowertrain) {
+    return false;
+  }
+
+  return activeApplicabilities.some(
+    (applicability) => applicability.powertrain === vehiclePowertrain,
+  );
 }
 
 function isModificationCompatible(

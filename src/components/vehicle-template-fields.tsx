@@ -49,8 +49,6 @@ export function VehicleTemplateFields({
   const [year, setYear] = useState(
     initialDefinition ? defaultYearForDefinition(initialDefinition, defaultYear) : "",
   );
-  const [searchQuery, setSearchQuery] = useState("");
-
   const brandOptions = useMemo(
     () => Array.from(new Set(definitions.map((definition) => definition.brand))),
     [definitions],
@@ -89,18 +87,6 @@ export function VehicleTemplateFields({
     : selectedDefinition
       ? defaultYearForDefinition(selectedDefinition, defaultYear)
       : "";
-  const searchResults = useMemo(() => {
-    const query = normalizeSearchToken(searchQuery);
-
-    if (query.length < 2) {
-      return [];
-    }
-
-    return definitions
-      .filter((definition) => searchableDefinitionLabel(definition).includes(query))
-      .slice(0, 8);
-  }, [definitions, searchQuery]);
-
   if (definitions.length === 0) {
     return (
       <ManualVehicleFields
@@ -132,29 +118,6 @@ export function VehicleTemplateFields({
           <input type="hidden" name="brand" value={selectedDefinition?.brand ?? ""} />
           <input type="hidden" name="model" value={selectedDefinition?.model ?? ""} />
           <input type="hidden" name="year" value={selectedYear} />
-
-          <div className="sm:col-span-2">
-            <SearchField
-              label="Araç ara"
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="GTI, M2, FL5"
-            />
-            {searchResults.length > 0 ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {searchResults.map((definition) => (
-                  <button
-                    key={definition.id}
-                    type="button"
-                    onClick={() => applyDefinitionSelection(definition)}
-                    className="rounded-full border border-ats-border px-3 py-2 text-xs font-black text-ats-muted transition hover:border-ats-blue hover:text-ats-blue"
-                  >
-                    {definitionSummary(definition)}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
 
           <SelectField
             label="Marka"
@@ -248,32 +211,6 @@ export function VehicleTemplateFields({
     setDefinitionId(definition.id);
     setYear(defaultYearForDefinition(definition, defaultYear));
   }
-}
-
-function SearchField({
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-}) {
-  return (
-    <label className="block">
-      <span className="text-sm font-bold text-ats-text">{label}</span>
-      <input
-        type="search"
-        value={value}
-        placeholder={placeholder}
-        onChange={(event) => onChange(event.target.value)}
-        autoComplete="off"
-        className="mt-2 h-12 w-full rounded-md border border-ats-border bg-ats-black px-3 text-sm font-semibold text-ats-text outline-none transition placeholder:text-ats-muted/60 focus:border-ats-blue focus:ring-2 focus:ring-ats-blue/20"
-      />
-    </label>
-  );
 }
 
 function ManualVehicleFields({
@@ -435,15 +372,4 @@ function definitionSummary(definition: VehicleTemplateOption) {
   ]
     .filter(Boolean)
     .join(" · ");
-}
-
-function searchableDefinitionLabel(definition: VehicleTemplateOption) {
-  return normalizeSearchToken(definitionSummary(definition));
-}
-
-function normalizeSearchToken(value: string) {
-  return value
-    .trim()
-    .replace(/\s+/g, " ")
-    .toLocaleLowerCase("tr-TR");
 }

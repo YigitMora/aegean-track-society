@@ -30,6 +30,7 @@ export type ModificationCatalogGroup = {
       bigBrakeKitSpecification?: BigBrakeKitSpecificationSummary | null;
       tyreSpecification?: TyreSpecificationSummary | null;
       wheelSpecification?: WheelSpecificationSummary | null;
+      fitmentNote?: string;
       reason?: string;
     }>;
   }>;
@@ -108,12 +109,27 @@ export function VehicleModificationBatchSelector({
   const [isPreviewPending, setIsPreviewPending] = useState(false);
   const [queuedDefinitionIds, setQueuedDefinitionIds] = useState<string[]>([]);
   const previewRequestVersion = useRef(0);
+  const visibleCatalogGroups = useMemo(
+    () =>
+      catalogGroups
+        .map((group) => ({
+          ...group,
+          types: group.types
+            .map((type) => ({
+              ...type,
+              options: type.options.filter(Boolean),
+            }))
+            .filter((type) => type.options.length > 0),
+        }))
+        .filter((group) => group.types.length > 0),
+    [catalogGroups],
+  );
   const [selectedCategory, setSelectedCategory] = useState(
-    catalogGroups[0]?.category ?? "",
+    visibleCatalogGroups[0]?.category ?? "",
   );
   const selectedGroup =
-    catalogGroups.find((group) => group.category === selectedCategory) ??
-    catalogGroups[0] ??
+    visibleCatalogGroups.find((group) => group.category === selectedCategory) ??
+    visibleCatalogGroups[0] ??
     null;
   const [selectedTypeKey, setSelectedTypeKey] = useState(
     selectedGroup?.types[0]?.typeKey ?? "",
@@ -153,6 +169,56 @@ export function VehicleModificationBatchSelector({
     (!state.ok && state.offendingDefinitionId) ||
     (!previewState?.ok && previewState?.offendingDefinitionId) ||
     null;
+
+  useEffect(() => {
+    if (!selectedGroup) {
+      setSelectedCategory("");
+      setSelectedTypeKey("");
+      setSelectedDefinitionId("");
+      return;
+    }
+
+    if (selectedGroup.category !== selectedCategory) {
+      const nextType = selectedGroup.types[0] ?? null;
+      const nextOption =
+        nextType?.options.find((option) => option.availability === "AVAILABLE") ??
+        nextType?.options[0] ??
+        null;
+
+      setSelectedCategory(selectedGroup.category);
+      setSelectedTypeKey(nextType?.typeKey ?? "");
+      setSelectedDefinitionId(nextOption?.definitionId ?? "");
+      return;
+    }
+
+    if (!selectedType || selectedType.typeKey !== selectedTypeKey) {
+      const nextType = selectedGroup.types[0] ?? null;
+      const nextOption =
+        nextType?.options.find((option) => option.availability === "AVAILABLE") ??
+        nextType?.options[0] ??
+        null;
+
+      setSelectedTypeKey(nextType?.typeKey ?? "");
+      setSelectedDefinitionId(nextOption?.definitionId ?? "");
+      return;
+    }
+
+    if (!selectedOption || selectedOption.definitionId !== selectedDefinitionId) {
+      const nextOption =
+        selectedType.options.find((option) => option.availability === "AVAILABLE") ??
+        selectedType.options[0] ??
+        null;
+
+      setSelectedDefinitionId(nextOption?.definitionId ?? "");
+    }
+  }, [
+    selectedCategory,
+    selectedDefinitionId,
+    selectedGroup,
+    selectedOption,
+    selectedType,
+    selectedTypeKey,
+  ]);
 
   useEffect(() => {
     if (!state.ok || state.submittedAt === 0) {
@@ -216,7 +282,7 @@ export function VehicleModificationBatchSelector({
     return () => window.clearTimeout(timeoutId);
   }, [previewAction, queueKey, queuedDefinitionIds]);
 
-  if (catalogGroups.length === 0) {
+  if (visibleCatalogGroups.length === 0) {
     return (
       <p className="mt-4 rounded-md border border-ats-border bg-ats-black p-4 text-sm font-semibold text-ats-muted">
         Eklenebilir katalog parçası bulunamadı.
@@ -232,7 +298,8 @@ export function VehicleModificationBatchSelector({
           value={selectedGroup?.category ?? ""}
           onChange={(value) => {
             const nextGroup =
-              catalogGroups.find((group) => group.category === value) ?? catalogGroups[0];
+              visibleCatalogGroups.find((group) => group.category === value) ??
+              visibleCatalogGroups[0];
             const nextType = nextGroup?.types[0] ?? null;
             const nextOption =
               nextType?.options.find((option) => option.availability === "AVAILABLE") ??
@@ -243,7 +310,7 @@ export function VehicleModificationBatchSelector({
             setSelectedTypeKey(nextType?.typeKey ?? "");
             setSelectedDefinitionId(nextOption?.definitionId ?? "");
           }}
-          options={catalogGroups.map((group) => ({
+          options={visibleCatalogGroups.map((group) => ({
             value: group.category,
             label: group.categoryLabel,
           }))}
@@ -285,9 +352,9 @@ export function VehicleModificationBatchSelector({
           }))}
         />
 
-          <button
-            type="button"
-            disabled={!canQueueSelected}
+        <button
+          type="button"
+          disabled={!canQueueSelected}
           onClick={() => {
             if (!selectedOption || !canQueueSelected) {
               return;
@@ -497,6 +564,11 @@ function CatalogOptionDetails({
           </div>
         ))}
       </dl>
+      {option.fitmentNote ? (
+        <p className="mt-2 text-xs font-semibold leading-5 text-ats-muted">
+          {option.fitmentNote}
+        </p>
+      ) : null}
     </div>
   );
 }
