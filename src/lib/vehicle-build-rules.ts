@@ -67,10 +67,12 @@ export type VehicleBuildVehicle = {
 
 export type VehicleBuildDefinitionLabel = {
   id: string;
+  code?: string;
   category: ModificationCategory;
   brand: string | null;
   name: string;
   variant: string | null;
+  componentTypeCode?: string | null;
 };
 
 type VehicleBuildCompatibility = {
@@ -164,11 +166,23 @@ export function normalizeVehicleIdentity(value: string | null | undefined) {
 }
 
 export function formatModificationDefinition(definition: {
+  code?: string;
   brand: string | null;
   name: string;
   variant: string | null;
+  componentTypeCode?: string | null;
 }) {
-  return [definition.brand, definition.name, definition.variant].filter(Boolean).join(" / ");
+  if (
+    definition.code === "brakes_performance_pads" ||
+    definition.code === "brakes_track_pads"
+  ) {
+    return "Fren Balatası · Eski genel kayıt";
+  }
+
+  const brand =
+    definition.brand && definition.brand !== "Generic" ? definition.brand : null;
+
+  return [brand, definition.name, definition.variant].filter(Boolean).join(" / ");
 }
 
 export function evaluateModificationAvailability({

@@ -24,9 +24,20 @@ export type ModificationCatalogGroup = {
       definitionId: string;
       label: string;
       availability: "AVAILABLE" | "INSTALLED" | "BLOCKED";
+      usageClass?: string | null;
+      brakePadSpecification?: BrakePadSpecificationSummary | null;
       reason?: string;
     }>;
   }>;
+};
+
+type BrakePadSpecificationSummary = {
+  coldPerformance: number;
+  hotPerformance: number;
+  fadeResistance: number;
+  streetSuitability: number;
+  rotorWear: number;
+  noiseLevel: number;
 };
 
 type VehicleModificationBatchSelectorProps = {
@@ -266,6 +277,8 @@ export function VehicleModificationBatchSelector({
         </p>
       ) : null}
 
+      <BrakePadOptionDetails option={selectedOption} />
+
       <form action={formAction} className="rounded-md border border-ats-border bg-ats-black p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -351,6 +364,40 @@ export function VehicleModificationBatchSelector({
               : state.message ?? previewState?.message ?? ""}
         </p>
       </form>
+    </div>
+  );
+}
+
+function BrakePadOptionDetails({
+  option,
+}: {
+  option: ModificationCatalogGroup["types"][number]["options"][number] | null;
+}) {
+  if (!option?.brakePadSpecification) {
+    return null;
+  }
+
+  const spec = option.brakePadSpecification;
+  const details: Array<[string, string | number]> = [
+    ["Kullanım", usageClassLabel(option.usageClass)],
+    ["Soğuk", spec.coldPerformance],
+    ["Sıcak", spec.hotPerformance],
+    ["Fade", spec.fadeResistance],
+    ["Yol", spec.streetSuitability],
+    ["Disk aşındırma", spec.rotorWear],
+    ["Gürültü", spec.noiseLevel],
+  ];
+
+  return (
+    <div className="rounded-md border border-ats-border bg-ats-black px-4 py-3">
+      <dl className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold text-ats-muted">
+        {details.map(([label, value]) => (
+          <div key={label} className="flex items-center gap-1.5">
+            <dt className="font-black uppercase tracking-[0.1em]">{label}</dt>
+            <dd className="text-ats-text">{value}</dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }
@@ -573,4 +620,18 @@ function availabilityLabel(availability: "AVAILABLE" | "INSTALLED" | "BLOCKED") 
   }
 
   return "Eklenebilir";
+}
+
+function usageClassLabel(value?: string | null) {
+  const labels: Record<string, string> = {
+    STREET: "Yol",
+    FAST_ROAD: "Hızlı yol",
+    STREET_TRACK: "Yol / pist",
+    TRACK: "Pist",
+    ENDURANCE: "Dayanıklılık",
+    SPRINT: "Sprint",
+    RACE: "Yarış",
+  };
+
+  return value ? labels[value] ?? value : "Belirtilmedi";
 }

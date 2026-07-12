@@ -41,6 +41,8 @@ const vehicleRatingModificationDefinitionSelect = {
   brand: true,
   name: true,
   variant: true,
+  componentTypeCode: true,
+  usageClass: true,
   powerImpact: true,
   handlingImpact: true,
   brakingImpact: true,
@@ -420,6 +422,8 @@ function VehicleList({
         brand: string | null;
         name: string;
         variant: string | null;
+        componentTypeCode: string | null;
+        usageClass: string | null;
         powerImpact: number;
         handlingImpact: number;
         brakingImpact: number;

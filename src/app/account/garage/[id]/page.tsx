@@ -98,6 +98,8 @@ export default async function EditVehiclePage({
                 brand: true,
                 name: true,
                 variant: true,
+                componentTypeCode: true,
+                usageClass: true,
                 powerImpact: true,
                 handlingImpact: true,
                 brakingImpact: true,
@@ -375,10 +377,13 @@ function VehicleBuildProfile({
     createdAt: Date;
     modificationDefinition: {
       id: string;
+      code: string;
       category: (typeof orderedModificationCategories)[number];
       brand: string | null;
       name: string;
       variant: string | null;
+      componentTypeCode: string | null;
+      usageClass: string | null;
       compatibilities: Array<{
         id: string;
       }>;
@@ -743,6 +748,8 @@ const modificationDefinitionLabelSelect = {
   brand: true,
   name: true,
   variant: true,
+  componentTypeCode: true,
+  usageClass: true,
 } satisfies Prisma.ModificationDefinitionSelect;
 
 const modificationDefinitionRuleSelect = {
@@ -750,6 +757,17 @@ const modificationDefinitionRuleSelect = {
   active: true,
   description: true,
   sortOrder: true,
+  brakePadSpecification: {
+    select: {
+      active: true,
+      coldPerformance: true,
+      hotPerformance: true,
+      fadeResistance: true,
+      streetSuitability: true,
+      rotorWear: true,
+      noiseLevel: true,
+    },
+  },
   compatibilities: {
     where: {
       active: true,
@@ -864,13 +882,17 @@ function buildCatalogGroups({
       brand: string | null;
       name: string;
       variant: string | null;
+      componentTypeCode?: string | null;
+      usageClass?: string | null;
     };
   }>;
 }): ModificationCatalogGroup[] {
   const groupsByCategory = new Map<string, ModificationCatalogGroup>();
 
   for (const definition of catalog) {
-    const typeKey = `${definition.category}:${definition.name.toLocaleLowerCase("tr-TR")}`;
+    const typeCode =
+      definition.componentTypeCode ?? definition.name.toLocaleLowerCase("tr-TR");
+    const typeKey = `${definition.category}:${typeCode}`;
     const availability = evaluateModificationAvailability({
       vehicle,
       definition,
@@ -892,13 +914,17 @@ function buildCatalogGroups({
       group.types.find((candidate) => candidate.typeKey === typeKey) ??
       {
         typeKey,
-        typeLabel: definition.name,
+        typeLabel: modificationTypeLabel(definition),
         options: [],
       };
 
     type.options.push({
       definitionId: definition.id,
       label: optionLabelForDefinition(definition),
+      usageClass: definition.usageClass,
+      brakePadSpecification: definition.brakePadSpecification?.active
+        ? definition.brakePadSpecification
+        : null,
       availability: availability.ok
         ? "AVAILABLE"
         : availability.code === "DUPLICATE_MODIFICATION"
@@ -946,10 +972,61 @@ function optionLabelForDefinition(definition: {
   brand: string | null;
   name: string;
   variant: string | null;
+  componentTypeCode?: string | null;
 }) {
-  const optionLabel = [definition.brand, definition.variant].filter(Boolean).join(" ");
+  const brand =
+    definition.brand && definition.brand !== "Generic" ? definition.brand : null;
+  const optionLabel = [brand, definition.variant].filter(Boolean).join(" / ");
 
   return optionLabel || formatModificationDefinition(definition);
+}
+
+function modificationTypeLabel(definition: {
+  componentTypeCode?: string | null;
+  name: string;
+}) {
+  const labels: Record<string, string> = {
+    brake_pad: "Fren Balatası",
+    brake_fluid: "Fren Hidroliği",
+    braided_brake_line: "Çelik Fren Hortumu",
+    brake_disc: "Fren Diski",
+    caliper: "Kaliper",
+    big_brake_kit: "Big Brake Kit",
+    brake_cooling: "Fren Soğutma",
+    ecu_software: "ECU Yazılımı",
+    platform_tune_package: "Platform Tune Paketi",
+    transmission_software: "Şanzıman Yazılımı",
+    air_filter: "Hava Filtresi",
+    intake: "Emiş",
+    turbo_inlet: "Turbo Inlet",
+    downpipe: "Downpipe",
+    cat_back_exhaust: "Cat-back Egzoz",
+    exhaust_manifold: "Egzoz Manifoldu",
+    intercooler: "Intercooler",
+    oil_cooler: "Yağ Soğutucu",
+    radiator: "Radyatör",
+    transmission_cooler: "Şanzıman Soğutucu",
+    sport_springs: "Spor Yay",
+    coilover: "Coilover",
+    damper: "Amortisör",
+    camber_hardware: "Kamber Donanımı",
+    anti_roll_bar: "Anti-roll Bar",
+    bushings: "Burç",
+    strut_brace: "Kule Gergisi",
+    uhp_road_tyre: "UHP Yol Lastiği",
+    semi_slick: "Semi-slick",
+    slick: "Slick",
+    wet_racing_tyre: "Yağmur Yarış Lastiği",
+    wheels: "Jant",
+    lsd: "LSD",
+    clutch: "Debriyaj",
+    flywheel: "Volan",
+    driveshaft_axle: "Aks / Şaft",
+  };
+
+  return definition.componentTypeCode
+    ? labels[definition.componentTypeCode] ?? definition.name
+    : definition.name;
 }
 
 function formatDate(date: Date) {
