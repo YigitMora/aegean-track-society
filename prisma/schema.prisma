@@ -128,6 +128,40 @@ enum ModificationUsageClass {
   RACE
 }
 
+enum BigBrakeKitAxle {
+  FRONT
+  REAR
+  BOTH
+}
+
+enum RotorConstruction {
+  ONE_PIECE
+  TWO_PIECE_FLOATING
+}
+
+enum CaliperType {
+  FIXED
+  FLOATING
+}
+
+enum TyreClass {
+  TOURING
+  UHP_ROAD
+  MAX_PERFORMANCE_ROAD
+  EXTREME_PERFORMANCE
+  TRACKDAY
+  SEMI_SLICK
+  SLICK
+  WET_RACING
+}
+
+enum WheelConstruction {
+  CAST
+  FLOW_FORMED
+  FORGED
+  MULTI_PIECE
+}
+
 enum VehiclePowertrain {
   ICE
   HYBRID
@@ -441,32 +475,36 @@ model VehicleDefinition {
 }
 
 model ModificationDefinition {
-  id                    String                          @id @default(cuid())
-  code                  String                          @unique
-  category              ModificationCategory
-  brand                 String?
-  name                  String
-  variant               String?
-  componentTypeCode     String?
-  usageClass            ModificationUsageClass?
-  description           String?                         @db.Text
-  powerImpact           Int                             @default(0)
-  handlingImpact        Int                             @default(0)
-  brakingImpact         Int                             @default(0)
-  reliabilityImpact     Int                             @default(0)
-  trackReadinessImpact  Int                             @default(0)
-  active                Boolean                         @default(true)
-  sortOrder             Int                             @default(0)
-  vehicleModifications  VehicleModification[]
-  modificationImpacts   VehicleModificationImpact[]
-  compatibilities       ModificationCompatibility[]
-  brakePadSpecification BrakePadSpecification?
-  rulesAsSource         ModificationRule[]              @relation("ModificationRuleSource")
-  rulesAsTarget         ModificationRule[]              @relation("ModificationRuleTarget")
-  requirementGroups     ModificationRequirementGroup[]  @relation("ModificationRequirementSource")
-  requirementOptions    ModificationRequirementOption[] @relation("ModificationRequirementOptionDefinition")
-  createdAt             DateTime                        @default(now())
-  updatedAt             DateTime                        @updatedAt
+  id                       String                          @id @default(cuid())
+  code                     String                          @unique
+  category                 ModificationCategory
+  brand                    String?
+  name                     String
+  variant                  String?
+  componentTypeCode        String?
+  usageClass               ModificationUsageClass?
+  description              String?                         @db.Text
+  powerImpact              Int                             @default(0)
+  handlingImpact           Int                             @default(0)
+  brakingImpact            Int                             @default(0)
+  reliabilityImpact        Int                             @default(0)
+  trackReadinessImpact     Int                             @default(0)
+  active                   Boolean                         @default(true)
+  sortOrder                Int                             @default(0)
+  vehicleModifications     VehicleModification[]
+  modificationImpacts      VehicleModificationImpact[]
+  compatibilities          ModificationCompatibility[]
+  brakePadSpecification    BrakePadSpecification?
+  sportSpringSpecification SportSpringSpecification?
+  bigBrakeKitSpecification BigBrakeKitSpecification?
+  tyreSpecification        TyreSpecification?
+  wheelSpecification       WheelSpecification?
+  rulesAsSource            ModificationRule[]              @relation("ModificationRuleSource")
+  rulesAsTarget            ModificationRule[]              @relation("ModificationRuleTarget")
+  requirementGroups        ModificationRequirementGroup[]  @relation("ModificationRequirementSource")
+  requirementOptions       ModificationRequirementOption[] @relation("ModificationRequirementOptionDefinition")
+  createdAt                DateTime                        @default(now())
+  updatedAt                DateTime                        @updatedAt
 
   @@index([category, active, sortOrder])
   @@index([category, componentTypeCode, active])
@@ -487,6 +525,76 @@ model BrakePadSpecification {
   noiseLevel               Int
   minOperatingTempC        Int?
   maxOperatingTempC        Int?
+  sourceNote               String?
+  active                   Boolean                @default(true)
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+}
+
+model SportSpringSpecification {
+  id                         String                 @id @default(cuid())
+  modificationDefinitionId   String                 @unique
+  modificationDefinition     ModificationDefinition @relation(fields: [modificationDefinitionId], references: [id], onDelete: Cascade)
+  approximateLoweringFrontMm Int?
+  approximateLoweringRearMm  Int?
+  progressiveRate            Boolean?
+  roadSuitability            Int
+  trackSuitability           Int
+  sourceNote                 String?
+  active                     Boolean                @default(true)
+  createdAt                  DateTime               @default(now())
+  updatedAt                  DateTime               @updatedAt
+}
+
+model BigBrakeKitSpecification {
+  id                       String                 @id @default(cuid())
+  modificationDefinitionId String                 @unique
+  modificationDefinition   ModificationDefinition @relation(fields: [modificationDefinitionId], references: [id], onDelete: Cascade)
+  frontOrRear              BigBrakeKitAxle
+  pistonCount              Int?
+  rotorDiameterMm          Int?
+  rotorThicknessMm         Int?
+  rotorConstruction        RotorConstruction?
+  caliperType              CaliperType?
+  roadSuitability          Int
+  trackSuitability         Int
+  thermalCapacity          Int
+  sourceNote               String?
+  active                   Boolean                @default(true)
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+}
+
+model TyreSpecification {
+  id                       String                 @id @default(cuid())
+  modificationDefinitionId String                 @unique
+  modificationDefinition   ModificationDefinition @relation(fields: [modificationDefinitionId], references: [id], onDelete: Cascade)
+  tyreClass                TyreClass
+  dryGrip                  Int
+  wetGrip                  Int
+  coldPerformance          Int
+  heatTolerance            Int
+  trackConsistency         Int
+  roadSuitability          Int
+  wearLongevity            Int
+  noiseComfort             Int
+  roadLegal                Boolean?
+  sourceNote               String?
+  active                   Boolean                @default(true)
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+}
+
+model WheelSpecification {
+  id                       String                 @id @default(cuid())
+  modificationDefinitionId String                 @unique
+  modificationDefinition   ModificationDefinition @relation(fields: [modificationDefinitionId], references: [id], onDelete: Cascade)
+  construction             WheelConstruction
+  nominalDiameterInches    Int?
+  nominalWidthInches       Decimal?               @db.Decimal(4, 1)
+  weightKg                 Decimal?               @db.Decimal(5, 2)
+  trackSuitability         Int
+  roadSuitability          Int
   sourceNote               String?
   active                   Boolean                @default(true)
   createdAt                DateTime               @default(now())

@@ -768,6 +768,49 @@ const modificationDefinitionRuleSelect = {
       noiseLevel: true,
     },
   },
+  sportSpringSpecification: {
+    select: {
+      active: true,
+      approximateLoweringFrontMm: true,
+      approximateLoweringRearMm: true,
+      progressiveRate: true,
+      roadSuitability: true,
+      trackSuitability: true,
+    },
+  },
+  bigBrakeKitSpecification: {
+    select: {
+      active: true,
+      frontOrRear: true,
+      pistonCount: true,
+      rotorDiameterMm: true,
+      rotorConstruction: true,
+      roadSuitability: true,
+      trackSuitability: true,
+      thermalCapacity: true,
+    },
+  },
+  tyreSpecification: {
+    select: {
+      active: true,
+      tyreClass: true,
+      dryGrip: true,
+      wetGrip: true,
+      coldPerformance: true,
+      heatTolerance: true,
+      trackConsistency: true,
+      roadSuitability: true,
+      roadLegal: true,
+    },
+  },
+  wheelSpecification: {
+    select: {
+      active: true,
+      construction: true,
+      trackSuitability: true,
+      roadSuitability: true,
+    },
+  },
   compatibilities: {
     where: {
       active: true,
@@ -925,6 +968,18 @@ function buildCatalogGroups({
       brakePadSpecification: definition.brakePadSpecification?.active
         ? definition.brakePadSpecification
         : null,
+      sportSpringSpecification: definition.sportSpringSpecification?.active
+        ? definition.sportSpringSpecification
+        : null,
+      bigBrakeKitSpecification: definition.bigBrakeKitSpecification?.active
+        ? definition.bigBrakeKitSpecification
+        : null,
+      tyreSpecification: definition.tyreSpecification?.active
+        ? definition.tyreSpecification
+        : null,
+      wheelSpecification: definition.wheelSpecification?.active
+        ? definition.wheelSpecification
+        : null,
       availability: availability.ok
         ? "AVAILABLE"
         : availability.code === "DUPLICATE_MODIFICATION"
@@ -1013,15 +1068,25 @@ function modificationTypeLabel(definition: {
     anti_roll_bar: "Anti-roll Bar",
     bushings: "Burç",
     strut_brace: "Kule Gergisi",
+    tyre_touring: "Touring Lastik",
+    tyre_uhp_road: "UHP Yol Lastiği",
+    tyre_trackday: "Trackday Lastiği",
+    tyre_semi_slick: "Semi-slick",
+    tyre_slick: "Slick",
     uhp_road_tyre: "UHP Yol Lastiği",
     semi_slick: "Semi-slick",
     slick: "Slick",
     wet_racing_tyre: "Yağmur Yarış Lastiği",
+    wheel: "Jant",
+    lightweight_wheel: "Hafif Jant",
+    forged_wheel: "Dövme Jant",
     wheels: "Jant",
     lsd: "LSD",
     clutch: "Debriyaj",
     flywheel: "Volan",
     driveshaft_axle: "Aks / Şaft",
+    roll_bar: "Roll Bar",
+    fire_extinguisher: "Yangın Söndürücü",
   };
 
   return definition.componentTypeCode
