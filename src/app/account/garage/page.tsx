@@ -197,6 +197,12 @@ function toGarageLifecycleVehicle(vehicle: {
     rating: rating
       ? {
           overall: rating.overall,
+          power: rating.power,
+          handling: rating.handling,
+          braking: rating.braking,
+          reliability: rating.reliability,
+          thermal: rating.thermal,
+          trackReadiness: rating.trackReadiness,
           status: rating.status,
         }
       : null,
