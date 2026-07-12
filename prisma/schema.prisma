@@ -118,6 +118,16 @@ enum ModificationRuleType {
   REQUIRES
 }
 
+enum ModificationUsageClass {
+  STREET
+  FAST_ROAD
+  STREET_TRACK
+  TRACK
+  ENDURANCE
+  SPRINT
+  RACE
+}
+
 enum VehiclePowertrain {
   ICE
   HYBRID
@@ -431,32 +441,56 @@ model VehicleDefinition {
 }
 
 model ModificationDefinition {
-  id                   String                          @id @default(cuid())
-  code                 String                          @unique
-  category             ModificationCategory
-  brand                String?
-  name                 String
-  variant              String?
-  description          String?                         @db.Text
-  powerImpact          Int                             @default(0)
-  handlingImpact       Int                             @default(0)
-  brakingImpact        Int                             @default(0)
-  reliabilityImpact    Int                             @default(0)
-  trackReadinessImpact Int                             @default(0)
-  active               Boolean                         @default(true)
-  sortOrder            Int                             @default(0)
-  vehicleModifications VehicleModification[]
-  modificationImpacts  VehicleModificationImpact[]
-  compatibilities      ModificationCompatibility[]
-  rulesAsSource        ModificationRule[]              @relation("ModificationRuleSource")
-  rulesAsTarget        ModificationRule[]              @relation("ModificationRuleTarget")
-  requirementGroups    ModificationRequirementGroup[]  @relation("ModificationRequirementSource")
-  requirementOptions   ModificationRequirementOption[] @relation("ModificationRequirementOptionDefinition")
-  createdAt            DateTime                        @default(now())
-  updatedAt            DateTime                        @updatedAt
+  id                    String                          @id @default(cuid())
+  code                  String                          @unique
+  category              ModificationCategory
+  brand                 String?
+  name                  String
+  variant               String?
+  componentTypeCode     String?
+  usageClass            ModificationUsageClass?
+  description           String?                         @db.Text
+  powerImpact           Int                             @default(0)
+  handlingImpact        Int                             @default(0)
+  brakingImpact         Int                             @default(0)
+  reliabilityImpact     Int                             @default(0)
+  trackReadinessImpact  Int                             @default(0)
+  active                Boolean                         @default(true)
+  sortOrder             Int                             @default(0)
+  vehicleModifications  VehicleModification[]
+  modificationImpacts   VehicleModificationImpact[]
+  compatibilities       ModificationCompatibility[]
+  brakePadSpecification BrakePadSpecification?
+  rulesAsSource         ModificationRule[]              @relation("ModificationRuleSource")
+  rulesAsTarget         ModificationRule[]              @relation("ModificationRuleTarget")
+  requirementGroups     ModificationRequirementGroup[]  @relation("ModificationRequirementSource")
+  requirementOptions    ModificationRequirementOption[] @relation("ModificationRequirementOptionDefinition")
+  createdAt             DateTime                        @default(now())
+  updatedAt             DateTime                        @updatedAt
 
   @@index([category, active, sortOrder])
+  @@index([category, componentTypeCode, active])
   @@index([brand, name])
+}
+
+model BrakePadSpecification {
+  id                       String                 @id @default(cuid())
+  modificationDefinitionId String                 @unique
+  modificationDefinition   ModificationDefinition @relation(fields: [modificationDefinitionId], references: [id], onDelete: Cascade)
+  coldPerformance          Int
+  hotPerformance           Int
+  modulation               Int
+  fadeResistance           Int
+  endurance                Int
+  rotorWear                Int
+  streetSuitability        Int
+  noiseLevel               Int
+  minOperatingTempC        Int?
+  maxOperatingTempC        Int?
+  sourceNote               String?
+  active                   Boolean                @default(true)
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
 }
 
 model VehicleModification {

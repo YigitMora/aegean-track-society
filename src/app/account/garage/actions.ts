@@ -1374,17 +1374,21 @@ type BatchActionStateContext = {
     offendingDefinitionId?: string;
     conflictingModification?: {
       modificationDefinition: {
+        code?: string;
         brand: string | null;
         name: string;
         variant: string | null;
+        componentTypeCode?: string | null;
       };
     };
     missingRequirement?: {
       options: Array<{
         requiredDefinition: {
+          code?: string;
           brand: string | null;
           name: string;
           variant: string | null;
+          componentTypeCode?: string | null;
         };
       }>;
     };
@@ -1482,23 +1486,29 @@ type PreviewStateContext = {
   projectedRating?: VehiclePerformanceRating | null;
   offendingDefinitionId?: string;
   offendingDefinition?: {
+    code?: string;
     brand: string | null;
     name: string;
     variant: string | null;
+    componentTypeCode?: string | null;
   };
   conflictingModification?: {
     modificationDefinition: {
+      code?: string;
       brand: string | null;
       name: string;
       variant: string | null;
+      componentTypeCode?: string | null;
     };
   };
   missingRequirement?: {
     options: Array<{
       requiredDefinition: {
+        code?: string;
         brand: string | null;
         name: string;
         variant: string | null;
+        componentTypeCode?: string | null;
       };
     }>;
   };
@@ -1823,19 +1833,25 @@ function imageErrorForUnknownFailure(error: unknown, fallback: GarageError): Gar
 
 const modificationDefinitionLabelSelect = {
   id: true,
+  code: true,
   category: true,
   brand: true,
   name: true,
   variant: true,
+  componentTypeCode: true,
+  usageClass: true,
 } satisfies Prisma.ModificationDefinitionSelect;
 
 const modificationDefinitionRuleSelect = {
   id: true,
   active: true,
   category: true,
+  code: true,
   brand: true,
   name: true,
   variant: true,
+  componentTypeCode: true,
+  usageClass: true,
   compatibilities: {
     where: {
       active: true,
