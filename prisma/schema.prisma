@@ -98,6 +98,26 @@ enum MemberStatus {
   SUSPENDED
 }
 
+enum ModificationCategory {
+  ENGINE
+  ECU
+  COOLING
+  INTAKE_EXHAUST
+  SUSPENSION
+  BRAKES
+  TYRES
+  WHEELS
+  DRIVETRAIN
+  AERO
+  SAFETY
+  OTHER
+}
+
+enum ModificationRuleType {
+  CONFLICTS_WITH
+  REQUIRES
+}
+
 model Event {
   id                      String         @id @default(cuid())
   code                    String         @unique
@@ -336,24 +356,124 @@ model User {
 }
 
 model Vehicle {
-  id            String         @id @default(cuid())
-  userId        String         @db.Uuid
-  user          User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  id            String                @id @default(cuid())
+  userId        String                @db.Uuid
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
   brand         String
   model         String
   year          Int?
   plateNumber   String
   color         String?
-  isPrimary     Boolean        @default(false)
+  isPrimary     Boolean               @default(false)
   imagePath     String?
   deletedAt     DateTime?
   registrations Registration[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  modifications VehicleModification[]
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
 
   @@index([userId, deletedAt])
   @@index([userId, isPrimary, deletedAt])
   @@index([plateNumber])
+}
+
+model ModificationDefinition {
+  id                   String                          @id @default(cuid())
+  code                 String                          @unique
+  category             ModificationCategory
+  brand                String?
+  name                 String
+  variant              String?
+  description          String?                         @db.Text
+  powerImpact          Int                             @default(0)
+  handlingImpact       Int                             @default(0)
+  brakingImpact        Int                             @default(0)
+  reliabilityImpact    Int                             @default(0)
+  trackReadinessImpact Int                             @default(0)
+  active               Boolean                         @default(true)
+  sortOrder            Int                             @default(0)
+  vehicleModifications VehicleModification[]
+  compatibilities      ModificationCompatibility[]
+  rulesAsSource        ModificationRule[]              @relation("ModificationRuleSource")
+  rulesAsTarget        ModificationRule[]              @relation("ModificationRuleTarget")
+  requirementGroups    ModificationRequirementGroup[]  @relation("ModificationRequirementSource")
+  requirementOptions   ModificationRequirementOption[] @relation("ModificationRequirementOptionDefinition")
+  createdAt            DateTime                        @default(now())
+  updatedAt            DateTime                        @updatedAt
+
+  @@index([category, active, sortOrder])
+  @@index([brand, name])
+}
+
+model VehicleModification {
+  id                       String                 @id @default(cuid())
+  vehicleId                String
+  vehicle                  Vehicle                @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  modificationDefinitionId String
+  modificationDefinition   ModificationDefinition @relation(fields: [modificationDefinitionId], references: [id], onDelete: Restrict)
+  customNotes              String?                @db.Text
+  installedAt              DateTime?
+  deletedAt                DateTime?
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+
+  @@index([vehicleId, deletedAt])
+  @@index([modificationDefinitionId])
+}
+
+model ModificationRule {
+  id                 String                 @id @default(cuid())
+  sourceDefinitionId String
+  sourceDefinition   ModificationDefinition @relation("ModificationRuleSource", fields: [sourceDefinitionId], references: [id], onDelete: Cascade)
+  targetDefinitionId String
+  targetDefinition   ModificationDefinition @relation("ModificationRuleTarget", fields: [targetDefinitionId], references: [id], onDelete: Cascade)
+  ruleType           ModificationRuleType
+  active             Boolean                @default(true)
+  createdAt          DateTime               @default(now())
+
+  @@unique([sourceDefinitionId, targetDefinitionId, ruleType])
+  @@index([sourceDefinitionId, active])
+  @@index([targetDefinitionId, active])
+}
+
+model ModificationRequirementGroup {
+  id                 String                          @id @default(cuid())
+  code               String                          @unique
+  sourceDefinitionId String
+  sourceDefinition   ModificationDefinition          @relation("ModificationRequirementSource", fields: [sourceDefinitionId], references: [id], onDelete: Cascade)
+  description        String?
+  active             Boolean                         @default(true)
+  sortOrder          Int                             @default(0)
+  options            ModificationRequirementOption[]
+  createdAt          DateTime                        @default(now())
+
+  @@index([sourceDefinitionId, active])
+}
+
+model ModificationRequirementOption {
+  id                   String                       @id @default(cuid())
+  requirementGroupId   String
+  requirementGroup     ModificationRequirementGroup @relation(fields: [requirementGroupId], references: [id], onDelete: Cascade)
+  requiredDefinitionId String
+  requiredDefinition   ModificationDefinition       @relation("ModificationRequirementOptionDefinition", fields: [requiredDefinitionId], references: [id], onDelete: Cascade)
+  createdAt            DateTime                     @default(now())
+
+  @@unique([requirementGroupId, requiredDefinitionId])
+  @@index([requiredDefinitionId])
+}
+
+model ModificationCompatibility {
+  id                       String                 @id @default(cuid())
+  modificationDefinitionId String
+  modificationDefinition   ModificationDefinition @relation(fields: [modificationDefinitionId], references: [id], onDelete: Cascade)
+  vehicleBrand             String?
+  vehicleModel             String?
+  yearFrom                 Int?
+  yearTo                   Int?
+  active                   Boolean                @default(true)
+
+  @@index([modificationDefinitionId, active])
+  @@index([vehicleBrand, vehicleModel, active])
 }
 
 model MemberProfile {

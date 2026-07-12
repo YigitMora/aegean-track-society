@@ -8,6 +8,11 @@ import { normalizeMemberReturnTo } from "@/lib/member-auth";
 import { prisma } from "@/lib/prisma";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
+  evaluateModificationAvailability,
+  evaluateModificationRemoval,
+  type VehicleBuildResultCode,
+} from "@/lib/vehicle-build-rules";
+import {
   buildVehicleImagePath,
   validateVehicleImageFile,
   vehicleImagesBucket,
@@ -26,9 +31,18 @@ type GarageError =
   | "storage_unavailable"
   | "upload_failed"
   | "remove_failed"
+  | "modification_not_found"
+  | "modification_inactive"
+  | "duplicate_modification"
+  | "modification_incompatible"
+  | "modification_conflict"
+  | "modification_requirement_missing"
+  | "modification_required_by_installed_item"
+  | "modification_write_failed"
   | "failed";
 
 const garagePath = "/account/garage";
+const maxModificationNoteLength = 280;
 
 export async function createVehicleAction(formData: FormData) {
   const memberUser = await requireCompleteMemberUser("/account/garage/new");
@@ -668,13 +682,282 @@ export async function removeVehicleImageAction(vehicleId: string) {
   redirect(`${garagePath}/${vehicleId}?garage=image_removed`);
 }
 
+export async function addVehicleModificationAction(
+  vehicleId: string,
+  modificationDefinitionId: string,
+  formData: FormData,
+) {
+  const memberUser = await requireCompleteMemberUser(
+    `/account/garage/${vehicleId}/modifications`,
+  );
+  const returnTo = normalizeMemberReturnTo(
+    formData.get("returnTo") ?? `${garagePath}/${vehicleId}/modifications`,
+  );
+  const customNotes = normalizeModificationNotes(formData.get("customNotes"));
+  const installedAt = parseInstalledAt(formData.get("installedAt"));
+
+  try {
+    const result = await prisma.$transaction(
+      async (tx) => {
+        const [vehicle, definition] = await Promise.all([
+          tx.vehicle.findFirst({
+            where: {
+              id: vehicleId,
+              userId: memberUser.id,
+              deletedAt: null,
+            },
+            select: {
+              id: true,
+              userId: true,
+              brand: true,
+              model: true,
+              year: true,
+              deletedAt: true,
+            },
+          }),
+          tx.modificationDefinition.findUnique({
+            where: {
+              id: modificationDefinitionId,
+            },
+            select: modificationDefinitionRuleSelect,
+          }),
+        ]);
+
+        if (!vehicle) {
+          return {
+            ok: false as const,
+            code: "VEHICLE_NOT_FOUND" as const,
+            modificationDefinitionId,
+          };
+        }
+
+        if (!definition) {
+          return {
+            ok: false as const,
+            code: "MODIFICATION_NOT_FOUND" as const,
+            modificationDefinitionId,
+          };
+        }
+
+        const installedModifications = await tx.vehicleModification.findMany({
+          where: {
+            vehicleId: vehicle.id,
+            deletedAt: null,
+          },
+          select: installedModificationLabelSelect,
+        });
+        const availability = evaluateModificationAvailability({
+          vehicle,
+          definition,
+          installedModifications,
+        });
+
+        if (!availability.ok) {
+          return {
+            ...availability,
+            modificationDefinitionId: definition.id,
+          };
+        }
+
+        await tx.vehicleModification.create({
+          data: {
+            vehicleId: vehicle.id,
+            modificationDefinitionId: definition.id,
+            customNotes,
+            installedAt,
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        return {
+          ok: true as const,
+          modificationDefinitionId: definition.id,
+        };
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      },
+    );
+
+    if (!result.ok) {
+      logVehicleModificationRejected(
+        memberUser.id,
+        vehicleId,
+        result.modificationDefinitionId,
+        "add",
+        result.code,
+      );
+      redirectWithError(returnTo, garageErrorForVehicleBuildCode(result.code));
+    }
+
+    console.log("VEHICLE_MODIFICATION_ADDED", {
+      userId: memberUser.id,
+      vehicleId,
+      modificationDefinitionId: result.modificationDefinitionId,
+      operation: "add",
+    });
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    const code = vehicleBuildCodeForWriteError(error);
+    logVehicleModificationFailure(
+      memberUser.id,
+      vehicleId,
+      modificationDefinitionId,
+      "add",
+      code,
+    );
+    redirectWithError(returnTo, garageErrorForVehicleBuildCode(code));
+  }
+
+  revalidateVehicleBuild(vehicleId);
+  redirect(withBuildStatus(returnTo, "modification_added"));
+}
+
+export async function removeVehicleModificationAction(
+  vehicleId: string,
+  vehicleModificationId: string,
+  formData: FormData,
+) {
+  const memberUser = await requireCompleteMemberUser(`/account/garage/${vehicleId}`);
+  const returnTo = normalizeMemberReturnTo(
+    formData.get("returnTo") ?? `${garagePath}/${vehicleId}`,
+  );
+
+  try {
+    const result = await prisma.$transaction(
+      async (tx) => {
+        const vehicle = await tx.vehicle.findFirst({
+          where: {
+            id: vehicleId,
+            userId: memberUser.id,
+            deletedAt: null,
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        if (!vehicle) {
+          return {
+            ok: false as const,
+            code: "VEHICLE_NOT_FOUND" as const,
+            modificationDefinitionId: null,
+          };
+        }
+
+        const installedModifications = await tx.vehicleModification.findMany({
+          where: {
+            vehicleId: vehicle.id,
+            deletedAt: null,
+          },
+          select: installedModificationRemovalSelect,
+        });
+        const removingModification = installedModifications.find(
+          (modification) => modification.id === vehicleModificationId,
+        );
+
+        if (!removingModification) {
+          return {
+            ok: false as const,
+            code: "MODIFICATION_NOT_FOUND" as const,
+            modificationDefinitionId: null,
+          };
+        }
+
+        const removalAvailability = evaluateModificationRemoval({
+          removingModification,
+          installedModifications,
+        });
+
+        if (!removalAvailability.ok) {
+          return {
+            ...removalAvailability,
+            modificationDefinitionId: removingModification.modificationDefinitionId,
+          };
+        }
+
+        const removed = await tx.vehicleModification.updateMany({
+          where: {
+            id: vehicleModificationId,
+            vehicleId: vehicle.id,
+            deletedAt: null,
+          },
+          data: {
+            deletedAt: new Date(),
+          },
+        });
+
+        if (removed.count === 0) {
+          return {
+            ok: false as const,
+            code: "MODIFICATION_WRITE_FAILED" as const,
+            modificationDefinitionId: removingModification.modificationDefinitionId,
+          };
+        }
+
+        return {
+          ok: true as const,
+          modificationDefinitionId: removingModification.modificationDefinitionId,
+        };
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      },
+    );
+
+    if (!result.ok) {
+      logVehicleModificationRejected(
+        memberUser.id,
+        vehicleId,
+        result.modificationDefinitionId,
+        "remove",
+        result.code,
+      );
+      redirectWithError(returnTo, garageErrorForVehicleBuildCode(result.code));
+    }
+
+    console.log("VEHICLE_MODIFICATION_REMOVED", {
+      userId: memberUser.id,
+      vehicleId,
+      modificationDefinitionId: result.modificationDefinitionId,
+      operation: "remove",
+    });
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    const code = vehicleBuildCodeForWriteError(error);
+    logVehicleModificationFailure(memberUser.id, vehicleId, null, "remove", code);
+    redirectWithError(returnTo, garageErrorForVehicleBuildCode(code));
+  }
+
+  revalidateVehicleBuild(vehicleId);
+  redirect(withBuildStatus(returnTo, "modification_removed"));
+}
+
 function revalidateGarage() {
   revalidatePath("/account");
   revalidatePath(garagePath);
 }
 
+function revalidateVehicleBuild(vehicleId: string) {
+  revalidateGarage();
+  revalidatePath(`${garagePath}/${vehicleId}`);
+  revalidatePath(`${garagePath}/${vehicleId}/modifications`);
+}
+
 function redirectWithError(pathname: string, error: GarageError): never {
-  redirect(`${pathname}?garageError=${error}`);
+  const url = new URL(pathname, "https://ats.local");
+  url.searchParams.set("garageError", error);
+  url.searchParams.delete("build");
+
+  redirect(`${url.pathname}${url.search}`);
 }
 
 function errorCodeForVehicleWrite(error: unknown, fallback: GarageError): GarageError {
@@ -776,6 +1059,213 @@ function imageErrorForUnknownFailure(error: unknown, fallback: GarageError): Gar
   }
 
   return fallback;
+}
+
+const modificationDefinitionLabelSelect = {
+  id: true,
+  category: true,
+  brand: true,
+  name: true,
+  variant: true,
+} satisfies Prisma.ModificationDefinitionSelect;
+
+const modificationDefinitionRuleSelect = {
+  id: true,
+  active: true,
+  category: true,
+  brand: true,
+  name: true,
+  variant: true,
+  compatibilities: {
+    where: {
+      active: true,
+    },
+    select: {
+      active: true,
+      vehicleBrand: true,
+      vehicleModel: true,
+      yearFrom: true,
+      yearTo: true,
+    },
+  },
+  requirementGroups: {
+    where: {
+      active: true,
+    },
+    select: {
+      active: true,
+      description: true,
+      options: {
+        select: {
+          requiredDefinitionId: true,
+          requiredDefinition: {
+            select: modificationDefinitionLabelSelect,
+          },
+        },
+      },
+    },
+  },
+  rulesAsSource: {
+    where: {
+      active: true,
+    },
+    select: {
+      active: true,
+      targetDefinitionId: true,
+      ruleType: true,
+    },
+  },
+  rulesAsTarget: {
+    where: {
+      active: true,
+    },
+    select: {
+      active: true,
+      sourceDefinitionId: true,
+      ruleType: true,
+    },
+  },
+} satisfies Prisma.ModificationDefinitionSelect;
+
+const installedModificationLabelSelect = {
+  id: true,
+  modificationDefinitionId: true,
+  modificationDefinition: {
+    select: modificationDefinitionLabelSelect,
+  },
+} satisfies Prisma.VehicleModificationSelect;
+
+const installedModificationRemovalSelect = {
+  id: true,
+  modificationDefinitionId: true,
+  modificationDefinition: {
+    select: {
+      ...modificationDefinitionLabelSelect,
+      requirementGroups: {
+        where: {
+          active: true,
+        },
+        select: {
+          active: true,
+          description: true,
+          options: {
+            select: {
+              requiredDefinitionId: true,
+              requiredDefinition: {
+                select: modificationDefinitionLabelSelect,
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+} satisfies Prisma.VehicleModificationSelect;
+
+function normalizeModificationNotes(value: FormDataEntryValue | null) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim().replace(/\s+/g, " ");
+
+  return normalized ? normalized.slice(0, maxModificationNoteLength) : null;
+}
+
+function parseInstalledAt(value: FormDataEntryValue | null) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null;
+  }
+
+  const date = new Date(`${value}T00:00:00.000Z`);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function garageErrorForVehicleBuildCode(code: VehicleBuildResultCode): GarageError {
+  if (code === "MODIFICATION_NOT_FOUND") {
+    return "modification_not_found";
+  }
+
+  if (code === "MODIFICATION_INACTIVE") {
+    return "modification_inactive";
+  }
+
+  if (code === "DUPLICATE_MODIFICATION") {
+    return "duplicate_modification";
+  }
+
+  if (code === "MODIFICATION_INCOMPATIBLE") {
+    return "modification_incompatible";
+  }
+
+  if (code === "MODIFICATION_CONFLICT") {
+    return "modification_conflict";
+  }
+
+  if (code === "MODIFICATION_REQUIREMENT_MISSING") {
+    return "modification_requirement_missing";
+  }
+
+  if (code === "MODIFICATION_REQUIRED_BY_INSTALLED_ITEM") {
+    return "modification_required_by_installed_item";
+  }
+
+  return code === "VEHICLE_NOT_FOUND" ? "not_found" : "modification_write_failed";
+}
+
+function vehicleBuildCodeForWriteError(error: unknown): VehicleBuildResultCode {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2002") {
+      return "DUPLICATE_MODIFICATION";
+    }
+
+    if (error.code === "P2025") {
+      return "VEHICLE_NOT_FOUND";
+    }
+  }
+
+  return "MODIFICATION_WRITE_FAILED";
+}
+
+function logVehicleModificationRejected(
+  userId: string,
+  vehicleId: string,
+  modificationDefinitionId: string | null,
+  operation: string,
+  code: VehicleBuildResultCode,
+) {
+  console.warn("VEHICLE_MODIFICATION_REJECTED", {
+    userId,
+    vehicleId,
+    modificationDefinitionId,
+    operation,
+    errorCode: code,
+  });
+}
+
+function logVehicleModificationFailure(
+  userId: string,
+  vehicleId: string,
+  modificationDefinitionId: string | null,
+  operation: string,
+  code: VehicleBuildResultCode,
+) {
+  console.warn("VEHICLE_MODIFICATION_OPERATION_FAILED", {
+    userId,
+    vehicleId,
+    modificationDefinitionId,
+    operation,
+    errorCode: code,
+  });
+}
+
+function withBuildStatus(pathname: string, value: string) {
+  const url = new URL(pathname, "https://ats.local");
+  url.searchParams.set("build", value);
+  url.searchParams.delete("garageError");
+
+  return `${url.pathname}${url.search}`;
 }
 
 function safeErrorCode(error: unknown) {

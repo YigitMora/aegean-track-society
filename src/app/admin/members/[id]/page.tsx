@@ -7,6 +7,11 @@ import { formatDateTime, formatStatus } from "@/lib/admin-format";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { isMemberProfileComplete } from "@/lib/member-profile-validation";
 import { prisma } from "@/lib/prisma";
+import {
+  formatModificationDefinition,
+  modificationCategoryLabels,
+  orderedModificationCategories,
+} from "@/lib/vehicle-build-rules";
 
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -74,6 +79,33 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
           imagePath: true,
           deletedAt: true,
           createdAt: true,
+          modifications: {
+            where: {
+              deletedAt: null,
+            },
+            orderBy: [
+              {
+                createdAt: "asc",
+              },
+              {
+                id: "asc",
+              },
+            ],
+            select: {
+              id: true,
+              customNotes: true,
+              installedAt: true,
+              modificationDefinition: {
+                select: {
+                  id: true,
+                  category: true,
+                  brand: true,
+                  name: true,
+                  variant: true,
+                },
+              },
+            },
+          },
         },
       },
       registrations: {
@@ -311,6 +343,18 @@ function VehicleList({
     imagePath: string | null;
     deletedAt: Date | null;
     createdAt: Date;
+    modifications: Array<{
+      id: string;
+      customNotes: string | null;
+      installedAt: Date | null;
+      modificationDefinition: {
+        id: string;
+        category: (typeof orderedModificationCategories)[number];
+        brand: string | null;
+        name: string;
+        variant: string | null;
+      };
+    }>;
   }>;
 }) {
   return (
@@ -341,6 +385,7 @@ function VehicleList({
               />
               <DetailRow label="Oluşturma" value={formatDateTime(vehicle.createdAt)} compact />
             </dl>
+            <AdminVehicleBuildProfile modifications={vehicle.modifications} />
           </article>
         ))}
         {vehicles.length === 0 ? (
@@ -348,6 +393,83 @@ function VehicleList({
             Kayıt yok.
           </p>
         ) : null}
+      </div>
+    </div>
+  );
+}
+
+function AdminVehicleBuildProfile({
+  modifications,
+}: {
+  modifications: Array<{
+    id: string;
+    customNotes: string | null;
+    installedAt: Date | null;
+    modificationDefinition: {
+      id: string;
+      category: (typeof orderedModificationCategories)[number];
+      brand: string | null;
+      name: string;
+      variant: string | null;
+    };
+  }>;
+}) {
+  if (modifications.length === 0) {
+    return (
+      <p className="mt-4 rounded-md border border-white/10 bg-asphalt p-3 text-xs font-semibold text-white/45">
+        Build profili boş.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-4 border-t border-white/10 pt-4">
+      <p className="text-xs font-black uppercase text-white/45">
+        Build profili
+      </p>
+      <div className="mt-3 space-y-4">
+        {orderedModificationCategories.map((category) => {
+          const categoryModifications = modifications.filter(
+            (modification) =>
+              modification.modificationDefinition.category === category,
+          );
+
+          if (categoryModifications.length === 0) {
+            return null;
+          }
+
+          return (
+            <div key={category}>
+              <p className="text-[11px] font-black uppercase text-signal">
+                {modificationCategoryLabels[category]}
+              </p>
+              <div className="mt-2 grid gap-2">
+                {categoryModifications.map((modification) => (
+                  <div
+                    key={modification.id}
+                    className="rounded-md border border-white/10 bg-asphalt p-3"
+                  >
+                    <p className="text-xs font-black text-white">
+                      {formatModificationDefinition(
+                        modification.modificationDefinition,
+                      )}
+                    </p>
+                    {modification.customNotes ? (
+                      <p className="mt-1 text-xs font-semibold leading-5 text-white/55">
+                        {modification.customNotes}
+                      </p>
+                    ) : null}
+                    {modification.installedAt ? (
+                      <p className="mt-1 text-[11px] font-bold uppercase text-white/40">
+                        Montaj: {formatDateTime(modification.installedAt)}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
