@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { StatusBadge } from "@/components/admin/status-badge";
-import { VehicleRatingCard } from "@/components/vehicle-rating-card";
+import { VehiclePerformanceRatingCard } from "@/components/vehicle-rating-card";
 import { formatDateTime, formatStatus } from "@/lib/admin-format";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { isMemberProfileComplete } from "@/lib/member-profile-validation";
@@ -493,7 +493,7 @@ function VehicleList({
                   compact
                 />
               </dl>
-              <VehicleRatingCard rating={rating} compact className="mt-4" />
+              <VehiclePerformanceRatingCard rating={rating} compact className="mt-4" />
               <AdminVehicleBuildProfile modifications={vehicle.modifications} />
             </article>
           );
