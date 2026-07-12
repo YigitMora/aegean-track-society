@@ -12,6 +12,9 @@ import {
   evaluateModificationAvailability,
   evaluateModificationRemoval,
   formatModificationDefinition,
+  genericEcuFallbackCodes,
+  hasNamedProviderEcuTuneForVehicle,
+  isGenericEcuFallbackDefinition,
   type VehicleBuildBatchResultCode,
   type VehicleBuildResultCode,
 } from "@/lib/vehicle-build-rules";
@@ -48,6 +51,7 @@ type GarageError =
   | "modification_inactive"
   | "duplicate_modification"
   | "modification_incompatible"
+  | "component_slot_occupied"
   | "modification_conflict"
   | "modification_requirement_missing"
   | "modification_required_by_installed_item"
@@ -79,6 +83,7 @@ export type VehicleRatingPreviewState = {
     | "DEFINITION_NOT_FOUND"
     | "DEFINITION_INACTIVE"
     | "MODIFICATION_INCOMPATIBLE"
+    | "COMPONENT_SLOT_OCCUPIED"
     | "DUPLICATE_MODIFICATION"
     | "MODIFICATION_CONFLICT"
     | "MODIFICATION_REQUIREMENT_MISSING"
@@ -92,7 +97,9 @@ export type VehicleRatingPreviewState = {
 
 export async function createVehicleAction(formData: FormData) {
   const memberUser = await requireCompleteMemberUser("/account/garage/new");
-  const returnTo = normalizeMemberReturnTo(formData.get("returnTo"));
+  const returnTo = vehicleCreateSuccessReturnTo(
+    normalizeMemberReturnTo(formData.get("returnTo")),
+  );
   const parsed = parseVehicleForm(formData);
 
   if (!parsed.ok) {
@@ -997,10 +1004,14 @@ export async function addVehicleModificationAction(
           },
           select: installedModificationLabelSelect,
         });
+        const hasNamedProviderEcuTune = isGenericEcuFallbackDefinition(definition)
+          ? await loadHasNamedProviderEcuTuneForVehicle(tx, vehicle)
+          : false;
         const availability = evaluateModificationAvailability({
           vehicle,
           definition,
           installedModifications,
+          hasNamedProviderEcuTune,
         });
 
         if (!availability.ok) {
@@ -1177,10 +1188,16 @@ export async function addVehicleModificationsBatchAction(
           },
           select: installedModificationLabelSelect,
         });
+        const hasNamedProviderEcuTune = orderedDefinitions.some(
+          isGenericEcuFallbackDefinition,
+        )
+          ? await loadHasNamedProviderEcuTuneForVehicle(tx, vehicle)
+          : false;
         const availability = evaluateModificationBatchAvailability({
           vehicle,
           definitions: orderedDefinitions,
           installedModifications,
+          hasNamedProviderEcuTune,
         });
 
         if (!availability.ok) {
@@ -1335,10 +1352,16 @@ export async function previewVehicleModificationsRatingAction(
       );
     }
 
+    const hasNamedProviderEcuTune = orderedDefinitions.some(
+      isGenericEcuFallbackDefinition,
+    )
+      ? await loadHasNamedProviderEcuTuneForVehicle(prisma, vehicle)
+      : false;
     const availability = evaluateModificationBatchAvailability({
       vehicle,
       definitions: orderedDefinitions,
       installedModifications,
+      hasNamedProviderEcuTune,
     });
 
     if (!availability.ok) {
@@ -1523,6 +1546,14 @@ function redirectWithError(pathname: string, error: GarageError): never {
   url.searchParams.delete("build");
 
   redirect(`${url.pathname}${url.search}${url.hash}`);
+}
+
+function vehicleCreateSuccessReturnTo(returnTo: string) {
+  if (returnTo.startsWith("/events/") && returnTo.endsWith("/register")) {
+    return returnTo;
+  }
+
+  return garagePath;
 }
 
 function normalizeBatchDefinitionIds(formData: FormData) {
@@ -1756,6 +1787,18 @@ function batchResultMessage(
     return "Seçilen parçalardan biri build profilinde zaten mevcut.";
   }
 
+  if (code === "COMPONENT_SLOT_OCCUPIED") {
+    const conflictingName = context.conflictingModification
+      ? formatModificationDefinition(
+          context.conflictingModification.modificationDefinition,
+        )
+      : null;
+
+    return conflictingName
+      ? `Bu araçta aynı parça tipinden zaten bir ürün bulunuyor: ${conflictingName}.`
+      : "Bu araçta aynı parça tipinden zaten bir ürün bulunuyor.";
+  }
+
   if (code === "MODIFICATION_INCOMPATIBLE") {
     return "Seçilen parçalardan biri bu araçla uyumlu değil.";
   }
@@ -1874,6 +1917,18 @@ function previewMessage(
 
   if (code === "DUPLICATE_MODIFICATION") {
     return "Bu parça build profilinde zaten yüklü.";
+  }
+
+  if (code === "COMPONENT_SLOT_OCCUPIED") {
+    const conflictingName = context.conflictingModification
+      ? formatModificationDefinition(
+          context.conflictingModification.modificationDefinition,
+        )
+      : null;
+
+    return conflictingName
+      ? `${previewDefinitionName(context)} için aynı parça tipi dolu: ${conflictingName}.`
+      : `${previewDefinitionName(context)} için aynı parça tipi zaten dolu.`;
   }
 
   if (code === "MODIFICATION_CONFLICT") {
@@ -2369,6 +2424,29 @@ const installedModificationRemovalSelect = {
   },
 } satisfies Prisma.VehicleModificationSelect;
 
+async function loadHasNamedProviderEcuTuneForVehicle(
+  client: Pick<Prisma.TransactionClient, "modificationDefinition">,
+  vehicle: Parameters<typeof hasNamedProviderEcuTuneForVehicle>[0]["vehicle"],
+) {
+  const namedEcuDefinitions = await client.modificationDefinition.findMany({
+    where: {
+      active: true,
+      code: {
+        notIn: [...genericEcuFallbackCodes],
+      },
+      componentTypeCode: {
+        in: ["ecu_software", "platform_tune_package"],
+      },
+    },
+    select: modificationDefinitionRuleSelect,
+  });
+
+  return hasNamedProviderEcuTuneForVehicle({
+    vehicle,
+    definitions: namedEcuDefinitions,
+  });
+}
+
 function normalizeModificationNotes(value: FormDataEntryValue | null) {
   if (typeof value !== "string") {
     return null;
@@ -2404,6 +2482,10 @@ function garageErrorForVehicleBuildCode(code: VehicleBuildResultCode): GarageErr
 
   if (code === "MODIFICATION_INCOMPATIBLE") {
     return "modification_incompatible";
+  }
+
+  if (code === "COMPONENT_SLOT_OCCUPIED") {
+    return "component_slot_occupied";
   }
 
   if (code === "MODIFICATION_CONFLICT") {

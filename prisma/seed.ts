@@ -6527,8 +6527,11 @@ const iceOnlyModificationCodes = [
   "charge_pipe_wagner_tuning",
   "engine_flex_fuel",
   "engine_turbo_upgrade",
+  "drivetrain_aftermarket_lsd",
   "drivetrain_transmission_software",
   "tune_xhp_bmw_zf8_stage_2",
+  "drivetrain_performance_clutch",
+  "drivetrain_lightweight_flywheel",
 ] as const;
 
 const modificationPowertrainApplicabilities = iceOnlyModificationCodes.map(

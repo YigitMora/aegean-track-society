@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { logoutAction } from "@/app/auth/actions";
 import { requireMemberUser } from "@/lib/member-auth";
 
 export const dynamic = "force-dynamic";
@@ -17,15 +18,9 @@ export default async function AccountLayout({ children }: { children: ReactNode 
           >
             Aegean Track Society
           </Link>
-          <nav className="flex items-center gap-4 text-xs font-bold uppercase tracking-[0.16em] text-ats-muted">
+          <nav className="flex items-center gap-4 overflow-x-auto text-xs font-bold uppercase tracking-[0.16em] text-ats-muted">
             <Link href="/events/kula-mytrack-2026" className="transition hover:text-ats-blue">
               Etkinlik
-            </Link>
-            <Link href="/account" className="transition hover:text-ats-blue">
-              Hesabım
-            </Link>
-            <Link href="/account/profile" className="transition hover:text-ats-blue">
-              Profil
             </Link>
             <Link href="/account/garage" className="transition hover:text-ats-blue">
               Garajım
@@ -33,6 +28,14 @@ export default async function AccountLayout({ children }: { children: ReactNode 
             <Link href="/account/registrations" className="transition hover:text-ats-blue">
               Başvurularım
             </Link>
+            <Link href="/account" className="transition hover:text-ats-blue">
+              Hesabım
+            </Link>
+            <form action={logoutAction}>
+              <button type="submit" className="transition hover:text-ats-blue">
+                Çıkış
+              </button>
+            </form>
           </nav>
         </div>
       </header>

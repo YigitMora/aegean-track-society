@@ -25,6 +25,8 @@ import { measureServerTiming } from "@/lib/server-timing";
 import {
   evaluateModificationAvailability,
   formatModificationDefinition,
+  hasNamedProviderEcuTuneForVehicle,
+  isGenericEcuFallbackDefinition,
   modificationCategoryLabels,
   normalizeVehicleIdentity,
   orderedModificationCategories,
@@ -718,6 +720,10 @@ function errorMessage(value?: string) {
     return "Bu parça seçilen araçla uyumlu değil.";
   }
 
+  if (value === "component_slot_occupied") {
+    return "Bu araçta aynı parça tipinden zaten bir ürün bulunuyor.";
+  }
+
   if (value === "modification_conflict") {
     return "Bu parça yüklü başka bir parçayla çakışıyor.";
   }
@@ -973,8 +979,16 @@ function buildCatalogGroups({
   }>;
 }): ModificationCatalogGroup[] {
   const groupsByCategory = new Map<string, ModificationCatalogGroup>();
+  const hasNamedProviderEcuTune = hasNamedProviderEcuTuneForVehicle({
+    vehicle,
+    definitions: catalog,
+  });
 
   for (const definition of catalog) {
+    if (isGenericEcuFallbackDefinition(definition) && hasNamedProviderEcuTune) {
+      continue;
+    }
+
     const typeCode =
       definition.componentTypeCode ?? definition.name.toLocaleLowerCase("tr-TR");
     const typeKey = `${definition.category}:${typeCode}`;
@@ -982,6 +996,7 @@ function buildCatalogGroups({
       vehicle,
       definition,
       installedModifications,
+      hasNamedProviderEcuTune,
     });
 
     if (!availability.ok && availability.code === "MODIFICATION_INCOMPATIBLE") {

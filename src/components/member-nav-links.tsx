@@ -50,7 +50,25 @@ export function MemberNavLinks() {
   }
 
   if (sessionState === "signed-in") {
-    return <MemberLink href="/account">Hesabım</MemberLink>;
+    return (
+      <>
+        <MemberLink href="/account/garage">Garajım</MemberLink>
+        <MemberLink href="/account/registrations">Başvurularım</MemberLink>
+        <MemberLink href="/account">Hesabım</MemberLink>
+        <button
+          type="button"
+          onClick={async () => {
+            const supabase = createSupabaseBrowserClient();
+
+            await supabase.auth.signOut({ scope: "local" });
+            window.location.assign("/");
+          }}
+          className="whitespace-nowrap transition hover:text-ats-blue"
+        >
+          Çıkış
+        </button>
+      </>
+    );
   }
 
   return (
