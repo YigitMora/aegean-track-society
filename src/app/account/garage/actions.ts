@@ -8,8 +8,11 @@ import { normalizeMemberReturnTo } from "@/lib/member-auth";
 import { prisma } from "@/lib/prisma";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
+  evaluateModificationBatchAvailability,
   evaluateModificationAvailability,
   evaluateModificationRemoval,
+  formatModificationDefinition,
+  type VehicleBuildBatchResultCode,
   type VehicleBuildResultCode,
 } from "@/lib/vehicle-build-rules";
 import {
@@ -43,6 +46,16 @@ type GarageError =
 
 const garagePath = "/account/garage";
 const maxModificationNoteLength = 280;
+const maxBatchModificationDefinitions = 20;
+
+export type VehicleModificationBatchActionState = {
+  ok: boolean;
+  code: VehicleBuildBatchResultCode | null;
+  message: string | null;
+  offendingDefinitionId?: string;
+  insertedCount: number;
+  submittedAt: number;
+};
 
 export async function createVehicleAction(formData: FormData) {
   const memberUser = await requireCompleteMemberUser("/account/garage/new");
@@ -887,6 +900,145 @@ export async function addSelectedVehicleModificationAction(
   await addVehicleModificationAction(vehicleId, modificationDefinitionId.trim(), formData);
 }
 
+export async function addVehicleModificationsBatchAction(
+  vehicleId: string,
+  _state: VehicleModificationBatchActionState,
+  formData: FormData,
+): Promise<VehicleModificationBatchActionState> {
+  const startedAt = performance.now();
+  const memberUser = await requireCompleteMemberUser(
+    `/account/garage/${vehicleId}#build-profile`,
+  );
+  const requestedDefinitionIds = normalizeBatchDefinitionIds(formData);
+
+  if (requestedDefinitionIds.length === 0) {
+    return batchActionState("BATCH_EMPTY");
+  }
+
+  if (requestedDefinitionIds.length > maxBatchModificationDefinitions) {
+    return batchActionState("BATCH_TOO_LARGE");
+  }
+
+  try {
+    const result = await prisma.$transaction(
+      async (tx) => {
+        const vehicle = await tx.vehicle.findFirst({
+          where: {
+            id: vehicleId,
+            userId: memberUser.id,
+            deletedAt: null,
+          },
+          select: {
+            id: true,
+            userId: true,
+            vehicleDefinitionId: true,
+            brand: true,
+            model: true,
+            year: true,
+            deletedAt: true,
+          },
+        });
+
+        if (!vehicle) {
+          return batchActionState("VEHICLE_NOT_FOUND");
+        }
+
+        const definitions = await tx.modificationDefinition.findMany({
+          where: {
+            id: {
+              in: requestedDefinitionIds,
+            },
+          },
+          select: modificationDefinitionRuleSelect,
+        });
+        const definitionsById = new Map(
+          definitions.map((definition) => [definition.id, definition]),
+        );
+        const missingDefinitionId = requestedDefinitionIds.find(
+          (definitionId) => !definitionsById.has(definitionId),
+        );
+
+        if (missingDefinitionId) {
+          return batchActionState("DEFINITION_NOT_FOUND", {
+            offendingDefinitionId: missingDefinitionId,
+          });
+        }
+
+        const orderedDefinitions = requestedDefinitionIds.map((definitionId) =>
+          definitionsById.get(definitionId)!,
+        );
+        const inactiveDefinition = orderedDefinitions.find(
+          (definition) => !definition.active,
+        );
+
+        if (inactiveDefinition) {
+          return batchActionState("DEFINITION_INACTIVE", {
+            offendingDefinitionId: inactiveDefinition.id,
+          });
+        }
+
+        const installedModifications = await tx.vehicleModification.findMany({
+          where: {
+            vehicleId: vehicle.id,
+            deletedAt: null,
+          },
+          select: installedModificationLabelSelect,
+        });
+        const availability = evaluateModificationBatchAvailability({
+          vehicle,
+          definitions: orderedDefinitions,
+          installedModifications,
+        });
+
+        if (!availability.ok) {
+          return batchActionState(availability.code, availability);
+        }
+
+        const created = await tx.vehicleModification.createMany({
+          data: orderedDefinitions.map((definition) => ({
+            vehicleId: vehicle.id,
+            modificationDefinitionId: definition.id,
+          })),
+        });
+
+        return batchActionState(null, {
+          insertedCount: created.count,
+        });
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      },
+    );
+
+    logVehicleBuildBatchResult({
+      userId: memberUser.id,
+      vehicleId,
+      requestedCount: requestedDefinitionIds.length,
+      insertedCount: result.insertedCount,
+      code: result.code,
+      startedAt,
+    });
+
+    if (result.ok) {
+      revalidatePath(`${garagePath}/${vehicleId}`);
+    }
+
+    return result;
+  } catch (error) {
+    const code = vehicleBuildBatchCodeForWriteError(error);
+    logVehicleBuildBatchResult({
+      userId: memberUser.id,
+      vehicleId,
+      requestedCount: requestedDefinitionIds.length,
+      insertedCount: 0,
+      code,
+      startedAt,
+    });
+
+    return batchActionState(code);
+  }
+}
+
 export async function removeVehicleModificationAction(
   vehicleId: string,
   vehicleModificationId: string,
@@ -1027,6 +1179,164 @@ function redirectWithError(pathname: string, error: GarageError): never {
   url.searchParams.delete("build");
 
   redirect(`${url.pathname}${url.search}${url.hash}`);
+}
+
+function normalizeBatchDefinitionIds(formData: FormData) {
+  const ids = formData
+    .getAll("modificationDefinitionIds")
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return Array.from(new Set(ids));
+}
+
+type BatchActionStateContext = {
+    insertedCount?: number;
+    offendingDefinitionId?: string;
+    conflictingModification?: {
+      modificationDefinition: {
+        brand: string | null;
+        name: string;
+        variant: string | null;
+      };
+    };
+    missingRequirement?: {
+      options: Array<{
+        requiredDefinition: {
+          brand: string | null;
+          name: string;
+          variant: string | null;
+        };
+      }>;
+    };
+  };
+
+function batchActionState(
+  code: VehicleBuildBatchResultCode | null,
+  context: BatchActionStateContext = {},
+): VehicleModificationBatchActionState {
+  if (code === null) {
+    const insertedCount = context.insertedCount ?? 0;
+
+    return {
+      ok: true,
+      code: null,
+      message: `${insertedCount} parça build profiline eklendi.`,
+      offendingDefinitionId: undefined,
+      insertedCount,
+      submittedAt: Date.now(),
+    };
+  }
+
+  return {
+    ok: false,
+    code,
+    message: batchResultMessage(code, context),
+    offendingDefinitionId: context.offendingDefinitionId,
+    insertedCount: 0,
+    submittedAt: Date.now(),
+  };
+}
+
+function batchResultMessage(
+  code: VehicleBuildBatchResultCode,
+  context: BatchActionStateContext,
+) {
+  if (code === "BATCH_EMPTY") {
+    return "Listeye en az bir parça ekleyin.";
+  }
+
+  if (code === "BATCH_TOO_LARGE") {
+    return "Tek seferde en fazla 20 parça eklenebilir.";
+  }
+
+  if (code === "DEFINITION_NOT_FOUND") {
+    return "Seçilen parçalardan biri katalogda bulunamadı.";
+  }
+
+  if (code === "DEFINITION_INACTIVE") {
+    return "Seçilen parçalardan biri şu anda aktif değil.";
+  }
+
+  if (code === "VEHICLE_NOT_FOUND") {
+    return "Araç bulunamadı veya bu işlem için uygun değil.";
+  }
+
+  if (code === "DUPLICATE_MODIFICATION") {
+    return "Seçilen parçalardan biri build profilinde zaten mevcut.";
+  }
+
+  if (code === "MODIFICATION_INCOMPATIBLE") {
+    return "Seçilen parçalardan biri bu araçla uyumlu değil.";
+  }
+
+  if (code === "MODIFICATION_CONFLICT") {
+    const conflictingName = context.conflictingModification
+      ? formatModificationDefinition(
+          context.conflictingModification.modificationDefinition,
+        )
+      : null;
+
+    return conflictingName
+      ? `Seçim çakışıyor: ${conflictingName}`
+      : "Seçilen parçalardan biri başka bir parçayla çakışıyor.";
+  }
+
+  if (code === "MODIFICATION_REQUIREMENT_MISSING") {
+    const requiredNames = context.missingRequirement?.options
+      .map((option) => formatModificationDefinition(option.requiredDefinition))
+      .join(" veya ");
+
+    return requiredNames
+      ? `Eksik gereksinim: ${requiredNames}`
+      : "Seçilen parçalardan biri için gerekli parça eksik.";
+  }
+
+  return "Parçalar toplu olarak eklenemedi. Lütfen tekrar deneyin.";
+}
+
+function vehicleBuildBatchCodeForWriteError(error: unknown): VehicleBuildBatchResultCode {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2025") {
+      return "VEHICLE_NOT_FOUND";
+    }
+
+    if (error.code === "P2002") {
+      return "DUPLICATE_MODIFICATION";
+    }
+  }
+
+  return "BATCH_WRITE_FAILED";
+}
+
+function logVehicleBuildBatchResult({
+  userId,
+  vehicleId,
+  requestedCount,
+  insertedCount,
+  code,
+  startedAt,
+}: {
+  userId: string;
+  vehicleId: string;
+  requestedCount: number;
+  insertedCount: number;
+  code: VehicleBuildBatchResultCode | null;
+  startedAt: number;
+}) {
+  if (process.env.NODE_ENV !== "development") {
+    return;
+  }
+
+  console.info("VEHICLE_BUILD_BATCH_WRITE", {
+    userId,
+    vehicleId,
+    requestedCount,
+    insertedCount,
+    code,
+    durationMs: Math.round(performance.now() - startedAt),
+  });
 }
 
 async function resolveVehicleInputForWrite(

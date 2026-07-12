@@ -5,7 +5,7 @@ import {
   makePrimaryVehicleAction,
   restoreVehicleAction,
 } from "@/app/account/garage/actions";
-import { VehicleRatingCard } from "@/components/vehicle-rating-card";
+import { VehiclePerformanceRatingCard } from "@/components/vehicle-rating-card";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
 import { measureServerTiming } from "@/lib/server-timing";
@@ -326,7 +326,7 @@ function VehicleCard({
         ) : null}
       </div>
 
-      <VehicleRatingCard rating={rating} compact className="mx-6 mt-5" />
+      <VehiclePerformanceRatingCard rating={rating} compact className="mx-6 mt-5" />
 
       <div className="flex flex-wrap gap-3 p-6">
         <Link

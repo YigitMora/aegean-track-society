@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import {
-  addSelectedVehicleModificationAction,
+  addVehicleModificationsBatchAction,
   archiveVehicleAction,
   makePrimaryVehicleAction,
   removeVehicleModificationAction,
@@ -12,11 +12,11 @@ import {
   updateVehicleAction,
 } from "@/app/account/garage/actions";
 import { VehicleForm } from "@/components/vehicle-form";
-import { VehicleRatingCard } from "@/components/vehicle-rating-card";
 import {
-  VehicleBuildModificationForm,
-  type VehicleBuildCatalogGroup,
-} from "@/components/vehicle-build-modification-form";
+  VehicleModificationBatchSelector,
+  type ModificationCatalogGroup,
+} from "@/components/vehicle-modification-batch-selector";
+import { VehiclePerformanceRatingCard } from "@/components/vehicle-rating-card";
 import { VehicleImageSubmitButton } from "@/components/vehicle-image-submit-button";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
@@ -190,7 +190,7 @@ export default async function EditVehiclePage({
   const uploadImageAction = uploadVehicleImageAction.bind(null, vehicle.id);
   const removeImageAction = removeVehicleImageAction.bind(null, vehicle.id);
   const unlinkTemplateAction = unlinkVehicleDefinitionAction.bind(null, vehicle.id);
-  const addModificationAction = addSelectedVehicleModificationAction.bind(
+  const addBatchModificationAction = addVehicleModificationsBatchAction.bind(
     null,
     vehicle.id,
   );
@@ -243,10 +243,10 @@ export default async function EditVehiclePage({
         templateDefaultMode={vehicle.vehicleDefinitionId ? "catalog" : "manual"}
       />
 
-      <VehicleRatingCard rating={rating} className="mt-6" />
+      <VehiclePerformanceRatingCard rating={rating} className="mt-6" />
 
       <VehicleBuildProfile
-        addAction={addModificationAction}
+        addAction={addBatchModificationAction}
         catalogGroups={catalogGroups}
         vehicleId={vehicle.id}
         vehicleDefinitionId={vehicle.vehicleDefinitionId}
@@ -355,8 +355,8 @@ function VehicleBuildProfile({
   vehicleDefinitionId,
   modifications,
 }: {
-  addAction: (formData: FormData) => void | Promise<void>;
-  catalogGroups: VehicleBuildCatalogGroup[];
+  addAction: Parameters<typeof VehicleModificationBatchSelector>[0]["action"];
+  catalogGroups: ModificationCatalogGroup[];
   vehicleId: string;
   vehicleDefinitionId: string | null;
   modifications: Array<{
@@ -482,16 +482,13 @@ function VehicleBuildProfile({
 
       <div className="mt-8 border-t border-ats-border pt-6">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-ats-blue">
-          Parça ekle
+          Hızlı Parça Ekle
         </p>
         {catalogGroups.length > 0 ? (
-          <div className="mt-4">
-            <VehicleBuildModificationForm
-              action={addAction}
-              catalogGroups={catalogGroups}
-              returnTo={`/account/garage/${vehicleId}#build-profile`}
-            />
-          </div>
+          <VehicleModificationBatchSelector
+            action={addAction}
+            catalogGroups={catalogGroups}
+          />
         ) : (
           <p className="mt-4 rounded-md border border-ats-border bg-ats-black p-4 text-sm font-semibold text-ats-muted">
             Eklenebilir katalog parçası bulunamadı.
@@ -860,8 +857,8 @@ function buildCatalogGroups({
       variant: string | null;
     };
   }>;
-}): VehicleBuildCatalogGroup[] {
-  const groupsByKey = new Map<string, VehicleBuildCatalogGroup>();
+}): ModificationCatalogGroup[] {
+  const groupsByCategory = new Map<string, ModificationCatalogGroup>();
 
   for (const definition of catalog) {
     const typeKey = `${definition.category}:${definition.name.toLocaleLowerCase("tr-TR")}`;
@@ -876,29 +873,43 @@ function buildCatalogGroups({
     }
 
     const group =
-      groupsByKey.get(typeKey) ??
+      groupsByCategory.get(definition.category) ??
       {
         category: definition.category,
         categoryLabel: modificationCategoryLabels[definition.category],
+        types: [],
+      };
+    const type =
+      group.types.find((candidate) => candidate.typeKey === typeKey) ??
+      {
         typeKey,
         typeLabel: definition.name,
         options: [],
       };
 
-    group.options.push({
+    type.options.push({
       definitionId: definition.id,
       label: optionLabelForDefinition(definition),
-      available: availability.ok,
+      availability: availability.ok
+        ? "AVAILABLE"
+        : availability.code === "DUPLICATE_MODIFICATION"
+          ? "INSTALLED"
+          : "BLOCKED",
       reason: availability.ok
-        ? null
+        ? undefined
         : availability.code === "DUPLICATE_MODIFICATION"
           ? "Zaten yüklü"
           : vehicleBuildResultLabel(availability.code, availability),
     });
-    groupsByKey.set(typeKey, group);
+
+    if (!group.types.some((candidate) => candidate.typeKey === typeKey)) {
+      group.types.push(type);
+    }
+
+    groupsByCategory.set(definition.category, group);
   }
 
-  return Array.from(groupsByKey.values()).sort((firstGroup, secondGroup) => {
+  const groups = Array.from(groupsByCategory.values()).sort((firstGroup, secondGroup) => {
     const firstCategoryOrder = orderedModificationCategories.indexOf(
       firstGroup.category as (typeof orderedModificationCategories)[number],
     );
@@ -910,8 +921,16 @@ function buildCatalogGroups({
       return firstCategoryOrder - secondCategoryOrder;
     }
 
-    return firstGroup.typeLabel.localeCompare(secondGroup.typeLabel, "tr-TR");
+    return firstGroup.categoryLabel.localeCompare(secondGroup.categoryLabel, "tr-TR");
   });
+
+  for (const group of groups) {
+    group.types.sort((firstType, secondType) =>
+      firstType.typeLabel.localeCompare(secondType.typeLabel, "tr-TR"),
+    );
+  }
+
+  return groups;
 }
 
 function optionLabelForDefinition(definition: {

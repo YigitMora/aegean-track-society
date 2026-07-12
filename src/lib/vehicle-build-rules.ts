@@ -43,7 +43,19 @@ export type VehicleBuildResultCode =
   | "MODIFICATION_REQUIRED_BY_INSTALLED_ITEM"
   | "MODIFICATION_WRITE_FAILED";
 
-type VehicleBuildVehicle = {
+export type VehicleBuildBatchResultCode =
+  | "BATCH_EMPTY"
+  | "BATCH_TOO_LARGE"
+  | "DEFINITION_NOT_FOUND"
+  | "DEFINITION_INACTIVE"
+  | "DUPLICATE_MODIFICATION"
+  | "MODIFICATION_CONFLICT"
+  | "MODIFICATION_REQUIREMENT_MISSING"
+  | "MODIFICATION_INCOMPATIBLE"
+  | "VEHICLE_NOT_FOUND"
+  | "BATCH_WRITE_FAILED";
+
+export type VehicleBuildVehicle = {
   id: string;
   userId: string;
   vehicleDefinitionId: string | null;
@@ -125,6 +137,26 @@ export type VehicleModificationRemovalAvailability =
       code: "MODIFICATION_REQUIRED_BY_INSTALLED_ITEM";
       dependentModification: VehicleBuildInstalledModification;
       missingRequirement: VehicleBuildRequirementGroup;
+    };
+
+export type VehicleModificationBatchAvailability =
+  | {
+      ok: true;
+      code: null;
+    }
+  | {
+      ok: false;
+      code: Exclude<
+        VehicleBuildBatchResultCode,
+        | "BATCH_EMPTY"
+        | "BATCH_TOO_LARGE"
+        | "DEFINITION_NOT_FOUND"
+        | "VEHICLE_NOT_FOUND"
+        | "BATCH_WRITE_FAILED"
+      >;
+      offendingDefinitionId: string;
+      conflictingModification?: VehicleBuildInstalledModification;
+      missingRequirement?: VehicleBuildRequirementGroup;
     };
 
 export function normalizeVehicleIdentity(value: string | null | undefined) {
@@ -249,6 +281,99 @@ export function evaluateModificationRemoval({
           missingRequirement: group,
         };
       }
+    }
+  }
+
+  return {
+    ok: true,
+    code: null,
+  };
+}
+
+export function evaluateModificationBatchAvailability({
+  vehicle,
+  definitions,
+  installedModifications,
+}: {
+  vehicle: VehicleBuildVehicle;
+  definitions: VehicleBuildDefinitionForRules[];
+  installedModifications: VehicleBuildInstalledModification[];
+}): VehicleModificationBatchAvailability {
+  const installedDefinitionIds = new Set(
+    installedModifications.map((modification) => modification.modificationDefinitionId),
+  );
+  const selectedDefinitionIds = new Set(definitions.map((definition) => definition.id));
+  const proposedModifications: VehicleBuildInstalledModification[] = definitions.map(
+    (definition) => ({
+      id: `batch:${definition.id}`,
+      modificationDefinitionId: definition.id,
+      modificationDefinition: definition,
+    }),
+  );
+
+  for (const definition of definitions) {
+    if (!definition.active) {
+      return {
+        ok: false,
+        code: "DEFINITION_INACTIVE",
+        offendingDefinitionId: definition.id,
+      };
+    }
+
+    if (!isModificationCompatible(vehicle, definition.compatibilities)) {
+      return {
+        ok: false,
+        code: "MODIFICATION_INCOMPATIBLE",
+        offendingDefinitionId: definition.id,
+      };
+    }
+
+    if (installedDefinitionIds.has(definition.id)) {
+      return {
+        ok: false,
+        code: "DUPLICATE_MODIFICATION",
+        offendingDefinitionId: definition.id,
+      };
+    }
+
+    const conflictingModification = findConflictingModification({
+      definition,
+      installedModifications: [
+        ...installedModifications,
+        ...proposedModifications.filter(
+          (modification) => modification.modificationDefinitionId !== definition.id,
+        ),
+      ],
+    });
+
+    if (conflictingModification) {
+      return {
+        ok: false,
+        code: "MODIFICATION_CONFLICT",
+        offendingDefinitionId: definition.id,
+        conflictingModification,
+      };
+    }
+
+    const missingRequirement = definition.requirementGroups.find((group) => {
+      if (!group.active) {
+        return false;
+      }
+
+      return !group.options.some(
+        (option) =>
+          installedDefinitionIds.has(option.requiredDefinitionId) ||
+          selectedDefinitionIds.has(option.requiredDefinitionId),
+      );
+    });
+
+    if (missingRequirement) {
+      return {
+        ok: false,
+        code: "MODIFICATION_REQUIREMENT_MISSING",
+        offendingDefinitionId: definition.id,
+        missingRequirement,
+      };
     }
   }
 
