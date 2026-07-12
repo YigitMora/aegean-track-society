@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import {
   archiveVehicleAction,
   makePrimaryVehicleAction,
+  removeVehicleModificationAction,
   removeVehicleImageAction,
   uploadVehicleImageAction,
   updateVehicleAction,
@@ -12,6 +13,11 @@ import { VehicleImageSubmitButton } from "@/components/vehicle-image-submit-butt
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
 import { measureServerTiming } from "@/lib/server-timing";
+import {
+  formatModificationDefinition,
+  modificationCategoryLabels,
+  orderedModificationCategories,
+} from "@/lib/vehicle-build-rules";
 import { createOwnedVehicleImageSignedUrl } from "@/lib/vehicle-images";
 
 type EditVehiclePageProps = {
@@ -19,6 +25,7 @@ type EditVehiclePageProps = {
     id: string;
   }>;
   searchParams: Promise<{
+    build?: string;
     garage?: string;
     garageError?: string;
   }>;
@@ -48,6 +55,35 @@ export default async function EditVehiclePage({
         isPrimary: true,
         imagePath: true,
         deletedAt: true,
+        modifications: {
+          where: {
+            deletedAt: null,
+          },
+          orderBy: [
+            {
+              createdAt: "asc",
+            },
+            {
+              id: "asc",
+            },
+          ],
+          select: {
+            id: true,
+            modificationDefinitionId: true,
+            customNotes: true,
+            installedAt: true,
+            createdAt: true,
+            modificationDefinition: {
+              select: {
+                id: true,
+                category: true,
+                brand: true,
+                name: true,
+                variant: true,
+              },
+            },
+          },
+        },
       },
     }),
   );
@@ -85,7 +121,11 @@ export default async function EditVehiclePage({
         </p>
       </div>
 
-      <VehicleMessage garage={query.garage} garageError={query.garageError} />
+      <VehicleMessage
+        build={query.build}
+        garage={query.garage}
+        garageError={query.garageError}
+      />
 
       <VehicleCoverPanel
         action={uploadImageAction}
@@ -99,6 +139,11 @@ export default async function EditVehiclePage({
         action={updateAction}
         submitLabel="Değişiklikleri Kaydet"
         vehicle={vehicle}
+      />
+
+      <VehicleBuildProfile
+        vehicleId={vehicle.id}
+        modifications={vehicle.modifications}
       />
 
       <div className="mt-6 flex flex-wrap gap-3 rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft">
@@ -125,6 +170,128 @@ export default async function EditVehiclePage({
           </button>
         </form>
       </div>
+    </section>
+  );
+}
+
+function VehicleBuildProfile({
+  vehicleId,
+  modifications,
+}: {
+  vehicleId: string;
+  modifications: Array<{
+    id: string;
+    modificationDefinitionId: string;
+    customNotes: string | null;
+    installedAt: Date | null;
+    createdAt: Date;
+    modificationDefinition: {
+      id: string;
+      category: (typeof orderedModificationCategories)[number];
+      brand: string | null;
+      name: string;
+      variant: string | null;
+    };
+  }>;
+}) {
+  return (
+    <section className="mt-6 rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-blue">
+            Araç Build Profili
+          </p>
+          <h2 className="mt-3 text-3xl font-black text-ats-text">
+            Yüklü parçalar
+          </h2>
+          <p className="mt-3 text-sm font-semibold leading-6 text-ats-muted">
+            Modifikasyonlar güncel garaj verisidir; geçmiş başvurulardaki araç
+            snapshotları değişmez.
+          </p>
+        </div>
+        <Link
+          href={`/account/garage/${vehicleId}/modifications`}
+          className="inline-flex h-11 items-center justify-center rounded-full bg-ats-blue px-5 text-xs font-black uppercase tracking-[0.12em] text-ats-black transition hover:bg-ats-blue-hover"
+        >
+          Parça ekle
+        </Link>
+      </div>
+
+      {modifications.length === 0 ? (
+        <p className="mt-6 rounded-md border border-ats-border bg-ats-black p-4 text-sm font-semibold text-ats-muted">
+          Build profiline henüz parça eklenmedi.
+        </p>
+      ) : (
+        <div className="mt-8 space-y-8">
+          {orderedModificationCategories.map((category) => {
+            const categoryModifications = modifications.filter(
+              (modification) =>
+                modification.modificationDefinition.category === category,
+            );
+
+            if (categoryModifications.length === 0) {
+              return null;
+            }
+
+            return (
+              <div key={category}>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-ats-muted">
+                  {modificationCategoryLabels[category]}
+                </p>
+                <div className="mt-3 grid gap-3">
+                  {categoryModifications.map((modification) => {
+                    const removeAction = removeVehicleModificationAction.bind(
+                      null,
+                      vehicleId,
+                      modification.id,
+                    );
+
+                    return (
+                      <article
+                        key={modification.id}
+                        className="rounded-md border border-ats-border bg-ats-black p-4"
+                      >
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="font-black text-ats-text">
+                              {formatModificationDefinition(
+                                modification.modificationDefinition,
+                              )}
+                            </p>
+                            {modification.customNotes ? (
+                              <p className="mt-2 text-sm font-semibold leading-6 text-ats-muted">
+                                {modification.customNotes}
+                              </p>
+                            ) : null}
+                            {modification.installedAt ? (
+                              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-ats-muted">
+                                Montaj: {formatDate(modification.installedAt)}
+                              </p>
+                            ) : null}
+                          </div>
+                          <form action={removeAction}>
+                            <input
+                              type="hidden"
+                              name="returnTo"
+                              value={`/account/garage/${vehicleId}`}
+                            />
+                            <button
+                              type="submit"
+                              className="inline-flex h-10 items-center justify-center rounded-full border border-red-300/40 px-4 text-xs font-black uppercase tracking-[0.12em] text-red-100 transition hover:bg-red-300 hover:text-ats-black"
+                            >
+                              Parçayı kaldır
+                            </button>
+                          </form>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
@@ -222,13 +389,15 @@ function VehicleCoverPanel({
 }
 
 function VehicleMessage({
+  build,
   garage,
   garageError,
 }: {
+  build?: string;
   garage?: string;
   garageError?: string;
 }) {
-  const success = successMessage(garage);
+  const success = successMessage(garage) ?? buildMessage(build);
   const error = errorMessage(garageError);
 
   if (!success && !error) {
@@ -267,6 +436,18 @@ function successMessage(value?: string) {
   return null;
 }
 
+function buildMessage(value?: string) {
+  if (value === "modification_added") {
+    return "Parça build profiline eklendi.";
+  }
+
+  if (value === "modification_removed") {
+    return "Parça build profilinden kaldırıldı.";
+  }
+
+  return null;
+}
+
 function errorMessage(value?: string) {
   if (value === "duplicate_plate") {
     return "Bu plaka ile aktif bir araç garajınızda zaten bulunuyor.";
@@ -300,9 +481,49 @@ function errorMessage(value?: string) {
     return "Araç fotoğrafı kaldırılamadı. Lütfen tekrar deneyin.";
   }
 
+  if (value === "modification_not_found") {
+    return "Parça katalogda veya build profilinde bulunamadı.";
+  }
+
+  if (value === "modification_inactive") {
+    return "Bu parça şu anda eklenemez.";
+  }
+
+  if (value === "duplicate_modification") {
+    return "Bu parça build profiline zaten eklenmiş.";
+  }
+
+  if (value === "modification_incompatible") {
+    return "Bu parça seçilen araçla uyumlu değil.";
+  }
+
+  if (value === "modification_conflict") {
+    return "Bu parça yüklü başka bir parçayla çakışıyor.";
+  }
+
+  if (value === "modification_requirement_missing") {
+    return "Bu parça için önce gerekli parça eklenmeli.";
+  }
+
+  if (value === "modification_required_by_installed_item") {
+    return "Bu parça yüklü başka bir parça tarafından gerekli olduğu için kaldırılamaz.";
+  }
+
+  if (value === "modification_write_failed") {
+    return "Build profili güncellenemedi. Lütfen tekrar deneyin.";
+  }
+
   if (value) {
     return "Araç güncellenemedi. Lütfen tekrar deneyin.";
   }
 
   return null;
+}
+
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat("tr-TR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(date);
 }
