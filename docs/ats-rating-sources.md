@@ -1,10 +1,16 @@
 # ATS Rating Sources
 
-Accessed date for this sprint: 2026-07-12.
+Accessed date for this sprint: 2026-07-13.
 
 ## Sprint 4G Tuning Evidence
 
 Platform-specific tuning packages now store calibration confidence, source notes, and optional manufacturer-claimed power or torque deltas on `VehicleModificationImpact`. These fields are evidence metadata only. The ATS rating formula remains unchanged, and tuning impacts stay conservative until exact vehicle-template evidence is stronger. See `docs/ats-platform-tuning-sources.md` for product-family source rows and compatibility precedence.
+
+## Sprint 4H Map-Stage and Catalog Evidence
+
+Sprint 4H adds provider-authentic `mapStageLabel` metadata on `TuningPackageSpecification` and keeps it separate from rating impact. MHD N55/B58, bootmod3 FlexFuel, and xHP records use official provider terminology only; no ATS tier ladder is introduced. B58 higher-output maps receive larger Power impacts than B48/N55 baseline records, but Reliability and Thermal penalties plus unchanged no-brake/no-cooling guardrails prevent high-stage ECU maps from becoming all-round 100-score builds.
+
+Eventuri intake and expanded wheel records add fitment/catalog metadata only. Their rating impact is intentionally small unless an exact vehicle-template override exists, and wheel construction never creates a large score gain without exact size and weight.
 
 ## Brake Pad Compounds
 

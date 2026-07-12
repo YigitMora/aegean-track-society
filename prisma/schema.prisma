@@ -698,6 +698,8 @@ model TuningPackageSpecification {
   modificationDefinition    ModificationDefinition @relation(fields: [modificationDefinitionId], references: [id], onDelete: Cascade)
   tuneType                  TuningPackageType
   measurementBasis          PowerMeasurementBasis?
+  mapStageLabel             String?
+  mapProgramCode            String?
   claimedPowerMinHp         Int?
   claimedPowerMaxHp         Int?
   claimedTorqueMinNm        Int?

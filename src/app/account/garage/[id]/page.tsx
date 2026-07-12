@@ -807,6 +807,9 @@ const modificationDefinitionRuleSelect = {
     select: {
       active: true,
       construction: true,
+      nominalDiameterInches: true,
+      nominalWidthInches: true,
+      weightKg: true,
       trackSuitability: true,
       roadSuitability: true,
     },
@@ -816,6 +819,8 @@ const modificationDefinitionRuleSelect = {
       active: true,
       tuneType: true,
       measurementBasis: true,
+      mapStageLabel: true,
+      mapProgramCode: true,
       claimedPowerMinHp: true,
       claimedPowerMaxHp: true,
       claimedTorqueMinNm: true,
@@ -1001,6 +1006,9 @@ function buildCatalogGroups({
     type.options.push({
       definitionId: definition.id,
       label: optionLabelForDefinition(definition),
+      brand: definition.brand,
+      name: definition.name,
+      variant: definition.variant,
       usageClass: definition.usageClass,
       brakePadSpecification: definition.brakePadSpecification?.active
         ? definition.brakePadSpecification
@@ -1015,7 +1023,17 @@ function buildCatalogGroups({
         ? definition.tyreSpecification
         : null,
       wheelSpecification: definition.wheelSpecification?.active
-        ? definition.wheelSpecification
+        ? {
+            construction: definition.wheelSpecification.construction,
+            nominalDiameterInches:
+              definition.wheelSpecification.nominalDiameterInches,
+            nominalWidthInches: decimalToNumber(
+              definition.wheelSpecification.nominalWidthInches,
+            ),
+            weightKg: decimalToNumber(definition.wheelSpecification.weightKg),
+            trackSuitability: definition.wheelSpecification.trackSuitability,
+            roadSuitability: definition.wheelSpecification.roadSuitability,
+          }
         : null,
       tuningPackageSpecification: definition.tuningPackageSpecification?.active
         ? definition.tuningPackageSpecification
@@ -1062,6 +1080,10 @@ function buildCatalogGroups({
   }
 
   return groups;
+}
+
+function decimalToNumber(value: Prisma.Decimal | null) {
+  return value ? value.toNumber() : null;
 }
 
 function optionLabelForDefinition(definition: {
