@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
+import { AdminPermissionBanner } from "@/components/admin/admin-permission-banner";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { formatDateTime } from "@/lib/admin-format";
@@ -58,6 +59,7 @@ type MembersPageProps = {
     marketing?: string;
     sort?: string;
     page?: string;
+    adminError?: string;
   }>;
 };
 
@@ -187,6 +189,8 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
         ) : null
       }
     >
+      <AdminPermissionBanner code={params.adminError} />
+
       <form
         action="/admin/members"
         method="get"
