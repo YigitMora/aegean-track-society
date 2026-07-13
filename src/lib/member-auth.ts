@@ -281,6 +281,7 @@ function isAllowedMemberReturnPath(returnTo: string) {
     returnTo === "/account" ||
     returnTo.startsWith("/account/") ||
     returnTo === "/auth/reset-password" ||
+    returnTo.startsWith("/admin/member-login") ||
     returnTo.startsWith("/events/") && returnTo.endsWith("/register")
   );
 }
