@@ -33,6 +33,8 @@ export type GarageLifecycleVehicle = {
   color: string | null;
   isPrimary?: boolean;
   coverImageUrl: string | null;
+  vehicleDefinitionId: string | null;
+  modificationCount: number;
   rating: GarageRating;
 };
 
@@ -216,6 +218,7 @@ function VehicleLifecycleSection({
 
   return (
     <section
+      id={mode === "active" ? "active-garage-vehicles" : undefined}
       className={
         mode === "archived" ? "mt-16 border-t border-ats-border pt-10" : "mt-10"
       }
@@ -553,14 +556,23 @@ function GarageLifecycleCard({
             {[vehicle.year, vehicle.color].filter(Boolean).join(" · ") || "Detay eklenmedi"}
           </p>
         </div>
-        {vehicle.isPrimary ? (
-          <span className="rounded-full border border-ats-blue/40 bg-ats-blue/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-ats-blue">
-            Birincil
-          </span>
-        ) : null}
+        <div className="flex flex-wrap justify-end gap-2">
+          {vehicle.vehicleDefinitionId ? null : (
+            <span className="rounded-full border border-amber-300/35 bg-amber-400/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-amber-100">
+              Katalog dışı araç
+            </span>
+          )}
+          {vehicle.isPrimary ? (
+            <span className="rounded-full border border-ats-blue/40 bg-ats-blue/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-ats-blue">
+              Birincil
+            </span>
+          ) : null}
+        </div>
       </div>
 
       <CompactRating rating={vehicle.rating} showBars={mode === "active"} />
+
+      {mode === "active" ? <BuildDiscoveryPanel vehicle={vehicle} /> : null}
 
       <div className="flex flex-wrap gap-3 p-6">
         {mode === "active" ? (
@@ -686,6 +698,76 @@ function VehicleCoverPreview({
       )}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-20 bg-gradient-to-t from-ats-black/55 to-transparent" />
     </div>
+  );
+}
+
+function BuildDiscoveryPanel({ vehicle }: { vehicle: GarageLifecycleVehicle }) {
+  if (!vehicle.vehicleDefinitionId) {
+    return (
+      <div className="mx-6 mt-4 rounded-md border border-amber-300/25 bg-amber-400/10 p-4">
+        <p className="text-sm font-black text-amber-100">Katalog dışı araç</p>
+        <p className="mt-2 text-sm font-semibold leading-6 text-ats-muted">
+          Bu araç etkinlik başvurularında kullanılabilir. ATS Rating ve uyumlu
+          modifikasyon özellikleri için aracın katalogla eşleşmesi gerekir.
+        </p>
+        <a
+          href="#garage-catalog-support"
+          className="mt-3 inline-flex h-10 items-center justify-center rounded-full border border-amber-300/40 px-4 text-xs font-black uppercase tracking-[0.12em] text-amber-100"
+        >
+          Katalog eşleştirmesi iste
+        </a>
+      </div>
+    );
+  }
+
+  const ratingScore = vehicle.rating
+    ? `${clampRatingScore(vehicle.rating.overall)}`
+    : "Hazır değil";
+  const hasModifications = vehicle.modificationCount > 0;
+
+  return (
+    <section className="mx-6 mt-4 rounded-md border border-ats-border bg-ats-black p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-black text-ats-text">Build ve Modifikasyonlar</p>
+          <p className="mt-2 text-sm font-semibold leading-6 text-ats-muted">
+            Takılı parçalarını ekle, build profilini oluştur ve tahmini ATS Rating
+            değişimini gör.
+          </p>
+        </div>
+        <div className="grid shrink-0 grid-cols-2 gap-2 text-right sm:min-w-40">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.1em] text-ats-muted">
+              ATS
+            </p>
+            <p className="text-sm font-black text-ats-text">{ratingScore}</p>
+          </div>
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.1em] text-ats-muted">
+              Parça
+            </p>
+            <p className="text-sm font-black text-ats-text">
+              {vehicle.modificationCount}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm font-black text-ats-text">
+          {hasModifications ? "Build profili mevcut" : "Henüz modifikasyon eklenmedi"}
+        </p>
+        <Link
+          href={`/account/garage/${vehicle.id}/modifications`}
+          className={`inline-flex h-10 items-center justify-center rounded-full px-4 text-xs font-black uppercase tracking-[0.12em] transition ${
+            hasModifications
+              ? "border border-ats-border text-ats-text hover:border-ats-blue hover:text-ats-blue"
+              : "bg-ats-blue text-ats-black hover:bg-ats-blue-hover"
+          }`}
+        >
+          {hasModifications ? "Build'i Görüntüle" : "İlk Modifikasyonu Ekle"}
+        </Link>
+      </div>
+    </section>
   );
 }
 
