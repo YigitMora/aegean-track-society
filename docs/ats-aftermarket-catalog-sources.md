@@ -170,6 +170,38 @@ HF Series was omitted because an official manufacturer/brand identity and stable
 | `safety_full_roll_cage` | Full Roll Cage | Existing safety declaration | Race-readiness signal. | Not a safety certification. |
 | `safety_fire_extinguisher` | Fire Extinguisher | Generic safety declaration | Track-readiness signal. | Not a safety certification. |
 
+## Sprint 4K Suspension Expansion
+
+Reviewed on 2026-07-13. Rows below are product-family declarations for catalog filtering and rating preview. They do not assert exact vehicle fitment, damper curves, spring rates, legal road approval, or installation safety. Damper rows remain advisory and are seeded with an active physical requirement: a damper record must be paired with a sport-spring record.
+
+| Code | Official product name | Publisher | Official URL | Values used | Uncertainty / rationale / advisory behavior |
+| --- | --- | --- | --- | --- | --- |
+| `damper_koni_special_active` | Special ACTIVE | KONI | https://www.koni.com/ | Road-biased damper family. | Exact vehicle fitment and valving are not modeled; ATS shows spring-pairing requirement only. |
+| `damper_sachs_performance` | Performance shock absorber | Sachs Performance / ZF | https://aftermarket.zf.com/ | Performance replacement damper family. | Cataloged as family metadata; verify vehicle fitment and spring compatibility. |
+| `damper_tein_endurapro` | EnduraPro | TEIN | https://www.tein.com/products/endurapro.html | OE-shape damper family and durability/road-use positioning. | No vehicle-specific H.B.S. or DBA feature is inferred; spring pairing remains required. |
+| `damper_eibach_pro_damper` | Pro-Damper | Eibach | https://eibach.com/ | Eibach sport damper family. | Included as suspension-package family metadata; no exact part number or lowering claim. |
+| `suspension_coilover_bc_racing_br` | BR Series | BC Racing | https://bcracing-na.com/ | Street/track coilover family. | Family row only; spring rates, top mounts, and damping specs vary by application. |
+| `suspension_coilover_bc_racing_ds` | DS Series | BC Racing | https://bcracing-na.com/ | More track-focused coilover family. | Family row only; exact digressive piston/spec details are not generalized. |
+| `suspension_coilover_tein_flex_z` | FLEX Z | TEIN | https://www.tein.com/products/flex_z.html | Height-adjustable coilover family and street/track positioning. | No platform fitment, spring rate, or EDFC support is inferred. |
+| `suspension_coilover_tein_mono_sport` | MONO SPORT | TEIN | https://www.tein.com/ | Mono-tube sport coilover family. | Retained as a track-biased family row; verify current vehicle availability. |
+| `suspension_coilover_hks_hipermax_s` | HIPERMAX S | HKS | https://www.hks-power.co.jp/en/ | Street/track coilover family. | Vehicle-specific fitment and spring rates are not stored. |
+| `suspension_coilover_hks_hipermax_r` | HIPERMAX R | HKS | https://www.hks-power.co.jp/en/ | Track-biased coilover family. | Higher handling/readiness signal is still conservative and not a lap-time claim. |
+| `suspension_coilover_ast_5100` | 5100 Series | AST Suspension | https://ast-suspension.com/ | Single-adjustable performance coilover family. | Competition/service details vary by application; no fitment guarantee. |
+| `suspension_coilover_ast_5200` | 5200 Series | AST Suspension | https://ast-suspension.com/ | Two-way motorsport coilover family. | Reliability penalty reflects increased setup/maintenance burden, not product quality. |
+| `suspension_coilover_mcs_1wnr` | 1WNR | Motion Control Suspension | https://motioncontrolsuspension.com/ | Non-remote single-adjustable motorsport coilover family. | Exact platform kit and valving must be verified. |
+| `suspension_coilover_mcs_2wnr` | 2WNR | Motion Control Suspension | https://motioncontrolsuspension.com/ | Non-remote two-way motorsport coilover family. | Higher setup complexity is advisory; no fitment or lap-time claim. |
+| `suspension_anti_roll_bar_hr_rear` | Anti-roll bar | H&R Springs | https://www.hrsprings.com/ | Rear anti-roll bar product family. | Front and rear rows are separated so slots do not block each other incorrectly. |
+| `suspension_anti_roll_bar_eibach_rear` | Anti-roll bar | Eibach | https://eibach.com/ | Rear anti-roll bar product family. | No diameter or stiffness is stored. |
+| `suspension_anti_roll_bar_whiteline_rear` | Anti-roll bar | Whiteline | https://whitelineperformance.com/ | Rear anti-roll bar product family. | No diameter, blade position, or chassis fitment is stored. |
+| `suspension_bushing_whiteline` | Bushing kit | Whiteline | https://whitelineperformance.com/ | Bushing/chassis correction family. | Correctly categorized as bushings, not coilover or spring hardware. |
+| `suspension_control_arm_whiteline` | Adjustable control arm | Whiteline | https://whitelineperformance.com/ | Alignment/control-arm family. | Track-readiness gain is descriptive; exact geometry range not stored. |
+| `suspension_ball_joint_whiteline` | Adjustable ball joint | Whiteline | https://whitelineperformance.com/ | Alignment ball-joint family. | Exact fitment and adjustment range must be verified. |
+| `suspension_strut_brace_whiteline` | Strut brace | Whiteline | https://whitelineperformance.com/ | Strut brace family. | Conservative handling signal only. |
+| `suspension_chassis_brace_whiteline` | Chassis brace | Whiteline | https://whitelineperformance.com/ | Chassis brace family. | Conservative handling signal only. |
+| `suspension_bushing_powerflex_road_series` | Road Series bushes | Powerflex | https://www.powerflex.co.uk/ | Road-biased polyurethane bushing family. | No exact hardness, NVH, or fitment row stored. |
+| `suspension_bushing_powerflex_black_series` | Black Series bushes | Powerflex | https://www.powerflex.co.uk/ | Track-biased polyurethane bushing family. | Higher track signal with owner-verification note; no universal road comfort claim. |
+| `suspension_alignment_bushing_powerflex` | Alignment bush | Powerflex | https://www.powerflex.co.uk/ | Alignment bushing family. | Geometry change is advisory only and must be verified during installation. |
+
 ## Sprint 4J Catalog Expansion Supplement
 
 Reviewed on 2026-07-13. New Sprint 4J rows are product-family declarations unless exact fitment is explicitly stated. No tyre row increases Power. Racing slick and wet tyres are marked race-only where the family is a competition tyre; road suitability is deliberately near-zero.

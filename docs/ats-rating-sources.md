@@ -20,6 +20,16 @@ Tyre taxonomy uses the normalized `TyreClass` enum: `TOURING`, `UHP_ROAD`, `MAX_
 
 Wheel rows remain conservative family metadata: construction affects the wheel detail summary, but no universal weight, diameter, offset, brake clearance, or fitment claim is converted into a large handling score. Aero rows do not store downforce claims and receive small handling/readiness values only. Safety rows represent build-preparation declarations, not certification or installation guarantees.
 
+## Sprint 4K Dependency and Suspension Rating Safeguards
+
+Sprint 4K keeps the rating formula unchanged. Advisory tuning dependencies, such as Stage 2 downpipe, flex-fuel calibration, and provider-recommended airflow/cooling support, are no longer active hard requirements. They remain represented in source notes, fitment notes, and tuning-package metadata instead of blocking selection.
+
+Flex-fuel hardware is a hardware declaration under `flex_fuel_hardware`, not ECU software, and does not add Power by itself. Power changes remain attached to calibration/tune rows or platform impacts.
+
+Damper records receive modest Handling/Track Readiness values and require an active sport-spring record. Coilovers conflict with sport springs and dampers through catalog rules, so the batch validator accepts spring + damper together, rejects damper alone, and rejects damper + coilover.
+
+Turbo rows use the existing rating formula and platform-impact override behavior. Named turbo families receive engine-family gated impacts; generic Hybrid Turbo and Big Turbo rows are lower-confidence fallback declarations and are suppressed when a compatible named turbo exists. No turbo row creates hard requirements for ECU software, downpipe, intercooler, fuel, or drivetrain upgrades.
+
 ## Brake Pad Compounds
 
 | Code | Source title | Publisher | URL | Values used | Uncertainty note |

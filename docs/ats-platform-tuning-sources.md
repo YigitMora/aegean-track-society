@@ -30,6 +30,29 @@ Reviewed on 2026-07-13.
 
 Family compatibility precedence is implemented in code as: powertrain, exact vehicle definition, engine family, platform family, legacy brand/model/year, then universal only when no active compatibility rows exist for that definition.
 
+## Sprint 4K Turbo Platform Catalog
+
+Reviewed on 2026-07-13. Turbo rows are product-family and compatibility metadata only. ATS does not model a hard dependency chain for downpipe, intercooler, fuel pump, injectors, ethanol content, clutch/gearbox, or ECU calibration; those remain advisory through descriptions and fitment notes. Generic turbo rows are visible only to matched ICE templates when no named turbo family is compatible.
+
+| Seed code | Product family | Source | Compatibility basis | ATS limitation / advisory behavior |
+| --- | --- | --- | --- | --- |
+| `engine_hybrid_turbo_generic` | Generic Hybrid Turbo | ATS generic declaration | Matched ICE templates without a named turbo row | Fallback build record only; hidden when a named compatible turbo exists. |
+| `engine_big_turbo_generic` | Generic Big Turbo | ATS generic declaration | Matched ICE templates without a named turbo row | Fallback high-output record only; owner must verify turbo, fueling, tune, cooling, and drivetrain limits. |
+| `turbo_apr_dtr6054_ea888_gen3` | APR DTR6054 | https://www.goapr.com/ | `vag_ea888_gen3` | Named EA888 Gen 3 turbo family; no universal Golf/Audi fitment beyond engine-family gate. |
+| `turbo_garrett_powermax_ea888_gen3` | Garrett PowerMax EA888 Gen 3 | https://www.garrettmotion.com/racing-and-performance/performance-catalog/turbo/ | `vag_ea888_gen3` | Official Garrett performance-turbo catalog basis; exact part number and tune must be verified. |
+| `turbo_racingline_oem_plus_ea888_gen4` | RacingLine OEM+ EA888 Gen 4 | https://www.racingline.com/ | `vag_ea888_gen4` | Family row only; no stage, dyno, or hardware completeness claim. |
+| `turbo_pure_n55_stage_2` | Pure Turbos N55 Stage 2 | https://www.pureturbos.com/ | `bmw_n55` | Not applied to B58/S55/S58; supporting fuel, intercooler, downpipe, and tune are advisory. |
+| `turbo_pure_b58_pure800` | Pure Turbos B58 PURE800 | https://www.pureturbos.com/ | `bmw_b58` | Early B58 family only; not reused for B58TU/TU2 or S58. |
+| `turbo_pure_b58tu_pure850` | Pure Turbos B58TU PURE850 | https://www.pureturbos.com/ | `bmw_b58tu`, `bmw_b58tu2` | Later B58TU/TU2 family only; no single universal BMW row. |
+| `turbo_pure_s55_stage_2` | Pure Turbos S55 Stage 2 | https://www.pureturbos.com/ | `bmw_s55` | Twin-turbo upgrade row; no N55/B58 applicability inferred. |
+| `turbo_pure_s58_pure1000` | Pure Turbos S58 PURE1000 | https://www.pureturbos.com/ | `bmw_s58` | Twin-turbo upgrade row; supporting tune/fuel/cooling remain advisory. |
+| `turbo_prl_p700_fk8` | PRL P700 FK8 | https://prlmotorsports.com/ | `honda_k20c1_fk8` | FK8 only; no FL5 inference. |
+| `turbo_prl_p700_fl5` | PRL P700 FL5 | https://prlmotorsports.com/ | `honda_k20c1_fl5` | FL5 only; no FK8 inference. |
+| `turbo_n75_i20n_hybrid` | N75 i20 N Hybrid Turbo | https://n75motorsports.ca/ | `hyundai_g4fp_i20n` | Low confidence family row; exact hardware and tune must be verified. |
+| `turbo_sxth_theta2_n_hybrid` | SXTH Theta II N Hybrid Turbo | https://sxthelement.com/ | `hyundai_theta2_tgdi_n` | Hyundai Elantra/Kona N engine-family gate; no i20 N applicability. |
+| `turbo_garrett_powermax_focus_rs` | Garrett PowerMax Focus RS | https://www.garrettmotion.com/racing-and-performance/performance-catalog/turbo/ | `ford_ecoboost_23_focus_rs` | Focus RS 2.3 family only; not applied to Mustang or Focus ST. |
+| `turbo_garrett_powermax_mustang_23` | Garrett PowerMax Mustang EcoBoost 2.3 | https://www.garrettmotion.com/racing-and-performance/performance-catalog/turbo/ | `ford_ecoboost_23_mustang` | Mustang 2.3 family only; not applied to Focus RS/ST. |
+
 ## Sprint 4H BMW N55/B58 Vehicle and Engine-Family Corrections
 
 BMW/Toyota vehicle codes below use official BMW Group press material, Toyota GR Supra newsroom material, and MHD supported-car lists as cross-checks. Ratings remain provisional unless an earlier seed row was already calibrated.

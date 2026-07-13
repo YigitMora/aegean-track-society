@@ -20,13 +20,16 @@ export type ModificationCatalogGroup = {
   types: Array<{
     typeKey: string;
     typeLabel: string;
-      options: Array<{
-        definitionId: string;
-        label: string;
-        brand: string | null;
-        name: string;
-        variant: string | null;
-        availability: "AVAILABLE" | "INSTALLED" | "BLOCKED";
+    options: Array<{
+      code?: string | null;
+      definitionId: string;
+      label: string;
+      brand: string | null;
+      name: string;
+      variant: string | null;
+      componentTypeCode?: string | null;
+      description?: string | null;
+      availability: "AVAILABLE" | "INSTALLED" | "BLOCKED";
       usageClass?: string | null;
       brakePadSpecification?: BrakePadSpecificationSummary | null;
       sportSpringSpecification?: SportSpringSpecificationSummary | null;
@@ -631,6 +634,26 @@ function CatalogOptionDetails({
     if (spec.minimumFuelOctaneRon !== null) {
       details.push(["Yakıt", `${spec.minimumFuelOctaneRon} RON+`]);
     }
+  } else if (isTurboComponent(option.componentTypeCode)) {
+    details.push(
+      ["Ürün", [option.brand, option.name, option.variant].filter(Boolean).join(" / ")],
+      ["Turbo tipi", turboTypeLabel(option)],
+      ["Yol", suspensionRoadSuitabilityLabel(option.usageClass)],
+      ["Pist", suspensionTrackSuitabilityLabel(option.usageClass)],
+    );
+  } else if (option.componentTypeCode === "damper") {
+    details.push(
+      ["Aile", [option.brand, option.variant ?? option.name].filter(Boolean).join(" / ")],
+      ["Yol", suspensionRoadSuitabilityLabel(option.usageClass)],
+      ["Pist", suspensionTrackSuitabilityLabel(option.usageClass)],
+      ["Gereksinim", "Spor yay ile kullanılmalıdır."],
+    );
+  } else if (isChassisHardwareComponent(option.componentTypeCode)) {
+    details.push(
+      ["Aile", [option.brand, option.variant ?? option.name].filter(Boolean).join(" / ")],
+      ["Yol", suspensionRoadSuitabilityLabel(option.usageClass)],
+      ["Pist", suspensionTrackSuitabilityLabel(option.usageClass)],
+    );
   } else {
     return null;
   }
@@ -657,6 +680,11 @@ function CatalogOptionDetails({
       {option.fitmentNote ? (
         <p className="mt-2 text-xs font-semibold leading-5 text-ats-muted">
           {option.fitmentNote}
+        </p>
+      ) : null}
+      {option.description ? (
+        <p className="mt-2 text-xs font-semibold leading-5 text-ats-muted">
+          {option.description}
         </p>
       ) : null}
       {option.wheelSpecification ? (
@@ -917,6 +945,75 @@ function usageClassLabel(value?: string | null) {
   };
 
   return value ? labels[value] ?? value : "Belirtilmedi";
+}
+
+function suspensionRoadSuitabilityLabel(value?: string | null) {
+  if (value === "TRACK" || value === "RACE") {
+    return "Düşük";
+  }
+
+  if (value === "STREET_TRACK" || value === "ENDURANCE" || value === "SPRINT") {
+    return "Orta";
+  }
+
+  return "Yüksek";
+}
+
+function suspensionTrackSuitabilityLabel(value?: string | null) {
+  if (value === "TRACK" || value === "RACE" || value === "ENDURANCE") {
+    return "Yüksek";
+  }
+
+  if (value === "STREET_TRACK" || value === "SPRINT") {
+    return "Orta";
+  }
+
+  return "Düşük";
+}
+
+function isChassisHardwareComponent(value?: string | null) {
+  return Boolean(
+    value &&
+      [
+        "anti_roll_bar_front",
+        "anti_roll_bar_rear",
+        "camber_plate",
+        "adjustable_ball_joint",
+        "adjustable_control_arm",
+        "bushings",
+        "strut_brace",
+        "chassis_brace",
+      ].includes(value),
+  );
+}
+
+function isTurboComponent(value?: string | null) {
+  return Boolean(
+    value &&
+      [
+        "turbo_upgrade",
+        "hybrid_turbo",
+        "big_turbo",
+        "turbocharger_upgrade",
+        "twin_turbo_upgrade",
+        "supercharger_upgrade",
+      ].includes(value),
+  );
+}
+
+function turboTypeLabel(option: ModificationCatalogGroup["types"][number]["options"][number]) {
+  const labels: Record<string, string> = {
+    turbo_upgrade: option.variant ?? "Turbocharger Upgrade",
+    hybrid_turbo: "Hybrid Turbo",
+    big_turbo: "Big Turbo",
+    turbocharger_upgrade: "Turbocharger Upgrade",
+    twin_turbo_upgrade: "Twin Turbo Upgrade",
+    supercharger_upgrade: "Supercharger Upgrade",
+  };
+
+  return option.componentTypeCode
+    ? labels[option.componentTypeCode] ?? option.componentTypeCode
+    : "Turbocharger Upgrade";
 }
 
 function tuningPackageTypeLabel(value: string) {

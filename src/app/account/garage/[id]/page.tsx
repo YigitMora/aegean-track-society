@@ -26,7 +26,9 @@ import {
   evaluateModificationAvailability,
   formatModificationDefinition,
   hasNamedProviderEcuTuneForVehicle,
+  hasNamedProviderTurboForVehicle,
   isGenericEcuFallbackDefinition,
+  isGenericTurboFallbackDefinition,
   modificationCategoryLabels,
   normalizeVehicleIdentity,
   orderedModificationCategories,
@@ -985,9 +987,17 @@ function buildCatalogGroups({
     vehicle,
     definitions: catalog,
   });
+  const hasNamedProviderTurbo = hasNamedProviderTurboForVehicle({
+    vehicle,
+    definitions: catalog,
+  });
 
   for (const definition of catalog) {
     if (isGenericEcuFallbackDefinition(definition) && hasNamedProviderEcuTune) {
+      continue;
+    }
+
+    if (isGenericTurboFallbackDefinition(definition) && hasNamedProviderTurbo) {
       continue;
     }
 
@@ -999,6 +1009,7 @@ function buildCatalogGroups({
       definition,
       installedModifications,
       hasNamedProviderEcuTune,
+      hasNamedProviderTurbo,
     });
 
     if (!availability.ok && availability.code === "MODIFICATION_INCOMPATIBLE") {
@@ -1021,12 +1032,15 @@ function buildCatalogGroups({
       };
 
     type.options.push({
+      code: definition.code,
       definitionId: definition.id,
       label: optionLabelForDefinition(definition),
       brand: definition.brand,
       name: definition.name,
       variant: definition.variant,
+      componentTypeCode: definition.componentTypeCode,
       usageClass: definition.usageClass,
+      description: definition.description,
       brakePadSpecification: definition.brakePadSpecification?.active
         ? definition.brakePadSpecification
         : null,
@@ -1131,6 +1145,7 @@ function modificationTypeLabel(definition: {
     ecu_software: "ECU Yazılımı",
     platform_tune_package: "Platform Tune Paketi",
     transmission_software: "Şanzıman Yazılımı",
+    flex_fuel_hardware: "Flex Fuel Donanımı",
     air_filter: "Hava Filtresi",
     intake: "Emiş",
     turbo_inlet: "Turbo Inlet",
@@ -1139,6 +1154,12 @@ function modificationTypeLabel(definition: {
     cat_back_exhaust: "Cat-back Egzoz",
     axle_back_exhaust: "Axle-back Egzoz",
     exhaust_manifold: "Egzoz Manifoldu",
+    turbo_upgrade: "Turbocharger Upgrade",
+    hybrid_turbo: "Hybrid Turbo",
+    big_turbo: "Big Turbo",
+    turbocharger_upgrade: "Turbocharger Upgrade",
+    twin_turbo_upgrade: "Twin Turbo Upgrade",
+    supercharger_upgrade: "Supercharger Upgrade",
     intercooler: "Intercooler",
     oil_cooler: "Yağ Soğutucu",
     radiator: "Radyatör",
@@ -1147,9 +1168,15 @@ function modificationTypeLabel(definition: {
     coilover: "Coilover",
     damper: "Amortisör",
     camber_hardware: "Kamber Donanımı",
+    camber_plate: "Kamber Plakası",
+    adjustable_ball_joint: "Ayarlı Rotil",
+    adjustable_control_arm: "Ayarlı Kontrol Kolu",
     anti_roll_bar: "Anti-roll Bar",
+    anti_roll_bar_front: "Ön Anti-roll Bar",
+    anti_roll_bar_rear: "Arka Anti-roll Bar",
     bushings: "Burç",
     strut_brace: "Kule Gergisi",
+    chassis_brace: "Şasi Gergisi",
     tyre_touring: "Touring Lastik",
     tyre_uhp_road: "UHP Yol Lastiği",
     tyre_max_performance_road: "Max Performance Lastik",
@@ -1180,6 +1207,7 @@ function modificationTypeLabel(definition: {
 }
 
 function fitmentNoteForDefinition(definition: {
+  code?: string | null;
   componentTypeCode?: string | null;
 }) {
   const componentTypeCode = definition.componentTypeCode;
@@ -1209,6 +1237,10 @@ function fitmentNoteForDefinition(definition: {
     return "Kalibrasyon kaydıdır. ECU/TCU yazılım versiyonu, yakıt, donanım ve tork limitini ayrıca doğrulayın.";
   }
 
+  if (componentTypeCode === "flex_fuel_hardware") {
+    return "Donanım kaydıdır. Sensör, yakıt hattı, yazılım ve ethanol kalibrasyonu uyumluluğunu ayrıca doğrulayın.";
+  }
+
   if (
     componentTypeCode === "intake" ||
     componentTypeCode === "intercooler" ||
@@ -1223,8 +1255,43 @@ function fitmentNoteForDefinition(definition: {
     return "Ürün ailesi kaydıdır. Motor, şasi ve bağlantı uyumluluğunu ayrıca doğrulayın.";
   }
 
+  if (
+    definition.code === "engine_hybrid_turbo_generic" ||
+    definition.code === "engine_big_turbo_generic"
+  ) {
+    return "Genel build kaydıdır. Turbo, yakıt, yazılım ve bağlantı uyumluluğunu ayrıca doğrulayın.";
+  }
+
+  if (
+    componentTypeCode === "turbo_upgrade" ||
+    componentTypeCode === "hybrid_turbo" ||
+    componentTypeCode === "big_turbo" ||
+    componentTypeCode === "turbocharger_upgrade" ||
+    componentTypeCode === "twin_turbo_upgrade" ||
+    componentTypeCode === "supercharger_upgrade"
+  ) {
+    return "Turbo ürün ailesi kaydıdır. Yakıt, yazılım, soğutma, bağlantı ve motor uyumluluğunu ayrıca doğrulayın.";
+  }
+
   if (componentTypeCode === "sport_springs") {
     return "Ürün ailesi kaydıdır. Aracınıza fiziksel uyumluluğu ayrıca doğrulayın.";
+  }
+
+  if (componentTypeCode === "damper") {
+    return "Spor yay ile kullanılmalıdır. Damper boyu, yay oranı ve araç uyumluluğunu ayrıca doğrulayın.";
+  }
+
+  if (
+    componentTypeCode === "anti_roll_bar_front" ||
+    componentTypeCode === "anti_roll_bar_rear" ||
+    componentTypeCode === "camber_plate" ||
+    componentTypeCode === "adjustable_ball_joint" ||
+    componentTypeCode === "adjustable_control_arm" ||
+    componentTypeCode === "bushings" ||
+    componentTypeCode === "strut_brace" ||
+    componentTypeCode === "chassis_brace"
+  ) {
+    return "Şasi donanımı kaydıdır. Parça, aks, geometri ve bağlantı uyumluluğunu ayrıca doğrulayın.";
   }
 
   return undefined;
