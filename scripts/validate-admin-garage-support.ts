@@ -31,10 +31,27 @@ assert.match(service, /ADMIN_GARAGE_VEHICLE_DEFINITION_MATCHED/);
 assert.match(service, /ADMIN_GARAGE_PRIMARY_CHANGED/);
 assert.match(service, /incompatible_modifications_block_match/);
 
-assert.match(adminActions, /role === "CHECKIN"/);
+assert.match(adminActions, /prisma\.adminUser\.findUnique/);
+assert.match(adminActions, /email: normalizeAdminEmail\(session\.email\)/);
+assert.match(adminActions, /!adminUser \|\| !canWriteGarageRole\(adminUser\.role\)/);
+assert.match(adminActions, /role === "OWNER" \|\| role === "STAFF"/);
+assert.doesNotMatch(adminActions, /prisma\.adminUser\.upsert/);
+assert.doesNotMatch(adminActions, /prisma\.adminUser\.create/);
 assert.match(adminActions, /admin_permission_denied/);
 assert.match(adminActions, /confirmVehicle/);
 assert.match(adminActions, /reason/);
+
+const roleExpectations = [
+  ["OWNER", true],
+  ["STAFF", true],
+  ["CHECKIN", false],
+  [null, false],
+  ["SUPPORT", false],
+] as const;
+
+for (const [role, expected] of roleExpectations) {
+  assert.equal(canWriteGarageRole(role), expected, `${String(role)} role matrix`);
+}
 
 assert.match(adminPage, /Garage Support/);
 assert.match(adminPage, /Uye Garajina Arac Ekle|Üye Garajına Araç Ekle/u);
@@ -55,4 +72,8 @@ console.log("Admin garage support validation passed.");
 
 function read(path: string) {
   return readFileSync(path, "utf8");
+}
+
+function canWriteGarageRole(role: unknown) {
+  return role === "OWNER" || role === "STAFF";
 }
