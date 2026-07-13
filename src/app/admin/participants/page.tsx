@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { formatDateTime } from "@/lib/admin-format";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { adminHasCapability, requireAdminCapability } from "@/lib/admin-authorization";
 import { kulaEventSlug } from "@/lib/event-config";
 import { prisma } from "@/lib/prisma";
 
@@ -30,7 +30,8 @@ type ParticipantsPageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminParticipantsPage({ searchParams }: ParticipantsPageProps) {
-  await requireAdminSession();
+  const adminActor = await requireAdminCapability("registrations.read");
+  const canExport = adminHasCapability(adminActor.role, "registrations.manage");
 
   const filters = await searchParams;
   const query = normalizeQuery(filters.q);
@@ -110,12 +111,14 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
       title="Participants"
       eyebrow="Registration operations"
       actions={
-        <Link
-          href="/admin/export"
-          className="inline-flex h-11 items-center rounded-full bg-white px-5 text-sm font-black text-asphalt transition hover:bg-signal"
-        >
-          Export CSV
-        </Link>
+        canExport ? (
+          <Link
+            href="/admin/export"
+            className="inline-flex h-11 items-center rounded-full bg-white px-5 text-sm font-black text-asphalt transition hover:bg-signal"
+          >
+            Export CSV
+          </Link>
+        ) : null
       }
     >
       <form

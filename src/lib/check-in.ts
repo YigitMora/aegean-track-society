@@ -151,28 +151,13 @@ export async function getCheckInRegistrationById(
 
 export async function confirmRegistrationCheckIn({
   registrationId,
-  adminEmail,
+  adminUserId,
   ipAddress,
 }: {
   registrationId: string;
-  adminEmail: string;
+  adminUserId: string;
   ipAddress?: string | null;
 }): Promise<CheckInActionResult> {
-  const adminUser = await prisma.adminUser.upsert({
-    where: {
-      email: adminEmail,
-    },
-    update: {},
-    create: {
-      email: adminEmail,
-      name: adminEmail,
-      role: "CHECKIN",
-    },
-    select: {
-      id: true,
-    },
-  });
-
   return prisma.$transaction(async (tx) => {
     const registration = await tx.registration.findFirst({
       where: {
@@ -206,7 +191,7 @@ export async function confirmRegistrationCheckIn({
     if (!registration) {
       await tx.auditLog.create({
         data: {
-          adminUserId: adminUser.id,
+          adminUserId,
           action: "CHECK_IN_REJECTED",
           after: {
             registrationId,
@@ -226,7 +211,7 @@ export async function confirmRegistrationCheckIn({
     if (!isConfirmedPaid(registration)) {
       await tx.auditLog.create({
         data: {
-          adminUserId: adminUser.id,
+          adminUserId,
           registrationId: registration.id,
           action: "CHECK_IN_REJECTED",
           before: {
@@ -252,7 +237,7 @@ export async function confirmRegistrationCheckIn({
     if (!checkIn) {
       await tx.auditLog.create({
         data: {
-          adminUserId: adminUser.id,
+          adminUserId,
           registrationId: registration.id,
           action: "CHECK_IN_REJECTED",
           after: {
@@ -288,7 +273,7 @@ export async function confirmRegistrationCheckIn({
 
       await tx.auditLog.create({
         data: {
-          adminUserId: adminUser.id,
+          adminUserId,
           registrationId: registration.id,
           action: "CHECK_IN_DUPLICATE_ATTEMPT",
           before: {
@@ -315,7 +300,7 @@ export async function confirmRegistrationCheckIn({
     if (checkIn.status !== "ELIGIBLE" || checkIn.checkedInAt) {
       await tx.auditLog.create({
         data: {
-          adminUserId: adminUser.id,
+          adminUserId,
           registrationId: registration.id,
           action: "CHECK_IN_REJECTED",
           before: {
@@ -346,7 +331,7 @@ export async function confirmRegistrationCheckIn({
       data: {
         status: "CHECKED_IN",
         checkedInAt,
-        checkedInByAdminId: adminUser.id,
+        checkedInByAdminId: adminUserId,
       },
     });
 
@@ -365,7 +350,7 @@ export async function confirmRegistrationCheckIn({
       if (latestCheckIn?.status !== "CHECKED_IN") {
         await tx.auditLog.create({
           data: {
-            adminUserId: adminUser.id,
+            adminUserId,
             registrationId: registration.id,
             action: "CHECK_IN_REJECTED",
             before: {
@@ -404,7 +389,7 @@ export async function confirmRegistrationCheckIn({
 
       await tx.auditLog.create({
         data: {
-          adminUserId: adminUser.id,
+          adminUserId,
           registrationId: registration.id,
           action: "CHECK_IN_DUPLICATE_ATTEMPT",
           before: {
@@ -429,7 +414,7 @@ export async function confirmRegistrationCheckIn({
 
     await tx.auditLog.create({
       data: {
-        adminUserId: adminUser.id,
+        adminUserId,
         registrationId: registration.id,
         action: "CHECKED_IN",
         before: {
@@ -439,7 +424,7 @@ export async function confirmRegistrationCheckIn({
         after: {
           status: "CHECKED_IN",
           checkedInAt: toIso(checkedInAt),
-          checkedInByAdminId: adminUser.id,
+          checkedInByAdminId: adminUserId,
         },
         reason: "Participant checked in for Kula MyTrack.",
         ipAddress,

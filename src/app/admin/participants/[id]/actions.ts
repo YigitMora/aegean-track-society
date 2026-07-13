@@ -3,13 +3,13 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { requireAdminCapability } from "@/lib/admin-authorization";
 import { sendRegistrationRejectedEmail } from "@/lib/email";
 import { confirmManualRegistrationPayment } from "@/lib/manual-payment-confirmation";
 import { prisma } from "@/lib/prisma";
 
 export async function addAdminNote(registrationId: string, formData: FormData) {
-  const session = await requireAdminSession();
+  const adminUser = await requireAdminCapability("registrations.manage");
   const body = String(formData.get("note") ?? "").trim();
 
   if (!body) {
@@ -27,14 +27,13 @@ export async function addAdminNote(registrationId: string, formData: FormData) {
     redirect(`/admin/participants/${registrationId}?actionResult=not_found`);
   }
 
-  const adminUser = await ensureAdminUser(session.email);
   const ipAddress = await getActionIpAddress();
 
   await prisma.adminNote.create({
     data: {
       registrationId,
       adminUserId: adminUser.id,
-      authorLabel: session.email,
+      authorLabel: adminUser.email,
       body,
     },
   });
@@ -57,10 +56,10 @@ export async function addAdminNote(registrationId: string, formData: FormData) {
 }
 
 export async function confirmManualPayment(registrationId: string) {
-  const session = await requireAdminSession();
+  const adminUser = await requireAdminCapability("payments.manage");
   const result = await confirmManualRegistrationPayment({
     registrationId,
-    adminEmail: session.email,
+    adminUserId: adminUser.id,
     ipAddress: await getActionIpAddress(),
   });
 
@@ -73,14 +72,13 @@ export async function confirmManualPayment(registrationId: string) {
 }
 
 export async function rejectRegistration(registrationId: string, formData: FormData) {
-  const session = await requireAdminSession();
+  const adminUser = await requireAdminCapability("registrations.manage");
   const reason = String(formData.get("reason") ?? "").trim();
 
   if (!reason) {
     redirect(`/admin/participants/${registrationId}?actionResult=reason_required`);
   }
 
-  const adminUser = await ensureAdminUser(session.email);
   const ipAddress = await getActionIpAddress();
   const registration = await prisma.registration.findUnique({
     where: { id: registrationId },
@@ -149,14 +147,13 @@ export async function rejectRegistration(registrationId: string, formData: FormD
 }
 
 export async function archiveRegistration(registrationId: string, formData: FormData) {
-  const session = await requireAdminSession();
+  const adminUser = await requireAdminCapability("registrations.manage");
   const reason = String(formData.get("reason") ?? "").trim();
 
   if (!reason) {
     redirect(`/admin/participants/${registrationId}?actionResult=reason_required`);
   }
 
-  const adminUser = await ensureAdminUser(session.email);
   const ipAddress = await getActionIpAddress();
   const registration = await prisma.registration.findUnique({
     where: { id: registrationId },
@@ -218,8 +215,7 @@ export async function archiveRegistration(registrationId: string, formData: Form
 }
 
 export async function restoreRegistration(registrationId: string) {
-  const session = await requireAdminSession();
-  const adminUser = await ensureAdminUser(session.email);
+  const adminUser = await requireAdminCapability("registrations.manage");
   const ipAddress = await getActionIpAddress();
   const registration = await prisma.registration.findUnique({
     where: { id: registrationId },
@@ -272,21 +268,6 @@ export async function restoreRegistration(registrationId: string) {
   revalidatePath("/admin");
   revalidatePath("/admin/participants");
   redirect(`/admin/participants/${registrationId}?actionResult=restored`);
-}
-
-async function ensureAdminUser(email: string) {
-  return prisma.adminUser.upsert({
-    where: { email },
-    update: {},
-    create: {
-      email,
-      name: email,
-      role: "OWNER",
-    },
-    select: {
-      id: true,
-    },
-  });
 }
 
 async function getActionIpAddress() {

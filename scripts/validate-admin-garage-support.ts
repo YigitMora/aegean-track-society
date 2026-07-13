@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const service = read("src/lib/garage-service.ts");
+const adminAuthorization = read("src/lib/admin-authorization.ts");
 const adminActions = read("src/app/admin/members/[id]/garage-actions.ts");
 const adminPage = read("src/app/admin/members/[id]/page.tsx");
 const garagePage = read("src/app/account/garage/page.tsx");
@@ -31,10 +32,9 @@ assert.match(service, /ADMIN_GARAGE_VEHICLE_DEFINITION_MATCHED/);
 assert.match(service, /ADMIN_GARAGE_PRIMARY_CHANGED/);
 assert.match(service, /incompatible_modifications_block_match/);
 
-assert.match(adminActions, /prisma\.adminUser\.findUnique/);
-assert.match(adminActions, /email: normalizeAdminEmail\(session\.email\)/);
-assert.match(adminActions, /!adminUser \|\| !canWriteGarageRole\(adminUser\.role\)/);
-assert.match(adminActions, /role === "OWNER" \|\| role === "STAFF"/);
+assert.match(adminAuthorization, /prisma\.adminUser\.findUnique/);
+assert.match(adminAuthorization, /email: normalizeAdminEmail\(session\.email\)/);
+assert.match(adminActions, /requireAdminCapability\("garages\.manage"/);
 assert.doesNotMatch(adminActions, /prisma\.adminUser\.upsert/);
 assert.doesNotMatch(adminActions, /prisma\.adminUser\.create/);
 assert.match(adminActions, /admin_permission_denied/);
@@ -43,7 +43,7 @@ assert.match(adminActions, /reason/);
 
 const roleExpectations = [
   ["OWNER", true],
-  ["STAFF", true],
+  ["STAFF", false],
   ["CHECKIN", false],
   [null, false],
   ["SUPPORT", false],
@@ -75,5 +75,5 @@ function read(path: string) {
 }
 
 function canWriteGarageRole(role: unknown) {
-  return role === "OWNER" || role === "STAFF";
+  return role === "OWNER";
 }

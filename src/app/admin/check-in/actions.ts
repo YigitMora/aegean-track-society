@@ -6,11 +6,11 @@ import {
   extractQrTokenFromInput,
   resultQueryForCheckInAction,
 } from "@/lib/check-in";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { requireCheckinOrOwner } from "@/lib/admin-authorization";
 import { getRequestIpAddress } from "@/lib/request-ip";
 
 export async function lookupQrInput(formData: FormData) {
-  await requireAdminSession();
+  await requireCheckinOrOwner();
 
   const input = String(formData.get("qrToken") ?? "");
   const token = extractQrTokenFromInput(input);
@@ -23,10 +23,10 @@ export async function lookupQrInput(formData: FormData) {
 }
 
 export async function confirmManualCheckIn(registrationId: string) {
-  const session = await requireAdminSession();
+  const adminActor = await requireCheckinOrOwner();
   const result = await confirmRegistrationCheckIn({
     registrationId,
-    adminEmail: session.email,
+    adminUserId: adminActor.id,
     ipAddress: await getRequestIpAddress(),
   });
 

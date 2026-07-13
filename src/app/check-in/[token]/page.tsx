@@ -4,7 +4,7 @@ import { CheckInCard } from "@/components/admin/check-in-card";
 import { formatDateTime } from "@/lib/admin-format";
 import type { CheckInRegistration } from "@/lib/check-in";
 import { lookupRegistrationByQrToken } from "@/lib/check-in";
-import { requireAdminSessionWithReturn } from "@/lib/admin-auth";
+import { requireCheckinOrOwner } from "@/lib/admin-authorization";
 import { confirmQrCheckIn } from "./actions";
 
 type CheckInTokenPageProps = {
@@ -25,7 +25,7 @@ export default async function CheckInTokenPage({
   const { token } = await params;
   const returnPath = `/check-in/${encodeURIComponent(token)}`;
 
-  await requireAdminSessionWithReturn(returnPath);
+  await requireCheckinOrOwner(returnPath);
 
   const { result } = await searchParams;
   const lookup = await lookupRegistrationByQrToken(token);

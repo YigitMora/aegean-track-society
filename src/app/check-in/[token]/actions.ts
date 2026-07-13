@@ -6,12 +6,12 @@ import {
   lookupRegistrationByQrToken,
   resultQueryForCheckInAction,
 } from "@/lib/check-in";
-import { requireAdminSessionWithReturn } from "@/lib/admin-auth";
+import { requireCheckinOrOwner } from "@/lib/admin-authorization";
 import { getRequestIpAddress } from "@/lib/request-ip";
 
 export async function confirmQrCheckIn(rawToken: string) {
   const returnPath = `/check-in/${encodeURIComponent(rawToken)}`;
-  const session = await requireAdminSessionWithReturn(returnPath);
+  const adminActor = await requireCheckinOrOwner(returnPath);
   const lookup = await lookupRegistrationByQrToken(rawToken);
 
   if (lookup.type !== "found") {
@@ -20,7 +20,7 @@ export async function confirmQrCheckIn(rawToken: string) {
 
   const result = await confirmRegistrationCheckIn({
     registrationId: lookup.registration.id,
-    adminEmail: session.email,
+    adminUserId: adminActor.id,
     ipAddress: await getRequestIpAddress(),
   });
 
