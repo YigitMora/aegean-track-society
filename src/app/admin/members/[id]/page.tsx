@@ -11,6 +11,10 @@ import { StatusBadge } from "@/components/admin/status-badge";
 import { VehiclePerformanceRatingCard } from "@/components/vehicle-rating-card";
 import { formatDateTime, formatStatus } from "@/lib/admin-format";
 import { requireAdminSession } from "@/lib/admin-auth";
+import {
+  MAX_ACTIVE_GARAGE_VEHICLES,
+  MAX_ARCHIVED_GARAGE_VEHICLES,
+} from "@/lib/garage-capacity";
 import { isMemberProfileComplete } from "@/lib/member-profile-validation";
 import { prisma } from "@/lib/prisma";
 import {
@@ -245,6 +249,9 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
 
   const activeVehicles = member.vehicles.filter((vehicle) => !vehicle.deletedAt);
   const archivedVehicles = member.vehicles.filter((vehicle) => vehicle.deletedAt);
+  const garageCapacityExceeded =
+    activeVehicles.length > MAX_ACTIVE_GARAGE_VEHICLES ||
+    archivedVehicles.length > MAX_ARCHIVED_GARAGE_VEHICLES;
   const profileComplete = isMemberProfileComplete(member);
   const activeRegistrations = member.registrations.filter(
     (registration) =>
@@ -275,9 +282,25 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
         </>
       }
     >
-      <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <MetricCard label="Aktif araç" value={activeVehicles.length.toString()} />
-        <MetricCard label="Arşivli araç" value={archivedVehicles.length.toString()} />
+      <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        <MetricCard
+          label="Aktif araç"
+          value={`${activeVehicles.length} / ${MAX_ACTIVE_GARAGE_VEHICLES}`}
+          detail={capacityDetail(activeVehicles.length, MAX_ACTIVE_GARAGE_VEHICLES)}
+        />
+        <MetricCard
+          label="Arşivli araç"
+          value={`${archivedVehicles.length} / ${MAX_ARCHIVED_GARAGE_VEHICLES}`}
+          detail={capacityDetail(
+            archivedVehicles.length,
+            MAX_ARCHIVED_GARAGE_VEHICLES,
+          )}
+        />
+        <MetricCard
+          label="Garaj kapasitesi"
+          value={garageCapacityExceeded ? "Üstü" : "Uygun"}
+          detail="Admin override yok"
+        />
         <MetricCard label="Toplam başvuru" value={member.registrations.length.toString()} />
         <MetricCard label="Aktif başvuru" value={activeRegistrations.length.toString()} />
         <MetricCard label="Onaylı başvuru" value={confirmedRegistrations.length.toString()} />
@@ -980,13 +1003,34 @@ function AccountStatusBadge({ status }: { status: string }) {
   );
 }
 
-function MetricCard({ label, value }: { label: string; value: string }) {
+function MetricCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+}) {
   return (
     <article className="rounded-lg border border-white/10 bg-white/10 p-5">
       <p className="text-xs font-black uppercase text-white/50">{label}</p>
       <p className="mt-3 text-4xl font-black">{value}</p>
+      {detail ? <p className="mt-2 text-xs font-semibold text-white/50">{detail}</p> : null}
     </article>
   );
+}
+
+function capacityDetail(count: number, limit: number) {
+  if (count > limit) {
+    return "Mevcut kayıtlar korunur";
+  }
+
+  if (count === limit) {
+    return "Kapasite dolu";
+  }
+
+  return `${limit - count} slot kaldı`;
 }
 
 function DetailSection({ title, children }: { title: string; children: ReactNode }) {

@@ -36,14 +36,24 @@ export type GarageLifecycleVehicle = {
   rating: GarageRating;
 };
 
+type GarageCapacitySummary = {
+  count: number;
+  max: number;
+  remaining: number;
+};
+
 type GarageVehicleLifecycleProps = {
   activeVehicles: GarageLifecycleVehicle[];
   archivedVehicles: GarageLifecycleVehicle[];
+  activeCapacity: GarageCapacitySummary;
+  archivedCapacity: GarageCapacitySummary;
 };
 
 export function GarageVehicleLifecycle({
   activeVehicles,
   archivedVehicles,
+  activeCapacity,
+  archivedCapacity,
 }: GarageVehicleLifecycleProps) {
   return (
     <>
@@ -51,11 +61,17 @@ export function GarageVehicleLifecycle({
         title="Aktif araçlar"
         vehicles={activeVehicles}
         mode="active"
+        capacity={activeCapacity}
+        activeSlotsRemaining={activeCapacity.remaining}
+        archivedSlotsRemaining={archivedCapacity.remaining}
       />
       <VehicleLifecycleSection
         title="Arşivlenen araçlar"
         vehicles={archivedVehicles}
         mode="archived"
+        capacity={archivedCapacity}
+        activeSlotsRemaining={activeCapacity.remaining}
+        archivedSlotsRemaining={archivedCapacity.remaining}
       />
     </>
   );
@@ -65,10 +81,16 @@ function VehicleLifecycleSection({
   title,
   vehicles,
   mode,
+  capacity,
+  activeSlotsRemaining,
+  archivedSlotsRemaining,
 }: {
   title: string;
   vehicles: GarageLifecycleVehicle[];
   mode: "active" | "archived";
+  capacity: GarageCapacitySummary;
+  activeSlotsRemaining: number;
+  archivedSlotsRemaining: number;
 }) {
   const router = useRouter();
   const [selectionMode, setSelectionMode] = useState(false);
@@ -90,7 +112,26 @@ function VehicleLifecycleSection({
   );
   const pendingDeleteIdSet = useMemo(() => new Set(pendingDeleteIds), [pendingDeleteIds]);
   const selectedVehicles = vehicles.filter((vehicle) => selectedIdSet.has(vehicle.id));
-  const allSelected = vehicles.length > 0 && selectedIds.length === vehicles.length;
+  const visibleVehicleIds = useMemo(
+    () => vehicles.map((vehicle) => vehicle.id),
+    [vehicles],
+  );
+  const selectAllVehicleIds = useMemo(() => {
+    if (mode === "active") {
+      return vehicles.slice(0, archivedSlotsRemaining).map((vehicle) => vehicle.id);
+    }
+
+    return visibleVehicleIds;
+  }, [archivedSlotsRemaining, mode, vehicles, visibleVehicleIds]);
+  const visibleVehicleIdSet = useMemo(
+    () => new Set(visibleVehicleIds),
+    [visibleVehicleIds],
+  );
+  const allSelected =
+    selectAllVehicleIds.length > 0 &&
+    selectAllVehicleIds.every((vehicleId) => selectedIdSet.has(vehicleId));
+  const archiveSelectionLimitReached =
+    mode === "active" && archivedSlotsRemaining <= selectedIds.length;
   const pendingMessage = archivePending
     ? pendingArchiveIds.length > 1
       ? "Araçlar arşivleniyor..."
@@ -110,6 +151,12 @@ function VehicleLifecycleSection({
       current.filter((vehicleId) => vehicles.some((vehicle) => vehicle.id === vehicleId)),
     );
   }, [vehicles]);
+
+  useEffect(() => {
+    setSelectedIds((current) =>
+      current.filter((vehicleId) => visibleVehicleIdSet.has(vehicleId)),
+    );
+  }, [visibleVehicleIdSet]);
 
   useEffect(() => {
     if (!archiveState.submittedAt) {
@@ -150,6 +197,9 @@ function VehicleLifecycleSection({
         <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-ats-muted">
           İlk aracınızı eklediğinizde otomatik olarak birincil aracınız olur.
         </p>
+        <p className="mt-3 text-sm font-black text-ats-text">
+          Aktif araçlar: {capacity.count} / {capacity.max}
+        </p>
         <Link
           href="/account/garage/new"
           className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-ats-blue px-6 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover"
@@ -170,13 +220,37 @@ function VehicleLifecycleSection({
         mode === "archived" ? "mt-16 border-t border-ats-border pt-10" : "mt-10"
       }
     >
-      {mode === "archived" ? (
-        <div className="max-w-2xl">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-muted">
-            Arşiv
-          </p>
-          <h2 className="mt-3 text-3xl font-black text-ats-text">{title}</h2>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className={mode === "archived" ? "max-w-2xl" : ""}>
+          {mode === "archived" ? (
+            <>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-muted">
+                Arşiv
+              </p>
+              <h2 className="mt-3 text-3xl font-black text-ats-text">{title}</h2>
+            </>
+          ) : (
+            <h2 className="text-2xl font-black text-ats-text">{title}</h2>
+          )}
         </div>
+        <div className="rounded-md border border-ats-border bg-ats-black px-4 py-3 text-sm font-black text-ats-text">
+          {mode === "active" ? "Aktif araçlar" : "Arşiv"}: {capacity.count} /{" "}
+          {capacity.max}
+        </div>
+      </div>
+
+      {mode === "active" && archivedSlotsRemaining <= 0 ? (
+        <p className="mt-4 rounded-md border border-amber-300/30 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-100">
+          Arşiv kapasitesi dolu. Yeni bir araç arşivlemek için arşivdeki
+          araçlardan birini kalıcı olarak silin veya geri yükleyin.
+        </p>
+      ) : null}
+
+      {mode === "archived" && activeSlotsRemaining <= 0 ? (
+        <p className="mt-4 rounded-md border border-amber-300/30 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-100">
+          Aktif araç kapasitesi dolu. Arşivden geri yüklemek için önce aktif
+          araçlardan birini arşivleyin.
+        </p>
       ) : null}
 
       <div className="mt-5 flex flex-wrap items-center gap-3 rounded-md border border-ats-border bg-ats-surface p-4">
@@ -195,9 +269,10 @@ function VehicleLifecycleSection({
             <button
               type="button"
               onClick={() =>
-                setSelectedIds(allSelected ? [] : vehicles.map((vehicle) => vehicle.id))
+                setSelectedIds(allSelected ? [] : selectAllVehicleIds)
               }
-              className="inline-flex h-10 items-center justify-center rounded-full border border-ats-border px-4 text-xs font-black uppercase tracking-[0.12em] text-ats-muted transition hover:border-ats-blue hover:text-ats-blue"
+              disabled={selectAllVehicleIds.length === 0}
+              className="inline-flex h-10 items-center justify-center rounded-full border border-ats-border px-4 text-xs font-black uppercase tracking-[0.12em] text-ats-muted transition hover:border-ats-blue hover:text-ats-blue disabled:cursor-not-allowed disabled:border-ats-border disabled:text-ats-muted"
             >
               {allSelected ? "Tümünü bırak" : "Tümünü seç"}
             </button>
@@ -211,6 +286,11 @@ function VehicleLifecycleSection({
             <span className="text-sm font-black text-ats-text">
               {selectedIds.length} seçili
             </span>
+            {mode === "active" ? (
+              <span className="text-sm font-semibold text-ats-muted">
+                Arşiv slotu: {archivedSlotsRemaining} kaldı
+              </span>
+            ) : null}
           </>
         ) : null}
       </div>
@@ -239,6 +319,7 @@ function VehicleLifecycleSection({
           deleteAction={deleteFormAction}
           archivePending={archivePending}
           deletePending={deletePending}
+          archivedSlotsRemaining={archivedSlotsRemaining}
           onArchiveSubmit={(vehicleIds) => setPendingArchiveIds(vehicleIds)}
           onDeleteSubmit={(vehicleIds) => setPendingDeleteIds(vehicleIds)}
         />
@@ -258,11 +339,20 @@ function VehicleLifecycleSection({
             deleteAction={deleteFormAction}
             archivePending={archivePending}
             deletePending={deletePending}
+            activeSlotsRemaining={activeSlotsRemaining}
+            archivedSlotsRemaining={archivedSlotsRemaining}
+            selectionDisabled={
+              mode === "active" &&
+              !selectedIdSet.has(vehicle.id) &&
+              archiveSelectionLimitReached
+            }
             onArchiveSubmit={(vehicleId) => setPendingArchiveIds([vehicleId])}
             onDeleteSubmit={(vehicleId) => setPendingDeleteIds([vehicleId])}
             onSelectionChange={(checked) => {
               setSelectedIds((current) =>
-                checked
+                checked && mode === "active" && current.length >= archivedSlotsRemaining
+                  ? current
+                  : checked
                   ? Array.from(new Set([...current, vehicle.id]))
                   : current.filter((vehicleId) => vehicleId !== vehicle.id),
               );
@@ -281,6 +371,7 @@ function BulkActionPanel({
   deleteAction,
   archivePending,
   deletePending,
+  archivedSlotsRemaining,
   onArchiveSubmit,
   onDeleteSubmit,
 }: {
@@ -290,11 +381,14 @@ function BulkActionPanel({
   deleteAction: (formData: FormData) => void;
   archivePending: boolean;
   deletePending: boolean;
+  archivedSlotsRemaining: number;
   onArchiveSubmit: (vehicleIds: string[]) => void;
   onDeleteSubmit: (vehicleIds: string[]) => void;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const selectedVehicleIds = selectedVehicles.map((vehicle) => vehicle.id);
+  const archiveCapacityExceeded =
+    mode === "active" && selectedVehicles.length > archivedSlotsRemaining;
 
   if (selectedVehicles.length === 0) {
     return null;
@@ -308,6 +402,15 @@ function BulkActionPanel({
       <p className="mt-2 text-sm font-semibold text-ats-text">
         {selectedVehicles.length} araç seçildi
       </p>
+      {mode === "active" ? (
+        <p
+          className={`mt-2 text-sm font-semibold ${
+            archiveCapacityExceeded ? "text-red-100" : "text-ats-muted"
+          }`}
+        >
+          Arşiv slotu: {archivedSlotsRemaining} kaldı
+        </p>
+      ) : null}
       {mode === "archived" ? (
         <ul className="mt-3 grid gap-1 text-xs font-semibold text-ats-muted">
           {selectedVehicles.slice(0, 5).map((vehicle) => (
@@ -326,7 +429,7 @@ function BulkActionPanel({
             ))}
             <button
               type="submit"
-              disabled={archivePending || deletePending}
+              disabled={archivePending || deletePending || archiveCapacityExceeded}
               className="inline-flex h-10 items-center justify-center rounded-full border border-red-300/50 px-4 text-xs font-black uppercase tracking-[0.12em] text-red-100 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:border-ats-border disabled:text-ats-muted"
             >
               {archivePending ? "Arşivleniyor..." : "Seçilenleri arşivle"}
@@ -382,6 +485,9 @@ function GarageLifecycleCard({
   deleteAction,
   archivePending,
   deletePending,
+  activeSlotsRemaining,
+  archivedSlotsRemaining,
+  selectionDisabled,
   onArchiveSubmit,
   onDeleteSubmit,
   onSelectionChange,
@@ -396,6 +502,9 @@ function GarageLifecycleCard({
   deleteAction: (formData: FormData) => void;
   archivePending: boolean;
   deletePending: boolean;
+  activeSlotsRemaining: number;
+  archivedSlotsRemaining: number;
+  selectionDisabled: boolean;
   onArchiveSubmit: (vehicleId: string) => void;
   onDeleteSubmit: (vehicleId: string) => void;
   onSelectionChange: (checked: boolean) => void;
@@ -416,7 +525,7 @@ function GarageLifecycleCard({
             type="checkbox"
             checked={selected}
             aria-label={`${vehicleSummary(vehicle)} seç`}
-            disabled={archivePending || deletePending}
+            disabled={archivePending || deletePending || selectionDisabled}
             onChange={(event) => onSelectionChange(event.target.checked)}
             className="h-4 w-4 rounded border-ats-border bg-ats-black accent-ats-blue"
           />
@@ -479,10 +588,14 @@ function GarageLifecycleCard({
               <input type="hidden" name="vehicleIds" value={vehicle.id} />
               <button
                 type="submit"
-                disabled={archivePending || deletePending}
+                disabled={archivePending || deletePending || archivedSlotsRemaining <= 0}
                 className="inline-flex h-11 items-center justify-center rounded-full border border-ats-border px-5 text-xs font-black uppercase tracking-[0.12em] text-ats-muted transition hover:border-red-300/60 hover:text-red-100 disabled:cursor-not-allowed disabled:border-ats-border disabled:text-ats-muted"
               >
-                {isArchiving ? "Arşivleniyor..." : "Aracı arşivle"}
+                {isArchiving
+                  ? "Arşivleniyor..."
+                  : archivedSlotsRemaining <= 0
+                    ? "Arşiv dolu"
+                    : "Aracı arşivle"}
               </button>
             </form>
           </>
@@ -491,9 +604,10 @@ function GarageLifecycleCard({
             <form action={restoreAction}>
               <button
                 type="submit"
-                className="inline-flex h-10 items-center justify-center rounded-full border border-ats-border px-4 text-xs font-black uppercase tracking-[0.12em] text-ats-text transition hover:border-ats-blue hover:text-ats-blue"
+                disabled={activeSlotsRemaining <= 0}
+                className="inline-flex h-10 items-center justify-center rounded-full border border-ats-border px-4 text-xs font-black uppercase tracking-[0.12em] text-ats-text transition hover:border-ats-blue hover:text-ats-blue disabled:cursor-not-allowed disabled:text-ats-muted"
               >
-                Aracı geri yükle
+                {activeSlotsRemaining <= 0 ? "Aktif garaj dolu" : "Aracı geri yükle"}
               </button>
             </form>
             <details className="w-full rounded-md border border-red-300/25 bg-red-500/10 p-3">
