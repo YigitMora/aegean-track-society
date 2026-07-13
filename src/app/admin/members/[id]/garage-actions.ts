@@ -234,15 +234,9 @@ export async function matchMemberGarageVehicleDefinitionAction(
 
 async function requireGarageAdminActor(memberId: string): Promise<AdminGarageActor> {
   const session = await requireAdminSession();
-  const adminUser = await prisma.adminUser.upsert({
+  const adminUser = await prisma.adminUser.findUnique({
     where: {
-      email: session.email,
-    },
-    update: {},
-    create: {
-      email: session.email,
-      name: session.email,
-      role: "OWNER",
+      email: normalizeAdminEmail(session.email),
     },
     select: {
       id: true,
@@ -250,7 +244,7 @@ async function requireGarageAdminActor(memberId: string): Promise<AdminGarageAct
     },
   });
 
-  if (adminUser.role === "CHECKIN") {
+  if (!adminUser || !canWriteGarageRole(adminUser.role)) {
     redirectWithGarageResult(memberId, "admin_permission_denied");
   }
 
@@ -259,6 +253,14 @@ async function requireGarageAdminActor(memberId: string): Promise<AdminGarageAct
     adminUserId: adminUser.id,
     ipAddress: await getActionIpAddress(),
   };
+}
+
+function canWriteGarageRole(role: unknown) {
+  return role === "OWNER" || role === "STAFF";
+}
+
+function normalizeAdminEmail(email: string) {
+  return email.trim().toLowerCase();
 }
 
 function withReason(actor: AdminGarageActor, reason: string): AdminGarageActor {
