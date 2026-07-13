@@ -26,9 +26,21 @@ Reviewed on 2026-07-13.
 | `tune_apr_ea888_gen4_stage_1` | APR EA888 Gen 4 Stage 1 | https://www.goapr.com/products/software/ecu_upgrade/ | Official APR ECU Upgrade page lists EA888 Gen 4 Mk8 GTI/Golf R/S3 applications. | Fuel program and local emissions legality are outside ATS. |
 | `tune_cobb_focus_rs_mk3_stage_1` | COBB Focus RS Accessport Stage 1 | https://www.cobbtuning.com/products/accessport/ford-focus-rs-accessport-v3 | Official COBB page lists 2016-2018 Focus RS support and OTS maps. | COBB percentage gains are not converted into guaranteed ATS output. |
 | `tune_ktuner_fk8_stage_1` | KTuner Civic Type R FK8 Stage 1 | https://ktuner.com/ | Official KTuner application list includes 2017-2021 Civic Type-R. | Exact ECU part number and map selection remain owner responsibility. |
-| `tune_hondata_fl5_flashpro_stage_1` | Hondata Civic Type R FL5 FlashPro Stage 1 | https://www.hondata.com/ | Seeded as a provisional FL5 calibration slot for ATS compatibility modelling. | Low confidence until refreshed official product-page review is attached. |
+| `tune_hondata_fl5_flashpro_stage_1` | Hondata Civic Type R FL5 FlashPro 93 Octane Calibration | https://www.hondata.com/flashpro-fl5-us | Official Hondata FL5 FlashPro page documents a 93 octane calibration and 45 hp / 50 lb-ft gain. | Stable code retained for idempotency; visible seed labels now use provider calibration terminology. |
 
 Family compatibility precedence is implemented in code as: powertrain, exact vehicle definition, engine family, platform family, legacy brand/model/year, then universal only when no active compatibility rows exist for that definition.
+
+## Sprint 4N Honda, Mountune, RacingLine, and Garrett Expansion
+
+Reviewed on 2026-07-13. Sprint 4N adds provider-authentic Honda calibration labels, a Mountune Ford ecosystem, deeper RacingLine VAG rows, and Garrett EA888 Gen 4 turbo visibility. The seed remains additive: existing MHD, bootmod3, xHP, RacingLine, Garrett, APR, generic fallback, and vehicle-template rows are retained.
+
+| Seed area | Source trail | Compatibility basis | Rating / UX guardrail |
+| --- | --- | --- | --- |
+| Hondata FK8/FL5 FlashPro | https://www.hondata.com/flashpro-fk8-us and https://www.hondata.com/flashpro-fl5-us | Exact FK8 or FL5 templates only | Uses Base Calibration, 93 Octane Calibration, High-Octane Calibration, and Custom Calibration Support labels; no invented Stage 2/3/4 ladder. |
+| KTuner FK8 | https://ktuner.com/17civictyper/ | Exact FK8 template only | Uses KTuner map/program terminology such as Stage 0, Stage 1 dampened low end, multi-stage behavior, and custom tuning support; no FK8-to-FL5 leakage. |
+| Mountune Ford | `docs/ats-mountune-sources.md` | Exact Ford ST/RS/Mustang EcoBoost templates | Power kits occupy `platform_tune_package`; hardware rows are exact-template gated and stay ICE-only. |
+| RacingLine VAG | `docs/ats-racingline-sources.md` | EA888 engine families plus exact MQB/MQB Evo hardware rows | ECU/TCU/turbo slots stay distinct; hardware rows do not create large score jumps by themselves. |
+| Garrett VAG | `docs/ats-racingline-sources.md` | EA888 Gen 3/Gen 4 engine families | Garrett and RacingLine turbo rows coexist as alternatives and share the turbo slot, preserving generic turbo fallback hiding. |
 
 ## Sprint 4L RacingLine VAG Ecosystem
 

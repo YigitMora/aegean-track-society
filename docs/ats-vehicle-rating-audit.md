@@ -8,16 +8,16 @@ Reviewed on 2026-07-13.
 
 | Metric | Value |
 | --- | --- |
-| Active vehicle definitions audited | 141 |
-| Calibrated definitions | 23 |
-| Provisional definitions | 118 |
-| Reviewed adjusted definitions | 6 |
+| Active vehicle definitions audited | 205 |
+| Calibrated definitions | 34 |
+| Provisional definitions | 171 |
+| Reviewed adjusted definitions | 11 |
 | Review-required signals | 0 |
 | Rating formula changed | No |
 | Client recalculation added | No |
 | Seed idempotency changed | No |
 
-The audit reuses `calculateVehicleCalibrationScores` for component baselines and reads the centralized rating weights from `src/lib/vehicle-performance-rating.ts`. Existing calibrated and provisional records remain on the same formula. Sprint 4L VAG additions are seeded as `PROVISIONAL` and use the same calibration helper as the existing garage rating flow.
+The audit reuses `calculateVehicleCalibrationScores` for component baselines and reads the centralized rating weights from `src/lib/vehicle-performance-rating.ts`. Existing calibrated and provisional records remain on the same formula. Sprint 4L and Sprint 4N additions use the same calibration helper as the existing garage rating flow.
 
 ## Sprint 4L Templates
 
@@ -33,30 +33,176 @@ The audit reuses `calculateVehicleCalibrationScores` for component baselines and
 | `skoda_octavia_vrs_mk4` | Skoda Octavia vRS Mk4 2.0 TSI 245 PS | PROVISIONAL | 62 | 41 | 65 | 66 | 71 | 68 | 63 | 1490 | 121 | PROVISIONAL | Sprint 4L VAG template; provisional source trail refreshed. |
 | `cupra_formentor_vz_20` | Cupra Formentor VZ KM 2.0 TSI 310 PS | PROVISIONAL | 64 | 52 | 64 | 66 | 71 | 71 | 65 | 1644 | 139 | PROVISIONAL | Sprint 4L VAG template; provisional source trail refreshed. |
 
+## Sprint 4N Templates
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `vw_golf_gti_mk5` | Volkswagen Golf GTI Mk5 2.0 TFSI | PROVISIONAL | 58 | 34 | 69 | 63 | 65 | 59 | 58 | 1336 | 110 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_gti_mk6` | Volkswagen Golf GTI Mk6 2.0 TSI | PROVISIONAL | 59 | 35 | 69 | 64 | 67 | 61 | 60 | 1372 | 113 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_gti_mk75` | Volkswagen Golf GTI Mk7.5 230 PS | PROVISIONAL | 66 | 43 | 73 | 70 | 72 | 69 | 69 | 1375 | 123 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_gti_clubsport_mk8` | Volkswagen Golf GTI Clubsport Mk8 300 PS | PROVISIONAL | 69 | 52 | 73 | 71 | 72 | 73 | 72 | 1460 | 151 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_r_mk6` | Volkswagen Golf R Mk6 2.0 TFSI | PROVISIONAL | 62 | 48 | 66 | 65 | 67 | 65 | 63 | 1521 | 131 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_polo_gti_6r` | Volkswagen Polo GTI 6R 1.4 TSI | PROVISIONAL | 57 | 34 | 71 | 63 | 61 | 56 | 54 | 1184 | 111 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_scirocco_r` | Volkswagen Scirocco R Mk3 2.0 TSI | PROVISIONAL | 65 | 47 | 72 | 69 | 67 | 66 | 67 | 1390 | 140 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_a3_20tfsi_8p` | Audi A3 8P 2.0 TFSI | PROVISIONAL | 57 | 34 | 66 | 61 | 64 | 59 | 55 | 1365 | 108 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_a3_20tfsi_8v` | Audi A3 8V 2.0 TFSI | PROVISIONAL | 59 | 37 | 68 | 63 | 68 | 61 | 57 | 1320 | 106 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_s3_8p` | Audi S3 8P 2.0 TFSI quattro | PROVISIONAL | 63 | 49 | 67 | 66 | 67 | 65 | 63 | 1480 | 132 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_tts_8j` | Audi TTS 8J 2.0 TFSI quattro | PROVISIONAL | 66 | 53 | 72 | 68 | 67 | 66 | 66 | 1415 | 141 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `seat_leon_cupra_1p` | SEAT Leon Cupra 1P 2.0 TFSI | PROVISIONAL | 62 | 41 | 71 | 67 | 66 | 63 | 64 | 1375 | 129 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `skoda_octavia_vrs_mk3` | Skoda Octavia vRS Mk3 2.0 TSI | PROVISIONAL | 60 | 40 | 65 | 65 | 70 | 65 | 60 | 1435 | 118 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `skoda_superb_sportline_20tsi` | Skoda Superb Sportline B8 2.0 TSI | PROVISIONAL | 57 | 46 | 57 | 59 | 70 | 63 | 53 | 1615 | 128 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_fiesta_st_edition_mk8` | Ford Fiesta ST Edition Mk8 1.5 EcoBoost | PROVISIONAL | 66 | 39 | 80 | 69 | 71 | 66 | 71 | 1262 | 116 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_focus_st_edition_mk4` | Ford Focus ST Edition Mk4 2.3 EcoBoost | PROVISIONAL | 67 | 50 | 72 | 68 | 72 | 69 | 70 | 1508 | 137 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_focus_rs500_mk2` | Ford Focus RS500 Mk2 2.5 Turbo | PROVISIONAL | 71 | 61 | 75 | 72 | 69 | 70 | 75 | 1468 | 175 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_mustang_gtd_s650` | Ford Mustang GTD S650 5.2 Supercharged V8 | CALIBRATED | 80 | 95 | 66 | 78 | 75 | 87 | 85 | 1970 | 309 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_911_gt3_rs_9912` | Porsche 911 GT3 RS 991.2 4.0 | CALIBRATED | 87 | 88 | 86 | 88 | 81 | 88 | 93 | 1430 | 268 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_911_gt3_rs_992` | Porsche 911 GT3 RS 992 4.0 | CALIBRATED | 89 | 87 | 86 | 90 | 81 | 91 | 96 | 1450 | 266 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_911_turbo_992` | Porsche 911 Turbo 992 3.7 | CALIBRATED | 80 | 93 | 70 | 78 | 78 | 84 | 79 | 1640 | 260 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_911_turbo_s_992` | Porsche 911 Turbo S 992 3.7 | CALIBRATED | 82 | 98 | 71 | 79 | 78 | 86 | 81 | 1640 | 291 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_718_cayman_gt4_rs` | Porsche 718 Cayman GT4 RS 982 4.0 | CALIBRATED | 87 | 85 | 86 | 88 | 81 | 88 | 93 | 1415 | 260 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_718_spyder_rs` | Porsche 718 Spyder RS 982 4.0 | CALIBRATED | 86 | 85 | 85 | 87 | 80 | 87 | 92 | 1410 | 261 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_911_st_992` | Porsche 911 S/T 992 4.0 | CALIBRATED | 87 | 90 | 86 | 87 | 80 | 87 | 90 | 1380 | 280 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `alpine_a110_gt` | Alpine A110 GT A110 300 PS | CALIBRATED | 77 | 68 | 88 | 79 | 73 | 73 | 77 | 1119 | 197 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `alpine_a110_r_ultime` | Alpine A110 R Ultime A110 345 PS | PROVISIONAL | 83 | 81 | 92 | 84 | 73 | 77 | 84 | 1120 | 227 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_rs5_b9` | Audi Sport RS 5 B9 2.9 TFSI quattro | PROVISIONAL | 71 | 76 | 64 | 71 | 72 | 75 | 70 | 1715 | 193 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `toyota_gr_corolla` | Toyota GR Corolla E210 G16E-GTS | CALIBRATED | 71 | 56 | 75 | 72 | 74 | 73 | 74 | 1475 | 152 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `lexus_rc_f` | Lexus RC F USC10 5.0 V8 | PROVISIONAL | 66 | 67 | 58 | 68 | 77 | 73 | 64 | 1775 | 198 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `lexus_lc_500` | Lexus LC 500 Z100 5.0 V8 | PROVISIONAL | 63 | 62 | 52 | 64 | 77 | 73 | 61 | 1935 | 181 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `mercedes_amg_gt_c190` | Mercedes-AMG GT C190 4.0 V8 Biturbo | CALIBRATED | 76 | 78 | 72 | 77 | 74 | 79 | 79 | 1615 | 211 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_10_tsi_mk8` | Volkswagen Golf Mk8 1.0 TSI | PROVISIONAL | 48 | 15 | 62 | 56 | 65 | 52 | 40 | 1260 | 64 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_15_tsi_mk8` | Volkswagen Golf Mk8 1.5 TSI | PROVISIONAL | 50 | 24 | 61 | 57 | 66 | 54 | 42 | 1310 | 84 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_20_tdi_mk8` | Volkswagen Golf Mk8 2.0 TDI | PROVISIONAL | 49 | 28 | 57 | 54 | 65 | 54 | 40 | 1395 | 79 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_polo_10_tsi_aw` | Volkswagen Polo AW 1.0 TSI | PROVISIONAL | 47 | 13 | 63 | 55 | 65 | 50 | 38 | 1160 | 60 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_polo_15_tsi_aw` | Volkswagen Polo AW 1.5 TSI | PROVISIONAL | 50 | 26 | 63 | 56 | 66 | 52 | 40 | 1215 | 91 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_passat_15_tsi_b8` | Volkswagen Passat B8 1.5 TSI | PROVISIONAL | 46 | 19 | 53 | 53 | 66 | 52 | 36 | 1460 | 75 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_tiguan_15_tsi_mqb` | Volkswagen Tiguan MQB 1.5 TSI | PROVISIONAL | 43 | 17 | 48 | 51 | 64 | 51 | 33 | 1540 | 71 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_clio_10_tce` | Renault Clio BJA 1.0 TCe | PROVISIONAL | 46 | 9 | 64 | 55 | 64 | 48 | 36 | 1110 | 60 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_clio_13_tce` | Renault Clio BJA 1.3 TCe | PROVISIONAL | 49 | 23 | 63 | 56 | 65 | 50 | 38 | 1180 | 81 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_clio_e_tech` | Renault Clio BJA E-Tech Hybrid | PROVISIONAL | 47 | 19 | 60 | 55 | 63 | 49 | 36 | 1238 | 85 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_megane_13_tce` | Renault Megane Mk4 1.3 TCe | PROVISIONAL | 47 | 19 | 59 | 55 | 65 | 51 | 38 | 1310 | 79 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_megane_e_tech_ev` | Renault Megane E-Tech CMF-EV EV60 | PROVISIONAL | 44 | 27 | 49 | 49 | 60 | 49 | 34 | 1624 | 99 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_captur_13_tce` | Renault Captur HJB 1.3 TCe | PROVISIONAL | 45 | 18 | 56 | 53 | 63 | 49 | 34 | 1320 | 78 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_fiesta_10_ecoboost` | Ford Fiesta Mk8 1.0 EcoBoost | PROVISIONAL | 48 | 15 | 65 | 55 | 64 | 50 | 39 | 1170 | 79 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_focus_10_ecoboost` | Ford Focus Mk4 1.0 EcoBoost | PROVISIONAL | 47 | 12 | 61 | 55 | 64 | 51 | 40 | 1322 | 70 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_focus_15_ecoboost` | Ford Focus Mk4 1.5 EcoBoost | PROVISIONAL | 49 | 21 | 61 | 55 | 64 | 52 | 42 | 1350 | 81 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_puma_10_ecoboost` | Ford Puma BX726 1.0 EcoBoost | PROVISIONAL | 46 | 18 | 58 | 54 | 64 | 50 | 36 | 1305 | 87 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `toyota_corolla_15` | Toyota Corolla E210 1.5 | PROVISIONAL | 46 | 10 | 59 | 54 | 71 | 51 | 37 | 1280 | 72 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `toyota_corolla_hybrid` | Toyota Corolla E210 Hybrid | PROVISIONAL | 46 | 15 | 56 | 53 | 71 | 50 | 35 | 1370 | 75 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `toyota_yaris_hybrid` | Toyota Yaris XP210 Hybrid | PROVISIONAL | 48 | 14 | 65 | 56 | 70 | 49 | 36 | 1085 | 78 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `toyota_chr_hybrid` | Toyota C-HR AX10 Hybrid | PROVISIONAL | 42 | 9 | 51 | 51 | 69 | 48 | 32 | 1420 | 63 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `hyundai_i20_10_tgdi` | Hyundai i20 BC3 1.0 T-GDi | PROVISIONAL | 47 | 14 | 64 | 55 | 64 | 48 | 37 | 1130 | 65 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `hyundai_i30_15_tgdi` | Hyundai i30 PD 1.5 T-GDi | PROVISIONAL | 49 | 23 | 60 | 55 | 66 | 52 | 41 | 1355 | 87 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `hyundai_kona_hybrid` | Hyundai Kona SX2 Hybrid | PROVISIONAL | 43 | 15 | 51 | 51 | 64 | 48 | 32 | 1450 | 72 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `hyundai_kona_electric` | Hyundai Kona Electric SX2 Long Range | PROVISIONAL | 39 | 21 | 41 | 45 | 60 | 46 | 28 | 1775 | 90 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `bmw_f40_118i` | BMW 118i F40 1.5 | PROVISIONAL | 49 | 19 | 60 | 55 | 66 | 53 | 42 | 1365 | 75 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `bmw_g20_320d` | BMW 320d G20 2.0 diesel | PROVISIONAL | 52 | 36 | 59 | 57 | 66 | 55 | 44 | 1525 | 92 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `mercedes_a180_w177` | Mercedes-Benz A 180 W177 1.3 | PROVISIONAL | 47 | 16 | 58 | 54 | 65 | 51 | 39 | 1365 | 73 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_a3_30tfsi_8y` | Audi A3 8Y 30 TFSI | PROVISIONAL | 47 | 13 | 61 | 56 | 65 | 51 | 40 | 1295 | 63 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `togg_t10f_rwd_standard_range` | Togg T10F RWD Standard Range | PROVISIONAL | 38 | 23 | 35 | 39 | 58 | 49 | 32 | 2100 | 76 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `togg_t10f_rwd_long_range` | Togg T10F RWD Long Range | PROVISIONAL | 36 | 21 | 31 | 37 | 58 | 49 | 31 | 2200 | 73 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `togg_t10f_awd_performance` | Togg T10F AWD Performance | PROVISIONAL | 43 | 58 | 30 | 38 | 59 | 51 | 32 | 2280 | 140 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+
+## Sprint 4N Hierarchy Checks
+
+### Golf daily, GTI, Clubsport, R
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `vw_golf_15_tsi_mk8` | Volkswagen Golf Mk8 1.5 TSI | PROVISIONAL | 50 | 24 | 61 | 57 | 66 | 54 | 42 | 1310 | 84 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_gti_mk8` | Volkswagen Golf GTI Mk8 245 PS | PROVISIONAL | 65 | 43 | 70 | 68 | 72 | 71 | 68 | 1460 | 123 | PROVISIONAL | - |
+| `vw_golf_gti_clubsport_mk8` | Volkswagen Golf GTI Clubsport Mk8 300 PS | PROVISIONAL | 69 | 52 | 73 | 71 | 72 | 73 | 72 | 1460 | 151 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_r_mk8` | Volkswagen Golf R Mk8 320 PS | PROVISIONAL | 68 | 58 | 68 | 69 | 72 | 73 | 70 | 1551 | 152 | PROVISIONAL | - |
+| `vw_golf_gti_mk85` | Volkswagen Golf GTI Mk8.5 | PROVISIONAL | 66 | 46 | 72 | 69 | 72 | 71 | 70 | 1460 | 134 | PROVISIONAL | - |
+| `vw_golf_gti_clubsport_mk85` | Volkswagen Golf GTI Clubsport Mk8.5 | PROVISIONAL | 69 | 52 | 74 | 72 | 72 | 73 | 74 | 1460 | 151 | PROVISIONAL | - |
+| `vw_golf_r_mk85` | Volkswagen Golf R Mk8.5 | PROVISIONAL | 70 | 60 | 71 | 71 | 72 | 74 | 74 | 1550 | 158 | PROVISIONAL | - |
+
+### Polo daily vs GTI
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `vw_polo_10_tsi_aw` | Volkswagen Polo AW 1.0 TSI | PROVISIONAL | 47 | 13 | 63 | 55 | 65 | 50 | 38 | 1160 | 60 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_polo_gti_6r` | Volkswagen Polo GTI 6R 1.4 TSI | PROVISIONAL | 57 | 34 | 71 | 63 | 61 | 56 | 54 | 1184 | 111 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_polo_gti_aw` | Volkswagen Polo GTI AW 2.0 TSI | PROVISIONAL | 62 | 40 | 72 | 66 | 70 | 63 | 61 | 1280 | 115 | PROVISIONAL | Sprint 4L VAG template; provisional source trail refreshed. |
+
+### Clio road trims vs RS
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `renault_clio_10_tce` | Renault Clio BJA 1.0 TCe | PROVISIONAL | 46 | 9 | 64 | 55 | 64 | 48 | 36 | 1110 | 60 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_clio_13_tce` | Renault Clio BJA 1.3 TCe | PROVISIONAL | 49 | 23 | 63 | 56 | 65 | 50 | 38 | 1180 | 81 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_clio_e_tech` | Renault Clio BJA E-Tech Hybrid | PROVISIONAL | 47 | 19 | 60 | 55 | 63 | 49 | 36 | 1238 | 85 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_clio_rs_200` | Renault Sport Clio RS X98 200 EDC | PROVISIONAL | 64 | 37 | 78 | 68 | 70 | 64 | 66 | 1204 | 122 | PROVISIONAL | - |
+| `renault_clio_rs_trophy` | Renault Sport Clio RS Trophy X98 220 EDC | PROVISIONAL | 67 | 43 | 80 | 70 | 71 | 66 | 69 | 1204 | 135 | PROVISIONAL | - |
+
+### Mustang hierarchy
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `ford_mustang_gt_s550` | Ford Mustang GT S550 5.0 V8 | PROVISIONAL | 66 | 68 | 61 | 64 | 72 | 69 | 64 | 1720 | 192 | PROVISIONAL | - |
+| `ford_mustang_dark_horse_s650` | Ford Mustang Dark Horse S650 5.0 V8 | CALIBRATED | 70 | 72 | 64 | 70 | 74 | 75 | 72 | 1790 | 208 | REVIEWED_ADJUSTED | - |
+| `ford_mustang_gtd_s650` | Ford Mustang GTD S650 5.2 Supercharged V8 | CALIBRATED | 80 | 95 | 66 | 78 | 75 | 87 | 85 | 1970 | 309 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+
+### 911 hierarchy
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `porsche_911_carrera_992` | Porsche 911 Carrera 992 3.0 Turbo | PROVISIONAL | 75 | 67 | 74 | 77 | 79 | 79 | 78 | 1505 | 188 | PROVISIONAL | - |
+| `porsche_911_carrera_s_992` | Porsche 911 Carrera S 992 3.0 Turbo | PROVISIONAL | 79 | 79 | 75 | 79 | 80 | 81 | 80 | 1515 | 218 | PROVISIONAL | - |
+| `porsche_911_gt3_992` | Porsche 911 GT3 992 4.0 | CALIBRATED | 88 | 87 | 85 | 89 | 83 | 91 | 94 | 1435 | 261 | OK | - |
+| `porsche_911_gt3_rs_992` | Porsche 911 GT3 RS 992 4.0 | CALIBRATED | 89 | 87 | 86 | 90 | 81 | 91 | 96 | 1450 | 266 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+
+### T10F RWD vs AWD
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `togg_t10f_rwd_standard_range` | Togg T10F RWD Standard Range | PROVISIONAL | 38 | 23 | 35 | 39 | 58 | 49 | 32 | 2100 | 76 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `togg_t10f_rwd_long_range` | Togg T10F RWD Long Range | PROVISIONAL | 36 | 21 | 31 | 37 | 58 | 49 | 31 | 2200 | 73 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `togg_t10f_awd_performance` | Togg T10F AWD Performance | PROVISIONAL | 43 | 58 | 30 | 38 | 59 | 51 | 32 | 2280 | 140 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+
+### Daily EV vs performance EV
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `renault_megane_e_tech_ev` | Renault Megane E-Tech CMF-EV EV60 | PROVISIONAL | 44 | 27 | 49 | 49 | 60 | 49 | 34 | 1624 | 99 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `hyundai_kona_electric` | Hyundai Kona Electric SX2 Long Range | PROVISIONAL | 39 | 21 | 41 | 45 | 60 | 46 | 28 | 1775 | 90 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `tesla_model_y_performance` | Tesla Model Y Performance | PROVISIONAL | 55 | 74 | 45 | 51 | 64 | 60 | 45 | 1995 | 197 | PROVISIONAL | - |
+| `hyundai_ioniq_5n` | Hyundai Ioniq 5 N NE N | CALIBRATED | 68 | 80 | 47 | 63 | 77 | 84 | 72 | 2275 | 210 | REVIEWED_ADJUSTED | - |
+
+### Daily premium vs performance
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `bmw_f40_118i` | BMW 118i F40 1.5 | PROVISIONAL | 49 | 19 | 60 | 55 | 66 | 53 | 42 | 1365 | 75 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `bmw_m135i_f40` | BMW M135i F40 xDrive | PROVISIONAL | 67 | 60 | 68 | 67 | 71 | 69 | 66 | 1525 | 148 | PROVISIONAL | - |
+| `audi_a3_30tfsi_8y` | Audi A3 8Y 30 TFSI | PROVISIONAL | 47 | 13 | 61 | 56 | 65 | 51 | 40 | 1295 | 63 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_s3_8y` | Audi S3 8Y 2.0 TFSI quattro | PROVISIONAL | 65 | 55 | 67 | 66 | 71 | 69 | 67 | 1575 | 145 | PROVISIONAL | - |
+| `mercedes_a180_w177` | Mercedes-Benz A 180 W177 1.3 | PROVISIONAL | 47 | 16 | 58 | 54 | 65 | 51 | 39 | 1365 | 73 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `mercedes_amg_a45_s_w177` | Mercedes-AMG A 45 S W177 4MATIC+ | CALIBRATED | 71 | 71 | 68 | 72 | 71 | 74 | 73 | 1635 | 190 | REVIEWED_ADJUSTED | - |
+
 ## Top Overall Baselines
 
 | Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Audit result | Notes |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `porsche_911_gt3_rs_992` | Porsche 911 GT3 RS 992 4.0 | CALIBRATED | 89 | 87 | 86 | 90 | 81 | 91 | 96 | 1450 | 266 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `porsche_911_gt3_992` | Porsche 911 GT3 992 4.0 | CALIBRATED | 88 | 87 | 85 | 89 | 83 | 91 | 94 | 1435 | 261 | OK | - |
+| `porsche_911_st_992` | Porsche 911 S/T 992 4.0 | CALIBRATED | 87 | 90 | 86 | 87 | 80 | 87 | 90 | 1380 | 280 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_911_gt3_rs_9912` | Porsche 911 GT3 RS 991.2 4.0 | CALIBRATED | 87 | 88 | 86 | 88 | 81 | 88 | 93 | 1430 | 268 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_718_cayman_gt4_rs` | Porsche 718 Cayman GT4 RS 982 4.0 | CALIBRATED | 87 | 85 | 86 | 88 | 81 | 88 | 93 | 1415 | 260 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_718_spyder_rs` | Porsche 718 Spyder RS 982 4.0 | CALIBRATED | 86 | 85 | 85 | 87 | 80 | 87 | 92 | 1410 | 261 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `alpine_a110_r_ultime` | Alpine A110 R Ultime A110 345 PS | PROVISIONAL | 83 | 81 | 92 | 84 | 73 | 77 | 84 | 1120 | 227 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `porsche_718_cayman_gt4` | Porsche 718 Cayman GT4 982 4.0 | CALIBRATED | 83 | 73 | 84 | 86 | 81 | 86 | 91 | 1420 | 218 | OK | - |
+| `porsche_911_turbo_s_992` | Porsche 911 Turbo S 992 3.7 | CALIBRATED | 82 | 98 | 71 | 79 | 78 | 86 | 81 | 1640 | 291 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `alpine_a110_r` | Alpine A110 R A110 300 PS | CALIBRATED | 81 | 72 | 92 | 83 | 74 | 76 | 84 | 1082 | 204 | OK | - |
+| `ford_mustang_gtd_s650` | Ford Mustang GTD S650 5.2 Supercharged V8 | CALIBRATED | 80 | 95 | 66 | 78 | 75 | 87 | 85 | 1970 | 309 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_911_turbo_992` | Porsche 911 Turbo 992 3.7 | CALIBRATED | 80 | 93 | 70 | 78 | 78 | 84 | 79 | 1640 | 260 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `porsche_718_cayman_gts_40` | Porsche 718 Cayman GTS 4.0 982 4.0 | CALIBRATED | 80 | 71 | 82 | 82 | 80 | 81 | 84 | 1405 | 209 | OK | - |
 | `porsche_911_carrera_s_992` | Porsche 911 Carrera S 992 3.0 Turbo | PROVISIONAL | 79 | 79 | 75 | 79 | 80 | 81 | 80 | 1515 | 218 | PROVISIONAL | - |
 | `alpine_a110_s` | Alpine A110 S A110 300 PS | CALIBRATED | 79 | 69 | 90 | 79 | 73 | 74 | 80 | 1114 | 198 | OK | - |
 | `renault_megane_rs_trophy_r` | Renault Sport Megane RS Trophy-R Mk4 300 | CALIBRATED | 79 | 60 | 86 | 85 | 73 | 80 | 88 | 1306 | 169 | OK | - |
+| `alpine_a110_gt` | Alpine A110 GT A110 300 PS | CALIBRATED | 77 | 68 | 88 | 79 | 73 | 73 | 77 | 1119 | 197 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `porsche_718_cayman_s` | Porsche 718 Cayman S 982 2.5 Turbo | CALIBRATED | 77 | 67 | 81 | 79 | 78 | 77 | 79 | 1355 | 190 | OK | - |
 | `toyota_gr_yaris_gen2` | Toyota GR Yaris Gen 2 1.6 Turbo AWD | CALIBRATED | 77 | 62 | 84 | 78 | 78 | 77 | 82 | 1300 | 158 | OK | - |
 | `nissan_gtr_r35` | Nissan GT-R R35 3.8 V6 Twin Turbo | CALIBRATED | 76 | 88 | 67 | 74 | 72 | 79 | 76 | 1752 | 239 | REVIEWED_ADJUSTED | - |
-| `honda_civic_type_r_fl5` | Honda Civic Type R FL5 | CALIBRATED | 76 | 59 | 80 | 80 | 78 | 79 | 83 | 1430 | 169 | OK | - |
-| `alpine_a110` | Alpine A110 A110 252 PS | CALIBRATED | 76 | 61 | 89 | 76 | 74 | 71 | 76 | 1103 | 168 | OK | - |
-| `bmw_m4_g82` | BMW M M4 G82 Competition | PROVISIONAL | 75 | 79 | 69 | 74 | 73 | 79 | 77 | 1725 | 217 | PROVISIONAL | - |
-| `bmw_m3_g80` | BMW M M3 G80 Competition | PROVISIONAL | 75 | 79 | 69 | 74 | 73 | 79 | 77 | 1730 | 217 | PROVISIONAL | - |
-| `bmw_m3_f80` | BMW M M3 F80 Competition | PROVISIONAL | 75 | 76 | 72 | 76 | 72 | 77 | 77 | 1585 | 209 | PROVISIONAL | - |
-| `bmw_m4_f82` | BMW M M4 F82 Competition | PROVISIONAL | 75 | 75 | 72 | 76 | 72 | 77 | 77 | 1590 | 208 | PROVISIONAL | - |
-| `porsche_911_carrera_992` | Porsche 911 Carrera 992 3.0 Turbo | PROVISIONAL | 75 | 67 | 74 | 77 | 79 | 79 | 78 | 1505 | 188 | PROVISIONAL | - |
-| `honda_civic_type_r_fk8` | Honda Civic Type R FK8 | CALIBRATED | 75 | 58 | 80 | 79 | 77 | 77 | 81 | 1390 | 169 | OK | - |
-| `toyota_gr_yaris_gen1` | Toyota GR Yaris Gen 1 1.6 Turbo AWD | CALIBRATED | 75 | 57 | 83 | 77 | 77 | 75 | 80 | 1280 | 150 | OK | - |
-| `bmw_m2_f87` | BMW M M2 F87 Competition | CALIBRATED | 74 | 70 | 72 | 75 | 73 | 77 | 79 | 1625 | 186 | REVIEWED_ADJUSTED | - |
 
 ## Review Signals
 
@@ -207,3 +353,67 @@ No threshold-breaching review signals were detected.
 | `bmw_g15_840i` | BMW 840i G15 B58TU | PROVISIONAL | 61 | 53 | 59 | 62 | 72 | 69 | 60 | 1785 | 140 | PROVISIONAL | - |
 | `bmw_g16_840i_gran_coupe` | BMW 840i Gran Coupe G16 B58TU | PROVISIONAL | 59 | 50 | 54 | 61 | 72 | 69 | 58 | 1870 | 134 | PROVISIONAL | - |
 | `bmw_g60_540i` | BMW 540i G60 B58TU2 mild hybrid | PROVISIONAL | 59 | 58 | 51 | 57 | 71 | 69 | 56 | 1900 | 147 | PROVISIONAL | - |
+| `vw_golf_gti_mk5` | Volkswagen Golf GTI Mk5 2.0 TFSI | PROVISIONAL | 58 | 34 | 69 | 63 | 65 | 59 | 58 | 1336 | 110 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_gti_mk6` | Volkswagen Golf GTI Mk6 2.0 TSI | PROVISIONAL | 59 | 35 | 69 | 64 | 67 | 61 | 60 | 1372 | 113 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_gti_mk75` | Volkswagen Golf GTI Mk7.5 230 PS | PROVISIONAL | 66 | 43 | 73 | 70 | 72 | 69 | 69 | 1375 | 123 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_gti_clubsport_mk8` | Volkswagen Golf GTI Clubsport Mk8 300 PS | PROVISIONAL | 69 | 52 | 73 | 71 | 72 | 73 | 72 | 1460 | 151 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_r_mk6` | Volkswagen Golf R Mk6 2.0 TFSI | PROVISIONAL | 62 | 48 | 66 | 65 | 67 | 65 | 63 | 1521 | 131 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_polo_gti_6r` | Volkswagen Polo GTI 6R 1.4 TSI | PROVISIONAL | 57 | 34 | 71 | 63 | 61 | 56 | 54 | 1184 | 111 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_scirocco_r` | Volkswagen Scirocco R Mk3 2.0 TSI | PROVISIONAL | 65 | 47 | 72 | 69 | 67 | 66 | 67 | 1390 | 140 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_a3_20tfsi_8p` | Audi A3 8P 2.0 TFSI | PROVISIONAL | 57 | 34 | 66 | 61 | 64 | 59 | 55 | 1365 | 108 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_a3_20tfsi_8v` | Audi A3 8V 2.0 TFSI | PROVISIONAL | 59 | 37 | 68 | 63 | 68 | 61 | 57 | 1320 | 106 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_s3_8p` | Audi S3 8P 2.0 TFSI quattro | PROVISIONAL | 63 | 49 | 67 | 66 | 67 | 65 | 63 | 1480 | 132 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_tts_8j` | Audi TTS 8J 2.0 TFSI quattro | PROVISIONAL | 66 | 53 | 72 | 68 | 67 | 66 | 66 | 1415 | 141 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `seat_leon_cupra_1p` | SEAT Leon Cupra 1P 2.0 TFSI | PROVISIONAL | 62 | 41 | 71 | 67 | 66 | 63 | 64 | 1375 | 129 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `skoda_octavia_vrs_mk3` | Skoda Octavia vRS Mk3 2.0 TSI | PROVISIONAL | 60 | 40 | 65 | 65 | 70 | 65 | 60 | 1435 | 118 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `skoda_superb_sportline_20tsi` | Skoda Superb Sportline B8 2.0 TSI | PROVISIONAL | 57 | 46 | 57 | 59 | 70 | 63 | 53 | 1615 | 128 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_fiesta_st_edition_mk8` | Ford Fiesta ST Edition Mk8 1.5 EcoBoost | PROVISIONAL | 66 | 39 | 80 | 69 | 71 | 66 | 71 | 1262 | 116 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_focus_st_edition_mk4` | Ford Focus ST Edition Mk4 2.3 EcoBoost | PROVISIONAL | 67 | 50 | 72 | 68 | 72 | 69 | 70 | 1508 | 137 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_focus_rs500_mk2` | Ford Focus RS500 Mk2 2.5 Turbo | PROVISIONAL | 71 | 61 | 75 | 72 | 69 | 70 | 75 | 1468 | 175 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_mustang_gtd_s650` | Ford Mustang GTD S650 5.2 Supercharged V8 | CALIBRATED | 80 | 95 | 66 | 78 | 75 | 87 | 85 | 1970 | 309 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_911_gt3_rs_9912` | Porsche 911 GT3 RS 991.2 4.0 | CALIBRATED | 87 | 88 | 86 | 88 | 81 | 88 | 93 | 1430 | 268 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_911_gt3_rs_992` | Porsche 911 GT3 RS 992 4.0 | CALIBRATED | 89 | 87 | 86 | 90 | 81 | 91 | 96 | 1450 | 266 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_911_turbo_992` | Porsche 911 Turbo 992 3.7 | CALIBRATED | 80 | 93 | 70 | 78 | 78 | 84 | 79 | 1640 | 260 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_911_turbo_s_992` | Porsche 911 Turbo S 992 3.7 | CALIBRATED | 82 | 98 | 71 | 79 | 78 | 86 | 81 | 1640 | 291 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_718_cayman_gt4_rs` | Porsche 718 Cayman GT4 RS 982 4.0 | CALIBRATED | 87 | 85 | 86 | 88 | 81 | 88 | 93 | 1415 | 260 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_718_spyder_rs` | Porsche 718 Spyder RS 982 4.0 | CALIBRATED | 86 | 85 | 85 | 87 | 80 | 87 | 92 | 1410 | 261 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `porsche_911_st_992` | Porsche 911 S/T 992 4.0 | CALIBRATED | 87 | 90 | 86 | 87 | 80 | 87 | 90 | 1380 | 280 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `alpine_a110_gt` | Alpine A110 GT A110 300 PS | CALIBRATED | 77 | 68 | 88 | 79 | 73 | 73 | 77 | 1119 | 197 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `alpine_a110_r_ultime` | Alpine A110 R Ultime A110 345 PS | PROVISIONAL | 83 | 81 | 92 | 84 | 73 | 77 | 84 | 1120 | 227 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_rs5_b9` | Audi Sport RS 5 B9 2.9 TFSI quattro | PROVISIONAL | 71 | 76 | 64 | 71 | 72 | 75 | 70 | 1715 | 193 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `toyota_gr_corolla` | Toyota GR Corolla E210 G16E-GTS | CALIBRATED | 71 | 56 | 75 | 72 | 74 | 73 | 74 | 1475 | 152 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `lexus_rc_f` | Lexus RC F USC10 5.0 V8 | PROVISIONAL | 66 | 67 | 58 | 68 | 77 | 73 | 64 | 1775 | 198 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `lexus_lc_500` | Lexus LC 500 Z100 5.0 V8 | PROVISIONAL | 63 | 62 | 52 | 64 | 77 | 73 | 61 | 1935 | 181 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `mercedes_amg_gt_c190` | Mercedes-AMG GT C190 4.0 V8 Biturbo | CALIBRATED | 76 | 78 | 72 | 77 | 74 | 79 | 79 | 1615 | 211 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_10_tsi_mk8` | Volkswagen Golf Mk8 1.0 TSI | PROVISIONAL | 48 | 15 | 62 | 56 | 65 | 52 | 40 | 1260 | 64 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_15_tsi_mk8` | Volkswagen Golf Mk8 1.5 TSI | PROVISIONAL | 50 | 24 | 61 | 57 | 66 | 54 | 42 | 1310 | 84 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_20_tdi_mk8` | Volkswagen Golf Mk8 2.0 TDI | PROVISIONAL | 49 | 28 | 57 | 54 | 65 | 54 | 40 | 1395 | 79 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_polo_10_tsi_aw` | Volkswagen Polo AW 1.0 TSI | PROVISIONAL | 47 | 13 | 63 | 55 | 65 | 50 | 38 | 1160 | 60 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_polo_15_tsi_aw` | Volkswagen Polo AW 1.5 TSI | PROVISIONAL | 50 | 26 | 63 | 56 | 66 | 52 | 40 | 1215 | 91 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_passat_15_tsi_b8` | Volkswagen Passat B8 1.5 TSI | PROVISIONAL | 46 | 19 | 53 | 53 | 66 | 52 | 36 | 1460 | 75 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_tiguan_15_tsi_mqb` | Volkswagen Tiguan MQB 1.5 TSI | PROVISIONAL | 43 | 17 | 48 | 51 | 64 | 51 | 33 | 1540 | 71 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_clio_10_tce` | Renault Clio BJA 1.0 TCe | PROVISIONAL | 46 | 9 | 64 | 55 | 64 | 48 | 36 | 1110 | 60 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_clio_13_tce` | Renault Clio BJA 1.3 TCe | PROVISIONAL | 49 | 23 | 63 | 56 | 65 | 50 | 38 | 1180 | 81 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_clio_e_tech` | Renault Clio BJA E-Tech Hybrid | PROVISIONAL | 47 | 19 | 60 | 55 | 63 | 49 | 36 | 1238 | 85 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_megane_13_tce` | Renault Megane Mk4 1.3 TCe | PROVISIONAL | 47 | 19 | 59 | 55 | 65 | 51 | 38 | 1310 | 79 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_megane_e_tech_ev` | Renault Megane E-Tech CMF-EV EV60 | PROVISIONAL | 44 | 27 | 49 | 49 | 60 | 49 | 34 | 1624 | 99 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_captur_13_tce` | Renault Captur HJB 1.3 TCe | PROVISIONAL | 45 | 18 | 56 | 53 | 63 | 49 | 34 | 1320 | 78 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_fiesta_10_ecoboost` | Ford Fiesta Mk8 1.0 EcoBoost | PROVISIONAL | 48 | 15 | 65 | 55 | 64 | 50 | 39 | 1170 | 79 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_focus_10_ecoboost` | Ford Focus Mk4 1.0 EcoBoost | PROVISIONAL | 47 | 12 | 61 | 55 | 64 | 51 | 40 | 1322 | 70 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_focus_15_ecoboost` | Ford Focus Mk4 1.5 EcoBoost | PROVISIONAL | 49 | 21 | 61 | 55 | 64 | 52 | 42 | 1350 | 81 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_puma_10_ecoboost` | Ford Puma BX726 1.0 EcoBoost | PROVISIONAL | 46 | 18 | 58 | 54 | 64 | 50 | 36 | 1305 | 87 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `toyota_corolla_15` | Toyota Corolla E210 1.5 | PROVISIONAL | 46 | 10 | 59 | 54 | 71 | 51 | 37 | 1280 | 72 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `toyota_corolla_hybrid` | Toyota Corolla E210 Hybrid | PROVISIONAL | 46 | 15 | 56 | 53 | 71 | 50 | 35 | 1370 | 75 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `toyota_yaris_hybrid` | Toyota Yaris XP210 Hybrid | PROVISIONAL | 48 | 14 | 65 | 56 | 70 | 49 | 36 | 1085 | 78 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `toyota_chr_hybrid` | Toyota C-HR AX10 Hybrid | PROVISIONAL | 42 | 9 | 51 | 51 | 69 | 48 | 32 | 1420 | 63 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `hyundai_i20_10_tgdi` | Hyundai i20 BC3 1.0 T-GDi | PROVISIONAL | 47 | 14 | 64 | 55 | 64 | 48 | 37 | 1130 | 65 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `hyundai_i30_15_tgdi` | Hyundai i30 PD 1.5 T-GDi | PROVISIONAL | 49 | 23 | 60 | 55 | 66 | 52 | 41 | 1355 | 87 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `hyundai_kona_hybrid` | Hyundai Kona SX2 Hybrid | PROVISIONAL | 43 | 15 | 51 | 51 | 64 | 48 | 32 | 1450 | 72 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `hyundai_kona_electric` | Hyundai Kona Electric SX2 Long Range | PROVISIONAL | 39 | 21 | 41 | 45 | 60 | 46 | 28 | 1775 | 90 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `bmw_f40_118i` | BMW 118i F40 1.5 | PROVISIONAL | 49 | 19 | 60 | 55 | 66 | 53 | 42 | 1365 | 75 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `bmw_g20_320d` | BMW 320d G20 2.0 diesel | PROVISIONAL | 52 | 36 | 59 | 57 | 66 | 55 | 44 | 1525 | 92 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `mercedes_a180_w177` | Mercedes-Benz A 180 W177 1.3 | PROVISIONAL | 47 | 16 | 58 | 54 | 65 | 51 | 39 | 1365 | 73 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_a3_30tfsi_8y` | Audi A3 8Y 30 TFSI | PROVISIONAL | 47 | 13 | 61 | 56 | 65 | 51 | 40 | 1295 | 63 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `togg_t10f_rwd_standard_range` | Togg T10F RWD Standard Range | PROVISIONAL | 38 | 23 | 35 | 39 | 58 | 49 | 32 | 2100 | 76 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `togg_t10f_rwd_long_range` | Togg T10F RWD Long Range | PROVISIONAL | 36 | 21 | 31 | 37 | 58 | 49 | 31 | 2200 | 73 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `togg_t10f_awd_performance` | Togg T10F AWD Performance | PROVISIONAL | 43 | 58 | 30 | 38 | 59 | 51 | 32 | 2280 | 140 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
