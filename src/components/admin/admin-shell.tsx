@@ -70,6 +70,14 @@ export async function AdminShell({ title, eyebrow, actions, children }: AdminShe
                 Export CSV
               </Link>
             ) : null}
+            {isOwner ? (
+              <Link
+                href="/admin/team"
+                className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
+              >
+                Ekip ve Yetkiler
+              </Link>
+            ) : null}
             <form action="/admin/logout" method="post">
               <button
                 type="submit"
