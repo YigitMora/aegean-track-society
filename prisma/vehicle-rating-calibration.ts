@@ -75,22 +75,31 @@ export function calculatePowerBaseScore(evidence: VehicleCalibrationEvidence) {
 
 export function calculateHandlingBaseScore(evidence: VehicleCalibrationEvidence) {
   const lightnessScore = scoreRange(2300 - evidence.curbWeightKg, 0, 1200);
+  const trackHardwareScore =
+    (evidence.brakeCapacity +
+      evidence.brakeRepeatability +
+      evidence.thermalCapability +
+      evidence.factoryTrackReadiness) /
+    4;
 
   return clampScore(
-    lightnessScore * 0.34 +
-      evidence.chassisTrackIntent * 0.46 +
-      drivetrainHandlingScore(evidence.drivetrain) * 0.12 +
-      evidence.factoryTrackReadiness * 0.08,
+    lightnessScore * 0.08 +
+      evidence.chassisTrackIntent * 0.54 +
+      evidence.factoryTrackReadiness * 0.25 +
+      trackHardwareScore * 0.08 +
+      drivetrainHandlingScore(evidence.drivetrain) * 0.05,
   );
 }
 
 export function calculateBrakingBaseScore(evidence: VehicleCalibrationEvidence) {
-  const massPenalty = scoreRange(2300 - evidence.curbWeightKg, 0, 1200);
+  const massSupportScore = scoreRange(2300 - evidence.curbWeightKg, 0, 1200);
 
   return clampScore(
-    evidence.brakeCapacity * 0.48 +
+    evidence.brakeCapacity * 0.42 +
       evidence.brakeRepeatability * 0.34 +
-      massPenalty * 0.18,
+      evidence.factoryTrackReadiness * 0.12 +
+      evidence.thermalCapability * 0.08 +
+      massSupportScore * 0.04,
   );
 }
 
@@ -104,9 +113,10 @@ export function calculateReliabilityBaseScore(evidence: VehicleCalibrationEviden
 
 export function calculateThermalBaseScore(evidence: VehicleCalibrationEvidence) {
   return clampScore(
-    evidence.thermalCapability * 0.62 +
-      evidence.brakeRepeatability * 0.22 +
-      evidence.sustainedPowerConfidence * 0.16,
+    evidence.thermalCapability * 0.66 +
+      evidence.sustainedPowerConfidence * 0.18 +
+      evidence.brakeRepeatability * 0.1 +
+      evidence.factoryTrackReadiness * 0.06,
   );
 }
 
@@ -114,8 +124,8 @@ export function calculateTrackReadinessBaseScore(
   evidence: VehicleCalibrationEvidence,
 ) {
   return clampScore(
-    evidence.factoryTrackReadiness * 0.42 +
-      evidence.brakeRepeatability * 0.22 +
+    evidence.factoryTrackReadiness * 0.46 +
+      evidence.brakeRepeatability * 0.18 +
       evidence.thermalCapability * 0.16 +
       evidence.chassisTrackIntent * 0.14 +
       evidence.brakeCapacity * 0.06,
