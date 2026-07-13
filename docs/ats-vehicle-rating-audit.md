@@ -8,9 +8,9 @@ Reviewed on 2026-07-13.
 
 | Metric | Value |
 | --- | --- |
-| Active vehicle definitions audited | 211 |
+| Active vehicle definitions audited | 289 |
 | Calibrated definitions | 40 |
-| Provisional definitions | 171 |
+| Provisional definitions | 249 |
 | Reviewed adjusted definitions | 22 |
 | Review-required signals | 0 |
 | Rating formula weights changed | No |
@@ -114,6 +114,89 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `mclaren_765lt` | McLaren 765LT Super Series 4.0 V8 | CALIBRATED | 94 | 96 | 92 | 92 | 78 | 90 | 93 | 1339 | 420 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 | `lamborghini_huracan_sto` | Lamborghini Huracan STO LP 640-2 5.2 V10 | CALIBRATED | 94 | 95 | 92 | 92 | 78 | 89 | 92 | 1339 | 351 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 
+## Sprint 4P Daily Templates
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `ford_tourneo_courier_10_ecoboost_6mt` | Ford Tourneo Courier Current 1.0 EcoBoost 6MT | PROVISIONAL | 33 | 8 | 33 | 39 | 62 | 45 | 25 | 1375 | 67 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_tourneo_courier_10_ecoboost_7dct` | Ford Tourneo Courier Current 1.0 EcoBoost 7DCT | PROVISIONAL | 33 | 7 | 33 | 38 | 62 | 45 | 25 | 1405 | 65 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_e_tourneo_courier` | Ford E-Tourneo Courier Current Electric | PROVISIONAL | 32 | 14 | 31 | 36 | 59 | 41 | 21 | 1640 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_transit_courier_10_ecoboost_100_6mt` | Ford Transit Courier Current 1.0 EcoBoost 100 6MT | PROVISIONAL | 32 | 7 | 32 | 38 | 62 | 43 | 23 | 1295 | 57 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_transit_courier_10_ecoboost_125_6mt` | Ford Transit Courier Current 1.0 EcoBoost 125 6MT | PROVISIONAL | 33 | 8 | 33 | 38 | 62 | 44 | 24 | 1315 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_transit_courier_10_ecoboost_125_7dct` | Ford Transit Courier Current 1.0 EcoBoost 125 7DCT | PROVISIONAL | 32 | 7 | 32 | 38 | 62 | 44 | 23 | 1345 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_transit_courier_15_ecoblue_6mt` | Ford Transit Courier Current 1.5 EcoBlue 6MT | PROVISIONAL | 33 | 12 | 31 | 38 | 63 | 46 | 23 | 1365 | 54 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_e_transit_courier` | Ford E-Transit Courier Current Electric | PROVISIONAL | 31 | 14 | 28 | 36 | 59 | 41 | 20 | 1665 | 60 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_fiesta_10_ecoboost_6mt` | Ford Fiesta Mk8 1.0 EcoBoost 6MT | PROVISIONAL | 42 | 15 | 48 | 46 | 64 | 50 | 38 | 1170 | 79 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_fiesta_10_ecoboost_7dct` | Ford Fiesta Mk8 1.0 EcoBoost 7DCT | PROVISIONAL | 41 | 13 | 46 | 45 | 64 | 50 | 37 | 1205 | 76 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_10_ecoboost_6mt` | Ford Focus Mk4 1.0 EcoBoost 6MT | PROVISIONAL | 42 | 12 | 47 | 48 | 64 | 50 | 39 | 1322 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_10_ecoboost_8at` | Ford Focus Mk4 1.0 EcoBoost 8AT | PROVISIONAL | 41 | 11 | 45 | 46 | 64 | 50 | 38 | 1360 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_15_ecoblue_6mt` | Ford Focus Mk4 1.5 EcoBlue 6MT | PROVISIONAL | 42 | 20 | 44 | 46 | 64 | 50 | 37 | 1390 | 63 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_15_ecoblue_8at` | Ford Focus Mk4 1.5 EcoBlue 8AT | PROVISIONAL | 41 | 19 | 43 | 46 | 64 | 50 | 36 | 1420 | 62 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_puma_10_ecoboost_6mt` | Ford Puma BX726 1.0 EcoBoost 6MT | PROVISIONAL | 41 | 16 | 43 | 46 | 64 | 49 | 35 | 1280 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_puma_10_ecoboost_7dct` | Ford Puma BX726 1.0 EcoBoost 7DCT | PROVISIONAL | 40 | 15 | 42 | 46 | 64 | 49 | 34 | 1310 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_kuga_fhev` | Ford Kuga CX482 2.5 Hybrid | PROVISIONAL | 37 | 15 | 36 | 43 | 64 | 47 | 29 | 1680 | 83 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_kuga_phev` | Ford Kuga CX482 2.5 PHEV | PROVISIONAL | 35 | 15 | 33 | 42 | 62 | 46 | 27 | 1845 | 89 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_10_tsi_mk8_6mt` | Volkswagen Golf Mk8 1.0 TSI 6MT | PROVISIONAL | 43 | 15 | 47 | 48 | 65 | 51 | 39 | 1260 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_10_etsi_mk8_dsg` | Volkswagen Golf Mk8 1.0 eTSI DSG | PROVISIONAL | 42 | 14 | 45 | 47 | 65 | 50 | 38 | 1295 | 63 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_15_tsi_mk8_6mt` | Volkswagen Golf Mk8 1.5 TSI 6MT | PROVISIONAL | 46 | 24 | 48 | 50 | 66 | 53 | 41 | 1310 | 84 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_15_etsi_mk8_dsg` | Volkswagen Golf Mk8 1.5 eTSI DSG | PROVISIONAL | 44 | 22 | 46 | 48 | 66 | 53 | 40 | 1350 | 81 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_20_tdi_mk8_dsg` | Volkswagen Golf Mk8 2.0 TDI DSG | PROVISIONAL | 45 | 28 | 45 | 48 | 65 | 53 | 39 | 1395 | 79 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_polo_10_mpi_aw_5mt` | Volkswagen Polo AW 1.0 MPI 5MT | PROVISIONAL | 38 | 5 | 43 | 44 | 63 | 46 | 34 | 1120 | 53 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_polo_10_tsi_aw_5mt` | Volkswagen Polo AW 1.0 TSI 5MT | PROVISIONAL | 41 | 13 | 46 | 46 | 65 | 49 | 37 | 1160 | 60 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_polo_10_tsi_aw_dsg` | Volkswagen Polo AW 1.0 TSI DSG | PROVISIONAL | 40 | 12 | 43 | 45 | 65 | 49 | 36 | 1195 | 59 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_t_roc_10_tsi_6mt` | Volkswagen T-Roc A11 1.0 TSI 6MT | PROVISIONAL | 40 | 13 | 42 | 46 | 65 | 49 | 34 | 1300 | 62 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_t_roc_15_tsi_dsg` | Volkswagen T-Roc A11 1.5 TSI DSG | PROVISIONAL | 42 | 22 | 42 | 46 | 65 | 51 | 35 | 1360 | 81 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_tiguan_15_etsi_mqb_evo` | Volkswagen Tiguan MQB Evo 1.5 eTSI DSG | PROVISIONAL | 39 | 17 | 37 | 45 | 64 | 50 | 32 | 1615 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_passat_15_etsi_b9` | Volkswagen Passat B9 1.5 eTSI DSG | PROVISIONAL | 40 | 17 | 39 | 47 | 64 | 50 | 33 | 1520 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_10_sce` | Renault Clio BJA 1.0 SCe 5MT | PROVISIONAL | 37 | 5 | 43 | 44 | 63 | 45 | 33 | 1090 | 45 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_10_tce_6mt` | Renault Clio BJA 1.0 TCe 6MT | PROVISIONAL | 39 | 9 | 44 | 45 | 64 | 48 | 36 | 1110 | 60 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_10_tce_xtronic` | Renault Clio BJA 1.0 TCe X-Tronic | PROVISIONAL | 38 | 7 | 43 | 44 | 64 | 47 | 34 | 1145 | 59 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_e_tech_full_hybrid` | Renault Clio BJA E-Tech Full Hybrid | PROVISIONAL | 41 | 19 | 44 | 46 | 63 | 48 | 36 | 1238 | 85 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_captur_10_tce_6mt` | Renault Captur HJB 1.0 TCe 6MT | PROVISIONAL | 37 | 7 | 40 | 44 | 62 | 46 | 33 | 1265 | 53 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_captur_e_tech_full_hybrid` | Renault Captur HJB E-Tech Full Hybrid | PROVISIONAL | 38 | 13 | 40 | 44 | 63 | 47 | 32 | 1363 | 77 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_megane_sedan_13_tce_edc` | Renault Megane Sedan Mk4 1.3 TCe EDC | PROVISIONAL | 41 | 18 | 42 | 46 | 65 | 49 | 36 | 1335 | 77 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_megane_e_tech_ev60_current` | Renault Megane E-Tech CMF-EV EV60 160 kW | PROVISIONAL | 41 | 27 | 42 | 45 | 60 | 48 | 33 | 1624 | 99 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_austral_e_tech_full_hybrid` | Renault Austral HHN E-Tech Full Hybrid | PROVISIONAL | 38 | 19 | 37 | 43 | 63 | 47 | 30 | 1592 | 92 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_egea_sedan_14_fire` | Fiat Egea Sedan 356 1.4 Fire 6MT | PROVISIONAL | 37 | 6 | 40 | 44 | 63 | 47 | 33 | 1230 | 57 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_egea_sedan_16_multijet` | Fiat Egea Sedan 356 1.6 Multijet 6MT | PROVISIONAL | 41 | 24 | 40 | 44 | 64 | 49 | 34 | 1305 | 74 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_egea_cross_10_firefly` | Fiat Egea Cross 356 1.0 FireFly 6MT | PROVISIONAL | 37 | 9 | 39 | 44 | 63 | 47 | 31 | 1315 | 56 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_egea_cross_15_hybrid` | Fiat Egea Cross 356 1.5 Hybrid DCT | PROVISIONAL | 38 | 17 | 37 | 44 | 62 | 47 | 30 | 1420 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_500_hybrid` | Fiat 500 312 1.0 Hybrid 6MT | PROVISIONAL | 36 | 5 | 42 | 42 | 61 | 44 | 32 | 980 | 52 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_500e_hatch` | Fiat 500e 332 Electric | PROVISIONAL | 36 | 17 | 38 | 41 | 58 | 41 | 28 | 1365 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_corolla_15_6mt` | Toyota Corolla E210 1.5 6MT | PROVISIONAL | 41 | 10 | 43 | 46 | 71 | 50 | 36 | 1280 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_corolla_15_cvt` | Toyota Corolla E210 1.5 CVT | PROVISIONAL | 40 | 9 | 41 | 45 | 71 | 50 | 35 | 1310 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_corolla_hybrid_e210` | Toyota Corolla E210 Hybrid | PROVISIONAL | 41 | 15 | 42 | 45 | 71 | 49 | 34 | 1370 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_yaris_15_hybrid` | Toyota Yaris XP210 1.5 Hybrid | PROVISIONAL | 41 | 14 | 45 | 46 | 70 | 48 | 35 | 1085 | 78 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_yaris_cross_hybrid` | Toyota Yaris Cross XP210 1.5 Hybrid | PROVISIONAL | 38 | 8 | 40 | 44 | 70 | 46 | 31 | 1245 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_chr_hybrid_current` | Toyota C-HR AX20 Hybrid | PROVISIONAL | 38 | 12 | 37 | 44 | 69 | 46 | 31 | 1495 | 69 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_rav4_hybrid` | Toyota RAV4 XA50 2.5 Hybrid | PROVISIONAL | 39 | 20 | 36 | 43 | 70 | 47 | 28 | 1665 | 96 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i10_10_mpi_5mt` | Hyundai i10 BA 1.0 MPI 5MT | PROVISIONAL | 36 | 5 | 41 | 42 | 63 | 44 | 31 | 1015 | 48 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i10_10_mpi_amt` | Hyundai i10 BA 1.0 MPI AMT | PROVISIONAL | 36 | 5 | 41 | 42 | 63 | 44 | 31 | 1035 | 47 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i20_10_tgdi_6mt` | Hyundai i20 BC3 1.0 T-GDi 6MT | PROVISIONAL | 41 | 14 | 45 | 45 | 64 | 48 | 36 | 1130 | 65 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i20_10_tgdi_7dct` | Hyundai i20 BC3 1.0 T-GDi 7DCT | PROVISIONAL | 39 | 12 | 43 | 44 | 64 | 48 | 34 | 1165 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_bayon_10_tgdi` | Hyundai Bayon BC3 CUV 1.0 T-GDi | PROVISIONAL | 37 | 10 | 40 | 43 | 64 | 46 | 32 | 1215 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i30_15_tgdi_48v` | Hyundai i30 PD 1.5 T-GDi 48V | PROVISIONAL | 44 | 23 | 46 | 48 | 66 | 52 | 39 | 1355 | 87 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_kona_hybrid_sx2` | Hyundai Kona SX2 Hybrid | PROVISIONAL | 38 | 15 | 38 | 44 | 64 | 46 | 31 | 1450 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_kona_electric_sx2` | Hyundai Kona Electric SX2 Long Range | PROVISIONAL | 37 | 21 | 35 | 42 | 60 | 45 | 27 | 1775 | 90 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_tucson_hybrid` | Hyundai Tucson NX4 1.6 T-GDi Hybrid | PROVISIONAL | 39 | 29 | 35 | 43 | 64 | 47 | 28 | 1685 | 100 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_208_12_puretech` | Peugeot 208 P21 1.2 PureTech | PROVISIONAL | 39 | 15 | 43 | 44 | 60 | 46 | 34 | 1165 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_208_hybrid_100` | Peugeot 208 P21 Hybrid 100 e-DCS6 | PROVISIONAL | 39 | 14 | 42 | 44 | 60 | 46 | 34 | 1210 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_e_208` | Peugeot e-208 P21 Electric | PROVISIONAL | 37 | 19 | 38 | 41 | 57 | 43 | 29 | 1530 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_2008_12_puretech` | Peugeot 2008 P24 1.2 PureTech | PROVISIONAL | 39 | 18 | 40 | 44 | 60 | 47 | 32 | 1275 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_e_2008` | Peugeot e-2008 P24 Electric | PROVISIONAL | 35 | 17 | 35 | 40 | 57 | 43 | 26 | 1620 | 71 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `citroen_c3_12_puretech` | Citroen C3 CC21 1.2 PureTech | PROVISIONAL | 36 | 5 | 41 | 43 | 59 | 44 | 31 | 1105 | 55 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `citroen_c4_12_puretech` | Citroen C4 C41 1.2 PureTech | PROVISIONAL | 39 | 18 | 40 | 44 | 60 | 47 | 32 | 1310 | 73 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `citroen_e_c4` | Citroen e-C4 C41 Electric | PROVISIONAL | 35 | 16 | 36 | 41 | 57 | 43 | 27 | 1541 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `opel_corsa_12_puretech` | Opel Corsa F 1.2 | PROVISIONAL | 37 | 5 | 43 | 44 | 59 | 45 | 33 | 1090 | 50 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `opel_corsa_electric` | Opel Corsa Electric F Electric | PROVISIONAL | 37 | 19 | 38 | 41 | 57 | 43 | 29 | 1530 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `opel_astra_12_turbo` | Opel Astra L 1.2 Turbo | PROVISIONAL | 40 | 17 | 43 | 46 | 60 | 48 | 34 | 1330 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `bmw_f40_116i` | BMW 116i F40 1.5 | PROVISIONAL | 42 | 14 | 46 | 48 | 65 | 51 | 39 | 1365 | 59 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `bmw_u11_x1_sdrive18i` | BMW X1 U11 sDrive18i | PROVISIONAL | 40 | 16 | 40 | 47 | 65 | 50 | 34 | 1500 | 67 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `mercedes_gla200_h247` | Mercedes-Benz GLA 200 H247 1.3 7G-DCT | PROVISIONAL | 41 | 19 | 40 | 47 | 65 | 50 | 34 | 1510 | 79 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `audi_a3_30tfsi_8y_6mt` | Audi A3 8Y 30 TFSI 6MT | PROVISIONAL | 42 | 13 | 46 | 48 | 65 | 50 | 39 | 1295 | 63 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `audi_a3_35tfsi_8y_s_tronic` | Audi A3 8Y 35 TFSI S tronic | PROVISIONAL | 44 | 23 | 46 | 48 | 65 | 51 | 39 | 1330 | 83 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `audi_q3_35tfsi_f3` | Audi Q3 F3 35 TFSI S tronic | PROVISIONAL | 39 | 17 | 38 | 45 | 65 | 50 | 32 | 1570 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+
 ## Sprint 4O Hierarchy Checks
 
 ### Golf daily, GTI, Clubsport, R
@@ -121,6 +204,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
 | `vw_golf_15_tsi_mk8` | Volkswagen Golf Mk8 1.5 TSI | PROVISIONAL | 46 | 24 | 48 | 50 | 66 | 53 | 41 | 1310 | 84 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_golf_15_etsi_mk8_dsg` | Volkswagen Golf Mk8 1.5 eTSI DSG | PROVISIONAL | 44 | 22 | 46 | 48 | 66 | 53 | 40 | 1350 | 81 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `vw_golf_gti_mk8` | Volkswagen Golf GTI Mk8 245 PS | PROVISIONAL | 65 | 43 | 71 | 68 | 72 | 71 | 68 | 1460 | 123 | 0 | PROVISIONAL | - |
 | `vw_golf_gti_clubsport_mk8` | Volkswagen Golf GTI Clubsport Mk8 300 PS | PROVISIONAL | 69 | 52 | 75 | 71 | 72 | 73 | 72 | 1460 | 151 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `vw_golf_r_mk8` | Volkswagen Golf R Mk8 320 PS | PROVISIONAL | 69 | 58 | 72 | 71 | 72 | 73 | 70 | 1551 | 152 | 0 | PROVISIONAL | - |
@@ -132,7 +216,8 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 
 | Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| `vw_polo_10_tsi_aw` | Volkswagen Polo AW 1.0 TSI | PROVISIONAL | 41 | 13 | 46 | 46 | 65 | 49 | 37 | 1160 | 60 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `vw_polo_10_mpi_aw_5mt` | Volkswagen Polo AW 1.0 MPI 5MT | PROVISIONAL | 38 | 5 | 43 | 44 | 63 | 46 | 34 | 1120 | 53 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_polo_10_tsi_aw_dsg` | Volkswagen Polo AW 1.0 TSI DSG | PROVISIONAL | 40 | 12 | 43 | 45 | 65 | 49 | 36 | 1195 | 59 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `vw_polo_gti_6r` | Volkswagen Polo GTI 6R 1.4 TSI | PROVISIONAL | 53 | 34 | 60 | 57 | 61 | 56 | 54 | 1184 | 111 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `vw_polo_gti_aw` | Volkswagen Polo GTI AW 2.0 TSI | PROVISIONAL | 60 | 40 | 65 | 62 | 70 | 63 | 60 | 1280 | 115 | 0 | PROVISIONAL | Sprint 4L VAG template; provisional source trail refreshed. |
 
@@ -140,11 +225,29 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 
 | Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| `renault_clio_10_tce` | Renault Clio BJA 1.0 TCe | PROVISIONAL | 39 | 9 | 44 | 45 | 64 | 48 | 36 | 1110 | 60 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
-| `renault_clio_13_tce` | Renault Clio BJA 1.3 TCe | PROVISIONAL | 43 | 23 | 45 | 47 | 65 | 50 | 38 | 1180 | 81 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
-| `renault_clio_e_tech` | Renault Clio BJA E-Tech Hybrid | PROVISIONAL | 41 | 19 | 44 | 46 | 63 | 48 | 36 | 1238 | 85 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `renault_clio_10_sce` | Renault Clio BJA 1.0 SCe 5MT | PROVISIONAL | 37 | 5 | 43 | 44 | 63 | 45 | 33 | 1090 | 45 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_10_tce_xtronic` | Renault Clio BJA 1.0 TCe X-Tronic | PROVISIONAL | 38 | 7 | 43 | 44 | 64 | 47 | 34 | 1145 | 59 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_e_tech_full_hybrid` | Renault Clio BJA E-Tech Full Hybrid | PROVISIONAL | 41 | 19 | 44 | 46 | 63 | 48 | 36 | 1238 | 85 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `renault_clio_rs_200` | Renault Sport Clio RS X98 200 EDC | PROVISIONAL | 63 | 37 | 73 | 65 | 70 | 64 | 67 | 1204 | 122 | 0 | PROVISIONAL | - |
 | `renault_clio_rs_trophy` | Renault Sport Clio RS Trophy X98 220 EDC | PROVISIONAL | 66 | 43 | 76 | 67 | 71 | 66 | 70 | 1204 | 135 | 0 | PROVISIONAL | - |
+
+### Courier passenger vs commercial
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `ford_tourneo_courier_10_ecoboost_6mt` | Ford Tourneo Courier Current 1.0 EcoBoost 6MT | PROVISIONAL | 33 | 8 | 33 | 39 | 62 | 45 | 25 | 1375 | 67 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_e_tourneo_courier` | Ford E-Tourneo Courier Current Electric | PROVISIONAL | 32 | 14 | 31 | 36 | 59 | 41 | 21 | 1640 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_transit_courier_10_ecoboost_125_7dct` | Ford Transit Courier Current 1.0 EcoBoost 125 7DCT | PROVISIONAL | 32 | 7 | 32 | 38 | 62 | 44 | 23 | 1345 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_e_transit_courier` | Ford E-Transit Courier Current Electric | PROVISIONAL | 31 | 14 | 28 | 36 | 59 | 41 | 20 | 1665 | 60 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+
+### Focus daily vs ST/RS
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `ford_focus_10_ecoboost_6mt` | Ford Focus Mk4 1.0 EcoBoost 6MT | PROVISIONAL | 42 | 12 | 47 | 48 | 64 | 50 | 39 | 1322 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_15_ecoblue_8at` | Ford Focus Mk4 1.5 EcoBlue 8AT | PROVISIONAL | 41 | 19 | 43 | 46 | 64 | 50 | 36 | 1420 | 62 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_st_mk4` | Ford Focus ST Mk4 2.3 EcoBoost | PROVISIONAL | 66 | 50 | 71 | 67 | 71 | 68 | 68 | 1508 | 137 | 0 | PROVISIONAL | - |
+| `ford_focus_rs_mk3` | Ford Focus RS Mk3 2.3 EcoBoost | PROVISIONAL | 73 | 64 | 78 | 74 | 70 | 72 | 76 | 1524 | 169 | 0 | PROVISIONAL | - |
 
 ### Mustang hierarchy
 
@@ -604,6 +707,84 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `audi_a3_30tfsi_8y` | Audi A3 8Y 30 TFSI | P 13, H 61, B 56, R 65, T 51, TR 40 | P 13, H 46, B 48, R 65, T 50, TR 39 | 47 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `togg_t10f_rwd_long_range` | Togg T10F RWD Long Range | P 21, H 31, B 37, R 58, T 49, TR 31 | P 21, H 36, B 41, R 58, T 49, TR 30 | 36 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `togg_t10f_awd_performance` | Togg T10F AWD Performance | P 58, H 30, B 38, R 59, T 51, TR 32 | P 58, H 38, B 43, R 59, T 51, TR 31 | 43 -> 45 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_tourneo_courier_10_ecoboost_6mt` | Ford Tourneo Courier Current 1.0 EcoBoost 6MT | P 8, H 50, B 47, R 62, T 46, TR 26 | P 8, H 33, B 39, R 62, T 45, TR 25 | 39 -> 33 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_tourneo_courier_10_ecoboost_7dct` | Ford Tourneo Courier Current 1.0 EcoBoost 7DCT | P 7, H 49, B 46, R 62, T 46, TR 26 | P 7, H 33, B 38, R 62, T 45, TR 25 | 38 -> 33 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_e_tourneo_courier` | Ford E-Tourneo Courier Current Electric | P 14, H 42, B 42, R 59, T 43, TR 23 | P 14, H 31, B 36, R 59, T 41, TR 21 | 36 -> 32 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_transit_courier_10_ecoboost_100_6mt` | Ford Transit Courier Current 1.0 EcoBoost 100 6MT | P 7, H 52, B 47, R 62, T 45, TR 25 | P 7, H 32, B 38, R 62, T 43, TR 23 | 39 -> 32 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_transit_courier_10_ecoboost_125_6mt` | Ford Transit Courier Current 1.0 EcoBoost 125 6MT | P 8, H 51, B 47, R 62, T 46, TR 25 | P 8, H 33, B 38, R 62, T 44, TR 24 | 39 -> 33 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_transit_courier_10_ecoboost_125_7dct` | Ford Transit Courier Current 1.0 EcoBoost 125 7DCT | P 7, H 50, B 46, R 62, T 46, TR 24 | P 7, H 32, B 38, R 62, T 44, TR 23 | 38 -> 32 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_transit_courier_15_ecoblue_6mt` | Ford Transit Courier Current 1.5 EcoBlue 6MT | P 12, H 49, B 47, R 63, T 47, TR 24 | P 12, H 31, B 38, R 63, T 46, TR 23 | 39 -> 33 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_e_transit_courier` | Ford E-Transit Courier Current Electric | P 14, H 40, B 42, R 59, T 43, TR 21 | P 14, H 28, B 36, R 59, T 41, TR 20 | 35 -> 31 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_fiesta_10_ecoboost_6mt` | Ford Fiesta Mk8 1.0 EcoBoost 6MT | P 15, H 65, B 55, R 64, T 50, TR 39 | P 15, H 48, B 46, R 64, T 50, TR 38 | 48 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_fiesta_10_ecoboost_7dct` | Ford Fiesta Mk8 1.0 EcoBoost 7DCT | P 13, H 62, B 54, R 64, T 50, TR 38 | P 13, H 46, B 45, R 64, T 50, TR 37 | 47 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_focus_10_ecoboost_6mt` | Ford Focus Mk4 1.0 EcoBoost 6MT | P 12, H 61, B 55, R 64, T 51, TR 40 | P 12, H 47, B 48, R 64, T 50, TR 39 | 47 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_focus_10_ecoboost_8at` | Ford Focus Mk4 1.0 EcoBoost 8AT | P 11, H 58, B 53, R 64, T 51, TR 39 | P 11, H 45, B 46, R 64, T 50, TR 38 | 45 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_focus_15_ecoblue_6mt` | Ford Focus Mk4 1.5 EcoBlue 6MT | P 20, H 57, B 53, R 64, T 51, TR 38 | P 20, H 44, B 46, R 64, T 50, TR 37 | 47 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_focus_15_ecoblue_8at` | Ford Focus Mk4 1.5 EcoBlue 8AT | P 19, H 55, B 52, R 64, T 51, TR 37 | P 19, H 43, B 46, R 64, T 50, TR 36 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_puma_10_ecoboost_6mt` | Ford Puma BX726 1.0 EcoBoost 6MT | P 16, H 59, B 54, R 64, T 50, TR 36 | P 16, H 43, B 46, R 64, T 49, TR 35 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_puma_10_ecoboost_7dct` | Ford Puma BX726 1.0 EcoBoost 7DCT | P 15, H 57, B 54, R 64, T 50, TR 35 | P 15, H 42, B 46, R 64, T 49, TR 34 | 45 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_kuga_fhev` | Ford Kuga CX482 2.5 Hybrid | P 15, H 44, B 47, R 64, T 48, TR 30 | P 15, H 36, B 43, R 64, T 47, TR 29 | 40 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ford_kuga_phev` | Ford Kuga CX482 2.5 PHEV | P 15, H 38, B 44, R 62, T 47, TR 28 | P 15, H 33, B 42, R 62, T 46, TR 27 | 37 -> 35 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `vw_golf_10_tsi_mk8_6mt` | Volkswagen Golf Mk8 1.0 TSI 6MT | P 15, H 62, B 56, R 65, T 52, TR 40 | P 15, H 47, B 48, R 65, T 51, TR 39 | 48 -> 43 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `vw_golf_10_etsi_mk8_dsg` | Volkswagen Golf Mk8 1.0 eTSI DSG | P 14, H 59, B 54, R 65, T 51, TR 39 | P 14, H 45, B 47, R 65, T 50, TR 38 | 47 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `vw_golf_15_tsi_mk8_6mt` | Volkswagen Golf Mk8 1.5 TSI 6MT | P 24, H 61, B 57, R 66, T 54, TR 42 | P 24, H 48, B 50, R 66, T 53, TR 41 | 50 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `vw_golf_15_etsi_mk8_dsg` | Volkswagen Golf Mk8 1.5 eTSI DSG | P 22, H 58, B 55, R 66, T 54, TR 40 | P 22, H 46, B 48, R 66, T 53, TR 40 | 49 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `vw_golf_20_tdi_mk8_dsg` | Volkswagen Golf Mk8 2.0 TDI DSG | P 28, H 57, B 54, R 65, T 54, TR 40 | P 28, H 45, B 48, R 65, T 53, TR 39 | 49 -> 45 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `vw_polo_10_mpi_aw_5mt` | Volkswagen Polo AW 1.0 MPI 5MT | P 5, H 63, B 54, R 63, T 47, TR 35 | P 5, H 43, B 44, R 63, T 46, TR 34 | 45 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `vw_polo_10_tsi_aw_5mt` | Volkswagen Polo AW 1.0 TSI 5MT | P 13, H 63, B 55, R 65, T 50, TR 38 | P 13, H 46, B 46, R 65, T 49, TR 37 | 47 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `vw_polo_10_tsi_aw_dsg` | Volkswagen Polo AW 1.0 TSI DSG | P 12, H 61, B 54, R 65, T 50, TR 37 | P 12, H 43, B 45, R 65, T 49, TR 36 | 46 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `vw_t_roc_10_tsi_6mt` | Volkswagen T-Roc A11 1.0 TSI 6MT | P 13, H 57, B 54, R 65, T 50, TR 35 | P 13, H 42, B 46, R 65, T 49, TR 34 | 45 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `vw_t_roc_15_tsi_dsg` | Volkswagen T-Roc A11 1.5 TSI DSG | P 22, H 56, B 54, R 65, T 52, TR 36 | P 22, H 42, B 46, R 65, T 51, TR 35 | 47 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `vw_tiguan_15_etsi_mqb_evo` | Volkswagen Tiguan MQB Evo 1.5 eTSI DSG | P 17, H 46, B 50, R 64, T 51, TR 33 | P 17, H 37, B 45, R 64, T 50, TR 32 | 42 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `vw_passat_15_etsi_b9` | Volkswagen Passat B9 1.5 eTSI DSG | P 17, H 49, B 52, R 64, T 51, TR 34 | P 17, H 39, B 47, R 64, T 50, TR 33 | 43 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `renault_clio_10_sce` | Renault Clio BJA 1.0 SCe 5MT | P 5, H 63, B 55, R 63, T 46, TR 34 | P 5, H 43, B 44, R 63, T 45, TR 33 | 44 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `renault_clio_10_tce_6mt` | Renault Clio BJA 1.0 TCe 6MT | P 9, H 64, B 55, R 64, T 48, TR 36 | P 9, H 44, B 45, R 64, T 48, TR 36 | 46 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `renault_clio_10_tce_xtronic` | Renault Clio BJA 1.0 TCe X-Tronic | P 7, H 61, B 54, R 64, T 48, TR 35 | P 7, H 43, B 44, R 64, T 47, TR 34 | 45 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `renault_clio_e_tech_full_hybrid` | Renault Clio BJA E-Tech Full Hybrid | P 19, H 60, B 55, R 63, T 49, TR 36 | P 19, H 44, B 46, R 63, T 48, TR 36 | 47 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `renault_captur_10_tce_6mt` | Renault Captur HJB 1.0 TCe 6MT | P 7, H 57, B 52, R 62, T 47, TR 34 | P 7, H 40, B 44, R 62, T 46, TR 33 | 43 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `renault_captur_e_tech_full_hybrid` | Renault Captur HJB E-Tech Full Hybrid | P 13, H 54, B 52, R 63, T 48, TR 33 | P 13, H 40, B 44, R 63, T 47, TR 32 | 43 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `renault_megane_sedan_13_tce_edc` | Renault Megane Sedan Mk4 1.3 TCe EDC | P 18, H 57, B 53, R 65, T 50, TR 37 | P 18, H 42, B 46, R 65, T 49, TR 36 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `renault_megane_e_tech_ev60_current` | Renault Megane E-Tech CMF-EV EV60 160 kW | P 27, H 49, B 49, R 60, T 49, TR 34 | P 27, H 42, B 45, R 60, T 48, TR 33 | 44 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `renault_austral_e_tech_full_hybrid` | Renault Austral HHN E-Tech Full Hybrid | P 19, H 47, B 48, R 63, T 48, TR 31 | P 19, H 37, B 43, R 63, T 47, TR 30 | 42 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_sedan_14_fire` | Fiat Egea Sedan 356 1.4 Fire 6MT | P 6, H 58, B 53, R 63, T 48, TR 33 | P 6, H 40, B 44, R 63, T 47, TR 33 | 43 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_sedan_16_multijet` | Fiat Egea Sedan 356 1.6 Multijet 6MT | P 24, H 56, B 52, R 64, T 50, TR 34 | P 24, H 40, B 44, R 64, T 49, TR 34 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_cross_10_firefly` | Fiat Egea Cross 356 1.0 FireFly 6MT | P 9, H 55, B 52, R 63, T 48, TR 32 | P 9, H 39, B 44, R 63, T 47, TR 31 | 43 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_cross_15_hybrid` | Fiat Egea Cross 356 1.5 Hybrid DCT | P 17, H 51, B 51, R 62, T 48, TR 31 | P 17, H 37, B 44, R 62, T 47, TR 30 | 43 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_500_hybrid` | Fiat 500 312 1.0 Hybrid 6MT | P 5, H 63, B 53, R 61, T 45, TR 33 | P 5, H 42, B 42, R 61, T 44, TR 32 | 44 -> 36 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_500e_hatch` | Fiat 500e 332 Electric | P 17, H 53, B 49, R 58, T 43, TR 29 | P 17, H 38, B 41, R 58, T 41, TR 28 | 41 -> 36 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `toyota_corolla_15_6mt` | Toyota Corolla E210 1.5 6MT | P 10, H 59, B 54, R 71, T 51, TR 37 | P 10, H 43, B 46, R 71, T 50, TR 36 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `toyota_corolla_15_cvt` | Toyota Corolla E210 1.5 CVT | P 9, H 57, B 53, R 71, T 51, TR 35 | P 9, H 41, B 45, R 71, T 50, TR 35 | 45 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `toyota_corolla_hybrid_e210` | Toyota Corolla E210 Hybrid | P 15, H 56, B 53, R 71, T 50, TR 35 | P 15, H 42, B 45, R 71, T 49, TR 34 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `toyota_yaris_15_hybrid` | Toyota Yaris XP210 1.5 Hybrid | P 14, H 65, B 56, R 70, T 49, TR 36 | P 14, H 45, B 46, R 70, T 48, TR 35 | 48 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `toyota_yaris_cross_hybrid` | Toyota Yaris Cross XP210 1.5 Hybrid | P 8, H 58, B 53, R 70, T 47, TR 32 | P 8, H 40, B 44, R 70, T 46, TR 31 | 44 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `toyota_chr_hybrid_current` | Toyota C-HR AX20 Hybrid | P 12, H 49, B 50, R 69, T 48, TR 32 | P 12, H 37, B 44, R 69, T 46, TR 31 | 42 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `toyota_rav4_hybrid` | Toyota RAV4 XA50 2.5 Hybrid | P 20, H 44, B 47, R 70, T 49, TR 29 | P 20, H 36, B 43, R 70, T 47, TR 28 | 42 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `hyundai_i10_10_mpi_5mt` | Hyundai i10 BA 1.0 MPI 5MT | P 5, H 62, B 53, R 63, T 45, TR 32 | P 5, H 41, B 42, R 63, T 44, TR 31 | 43 -> 36 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `hyundai_i10_10_mpi_amt` | Hyundai i10 BA 1.0 MPI AMT | P 5, H 62, B 53, R 63, T 45, TR 32 | P 5, H 41, B 42, R 63, T 44, TR 31 | 43 -> 36 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `hyundai_i20_10_tgdi_6mt` | Hyundai i20 BC3 1.0 T-GDi 6MT | P 14, H 64, B 55, R 64, T 48, TR 37 | P 14, H 45, B 45, R 64, T 48, TR 36 | 47 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `hyundai_i20_10_tgdi_7dct` | Hyundai i20 BC3 1.0 T-GDi 7DCT | P 12, H 62, B 54, R 64, T 48, TR 35 | P 12, H 43, B 44, R 64, T 48, TR 34 | 46 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `hyundai_bayon_10_tgdi` | Hyundai Bayon BC3 CUV 1.0 T-GDi | P 10, H 58, B 52, R 64, T 47, TR 33 | P 10, H 40, B 43, R 64, T 46, TR 32 | 44 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `hyundai_i30_15_tgdi_48v` | Hyundai i30 PD 1.5 T-GDi 48V | P 23, H 59, B 54, R 66, T 52, TR 40 | P 23, H 46, B 48, R 66, T 52, TR 39 | 49 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `hyundai_kona_hybrid_sx2` | Hyundai Kona SX2 Hybrid | P 15, H 51, B 51, R 64, T 48, TR 32 | P 15, H 38, B 44, R 64, T 46, TR 31 | 43 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `hyundai_kona_electric_sx2` | Hyundai Kona Electric SX2 Long Range | P 21, H 41, B 45, R 60, T 46, TR 28 | P 21, H 35, B 42, R 60, T 45, TR 27 | 39 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `hyundai_tucson_hybrid` | Hyundai Tucson NX4 1.6 T-GDi Hybrid | P 29, H 43, B 47, R 64, T 49, TR 29 | P 29, H 35, B 43, R 64, T 47, TR 28 | 42 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `peugeot_208_12_puretech` | Peugeot 208 P21 1.2 PureTech | P 15, H 61, B 54, R 60, T 47, TR 35 | P 15, H 43, B 44, R 60, T 46, TR 34 | 46 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `peugeot_208_hybrid_100` | Peugeot 208 P21 Hybrid 100 e-DCS6 | P 14, H 60, B 53, R 60, T 47, TR 35 | P 14, H 42, B 44, R 60, T 46, TR 34 | 45 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `peugeot_e_208` | Peugeot e-208 P21 Electric | P 19, H 49, B 47, R 57, T 44, TR 30 | P 19, H 38, B 41, R 57, T 43, TR 29 | 41 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `peugeot_2008_12_puretech` | Peugeot 2008 P24 1.2 PureTech | P 18, H 57, B 52, R 60, T 48, TR 33 | P 18, H 40, B 44, R 60, T 47, TR 32 | 45 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `peugeot_e_2008` | Peugeot e-2008 P24 Electric | P 17, H 45, B 46, R 57, T 44, TR 27 | P 17, H 35, B 40, R 57, T 43, TR 26 | 39 -> 35 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `citroen_c3_12_puretech` | Citroen C3 CC21 1.2 PureTech | P 5, H 62, B 54, R 59, T 45, TR 32 | P 5, H 41, B 43, R 59, T 44, TR 31 | 43 -> 36 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `citroen_c4_12_puretech` | Citroen C4 C41 1.2 PureTech | P 18, H 56, B 52, R 60, T 48, TR 33 | P 18, H 40, B 44, R 60, T 47, TR 32 | 44 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `citroen_e_c4` | Citroen e-C4 C41 Electric | P 16, H 47, B 47, R 57, T 44, TR 28 | P 16, H 36, B 41, R 57, T 43, TR 27 | 39 -> 35 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `opel_corsa_12_puretech` | Opel Corsa F 1.2 | P 5, H 64, B 55, R 59, T 46, TR 34 | P 5, H 43, B 44, R 59, T 45, TR 33 | 44 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `opel_corsa_electric` | Opel Corsa Electric F Electric | P 19, H 49, B 47, R 57, T 44, TR 30 | P 19, H 38, B 41, R 57, T 43, TR 29 | 41 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `opel_astra_12_turbo` | Opel Astra L 1.2 Turbo | P 17, H 57, B 53, R 60, T 49, TR 35 | P 17, H 43, B 46, R 60, T 48, TR 34 | 45 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_f40_116i` | BMW 116i F40 1.5 | P 14, H 59, B 55, R 65, T 52, TR 40 | P 14, H 46, B 48, R 65, T 51, TR 39 | 47 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_u11_x1_sdrive18i` | BMW X1 U11 sDrive18i | P 16, H 51, B 52, R 65, T 51, TR 35 | P 16, H 40, B 47, R 65, T 50, TR 34 | 44 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_gla200_h247` | Mercedes-Benz GLA 200 H247 1.3 7G-DCT | P 19, H 50, B 52, R 65, T 51, TR 35 | P 19, H 40, B 47, R 65, T 50, TR 34 | 44 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a3_30tfsi_8y_6mt` | Audi A3 8Y 30 TFSI 6MT | P 13, H 61, B 56, R 65, T 51, TR 40 | P 13, H 46, B 48, R 65, T 50, TR 39 | 47 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a3_35tfsi_8y_s_tronic` | Audi A3 8Y 35 TFSI S tronic | P 23, H 59, B 55, R 65, T 52, TR 40 | P 23, H 46, B 48, R 65, T 51, TR 39 | 49 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_q3_35tfsi_f3` | Audi Q3 F3 35 TFSI S tronic | P 17, H 48, B 50, R 65, T 51, TR 33 | P 17, H 38, B 45, R 65, T 50, TR 32 | 43 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 
 ## Remaining Provisional Vehicles
 
@@ -780,6 +961,84 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `togg_t10f_rwd_standard_range` | Togg T10F RWD Standard Range | PROVISIONAL | 38 | 23 | 37 | 41 | 58 | 49 | 31 | 2100 | 76 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `togg_t10f_rwd_long_range` | Togg T10F RWD Long Range | PROVISIONAL | 37 | 21 | 36 | 41 | 58 | 49 | 30 | 2200 | 73 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `togg_t10f_awd_performance` | Togg T10F AWD Performance | PROVISIONAL | 45 | 58 | 38 | 43 | 59 | 51 | 31 | 2280 | 140 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_tourneo_courier_10_ecoboost_6mt` | Ford Tourneo Courier Current 1.0 EcoBoost 6MT | PROVISIONAL | 33 | 8 | 33 | 39 | 62 | 45 | 25 | 1375 | 67 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_tourneo_courier_10_ecoboost_7dct` | Ford Tourneo Courier Current 1.0 EcoBoost 7DCT | PROVISIONAL | 33 | 7 | 33 | 38 | 62 | 45 | 25 | 1405 | 65 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_e_tourneo_courier` | Ford E-Tourneo Courier Current Electric | PROVISIONAL | 32 | 14 | 31 | 36 | 59 | 41 | 21 | 1640 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_transit_courier_10_ecoboost_100_6mt` | Ford Transit Courier Current 1.0 EcoBoost 100 6MT | PROVISIONAL | 32 | 7 | 32 | 38 | 62 | 43 | 23 | 1295 | 57 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_transit_courier_10_ecoboost_125_6mt` | Ford Transit Courier Current 1.0 EcoBoost 125 6MT | PROVISIONAL | 33 | 8 | 33 | 38 | 62 | 44 | 24 | 1315 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_transit_courier_10_ecoboost_125_7dct` | Ford Transit Courier Current 1.0 EcoBoost 125 7DCT | PROVISIONAL | 32 | 7 | 32 | 38 | 62 | 44 | 23 | 1345 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_transit_courier_15_ecoblue_6mt` | Ford Transit Courier Current 1.5 EcoBlue 6MT | PROVISIONAL | 33 | 12 | 31 | 38 | 63 | 46 | 23 | 1365 | 54 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_e_transit_courier` | Ford E-Transit Courier Current Electric | PROVISIONAL | 31 | 14 | 28 | 36 | 59 | 41 | 20 | 1665 | 60 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_fiesta_10_ecoboost_6mt` | Ford Fiesta Mk8 1.0 EcoBoost 6MT | PROVISIONAL | 42 | 15 | 48 | 46 | 64 | 50 | 38 | 1170 | 79 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_fiesta_10_ecoboost_7dct` | Ford Fiesta Mk8 1.0 EcoBoost 7DCT | PROVISIONAL | 41 | 13 | 46 | 45 | 64 | 50 | 37 | 1205 | 76 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_10_ecoboost_6mt` | Ford Focus Mk4 1.0 EcoBoost 6MT | PROVISIONAL | 42 | 12 | 47 | 48 | 64 | 50 | 39 | 1322 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_10_ecoboost_8at` | Ford Focus Mk4 1.0 EcoBoost 8AT | PROVISIONAL | 41 | 11 | 45 | 46 | 64 | 50 | 38 | 1360 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_15_ecoblue_6mt` | Ford Focus Mk4 1.5 EcoBlue 6MT | PROVISIONAL | 42 | 20 | 44 | 46 | 64 | 50 | 37 | 1390 | 63 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_15_ecoblue_8at` | Ford Focus Mk4 1.5 EcoBlue 8AT | PROVISIONAL | 41 | 19 | 43 | 46 | 64 | 50 | 36 | 1420 | 62 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_puma_10_ecoboost_6mt` | Ford Puma BX726 1.0 EcoBoost 6MT | PROVISIONAL | 41 | 16 | 43 | 46 | 64 | 49 | 35 | 1280 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_puma_10_ecoboost_7dct` | Ford Puma BX726 1.0 EcoBoost 7DCT | PROVISIONAL | 40 | 15 | 42 | 46 | 64 | 49 | 34 | 1310 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_kuga_fhev` | Ford Kuga CX482 2.5 Hybrid | PROVISIONAL | 37 | 15 | 36 | 43 | 64 | 47 | 29 | 1680 | 83 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_kuga_phev` | Ford Kuga CX482 2.5 PHEV | PROVISIONAL | 35 | 15 | 33 | 42 | 62 | 46 | 27 | 1845 | 89 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_10_tsi_mk8_6mt` | Volkswagen Golf Mk8 1.0 TSI 6MT | PROVISIONAL | 43 | 15 | 47 | 48 | 65 | 51 | 39 | 1260 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_10_etsi_mk8_dsg` | Volkswagen Golf Mk8 1.0 eTSI DSG | PROVISIONAL | 42 | 14 | 45 | 47 | 65 | 50 | 38 | 1295 | 63 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_15_tsi_mk8_6mt` | Volkswagen Golf Mk8 1.5 TSI 6MT | PROVISIONAL | 46 | 24 | 48 | 50 | 66 | 53 | 41 | 1310 | 84 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_15_etsi_mk8_dsg` | Volkswagen Golf Mk8 1.5 eTSI DSG | PROVISIONAL | 44 | 22 | 46 | 48 | 66 | 53 | 40 | 1350 | 81 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_20_tdi_mk8_dsg` | Volkswagen Golf Mk8 2.0 TDI DSG | PROVISIONAL | 45 | 28 | 45 | 48 | 65 | 53 | 39 | 1395 | 79 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_polo_10_mpi_aw_5mt` | Volkswagen Polo AW 1.0 MPI 5MT | PROVISIONAL | 38 | 5 | 43 | 44 | 63 | 46 | 34 | 1120 | 53 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_polo_10_tsi_aw_5mt` | Volkswagen Polo AW 1.0 TSI 5MT | PROVISIONAL | 41 | 13 | 46 | 46 | 65 | 49 | 37 | 1160 | 60 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_polo_10_tsi_aw_dsg` | Volkswagen Polo AW 1.0 TSI DSG | PROVISIONAL | 40 | 12 | 43 | 45 | 65 | 49 | 36 | 1195 | 59 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_t_roc_10_tsi_6mt` | Volkswagen T-Roc A11 1.0 TSI 6MT | PROVISIONAL | 40 | 13 | 42 | 46 | 65 | 49 | 34 | 1300 | 62 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_t_roc_15_tsi_dsg` | Volkswagen T-Roc A11 1.5 TSI DSG | PROVISIONAL | 42 | 22 | 42 | 46 | 65 | 51 | 35 | 1360 | 81 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_tiguan_15_etsi_mqb_evo` | Volkswagen Tiguan MQB Evo 1.5 eTSI DSG | PROVISIONAL | 39 | 17 | 37 | 45 | 64 | 50 | 32 | 1615 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_passat_15_etsi_b9` | Volkswagen Passat B9 1.5 eTSI DSG | PROVISIONAL | 40 | 17 | 39 | 47 | 64 | 50 | 33 | 1520 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_10_sce` | Renault Clio BJA 1.0 SCe 5MT | PROVISIONAL | 37 | 5 | 43 | 44 | 63 | 45 | 33 | 1090 | 45 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_10_tce_6mt` | Renault Clio BJA 1.0 TCe 6MT | PROVISIONAL | 39 | 9 | 44 | 45 | 64 | 48 | 36 | 1110 | 60 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_10_tce_xtronic` | Renault Clio BJA 1.0 TCe X-Tronic | PROVISIONAL | 38 | 7 | 43 | 44 | 64 | 47 | 34 | 1145 | 59 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_e_tech_full_hybrid` | Renault Clio BJA E-Tech Full Hybrid | PROVISIONAL | 41 | 19 | 44 | 46 | 63 | 48 | 36 | 1238 | 85 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_captur_10_tce_6mt` | Renault Captur HJB 1.0 TCe 6MT | PROVISIONAL | 37 | 7 | 40 | 44 | 62 | 46 | 33 | 1265 | 53 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_captur_e_tech_full_hybrid` | Renault Captur HJB E-Tech Full Hybrid | PROVISIONAL | 38 | 13 | 40 | 44 | 63 | 47 | 32 | 1363 | 77 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_megane_sedan_13_tce_edc` | Renault Megane Sedan Mk4 1.3 TCe EDC | PROVISIONAL | 41 | 18 | 42 | 46 | 65 | 49 | 36 | 1335 | 77 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_megane_e_tech_ev60_current` | Renault Megane E-Tech CMF-EV EV60 160 kW | PROVISIONAL | 41 | 27 | 42 | 45 | 60 | 48 | 33 | 1624 | 99 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_austral_e_tech_full_hybrid` | Renault Austral HHN E-Tech Full Hybrid | PROVISIONAL | 38 | 19 | 37 | 43 | 63 | 47 | 30 | 1592 | 92 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_egea_sedan_14_fire` | Fiat Egea Sedan 356 1.4 Fire 6MT | PROVISIONAL | 37 | 6 | 40 | 44 | 63 | 47 | 33 | 1230 | 57 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_egea_sedan_16_multijet` | Fiat Egea Sedan 356 1.6 Multijet 6MT | PROVISIONAL | 41 | 24 | 40 | 44 | 64 | 49 | 34 | 1305 | 74 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_egea_cross_10_firefly` | Fiat Egea Cross 356 1.0 FireFly 6MT | PROVISIONAL | 37 | 9 | 39 | 44 | 63 | 47 | 31 | 1315 | 56 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_egea_cross_15_hybrid` | Fiat Egea Cross 356 1.5 Hybrid DCT | PROVISIONAL | 38 | 17 | 37 | 44 | 62 | 47 | 30 | 1420 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_500_hybrid` | Fiat 500 312 1.0 Hybrid 6MT | PROVISIONAL | 36 | 5 | 42 | 42 | 61 | 44 | 32 | 980 | 52 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_500e_hatch` | Fiat 500e 332 Electric | PROVISIONAL | 36 | 17 | 38 | 41 | 58 | 41 | 28 | 1365 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_corolla_15_6mt` | Toyota Corolla E210 1.5 6MT | PROVISIONAL | 41 | 10 | 43 | 46 | 71 | 50 | 36 | 1280 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_corolla_15_cvt` | Toyota Corolla E210 1.5 CVT | PROVISIONAL | 40 | 9 | 41 | 45 | 71 | 50 | 35 | 1310 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_corolla_hybrid_e210` | Toyota Corolla E210 Hybrid | PROVISIONAL | 41 | 15 | 42 | 45 | 71 | 49 | 34 | 1370 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_yaris_15_hybrid` | Toyota Yaris XP210 1.5 Hybrid | PROVISIONAL | 41 | 14 | 45 | 46 | 70 | 48 | 35 | 1085 | 78 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_yaris_cross_hybrid` | Toyota Yaris Cross XP210 1.5 Hybrid | PROVISIONAL | 38 | 8 | 40 | 44 | 70 | 46 | 31 | 1245 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_chr_hybrid_current` | Toyota C-HR AX20 Hybrid | PROVISIONAL | 38 | 12 | 37 | 44 | 69 | 46 | 31 | 1495 | 69 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_rav4_hybrid` | Toyota RAV4 XA50 2.5 Hybrid | PROVISIONAL | 39 | 20 | 36 | 43 | 70 | 47 | 28 | 1665 | 96 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i10_10_mpi_5mt` | Hyundai i10 BA 1.0 MPI 5MT | PROVISIONAL | 36 | 5 | 41 | 42 | 63 | 44 | 31 | 1015 | 48 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i10_10_mpi_amt` | Hyundai i10 BA 1.0 MPI AMT | PROVISIONAL | 36 | 5 | 41 | 42 | 63 | 44 | 31 | 1035 | 47 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i20_10_tgdi_6mt` | Hyundai i20 BC3 1.0 T-GDi 6MT | PROVISIONAL | 41 | 14 | 45 | 45 | 64 | 48 | 36 | 1130 | 65 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i20_10_tgdi_7dct` | Hyundai i20 BC3 1.0 T-GDi 7DCT | PROVISIONAL | 39 | 12 | 43 | 44 | 64 | 48 | 34 | 1165 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_bayon_10_tgdi` | Hyundai Bayon BC3 CUV 1.0 T-GDi | PROVISIONAL | 37 | 10 | 40 | 43 | 64 | 46 | 32 | 1215 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i30_15_tgdi_48v` | Hyundai i30 PD 1.5 T-GDi 48V | PROVISIONAL | 44 | 23 | 46 | 48 | 66 | 52 | 39 | 1355 | 87 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_kona_hybrid_sx2` | Hyundai Kona SX2 Hybrid | PROVISIONAL | 38 | 15 | 38 | 44 | 64 | 46 | 31 | 1450 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_kona_electric_sx2` | Hyundai Kona Electric SX2 Long Range | PROVISIONAL | 37 | 21 | 35 | 42 | 60 | 45 | 27 | 1775 | 90 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_tucson_hybrid` | Hyundai Tucson NX4 1.6 T-GDi Hybrid | PROVISIONAL | 39 | 29 | 35 | 43 | 64 | 47 | 28 | 1685 | 100 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_208_12_puretech` | Peugeot 208 P21 1.2 PureTech | PROVISIONAL | 39 | 15 | 43 | 44 | 60 | 46 | 34 | 1165 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_208_hybrid_100` | Peugeot 208 P21 Hybrid 100 e-DCS6 | PROVISIONAL | 39 | 14 | 42 | 44 | 60 | 46 | 34 | 1210 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_e_208` | Peugeot e-208 P21 Electric | PROVISIONAL | 37 | 19 | 38 | 41 | 57 | 43 | 29 | 1530 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_2008_12_puretech` | Peugeot 2008 P24 1.2 PureTech | PROVISIONAL | 39 | 18 | 40 | 44 | 60 | 47 | 32 | 1275 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_e_2008` | Peugeot e-2008 P24 Electric | PROVISIONAL | 35 | 17 | 35 | 40 | 57 | 43 | 26 | 1620 | 71 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `citroen_c3_12_puretech` | Citroen C3 CC21 1.2 PureTech | PROVISIONAL | 36 | 5 | 41 | 43 | 59 | 44 | 31 | 1105 | 55 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `citroen_c4_12_puretech` | Citroen C4 C41 1.2 PureTech | PROVISIONAL | 39 | 18 | 40 | 44 | 60 | 47 | 32 | 1310 | 73 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `citroen_e_c4` | Citroen e-C4 C41 Electric | PROVISIONAL | 35 | 16 | 36 | 41 | 57 | 43 | 27 | 1541 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `opel_corsa_12_puretech` | Opel Corsa F 1.2 | PROVISIONAL | 37 | 5 | 43 | 44 | 59 | 45 | 33 | 1090 | 50 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `opel_corsa_electric` | Opel Corsa Electric F Electric | PROVISIONAL | 37 | 19 | 38 | 41 | 57 | 43 | 29 | 1530 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `opel_astra_12_turbo` | Opel Astra L 1.2 Turbo | PROVISIONAL | 40 | 17 | 43 | 46 | 60 | 48 | 34 | 1330 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `bmw_f40_116i` | BMW 116i F40 1.5 | PROVISIONAL | 42 | 14 | 46 | 48 | 65 | 51 | 39 | 1365 | 59 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `bmw_u11_x1_sdrive18i` | BMW X1 U11 sDrive18i | PROVISIONAL | 40 | 16 | 40 | 47 | 65 | 50 | 34 | 1500 | 67 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `mercedes_gla200_h247` | Mercedes-Benz GLA 200 H247 1.3 7G-DCT | PROVISIONAL | 41 | 19 | 40 | 47 | 65 | 50 | 34 | 1510 | 79 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `audi_a3_30tfsi_8y_6mt` | Audi A3 8Y 30 TFSI 6MT | PROVISIONAL | 42 | 13 | 46 | 48 | 65 | 50 | 39 | 1295 | 63 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `audi_a3_35tfsi_8y_s_tronic` | Audi A3 8Y 35 TFSI S tronic | PROVISIONAL | 44 | 23 | 46 | 48 | 65 | 51 | 39 | 1330 | 83 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `audi_q3_35tfsi_f3` | Audi Q3 F3 35 TFSI S tronic | PROVISIONAL | 39 | 17 | 38 | 45 | 65 | 50 | 32 | 1570 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 
 ## Review Signals
 
@@ -1000,3 +1259,81 @@ No threshold-breaching review signals were detected.
 | `togg_t10f_rwd_standard_range` | Togg T10F RWD Standard Range | PROVISIONAL | 38 | 23 | 37 | 41 | 58 | 49 | 31 | 2100 | 76 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `togg_t10f_rwd_long_range` | Togg T10F RWD Long Range | PROVISIONAL | 37 | 21 | 36 | 41 | 58 | 49 | 30 | 2200 | 73 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `togg_t10f_awd_performance` | Togg T10F AWD Performance | PROVISIONAL | 45 | 58 | 38 | 43 | 59 | 51 | 31 | 2280 | 140 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ford_tourneo_courier_10_ecoboost_6mt` | Ford Tourneo Courier Current 1.0 EcoBoost 6MT | PROVISIONAL | 33 | 8 | 33 | 39 | 62 | 45 | 25 | 1375 | 67 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_tourneo_courier_10_ecoboost_7dct` | Ford Tourneo Courier Current 1.0 EcoBoost 7DCT | PROVISIONAL | 33 | 7 | 33 | 38 | 62 | 45 | 25 | 1405 | 65 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_e_tourneo_courier` | Ford E-Tourneo Courier Current Electric | PROVISIONAL | 32 | 14 | 31 | 36 | 59 | 41 | 21 | 1640 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_transit_courier_10_ecoboost_100_6mt` | Ford Transit Courier Current 1.0 EcoBoost 100 6MT | PROVISIONAL | 32 | 7 | 32 | 38 | 62 | 43 | 23 | 1295 | 57 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_transit_courier_10_ecoboost_125_6mt` | Ford Transit Courier Current 1.0 EcoBoost 125 6MT | PROVISIONAL | 33 | 8 | 33 | 38 | 62 | 44 | 24 | 1315 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_transit_courier_10_ecoboost_125_7dct` | Ford Transit Courier Current 1.0 EcoBoost 125 7DCT | PROVISIONAL | 32 | 7 | 32 | 38 | 62 | 44 | 23 | 1345 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_transit_courier_15_ecoblue_6mt` | Ford Transit Courier Current 1.5 EcoBlue 6MT | PROVISIONAL | 33 | 12 | 31 | 38 | 63 | 46 | 23 | 1365 | 54 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_e_transit_courier` | Ford E-Transit Courier Current Electric | PROVISIONAL | 31 | 14 | 28 | 36 | 59 | 41 | 20 | 1665 | 60 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_fiesta_10_ecoboost_6mt` | Ford Fiesta Mk8 1.0 EcoBoost 6MT | PROVISIONAL | 42 | 15 | 48 | 46 | 64 | 50 | 38 | 1170 | 79 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_fiesta_10_ecoboost_7dct` | Ford Fiesta Mk8 1.0 EcoBoost 7DCT | PROVISIONAL | 41 | 13 | 46 | 45 | 64 | 50 | 37 | 1205 | 76 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_10_ecoboost_6mt` | Ford Focus Mk4 1.0 EcoBoost 6MT | PROVISIONAL | 42 | 12 | 47 | 48 | 64 | 50 | 39 | 1322 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_10_ecoboost_8at` | Ford Focus Mk4 1.0 EcoBoost 8AT | PROVISIONAL | 41 | 11 | 45 | 46 | 64 | 50 | 38 | 1360 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_15_ecoblue_6mt` | Ford Focus Mk4 1.5 EcoBlue 6MT | PROVISIONAL | 42 | 20 | 44 | 46 | 64 | 50 | 37 | 1390 | 63 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_focus_15_ecoblue_8at` | Ford Focus Mk4 1.5 EcoBlue 8AT | PROVISIONAL | 41 | 19 | 43 | 46 | 64 | 50 | 36 | 1420 | 62 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_puma_10_ecoboost_6mt` | Ford Puma BX726 1.0 EcoBoost 6MT | PROVISIONAL | 41 | 16 | 43 | 46 | 64 | 49 | 35 | 1280 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_puma_10_ecoboost_7dct` | Ford Puma BX726 1.0 EcoBoost 7DCT | PROVISIONAL | 40 | 15 | 42 | 46 | 64 | 49 | 34 | 1310 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_kuga_fhev` | Ford Kuga CX482 2.5 Hybrid | PROVISIONAL | 37 | 15 | 36 | 43 | 64 | 47 | 29 | 1680 | 83 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `ford_kuga_phev` | Ford Kuga CX482 2.5 PHEV | PROVISIONAL | 35 | 15 | 33 | 42 | 62 | 46 | 27 | 1845 | 89 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_10_tsi_mk8_6mt` | Volkswagen Golf Mk8 1.0 TSI 6MT | PROVISIONAL | 43 | 15 | 47 | 48 | 65 | 51 | 39 | 1260 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_10_etsi_mk8_dsg` | Volkswagen Golf Mk8 1.0 eTSI DSG | PROVISIONAL | 42 | 14 | 45 | 47 | 65 | 50 | 38 | 1295 | 63 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_15_tsi_mk8_6mt` | Volkswagen Golf Mk8 1.5 TSI 6MT | PROVISIONAL | 46 | 24 | 48 | 50 | 66 | 53 | 41 | 1310 | 84 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_15_etsi_mk8_dsg` | Volkswagen Golf Mk8 1.5 eTSI DSG | PROVISIONAL | 44 | 22 | 46 | 48 | 66 | 53 | 40 | 1350 | 81 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_golf_20_tdi_mk8_dsg` | Volkswagen Golf Mk8 2.0 TDI DSG | PROVISIONAL | 45 | 28 | 45 | 48 | 65 | 53 | 39 | 1395 | 79 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_polo_10_mpi_aw_5mt` | Volkswagen Polo AW 1.0 MPI 5MT | PROVISIONAL | 38 | 5 | 43 | 44 | 63 | 46 | 34 | 1120 | 53 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_polo_10_tsi_aw_5mt` | Volkswagen Polo AW 1.0 TSI 5MT | PROVISIONAL | 41 | 13 | 46 | 46 | 65 | 49 | 37 | 1160 | 60 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_polo_10_tsi_aw_dsg` | Volkswagen Polo AW 1.0 TSI DSG | PROVISIONAL | 40 | 12 | 43 | 45 | 65 | 49 | 36 | 1195 | 59 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_t_roc_10_tsi_6mt` | Volkswagen T-Roc A11 1.0 TSI 6MT | PROVISIONAL | 40 | 13 | 42 | 46 | 65 | 49 | 34 | 1300 | 62 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_t_roc_15_tsi_dsg` | Volkswagen T-Roc A11 1.5 TSI DSG | PROVISIONAL | 42 | 22 | 42 | 46 | 65 | 51 | 35 | 1360 | 81 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_tiguan_15_etsi_mqb_evo` | Volkswagen Tiguan MQB Evo 1.5 eTSI DSG | PROVISIONAL | 39 | 17 | 37 | 45 | 64 | 50 | 32 | 1615 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `vw_passat_15_etsi_b9` | Volkswagen Passat B9 1.5 eTSI DSG | PROVISIONAL | 40 | 17 | 39 | 47 | 64 | 50 | 33 | 1520 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_10_sce` | Renault Clio BJA 1.0 SCe 5MT | PROVISIONAL | 37 | 5 | 43 | 44 | 63 | 45 | 33 | 1090 | 45 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_10_tce_6mt` | Renault Clio BJA 1.0 TCe 6MT | PROVISIONAL | 39 | 9 | 44 | 45 | 64 | 48 | 36 | 1110 | 60 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_10_tce_xtronic` | Renault Clio BJA 1.0 TCe X-Tronic | PROVISIONAL | 38 | 7 | 43 | 44 | 64 | 47 | 34 | 1145 | 59 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_clio_e_tech_full_hybrid` | Renault Clio BJA E-Tech Full Hybrid | PROVISIONAL | 41 | 19 | 44 | 46 | 63 | 48 | 36 | 1238 | 85 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_captur_10_tce_6mt` | Renault Captur HJB 1.0 TCe 6MT | PROVISIONAL | 37 | 7 | 40 | 44 | 62 | 46 | 33 | 1265 | 53 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_captur_e_tech_full_hybrid` | Renault Captur HJB E-Tech Full Hybrid | PROVISIONAL | 38 | 13 | 40 | 44 | 63 | 47 | 32 | 1363 | 77 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_megane_sedan_13_tce_edc` | Renault Megane Sedan Mk4 1.3 TCe EDC | PROVISIONAL | 41 | 18 | 42 | 46 | 65 | 49 | 36 | 1335 | 77 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_megane_e_tech_ev60_current` | Renault Megane E-Tech CMF-EV EV60 160 kW | PROVISIONAL | 41 | 27 | 42 | 45 | 60 | 48 | 33 | 1624 | 99 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `renault_austral_e_tech_full_hybrid` | Renault Austral HHN E-Tech Full Hybrid | PROVISIONAL | 38 | 19 | 37 | 43 | 63 | 47 | 30 | 1592 | 92 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_egea_sedan_14_fire` | Fiat Egea Sedan 356 1.4 Fire 6MT | PROVISIONAL | 37 | 6 | 40 | 44 | 63 | 47 | 33 | 1230 | 57 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_egea_sedan_16_multijet` | Fiat Egea Sedan 356 1.6 Multijet 6MT | PROVISIONAL | 41 | 24 | 40 | 44 | 64 | 49 | 34 | 1305 | 74 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_egea_cross_10_firefly` | Fiat Egea Cross 356 1.0 FireFly 6MT | PROVISIONAL | 37 | 9 | 39 | 44 | 63 | 47 | 31 | 1315 | 56 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_egea_cross_15_hybrid` | Fiat Egea Cross 356 1.5 Hybrid DCT | PROVISIONAL | 38 | 17 | 37 | 44 | 62 | 47 | 30 | 1420 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_500_hybrid` | Fiat 500 312 1.0 Hybrid 6MT | PROVISIONAL | 36 | 5 | 42 | 42 | 61 | 44 | 32 | 980 | 52 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `fiat_500e_hatch` | Fiat 500e 332 Electric | PROVISIONAL | 36 | 17 | 38 | 41 | 58 | 41 | 28 | 1365 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_corolla_15_6mt` | Toyota Corolla E210 1.5 6MT | PROVISIONAL | 41 | 10 | 43 | 46 | 71 | 50 | 36 | 1280 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_corolla_15_cvt` | Toyota Corolla E210 1.5 CVT | PROVISIONAL | 40 | 9 | 41 | 45 | 71 | 50 | 35 | 1310 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_corolla_hybrid_e210` | Toyota Corolla E210 Hybrid | PROVISIONAL | 41 | 15 | 42 | 45 | 71 | 49 | 34 | 1370 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_yaris_15_hybrid` | Toyota Yaris XP210 1.5 Hybrid | PROVISIONAL | 41 | 14 | 45 | 46 | 70 | 48 | 35 | 1085 | 78 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_yaris_cross_hybrid` | Toyota Yaris Cross XP210 1.5 Hybrid | PROVISIONAL | 38 | 8 | 40 | 44 | 70 | 46 | 31 | 1245 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_chr_hybrid_current` | Toyota C-HR AX20 Hybrid | PROVISIONAL | 38 | 12 | 37 | 44 | 69 | 46 | 31 | 1495 | 69 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_rav4_hybrid` | Toyota RAV4 XA50 2.5 Hybrid | PROVISIONAL | 39 | 20 | 36 | 43 | 70 | 47 | 28 | 1665 | 96 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i10_10_mpi_5mt` | Hyundai i10 BA 1.0 MPI 5MT | PROVISIONAL | 36 | 5 | 41 | 42 | 63 | 44 | 31 | 1015 | 48 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i10_10_mpi_amt` | Hyundai i10 BA 1.0 MPI AMT | PROVISIONAL | 36 | 5 | 41 | 42 | 63 | 44 | 31 | 1035 | 47 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i20_10_tgdi_6mt` | Hyundai i20 BC3 1.0 T-GDi 6MT | PROVISIONAL | 41 | 14 | 45 | 45 | 64 | 48 | 36 | 1130 | 65 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i20_10_tgdi_7dct` | Hyundai i20 BC3 1.0 T-GDi 7DCT | PROVISIONAL | 39 | 12 | 43 | 44 | 64 | 48 | 34 | 1165 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_bayon_10_tgdi` | Hyundai Bayon BC3 CUV 1.0 T-GDi | PROVISIONAL | 37 | 10 | 40 | 43 | 64 | 46 | 32 | 1215 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_i30_15_tgdi_48v` | Hyundai i30 PD 1.5 T-GDi 48V | PROVISIONAL | 44 | 23 | 46 | 48 | 66 | 52 | 39 | 1355 | 87 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_kona_hybrid_sx2` | Hyundai Kona SX2 Hybrid | PROVISIONAL | 38 | 15 | 38 | 44 | 64 | 46 | 31 | 1450 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_kona_electric_sx2` | Hyundai Kona Electric SX2 Long Range | PROVISIONAL | 37 | 21 | 35 | 42 | 60 | 45 | 27 | 1775 | 90 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_tucson_hybrid` | Hyundai Tucson NX4 1.6 T-GDi Hybrid | PROVISIONAL | 39 | 29 | 35 | 43 | 64 | 47 | 28 | 1685 | 100 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_208_12_puretech` | Peugeot 208 P21 1.2 PureTech | PROVISIONAL | 39 | 15 | 43 | 44 | 60 | 46 | 34 | 1165 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_208_hybrid_100` | Peugeot 208 P21 Hybrid 100 e-DCS6 | PROVISIONAL | 39 | 14 | 42 | 44 | 60 | 46 | 34 | 1210 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_e_208` | Peugeot e-208 P21 Electric | PROVISIONAL | 37 | 19 | 38 | 41 | 57 | 43 | 29 | 1530 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_2008_12_puretech` | Peugeot 2008 P24 1.2 PureTech | PROVISIONAL | 39 | 18 | 40 | 44 | 60 | 47 | 32 | 1275 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `peugeot_e_2008` | Peugeot e-2008 P24 Electric | PROVISIONAL | 35 | 17 | 35 | 40 | 57 | 43 | 26 | 1620 | 71 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `citroen_c3_12_puretech` | Citroen C3 CC21 1.2 PureTech | PROVISIONAL | 36 | 5 | 41 | 43 | 59 | 44 | 31 | 1105 | 55 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `citroen_c4_12_puretech` | Citroen C4 C41 1.2 PureTech | PROVISIONAL | 39 | 18 | 40 | 44 | 60 | 47 | 32 | 1310 | 73 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `citroen_e_c4` | Citroen e-C4 C41 Electric | PROVISIONAL | 35 | 16 | 36 | 41 | 57 | 43 | 27 | 1541 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `opel_corsa_12_puretech` | Opel Corsa F 1.2 | PROVISIONAL | 37 | 5 | 43 | 44 | 59 | 45 | 33 | 1090 | 50 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `opel_corsa_electric` | Opel Corsa Electric F Electric | PROVISIONAL | 37 | 19 | 38 | 41 | 57 | 43 | 29 | 1530 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `opel_astra_12_turbo` | Opel Astra L 1.2 Turbo | PROVISIONAL | 40 | 17 | 43 | 46 | 60 | 48 | 34 | 1330 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `bmw_f40_116i` | BMW 116i F40 1.5 | PROVISIONAL | 42 | 14 | 46 | 48 | 65 | 51 | 39 | 1365 | 59 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `bmw_u11_x1_sdrive18i` | BMW X1 U11 sDrive18i | PROVISIONAL | 40 | 16 | 40 | 47 | 65 | 50 | 34 | 1500 | 67 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `mercedes_gla200_h247` | Mercedes-Benz GLA 200 H247 1.3 7G-DCT | PROVISIONAL | 41 | 19 | 40 | 47 | 65 | 50 | 34 | 1510 | 79 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `audi_a3_30tfsi_8y_6mt` | Audi A3 8Y 30 TFSI 6MT | PROVISIONAL | 42 | 13 | 46 | 48 | 65 | 50 | 39 | 1295 | 63 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `audi_a3_35tfsi_8y_s_tronic` | Audi A3 8Y 35 TFSI S tronic | PROVISIONAL | 44 | 23 | 46 | 48 | 65 | 51 | 39 | 1330 | 83 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `audi_q3_35tfsi_f3` | Audi Q3 F3 35 TFSI S tronic | PROVISIONAL | 39 | 17 | 38 | 45 | 65 | 50 | 32 | 1570 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
