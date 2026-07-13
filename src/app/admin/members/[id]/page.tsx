@@ -8,6 +8,8 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { StatusBadge } from "@/components/admin/status-badge";
+import { VehicleForm } from "@/components/vehicle-form";
+import type { VehicleTemplateOption } from "@/components/vehicle-template-fields";
 import { VehiclePerformanceRatingCard } from "@/components/vehicle-rating-card";
 import { formatDateTime, formatStatus } from "@/lib/admin-format";
 import { requireAdminSession } from "@/lib/admin-auth";
@@ -23,6 +25,15 @@ import {
   orderedModificationCategories,
 } from "@/lib/vehicle-build-rules";
 import { calculateVehiclePerformanceRating } from "@/lib/vehicle-performance-rating";
+import {
+  addMemberGarageVehicleAction,
+  archiveMemberGarageVehicleAction,
+  deleteArchivedMemberGarageVehicleAction,
+  makePrimaryMemberGarageVehicleAction,
+  matchMemberGarageVehicleDefinitionAction,
+  restoreMemberGarageVehicleAction,
+  updateMemberGarageVehicleAction,
+} from "./garage-actions";
 
 const vehicleDefinitionRatingSelect = {
   id: true,
@@ -119,25 +130,44 @@ type MemberDetailPageProps = {
   params: Promise<{
     id: string;
   }>;
+  searchParams: Promise<{
+    garageResult?: string;
+    blocked?: string;
+    vehicle?: string;
+  }>;
 };
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminMemberDetailPage({ params }: MemberDetailPageProps) {
-  await requireAdminSession();
-
-  const { id } = await params;
+export default async function AdminMemberDetailPage({
+  params,
+  searchParams,
+}: MemberDetailPageProps) {
+  const [session, { id }, queryParams] = await Promise.all([
+    requireAdminSession(),
+    params,
+    searchParams,
+  ]);
 
   if (!uuidRegex.test(id)) {
     notFound();
   }
 
-  const member = await prisma.user.findFirst({
-    where: {
-      id,
-      deletedAt: null,
-    },
-    select: {
+  const [adminUser, member, vehicleDefinitions] = await Promise.all([
+    prisma.adminUser.findUnique({
+      where: {
+        email: session.email,
+      },
+      select: {
+        role: true,
+      },
+    }),
+    prisma.user.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+      select: {
       id: true,
       email: true,
       role: true,
@@ -219,6 +249,7 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
         ],
         select: {
           id: true,
+          vehicleId: true,
           participantCode: true,
           registrationSource: true,
           status: true,
@@ -240,8 +271,61 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
           },
         },
       },
-    },
-  });
+      },
+    }),
+    prisma.vehicleDefinition.findMany({
+      where: {
+        active: true,
+      },
+      orderBy: [
+        {
+          brand: "asc",
+        },
+        {
+          model: "asc",
+        },
+        {
+          sortOrder: "asc",
+        },
+        {
+          id: "asc",
+        },
+      ],
+      select: {
+        id: true,
+        brand: true,
+        model: true,
+        generation: true,
+        chassisCode: true,
+        variant: true,
+        yearFrom: true,
+        yearTo: true,
+        powerRating: true,
+        handlingRating: true,
+        brakingRating: true,
+        reliabilityRating: true,
+        thermalRating: true,
+        trackReadinessRating: true,
+        weightPenalty: true,
+        ratingStatus: true,
+        platformFamily: {
+          select: {
+            code: true,
+            brand: true,
+            name: true,
+            generation: true,
+          },
+        },
+        engineFamily: {
+          select: {
+            code: true,
+            manufacturer: true,
+            name: true,
+          },
+        },
+      },
+    }),
+  ]);
 
   if (!member) {
     notFound();
@@ -249,6 +333,17 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
 
   const activeVehicles = member.vehicles.filter((vehicle) => !vehicle.deletedAt);
   const archivedVehicles = member.vehicles.filter((vehicle) => vehicle.deletedAt);
+  const canWriteGarage = (adminUser?.role ?? "OWNER") !== "CHECKIN";
+  const registrationCountsByVehicleId = member.registrations.reduce(
+    (counts, registration) => {
+      if (registration.vehicleId) {
+        counts[registration.vehicleId] = (counts[registration.vehicleId] ?? 0) + 1;
+      }
+
+      return counts;
+    },
+    {} as Record<string, number>,
+  );
   const garageCapacityExceeded =
     activeVehicles.length > MAX_ACTIVE_GARAGE_VEHICLES ||
     archivedVehicles.length > MAX_ARCHIVED_GARAGE_VEHICLES;
@@ -357,9 +452,63 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
         </div>
 
         <div className="space-y-6">
-          <DetailSection title="Garaj">
-            <VehicleList title="Aktif araçlar" vehicles={activeVehicles} />
-            <VehicleList title="Arşivlenen araçlar" vehicles={archivedVehicles} />
+          <DetailSection title="Garage Support">
+            <div className="rounded-md border border-signal/35 bg-signal/10 p-4">
+              <p className="text-sm font-black text-white">
+                Bu işlemler üyenin garajını doğrudan değiştirir.
+              </p>
+              <p className="mt-2 text-xs font-semibold leading-5 text-white/60">
+                Kapasite korunur: aktif {activeVehicles.length} /{" "}
+                {MAX_ACTIVE_GARAGE_VEHICLES}, arşiv {archivedVehicles.length} /{" "}
+                {MAX_ARCHIVED_GARAGE_VEHICLES}. CHECKIN rolü bu alanda salt okunur.
+              </p>
+            </div>
+
+            <GarageSupportMessage
+              result={queryParams.garageResult}
+              blocked={queryParams.blocked}
+            />
+
+            {canWriteGarage ? (
+              <details className="mt-5 rounded-md border border-white/10 bg-asphalt p-4">
+                <summary className="cursor-pointer text-sm font-black text-white">
+                  Üye Garajına Araç Ekle
+                </summary>
+                <div className="mt-4">
+                  <VehicleForm
+                    action={addMemberGarageVehicleAction.bind(null, member.id)}
+                    submitLabel="Üye Garajına Araç Ekle"
+                    showPrimaryOption
+                    returnTo={`/admin/members/${member.id}`}
+                    vehicleDefinitions={vehicleDefinitions}
+                    templateDefaultMode="catalog"
+                  />
+                </div>
+              </details>
+            ) : (
+              <p className="mt-5 rounded-md border border-white/10 bg-asphalt p-4 text-sm font-semibold text-white/60">
+                CHECKIN rolü garaj yazma yetkisine sahip değildir.
+              </p>
+            )}
+
+            <VehicleList
+              title="Aktif araçlar"
+              mode="active"
+              memberId={member.id}
+              vehicles={activeVehicles}
+              canWrite={canWriteGarage}
+              vehicleDefinitions={vehicleDefinitions}
+              registrationCountsByVehicleId={registrationCountsByVehicleId}
+            />
+            <VehicleList
+              title="Arşivlenen araçlar"
+              mode="archived"
+              memberId={member.id}
+              vehicles={archivedVehicles}
+              canWrite={canWriteGarage}
+              vehicleDefinitions={vehicleDefinitions}
+              registrationCountsByVehicleId={registrationCountsByVehicleId}
+            />
           </DetailSection>
         </div>
       </section>
@@ -443,11 +592,43 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
   );
 }
 
+type AdminVehicleDefinitionOption = VehicleTemplateOption & {
+  powerRating: number;
+  handlingRating: number;
+  brakingRating: number;
+  reliabilityRating: number;
+  thermalRating: number;
+  trackReadinessRating: number;
+  weightPenalty: number;
+  ratingStatus: VehicleRatingStatus;
+  platformFamily: {
+    code: string;
+    brand: string;
+    name: string;
+    generation: string | null;
+  } | null;
+  engineFamily: {
+    code: string;
+    manufacturer: string;
+    name: string;
+  } | null;
+};
+
 function VehicleList({
   title,
+  mode,
+  memberId,
   vehicles,
+  canWrite,
+  vehicleDefinitions,
+  registrationCountsByVehicleId,
 }: {
   title: string;
+  mode: "active" | "archived";
+  memberId: string;
+  canWrite: boolean;
+  vehicleDefinitions: AdminVehicleDefinitionOption[];
+  registrationCountsByVehicleId: Record<string, number>;
   vehicles: Array<{
     id: string;
     vehicleDefinitionId: string | null;
@@ -551,6 +732,7 @@ function VehicleList({
             vehicleDefinition: vehicle.vehicleDefinition,
             installedModifications: vehicle.modifications,
           });
+          const registrationCount = registrationCountsByVehicleId[vehicle.id] ?? 0;
 
           return (
             <article key={vehicle.id} className="rounded-md border border-white/10 bg-white/5 p-4">
@@ -566,6 +748,9 @@ function VehicleList({
                 <div className="flex flex-wrap gap-2">
                   {vehicle.isPrimary ? <StatusBadge value="PRIMARY" /> : null}
                   {vehicle.deletedAt ? <StatusBadge value="ARCHIVED" /> : null}
+                  <span className="inline-flex rounded-full border border-white/10 bg-asphalt px-3 py-1 text-xs font-black uppercase text-white/60">
+                    {vehicle.vehicleDefinitionId ? "Katalog eşli" : "Katalog dışı"}
+                  </span>
                 </div>
               </div>
               <dl className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -613,12 +798,35 @@ function VehicleList({
                   }
                   compact
                 />
+                <DetailRow
+                  label="ATS Overall"
+                  value={rating ? Math.round(rating.overall).toString() : "Yok"}
+                  compact
+                />
+                <DetailRow
+                  label="Modifikasyon"
+                  value={vehicle.modifications.length.toString()}
+                  compact
+                />
+                <DetailRow
+                  label="Başvuru bağlantısı"
+                  value={registrationCount.toString()}
+                  compact
+                />
               </dl>
               <VehiclePerformanceRatingCard rating={rating} compact className="mt-4" />
               <AdminVehicleBuildProfile
                 modifications={vehicle.modifications}
                 vehicleDefinitionId={vehicle.vehicleDefinitionId}
               />
+              {canWrite ? (
+                <AdminGarageVehicleActions
+                  memberId={memberId}
+                  vehicle={vehicle}
+                  mode={mode}
+                  vehicleDefinitions={vehicleDefinitions}
+                />
+              ) : null}
             </article>
           );
         })}
@@ -628,6 +836,197 @@ function VehicleList({
           </p>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+function AdminGarageVehicleActions({
+  memberId,
+  vehicle,
+  mode,
+  vehicleDefinitions,
+}: {
+  memberId: string;
+  mode: "active" | "archived";
+  vehicle: {
+    id: string;
+    vehicleDefinitionId: string | null;
+    brand: string;
+    model: string;
+    year: number | null;
+    plateNumber: string;
+    color: string | null;
+    isPrimary: boolean;
+    deletedAt: Date | null;
+  };
+  vehicleDefinitions: AdminVehicleDefinitionOption[];
+}) {
+  return (
+    <div className="mt-4 border-t border-white/10 pt-4">
+      <div className="flex flex-wrap gap-2">
+        {mode === "active" ? (
+          <>
+            {!vehicle.isPrimary ? (
+              <form
+                action={makePrimaryMemberGarageVehicleAction.bind(
+                  null,
+                  memberId,
+                  vehicle.id,
+                )}
+              >
+                <button className="inline-flex h-9 items-center rounded-full border border-signal/50 px-3 text-[11px] font-black uppercase text-signal transition hover:bg-signal hover:text-asphalt">
+                  Birincil yap
+                </button>
+              </form>
+            ) : null}
+            <form
+              action={archiveMemberGarageVehicleAction.bind(
+                null,
+                memberId,
+                vehicle.id,
+              )}
+            >
+              <button className="inline-flex h-9 items-center rounded-full border border-white/15 px-3 text-[11px] font-black uppercase text-white/65 transition hover:border-red-300/60 hover:text-red-100">
+                Arşivle
+              </button>
+            </form>
+          </>
+        ) : (
+          <form
+            action={restoreMemberGarageVehicleAction.bind(null, memberId, vehicle.id)}
+          >
+            <button className="inline-flex h-9 items-center rounded-full border border-signal/50 px-3 text-[11px] font-black uppercase text-signal transition hover:bg-signal hover:text-asphalt">
+              Geri yükle
+            </button>
+          </form>
+        )}
+      </div>
+
+      <details className="mt-3 rounded-md border border-white/10 bg-asphalt p-3">
+        <summary className="cursor-pointer text-xs font-black uppercase text-white/60">
+          Aracı düzenle
+        </summary>
+        <div className="mt-3">
+          <VehicleForm
+            action={updateMemberGarageVehicleAction.bind(
+              null,
+              memberId,
+              vehicle.id,
+            )}
+            submitLabel="Araç bilgisini güncelle"
+            vehicle={vehicle}
+            showPrimaryOption={mode === "active"}
+            returnTo={`/admin/members/${memberId}`}
+            vehicleDefinitions={vehicleDefinitions}
+            templateDefaultMode={vehicle.vehicleDefinitionId ? "catalog" : "manual"}
+          />
+        </div>
+      </details>
+
+      {!vehicle.vehicleDefinitionId ? (
+        <details className="mt-3 rounded-md border border-signal/30 bg-signal/10 p-3">
+          <summary className="cursor-pointer text-xs font-black uppercase text-signal">
+            ATS kataloğuyla eşleştir
+          </summary>
+          <form
+            action={matchMemberGarageVehicleDefinitionAction.bind(
+              null,
+              memberId,
+              vehicle.id,
+            )}
+            className="mt-3 grid gap-3"
+          >
+            <div className="grid gap-3 rounded-md border border-white/10 bg-asphalt p-3 text-xs font-semibold text-white/60 sm:grid-cols-2">
+              <div>
+                <p className="font-black uppercase text-white/40">Önce</p>
+                <p className="mt-1 text-white">Manual araç</p>
+                <p className="mt-1">Rating mevcut değil</p>
+              </div>
+              <div>
+                <p className="font-black uppercase text-white/40">Sonra</p>
+                <p className="mt-1 text-white">Seçilen katalog platformu</p>
+                <p className="mt-1">Baz ATS Rating ve uyumlu modifikasyonlar açılır.</p>
+              </div>
+            </div>
+            <label className="block">
+              <span className="text-xs font-black uppercase text-white/45">
+                Aktif katalog kaydı
+              </span>
+              <select
+                name="vehicleDefinitionId"
+                required
+                className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm font-semibold text-white outline-none focus:border-signal"
+              >
+                <option value="">Katalog kaydı seç</option>
+                {vehicleDefinitions.map((definition) => (
+                  <option key={definition.id} value={definition.id}>
+                    {definitionOptionLabel(definition)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex gap-2 text-xs font-semibold leading-5 text-white/60">
+              <input
+                name="normalizeIdentity"
+                type="checkbox"
+                defaultChecked
+                className="mt-1 h-4 w-4 rounded border-white/20 bg-black accent-signal"
+              />
+              <span>Marka/model bilgisini seçilen katalog kaydıyla eşitle.</span>
+            </label>
+            <button className="inline-flex h-10 w-fit items-center rounded-full bg-signal px-4 text-xs font-black uppercase text-asphalt transition hover:bg-white">
+              ATS kataloğuyla eşleştir
+            </button>
+          </form>
+        </details>
+      ) : null}
+
+      {mode === "archived" ? (
+        <details className="mt-3 rounded-md border border-red-300/25 bg-red-500/10 p-3">
+          <summary className="cursor-pointer text-xs font-black uppercase text-red-100">
+            Kalıcı silme
+          </summary>
+          <form
+            action={deleteArchivedMemberGarageVehicleAction.bind(
+              null,
+              memberId,
+              vehicle.id,
+            )}
+            className="mt-3 grid gap-3"
+          >
+            <p className="text-xs font-semibold leading-5 text-red-100">
+              Bu işlem geri alınamaz. Geçmiş etkinlik snapshot alanları korunur,
+              araç ve build kaydı kalıcı silinir.
+            </p>
+            <label className="block">
+              <span className="text-xs font-black uppercase text-white/45">
+                Onay için plakayı yazın: {vehicle.plateNumber}
+              </span>
+              <input
+                name="confirmVehicle"
+                required
+                autoComplete="off"
+                className="mt-2 h-10 w-full rounded-md border border-white/10 bg-black px-3 text-sm font-semibold text-white outline-none focus:border-red-200"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-black uppercase text-white/45">
+                Silme nedeni
+              </span>
+              <textarea
+                name="reason"
+                required
+                minLength={4}
+                maxLength={500}
+                className="mt-2 min-h-20 w-full rounded-md border border-white/10 bg-black px-3 py-2 text-sm font-semibold text-white outline-none focus:border-red-200"
+              />
+            </label>
+            <button className="inline-flex h-10 w-fit items-center rounded-full border border-red-300/50 px-4 text-xs font-black uppercase text-red-100 transition hover:bg-red-500/15">
+              Kalıcı olarak sil
+            </button>
+          </form>
+        </details>
+      ) : null}
     </div>
   );
 }
@@ -866,6 +1265,67 @@ function formatRegistrationSource(value: string) {
   return labels[value] ?? formatStatus(value);
 }
 
+function GarageSupportMessage({
+  result,
+  blocked,
+}: {
+  result?: string;
+  blocked?: string;
+}) {
+  if (!result) {
+    return null;
+  }
+
+  const success = adminGarageSuccessMessage(result);
+  const error = adminGarageErrorMessage(result, blocked);
+
+  return (
+    <p
+      className={`mt-5 rounded-md border px-4 py-3 text-sm font-semibold ${
+        success
+          ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-100"
+          : "border-red-300/30 bg-red-500/10 text-red-100"
+      }`}
+    >
+      {success ?? error}
+    </p>
+  );
+}
+
+function adminGarageSuccessMessage(result: string) {
+  const messages: Record<string, string> = {
+    created: "Üye garajına araç eklendi.",
+    updated: "Araç bilgileri güncellendi.",
+    archived: "Araç arşivlendi.",
+    restored: "Araç geri yüklendi.",
+    deleted: "Araç kalıcı olarak silindi.",
+    matched: "Araç ATS kataloğuyla eşleştirildi.",
+    primary: "Birincil araç güncellendi.",
+  };
+
+  return messages[result] ?? null;
+}
+
+function adminGarageErrorMessage(result: string, blocked?: string) {
+  const messages: Record<string, string> = {
+    invalid: "Araç bilgileri geçersiz veya seçilen katalog yılı uyumsuz.",
+    duplicate_plate: "Bu üyede aynı plakaya sahip aktif araç var.",
+    active_vehicle_limit_reached: "Aktif garaj kapasitesi dolu.",
+    archived_vehicle_limit_reached: "Arşiv kapasitesi dolu.",
+    not_found: "Araç bulunamadı veya işlem için uygun değil.",
+    restore_conflict: "Aynı plakaya sahip aktif araç olduğu için geri yüklenemedi.",
+    active_delete_forbidden: "Kalıcı silme yalnızca arşivlenen araçlar için yapılabilir.",
+    confirmation_required: "Kalıcı silme için plaka onayı ve neden gereklidir.",
+    incompatible_modifications_block_match: blocked
+      ? `Katalog eşleştirmesi engellendi. Uyumsuz modifikasyonlar: ${blocked}.`
+      : "Katalog eşleştirmesi mevcut modifikasyonlarla uyumsuz.",
+    admin_permission_denied: "Bu admin rolü garaj değişikliği yapamaz.",
+    failed: "Garaj işlemi tamamlanamadı.",
+  };
+
+  return messages[result] ?? "Garaj işlemi tamamlanamadı.";
+}
+
 function vehicleDefinitionLabel(definition: {
   brand: string;
   model: string;
@@ -882,6 +1342,30 @@ function vehicleDefinitionLabel(definition: {
   ]
     .filter(Boolean)
     .join(" / ");
+}
+
+function definitionOptionLabel(definition: AdminVehicleDefinitionOption) {
+  const rating = calculateVehiclePerformanceRating({
+    vehicleDefinition: definition,
+    installedModifications: [],
+  });
+  const ratingText = rating ? `ATS ${Math.round(rating.overall)}` : "ATS yok";
+  const platform = definition.platformFamily
+    ? vehiclePlatformFamilyLabel(definition.platformFamily)
+    : null;
+  const engine = definition.engineFamily
+    ? vehicleEngineFamilyLabel(definition.engineFamily)
+    : null;
+
+  return [
+    vehicleDefinitionLabel(definition),
+    ratingText,
+    definition.ratingStatus === "CALIBRATED" ? "Kalibre" : "Geçici",
+    platform,
+    engine,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 function vehiclePlatformFamilyLabel(family: {

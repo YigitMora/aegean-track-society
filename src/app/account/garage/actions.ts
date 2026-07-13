@@ -3,14 +3,17 @@
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import {
-  canAddActiveVehicle,
-  canArchiveVehicleCount,
-  canRestoreVehicleCount,
-} from "@/lib/garage-capacity";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { normalizeMemberReturnTo } from "@/lib/member-auth";
 import { prisma } from "@/lib/prisma";
+import {
+  archiveGarageVehicles,
+  createGarageVehicle,
+  makePrimaryGarageVehicle,
+  permanentlyDeleteArchivedGarageVehicles,
+  restoreGarageVehicle,
+  updateGarageVehicle,
+} from "@/lib/garage-service";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   evaluateModificationBatchAvailability,
@@ -41,7 +44,7 @@ import type {
   GarageLifecycleActionState,
   GarageLifecycleErrorCode,
 } from "@/lib/garage-lifecycle-state";
-import { parseVehicleForm, type VehicleInput } from "@/lib/vehicle-validation";
+import { parseVehicleForm } from "@/lib/vehicle-validation";
 
 type GarageError = GarageLifecycleErrorCode;
 
@@ -93,89 +96,10 @@ export async function createVehicleAction(formData: FormData) {
     redirectWithError("/account/garage/new", "invalid");
   }
 
-  const vehicleInput = await resolveVehicleInputForWrite(parsed.data);
-
-  if (!vehicleInput) {
-    redirectWithError("/account/garage/new", "invalid");
-  }
-
   try {
-    const result = await runGarageSerializableTransaction(async (tx) => {
-      const activeVehicleCount = await tx.vehicle.count({
-        where: {
-          userId: memberUser.id,
-          deletedAt: null,
-        },
-      });
-
-      if (!canAddActiveVehicle(activeVehicleCount)) {
-        return {
-          ok: false as const,
-          code: "active_vehicle_limit_reached" as const,
-        };
-      }
-
-      const duplicateVehicle = await tx.vehicle.findFirst({
-        where: {
-          userId: memberUser.id,
-          plateNumber: vehicleInput.plateNumber,
-          deletedAt: null,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (duplicateVehicle) {
-        return {
-          ok: false as const,
-          code: "duplicate_plate" as const,
-        };
-      }
-
-      const activePrimaryCount = await tx.vehicle.count({
-        where: {
-          userId: memberUser.id,
-          deletedAt: null,
-          isPrimary: true,
-        },
-      });
-      const shouldBecomePrimary =
-        vehicleInput.isPrimary || activePrimaryCount === 0;
-
-      if (shouldBecomePrimary) {
-        await tx.vehicle.updateMany({
-          where: {
-            userId: memberUser.id,
-            deletedAt: null,
-            isPrimary: true,
-          },
-          data: {
-            isPrimary: false,
-          },
-        });
-      }
-
-      const vehicle = await tx.vehicle.create({
-        data: {
-          userId: memberUser.id,
-          vehicleDefinitionId: vehicleInput.vehicleDefinitionId,
-          brand: vehicleInput.brand,
-          model: vehicleInput.model,
-          year: vehicleInput.year,
-          plateNumber: vehicleInput.plateNumber,
-          color: vehicleInput.color,
-          isPrimary: shouldBecomePrimary,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      return {
-        ok: true as const,
-        vehicleId: vehicle.id,
-      };
+    const result = await createGarageVehicle({
+      targetUserId: memberUser.id,
+      input: parsed.data,
     });
 
     if (!result.ok) {
@@ -214,95 +138,15 @@ export async function updateVehicleAction(vehicleId: string, formData: FormData)
     redirectWithError(`/account/garage/${vehicleId}`, "invalid");
   }
 
-  const vehicleInput = await resolveVehicleInputForWrite(parsed.data);
-
-  if (!vehicleInput) {
-    redirectWithError(`/account/garage/${vehicleId}`, "invalid");
-  }
-
   try {
-    const existingVehicle = await prisma.vehicle.findFirst({
-      where: {
-        id: vehicleId,
-        userId: memberUser.id,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-        isPrimary: true,
-      },
+    const result = await updateGarageVehicle({
+      targetUserId: memberUser.id,
+      vehicleId,
+      input: parsed.data,
     });
 
-    if (!existingVehicle) {
-      redirectWithError(garagePath, "not_found");
-    }
-
-    const duplicateVehicle = await prisma.vehicle.findFirst({
-      where: {
-        userId: memberUser.id,
-        plateNumber: vehicleInput.plateNumber,
-        deletedAt: null,
-        id: {
-          not: vehicleId,
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (duplicateVehicle) {
-      redirectWithError(`/account/garage/${vehicleId}`, "duplicate_plate");
-    }
-
-    const updateData = {
-      vehicleDefinitionId: vehicleInput.vehicleDefinitionId,
-      brand: vehicleInput.brand,
-      model: vehicleInput.model,
-      year: vehicleInput.year,
-      plateNumber: vehicleInput.plateNumber,
-      color: vehicleInput.color,
-    };
-
-    if (vehicleInput.isPrimary && !existingVehicle.isPrimary) {
-      await prisma.$transaction([
-        prisma.vehicle.updateMany({
-          where: {
-            userId: memberUser.id,
-            deletedAt: null,
-            isPrimary: true,
-          },
-          data: {
-            isPrimary: false,
-          },
-        }),
-        prisma.vehicle.update({
-          where: {
-            id: vehicleId,
-            userId: memberUser.id,
-            deletedAt: null,
-          },
-          data: {
-            ...updateData,
-            isPrimary: true,
-          },
-          select: {
-            id: true,
-          },
-        }),
-      ]);
-    } else {
-      await prisma.vehicle.update({
-        where: {
-          id: vehicleId,
-          userId: memberUser.id,
-          deletedAt: null,
-        },
-        data: updateData,
-        select: {
-          id: true,
-        },
-      });
+    if (!result.ok) {
+      redirectWithError(`/account/garage/${vehicleId}`, result.code);
     }
 
     console.log("GARAGE_VEHICLE_UPDATED", {
@@ -367,49 +211,16 @@ export async function makePrimaryVehicleAction(vehicleId: string) {
   const memberUser = await requireCompleteMemberUser(garagePath);
 
   try {
-    const vehicle = await prisma.vehicle.findFirst({
-      where: {
-        id: vehicleId,
-        userId: memberUser.id,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-        isPrimary: true,
-      },
+    const result = await makePrimaryGarageVehicle({
+      targetUserId: memberUser.id,
+      vehicleId,
     });
 
-    if (!vehicle) {
-      redirectWithError(garagePath, "not_found");
+    if (!result.ok) {
+      redirectWithError(garagePath, result.code);
     }
 
-    if (!vehicle.isPrimary) {
-      await prisma.$transaction([
-        prisma.vehicle.updateMany({
-          where: {
-            userId: memberUser.id,
-            deletedAt: null,
-            isPrimary: true,
-          },
-          data: {
-            isPrimary: false,
-          },
-        }),
-        prisma.vehicle.update({
-          where: {
-            id: vehicleId,
-            userId: memberUser.id,
-            deletedAt: null,
-          },
-          data: {
-            isPrimary: true,
-          },
-          select: {
-            id: true,
-          },
-        }),
-      ]);
-
+    if (result.changed) {
       console.log("GARAGE_PRIMARY_CHANGED", {
         userId: memberUser.id,
         vehicleId,
@@ -433,7 +244,10 @@ export async function archiveVehicleAction(vehicleId: string) {
   const memberUser = await requireCompleteMemberUser(garagePath);
 
   try {
-    const result = await archiveVehiclesForMember(memberUser.id, [vehicleId]);
+    const result = await archiveGarageVehicles({
+      targetUserId: memberUser.id,
+      vehicleIds: [vehicleId],
+    });
 
     if (!result.ok) {
       redirectWithError(garagePath, result.code);
@@ -461,95 +275,9 @@ export async function restoreVehicleAction(vehicleId: string) {
   const memberUser = await requireCompleteMemberUser(garagePath);
 
   try {
-    const result = await runGarageSerializableTransaction(async (tx) => {
-      const vehicle = await tx.vehicle.findFirst({
-        where: {
-          id: vehicleId,
-          userId: memberUser.id,
-          deletedAt: {
-            not: null,
-          },
-        },
-        select: {
-          id: true,
-          plateNumber: true,
-        },
-      });
-
-      if (!vehicle) {
-        return {
-          ok: false as const,
-          code: "not_found" as const,
-        };
-      }
-
-      const activeVehicleCount = await tx.vehicle.count({
-        where: {
-          userId: memberUser.id,
-          deletedAt: null,
-        },
-      });
-
-      if (!canRestoreVehicleCount(activeVehicleCount, 1)) {
-        return {
-          ok: false as const,
-          code: "active_vehicle_limit_reached" as const,
-        };
-      }
-
-      const duplicateVehicle = await tx.vehicle.findFirst({
-        where: {
-          userId: memberUser.id,
-          plateNumber: vehicle.plateNumber,
-          deletedAt: null,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (duplicateVehicle) {
-        return {
-          ok: false as const,
-          code: "restore_conflict" as const,
-        };
-      }
-
-      const activePrimaryVehicle = await tx.vehicle.findFirst({
-        where: {
-          userId: memberUser.id,
-          deletedAt: null,
-          isPrimary: true,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      const restoredVehicle = await tx.vehicle.updateMany({
-        where: {
-          id: vehicleId,
-          userId: memberUser.id,
-          deletedAt: {
-            not: null,
-          },
-        },
-        data: {
-          deletedAt: null,
-          isPrimary: !activePrimaryVehicle,
-        },
-      });
-
-      if (restoredVehicle.count === 0) {
-        return {
-          ok: false as const,
-          code: "not_found" as const,
-        };
-      }
-
-      return {
-        ok: true as const,
-      };
+    const result = await restoreGarageVehicle({
+      targetUserId: memberUser.id,
+      vehicleId,
     });
 
     if (!result.ok) {
@@ -587,7 +315,10 @@ export async function archiveVehiclesBatchAction(formData: FormData) {
   }
 
   try {
-    const result = await archiveVehiclesForMember(memberUser.id, vehicleIds);
+    const result = await archiveGarageVehicles({
+      targetUserId: memberUser.id,
+      vehicleIds,
+    });
 
     if (!result.ok) {
       redirectWithError(garagePath, result.code);
@@ -643,7 +374,10 @@ export async function archiveVehiclesLifecycleAction(
   }
 
   try {
-    const result = await archiveVehiclesForMember(memberUser.id, vehicleIds);
+    const result = await archiveGarageVehicles({
+      targetUserId: memberUser.id,
+      vehicleIds,
+    });
 
     if (!result.ok) {
       logLifecycleTiming("GARAGE_ARCHIVE_BATCH", {
@@ -750,10 +484,10 @@ export async function permanentlyDeleteArchivedVehiclesLifecycleAction(
   }
 
   try {
-    const result = await deleteArchivedVehiclesForMember(
-      memberUser.id,
-      selectedVehicleIds,
-    );
+    const result = await permanentlyDeleteArchivedGarageVehicles({
+      targetUserId: memberUser.id,
+      vehicleIds: selectedVehicleIds,
+    });
 
     if (!result.ok) {
       logLifecycleTiming("GARAGE_DELETE_BATCH", {
@@ -1651,311 +1385,6 @@ function normalizeVehicleIds(formData: FormData) {
   return Array.from(new Set(ids));
 }
 
-async function archiveVehiclesForMember(userId: string, vehicleIds: string[]) {
-  const transactionStartedAt = lifecycleNow();
-
-  const result = await runGarageSerializableTransaction(
-    async (tx) => {
-      const validationStartedAt = lifecycleNow();
-      const vehicles = await tx.vehicle.findMany({
-        where: {
-          id: {
-            in: vehicleIds,
-          },
-          userId,
-        },
-        select: {
-          id: true,
-          deletedAt: true,
-          isPrimary: true,
-        },
-      });
-      logLifecycleTiming("GARAGE_ARCHIVE_BATCH", {
-        userId,
-        selectedVehicleCount: vehicleIds.length,
-        durationMs: lifecycleDuration(validationStartedAt),
-        resultCode: "vehicle_validation_query",
-      });
-
-      if (vehicles.length !== vehicleIds.length) {
-        return {
-          ok: false as const,
-          code: "not_found" as const,
-          hadPrimaryVehicle: false,
-        };
-      }
-
-      if (vehicles.some((vehicle) => vehicle.deletedAt !== null)) {
-        return {
-          ok: false as const,
-          code: "archive_failed" as const,
-          hadPrimaryVehicle: false,
-        };
-      }
-
-      const archivedVehicleCount = await tx.vehicle.count({
-        where: {
-          userId,
-          deletedAt: {
-            not: null,
-          },
-        },
-      });
-
-      if (!canArchiveVehicleCount(archivedVehicleCount, vehicleIds.length)) {
-        return {
-          ok: false as const,
-          code: "archived_vehicle_limit_reached" as const,
-          hadPrimaryVehicle: false,
-        };
-      }
-
-      const archivedPrimary = vehicles.some((vehicle) => vehicle.isPrimary);
-      const now = new Date();
-      const archived = await tx.vehicle.updateMany({
-        where: {
-          id: {
-            in: vehicleIds,
-          },
-          userId,
-          deletedAt: null,
-        },
-        data: {
-          deletedAt: now,
-          isPrimary: false,
-        },
-      });
-
-      if (archived.count !== vehicleIds.length) {
-        return {
-          ok: false as const,
-          code: "archive_failed" as const,
-          hadPrimaryVehicle: archivedPrimary,
-        };
-      }
-
-      if (archivedPrimary) {
-        const primaryStartedAt = lifecycleNow();
-        const nextPrimaryVehicle = await tx.vehicle.findFirst({
-          where: {
-            userId,
-            deletedAt: null,
-          },
-          orderBy: [
-            {
-              createdAt: "asc",
-            },
-            {
-              id: "asc",
-            },
-          ],
-          select: {
-            id: true,
-          },
-        });
-
-        if (nextPrimaryVehicle) {
-          await tx.vehicle.update({
-            where: {
-              id: nextPrimaryVehicle.id,
-              userId,
-              deletedAt: null,
-            },
-            data: {
-              isPrimary: true,
-            },
-            select: {
-              id: true,
-            },
-          });
-        }
-
-        logLifecycleTiming("GARAGE_ARCHIVE_BATCH", {
-          userId,
-          selectedVehicleCount: vehicleIds.length,
-          hadPrimaryVehicle: true,
-          durationMs: lifecycleDuration(primaryStartedAt),
-          resultCode: "primary_reassignment",
-        });
-      }
-
-      return {
-        ok: true as const,
-        count: archived.count,
-        hadPrimaryVehicle: archivedPrimary,
-      };
-    },
-  );
-
-  logLifecycleTiming("GARAGE_ARCHIVE_BATCH", {
-    userId,
-    selectedVehicleCount: vehicleIds.length,
-    hadPrimaryVehicle: result.hadPrimaryVehicle,
-    durationMs: lifecycleDuration(transactionStartedAt),
-    resultCode: "archive_transaction",
-  });
-
-  return result;
-}
-
-async function runGarageSerializableTransaction<T>(
-  operation: (tx: Prisma.TransactionClient) => Promise<T>,
-) {
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    try {
-      return await prisma.$transaction(operation, {
-        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-      });
-    } catch (error) {
-      if (attempt < 3 && isGarageSerializableConflict(error)) {
-        continue;
-      }
-
-      throw error;
-    }
-  }
-
-  throw new Error("Garage serializable transaction failed.");
-}
-
-function isGarageSerializableConflict(error: unknown) {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === "P2034"
-  );
-}
-
-async function deleteArchivedVehiclesForMember(userId: string, vehicleIds: string[]) {
-  const transactionStartedAt = lifecycleNow();
-
-  const result = await prisma.$transaction(
-    async (tx) => {
-      const validationStartedAt = lifecycleNow();
-      const vehicles = await tx.vehicle.findMany({
-        where: {
-          id: {
-            in: vehicleIds,
-          },
-          userId,
-        },
-        select: {
-          id: true,
-          deletedAt: true,
-          imagePath: true,
-        },
-      });
-      logLifecycleTiming("GARAGE_DELETE_BATCH", {
-        userId,
-        selectedVehicleCount: vehicleIds.length,
-        durationMs: lifecycleDuration(validationStartedAt),
-        resultCode: "vehicle_validation_query",
-      });
-
-      if (vehicles.length !== vehicleIds.length) {
-        return {
-          ok: false as const,
-          code: "not_found" as const,
-          imagePaths: [] as string[],
-        };
-      }
-
-      if (vehicles.some((vehicle) => vehicle.deletedAt === null)) {
-        return {
-          ok: false as const,
-          code: "active_delete_forbidden" as const,
-          imagePaths: [] as string[],
-        };
-      }
-
-      const registrationStartedAt = lifecycleNow();
-      const unlinkedRegistrations = await tx.registration.updateMany({
-        where: {
-          vehicleId: {
-            in: vehicleIds,
-          },
-        },
-        data: {
-          vehicleId: null,
-        },
-      });
-      logLifecycleTiming("GARAGE_DELETE_BATCH", {
-        userId,
-        selectedVehicleCount: vehicleIds.length,
-        registrationRowsUnlinked: unlinkedRegistrations.count,
-        durationMs: lifecycleDuration(registrationStartedAt),
-        resultCode: "registration_unlink",
-      });
-
-      const modificationStartedAt = lifecycleNow();
-      const deletedModifications = await tx.vehicleModification.deleteMany({
-        where: {
-          vehicleId: {
-            in: vehicleIds,
-          },
-        },
-      });
-      logLifecycleTiming("GARAGE_DELETE_BATCH", {
-        userId,
-        selectedVehicleCount: vehicleIds.length,
-        modificationRowsDeleted: deletedModifications.count,
-        durationMs: lifecycleDuration(modificationStartedAt),
-        resultCode: "modification_deletion",
-      });
-
-      const deletionStartedAt = lifecycleNow();
-      const deletedVehicles = await tx.vehicle.deleteMany({
-        where: {
-          id: {
-            in: vehicleIds,
-          },
-          userId,
-          deletedAt: {
-            not: null,
-          },
-        },
-      });
-      logLifecycleTiming("GARAGE_DELETE_BATCH", {
-        userId,
-        selectedVehicleCount: vehicleIds.length,
-        vehicleRowsDeleted: deletedVehicles.count,
-        durationMs: lifecycleDuration(deletionStartedAt),
-        resultCode: "vehicle_deletion",
-      });
-
-      if (deletedVehicles.count !== vehicleIds.length) {
-        return {
-          ok: false as const,
-          code: "delete_failed" as const,
-          imagePaths: [] as string[],
-        };
-      }
-
-      return {
-        ok: true as const,
-        vehicleRowsDeleted: deletedVehicles.count,
-        registrationRowsUnlinked: unlinkedRegistrations.count,
-        modificationRowsDeleted: deletedModifications.count,
-        imagePaths: vehicles.flatMap((vehicle) =>
-          vehicle.imagePath ? [vehicle.imagePath] : [],
-        ),
-      };
-    },
-    {
-      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-    },
-  );
-
-  logLifecycleTiming("GARAGE_DELETE_BATCH", {
-    userId,
-    selectedVehicleCount: vehicleIds.length,
-    imageObjectCount: result.imagePaths.length,
-    durationMs: lifecycleDuration(transactionStartedAt),
-    resultCode: "delete_transaction",
-  });
-
-  return result;
-}
-
 function garageLifecycleState({
   ok = false,
   code = ok ? null : "failed",
@@ -2068,7 +1497,10 @@ async function permanentlyDeleteArchivedVehicles(
   let imagePaths: string[] = [];
 
   try {
-    const result = await deleteArchivedVehiclesForMember(memberUser.id, vehicleIds);
+    const result = await permanentlyDeleteArchivedGarageVehicles({
+      targetUserId: memberUser.id,
+      vehicleIds,
+    });
 
     if (!result.ok) {
       redirectWithError(garagePath, result.code);
@@ -2434,50 +1866,6 @@ function logVehicleBuildRatingPreview({
     resultCode,
     durationMs: Math.round(performance.now() - startedAt),
   });
-}
-
-async function resolveVehicleInputForWrite(
-  input: VehicleInput,
-): Promise<VehicleInput | null> {
-  if (!input.vehicleDefinitionId) {
-    return {
-      ...input,
-      vehicleDefinitionId: null,
-    };
-  }
-
-  const vehicleDefinition = await prisma.vehicleDefinition.findFirst({
-    where: {
-      id: input.vehicleDefinitionId,
-      active: true,
-    },
-    select: {
-      id: true,
-      brand: true,
-      model: true,
-      yearFrom: true,
-      yearTo: true,
-    },
-  });
-
-  if (!vehicleDefinition || input.year === null) {
-    return null;
-  }
-
-  if (vehicleDefinition.yearFrom !== null && input.year < vehicleDefinition.yearFrom) {
-    return null;
-  }
-
-  if (vehicleDefinition.yearTo !== null && input.year > vehicleDefinition.yearTo) {
-    return null;
-  }
-
-  return {
-    ...input,
-    vehicleDefinitionId: vehicleDefinition.id,
-    brand: vehicleDefinition.brand,
-    model: vehicleDefinition.model,
-  };
 }
 
 function errorCodeForVehicleWrite(error: unknown, fallback: GarageError): GarageError {

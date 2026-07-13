@@ -202,6 +202,9 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
         <p>Arşiv: {archivedCapacity.count} / {archivedCapacity.max}</p>
       </div>
 
+      <GarageBuildIntroPanel vehicles={activeLifecycleVehicles} />
+      <GarageCatalogSupportPanel vehicles={activeLifecycleVehicles} />
+
       <GarageMessage garage={params.garage} garageError={params.garageError} />
 
       <GarageVehicleLifecycle
@@ -223,6 +226,7 @@ function toGarageLifecycleVehicle(vehicle: {
   color: string | null;
   isPrimary: boolean;
   coverImageUrl: string | null;
+  vehicleDefinitionId: string | null;
   vehicleDefinition: Parameters<typeof calculateVehiclePerformanceRating>[0]["vehicleDefinition"];
   modifications: Parameters<typeof calculateVehiclePerformanceRating>[0]["installedModifications"];
 }): GarageLifecycleVehicle {
@@ -240,6 +244,8 @@ function toGarageLifecycleVehicle(vehicle: {
     color: vehicle.color,
     isPrimary: vehicle.isPrimary,
     coverImageUrl: vehicle.coverImageUrl,
+    vehicleDefinitionId: vehicle.vehicleDefinitionId,
+    modificationCount: vehicle.modifications.length,
     rating: rating
       ? {
           overall: rating.overall,
@@ -253,6 +259,79 @@ function toGarageLifecycleVehicle(vehicle: {
         }
       : null,
   };
+}
+
+function GarageBuildIntroPanel({
+  vehicles,
+}: {
+  vehicles: GarageLifecycleVehicle[];
+}) {
+  const catalogMatchedVehicles = vehicles.filter(
+    (vehicle) => vehicle.vehicleDefinitionId !== null,
+  );
+  const singleVehicle = catalogMatchedVehicles.length === 1 ? catalogMatchedVehicles[0] : null;
+  const actionHref = singleVehicle
+    ? `/account/garage/${singleVehicle.id}/modifications`
+    : catalogMatchedVehicles.length > 1
+      ? "/account/garage#active-garage-vehicles"
+      : null;
+
+  return (
+    <div className="mt-5 rounded-md border border-ats-border bg-ats-surface p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="max-w-3xl">
+          <p className="text-sm font-black text-ats-text">
+            Aracının gerçek build profilini oluştur
+          </p>
+          <p className="mt-2 text-sm font-semibold leading-6 text-ats-muted">
+            Takılı modifikasyonları ekleyerek aracının Güç, Yol Tutuş, Fren, Termal
+            ve Pist Hazırlığı puanlarındaki tahmini değişimi görebilirsin.
+          </p>
+        </div>
+        {actionHref ? (
+          <Link
+            href={actionHref}
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-full border border-ats-blue/50 px-4 text-xs font-black uppercase tracking-[0.12em] text-ats-blue transition hover:bg-ats-blue hover:text-ats-black"
+          >
+            Modifikasyonları Keşfet
+          </Link>
+        ) : null}
+      </div>
+      {catalogMatchedVehicles.length === 0 ? (
+        <p className="mt-3 text-xs font-semibold leading-5 text-ats-muted">
+          Modifikasyon özellikleri, ATS kataloğuyla eşleşen araçlarda kullanılabilir.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function GarageCatalogSupportPanel({
+  vehicles,
+}: {
+  vehicles: GarageLifecycleVehicle[];
+}) {
+  const catalogFreeCount = vehicles.filter(
+    (vehicle) => vehicle.vehicleDefinitionId === null,
+  ).length;
+
+  if (catalogFreeCount === 0) {
+    return null;
+  }
+
+  return (
+    <div
+      id="garage-catalog-support"
+      className="mt-4 rounded-md border border-amber-300/25 bg-amber-400/10 p-4 text-sm font-semibold leading-6 text-ats-muted"
+    >
+      <p className="font-black text-amber-100">Katalog eşleştirmesi iste</p>
+      <p className="mt-2">
+        Katalog dışı araçların etkinlik başvuru yolu açık kalır. ATS Rating ve
+        uyumlu modifikasyon özellikleri için destek ekibi aracını aktif katalog
+        kaydıyla eşleştirebilir.
+      </p>
+    </div>
+  );
 }
 
 function GarageMessage({
