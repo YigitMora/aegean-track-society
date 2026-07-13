@@ -83,7 +83,7 @@ export async function AdminShell({ title, eyebrow, actions, children }: AdminShe
                 type="submit"
                 className="rounded-full bg-white px-4 py-2 font-black text-asphalt transition hover:bg-signal"
               >
-                Logout
+                Çıkış Yap
               </button>
             </form>
           </nav>

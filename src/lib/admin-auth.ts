@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import type { NextResponse } from "next/server";
 
 const adminCookieName = "atd_admin_session";
 const sessionDurationMs = 1000 * 60 * 60 * 8;
@@ -91,21 +92,24 @@ export async function createMemberAdminSessionCookie(email: string) {
 export async function clearAdminSessionCookie() {
   const cookieStore = await cookies();
 
-  cookieStore.set(adminCookieName, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    expires: new Date(0),
-  });
+  cookieStore.set(adminCookieName, "", expiredAdminCookieOptions("/"));
+  cookieStore.set(adminCookieName, "", expiredAdminCookieOptions("/admin"));
+}
 
-  cookieStore.set(adminCookieName, "", {
+export function expireAdminSessionCookieOnResponse(response: NextResponse) {
+  response.cookies.set(adminCookieName, "", expiredAdminCookieOptions("/"));
+  response.cookies.set(adminCookieName, "", expiredAdminCookieOptions("/admin"));
+}
+
+function expiredAdminCookieOptions(path: "/" | "/admin") {
+  return {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    path: "/admin",
+    path,
     expires: new Date(0),
-  });
+    maxAge: 0,
+  } as const;
 }
 
 export function verifyAdminCredentials(email: string, password: string) {
