@@ -36,6 +36,22 @@ Sprint 4L keeps the rating formula unchanged. RacingLine OEM+ ECU and Dynamic TC
 
 The new VAG templates added in Sprint 4L remain `PROVISIONAL` unless they extend an already calibrated platform pattern. Their ratings are generated through `calculateVehicleCalibrationScores`; no separate formula or client-side recalculation was introduced.
 
+## Sprint 4N Rating Safeguards
+
+Sprint 4N keeps the global rating formula unchanged. The new ordinary-road-car layer uses modest Power, average Handling/Braking, reasonable Reliability, moderate Thermal, and low Track Readiness inputs. Low readiness reflects road intent, tyres, brakes, and cooling, not a blanket penalty. EV daily cars receive acceleration credit through Power but keep low sustained-track and thermal assumptions.
+
+Mustang GTD uses Ford's official Mustang GTD naming only; no separate "Competition" row is seeded. Its rating is top-tier for Power, aero/chassis intent, braking, thermal support, and readiness, but Reliability is not perfect and mass keeps it from becoming an automatic 100. Porsche 911 GT3 RS generations are split: 991.2 and 992 are separate templates, with the 992 receiving stronger Handling, Braking, Thermal, and Track Readiness than the existing 992 GT3.
+
+Mountune power packages affect modified build previews only; they do not alter stock Ford template ratings. RacingLine/Garrett turbo and ECU additions use the same conservative impact path as earlier named provider rows, and named products remain slot-exclusive alternatives.
+
+| Seed area | Source trail | Values used | Rating rationale |
+| --- | --- | --- | --- |
+| Togg T10F | https://www.togg.com.tr/t10f | RWD and AWD EV output classes, acceleration, and mass estimates | RWD versions are road-focused; AWD gets stronger Power but no inflated Handling/Readiness. |
+| Ford Mustang GTD | https://www.ford.com/performance/mustang-gtd/ | 815 hp, 664 lb-ft, rear transaxle, dry sump, carbon-ceramic brakes, Cup 2R tyre/aero package evidence | Near top-tier track baseline while retaining mass and reliability moderation. |
+| Porsche 911 GT3 RS | https://www.porsche.com/international/models/911/911-gt3-rs/911-gt3-rs/ | GT3 RS model data and GT hardware positioning | GT3 RS sits above GT3 in Handling, Braking, and Readiness. |
+| Daily Golf/Polo/Clio and peers | Manufacturer model pages/newsrooms | Road-trim output, drivetrain, mass, and acceleration classes | Kept materially below GTI/RS/ST/AMG/M/RS performance variants in Track Readiness. |
+| Mountune, RacingLine, Garrett, Hondata, KTuner | `docs/ats-mountune-sources.md`, `docs/ats-racingline-sources.md`, `docs/ats-platform-tuning-sources.md` | Provider product naming, claimed package labels, and fitment basis | Exact or family compatibility only; no local formula changes. |
+
 | Code | Source title | Publisher | URL | Values used | Uncertainty note |
 | --- | --- | --- | --- | --- | --- |
 | `vw_golf_gti_mk75_performance` | Golf GTI 7/7.5 model family and RacingLine selector | Volkswagen / RacingLine | https://www.volkswagen-newsroom.com/ and https://www.racingline.com/ | GTI Performance output class, FWD MQB platform, brakes/chassis relative to Mk7 GTI. | Provisional; market trim/DSG/manual curb weights vary. |

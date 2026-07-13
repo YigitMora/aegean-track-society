@@ -73,6 +73,73 @@ const sprint4LVehicleCodes = new Set([
   "cupra_formentor_vz_20",
 ]);
 
+const sprint4NVehicleCodes = new Set([
+  "vw_golf_gti_mk5",
+  "vw_golf_gti_mk6",
+  "vw_golf_gti_mk75",
+  "vw_golf_gti_clubsport_mk8",
+  "vw_golf_r_mk6",
+  "vw_polo_gti_6r",
+  "vw_scirocco_r",
+  "audi_a3_20tfsi_8p",
+  "audi_a3_20tfsi_8v",
+  "audi_s3_8p",
+  "audi_tts_8j",
+  "seat_leon_cupra_1p",
+  "skoda_octavia_vrs_mk3",
+  "skoda_superb_sportline_20tsi",
+  "ford_fiesta_st_edition_mk8",
+  "ford_focus_st_edition_mk4",
+  "ford_focus_rs500_mk2",
+  "ford_mustang_gtd_s650",
+  "porsche_911_gt3_rs_9912",
+  "porsche_911_gt3_rs_992",
+  "porsche_911_turbo_992",
+  "porsche_911_turbo_s_992",
+  "porsche_718_cayman_gt4_rs",
+  "porsche_718_spyder_rs",
+  "porsche_911_st_992",
+  "alpine_a110_gt",
+  "alpine_a110_r_ultime",
+  "audi_rs5_b9",
+  "toyota_gr_corolla",
+  "lexus_rc_f",
+  "lexus_lc_500",
+  "mercedes_amg_gt_c190",
+  "vw_golf_10_tsi_mk8",
+  "vw_golf_15_tsi_mk8",
+  "vw_golf_20_tdi_mk8",
+  "vw_polo_10_tsi_aw",
+  "vw_polo_15_tsi_aw",
+  "vw_passat_15_tsi_b8",
+  "vw_tiguan_15_tsi_mqb",
+  "renault_clio_10_tce",
+  "renault_clio_13_tce",
+  "renault_clio_e_tech",
+  "renault_megane_13_tce",
+  "renault_megane_e_tech_ev",
+  "renault_captur_13_tce",
+  "ford_fiesta_10_ecoboost",
+  "ford_focus_10_ecoboost",
+  "ford_focus_15_ecoboost",
+  "ford_puma_10_ecoboost",
+  "toyota_corolla_15",
+  "toyota_corolla_hybrid",
+  "toyota_yaris_hybrid",
+  "toyota_chr_hybrid",
+  "hyundai_i20_10_tgdi",
+  "hyundai_i30_15_tgdi",
+  "hyundai_kona_hybrid",
+  "hyundai_kona_electric",
+  "bmw_f40_118i",
+  "bmw_g20_320d",
+  "mercedes_a180_w177",
+  "audi_a3_30tfsi_8y",
+  "togg_t10f_rwd_standard_range",
+  "togg_t10f_rwd_long_range",
+  "togg_t10f_awd_performance",
+]);
+
 const root = process.cwd();
 const seedText = readFileSync(resolve(root, "prisma/seed.ts"), "utf8");
 const ratingSourceText = readFileSync(
@@ -84,6 +151,8 @@ const weights = parseVehicleRatingWeights(ratingSourceText);
 const vehicleRows = [
   ...extractVehicleRows("baseVehicleDefinitions"),
   ...extractVehicleRows("expandedPerformanceVehicleDefinitions"),
+  ...extractVehicleRows("sprint4NPerformanceVehicleDefinitions"),
+  ...extractVehicleRows("sprint4NDailyVehicleDefinitions"),
 ].sort((a, b) => a.sortOrder - b.sortOrder || a.code.localeCompare(b.code));
 
 const auditIssues = [
@@ -277,6 +346,8 @@ function vehicleRowFromSeedBlock(block: string): VehicleAuditRow {
   const scores = applyWeightPenalty(baseScores, weightPenalty);
   const notes = sprint4LVehicleCodes.has(code)
     ? ["Sprint 4L VAG template; provisional source trail refreshed."]
+    : sprint4NVehicleCodes.has(code)
+      ? ["Sprint 4N expanded template; source trail and hierarchy reviewed."]
     : [];
 
   return {
@@ -321,6 +392,7 @@ function renderAuditDocument(rows: VehicleAuditRow[], issues: AuditIssue[]) {
     (row) => row.auditResult === "REVIEW_REQUIRED",
   ).length;
   const sprint4LRows = rows.filter((row) => sprint4LVehicleCodes.has(row.code));
+  const sprint4NRows = rows.filter((row) => sprint4NVehicleCodes.has(row.code));
 
   return [
     "# ATS Vehicle Rating Audit",
@@ -342,11 +414,19 @@ function renderAuditDocument(rows: VehicleAuditRow[], issues: AuditIssue[]) {
     "| Client recalculation added | No |",
     "| Seed idempotency changed | No |",
     "",
-    "The audit reuses `calculateVehicleCalibrationScores` for component baselines and reads the centralized rating weights from `src/lib/vehicle-performance-rating.ts`. Existing calibrated and provisional records remain on the same formula. Sprint 4L VAG additions are seeded as `PROVISIONAL` and use the same calibration helper as the existing garage rating flow.",
+    "The audit reuses `calculateVehicleCalibrationScores` for component baselines and reads the centralized rating weights from `src/lib/vehicle-performance-rating.ts`. Existing calibrated and provisional records remain on the same formula. Sprint 4L and Sprint 4N additions use the same calibration helper as the existing garage rating flow.",
     "",
     "## Sprint 4L Templates",
     "",
     renderVehicleTable(sprint4LRows),
+    "",
+    "## Sprint 4N Templates",
+    "",
+    renderVehicleTable(sprint4NRows),
+    "",
+    "## Sprint 4N Hierarchy Checks",
+    "",
+    renderHierarchyComparisons(rows),
     "",
     "## Top Overall Baselines",
     "",
@@ -367,6 +447,40 @@ function renderAuditDocument(rows: VehicleAuditRow[], issues: AuditIssue[]) {
     renderVehicleTable(rows),
     "",
   ].join("\n");
+}
+
+function renderHierarchyComparisons(rows: VehicleAuditRow[]) {
+  const byCode = new Map(rows.map((row) => [row.code, row]));
+  const groups = [
+    [
+      "Golf daily, GTI, Clubsport, R",
+      [
+        "vw_golf_15_tsi_mk8",
+        "vw_golf_gti_mk8",
+        "vw_golf_gti_clubsport_mk8",
+        "vw_golf_r_mk8",
+        "vw_golf_gti_mk85",
+        "vw_golf_gti_clubsport_mk85",
+        "vw_golf_r_mk85",
+      ],
+    ],
+    ["Polo daily vs GTI", ["vw_polo_10_tsi_aw", "vw_polo_gti_6r", "vw_polo_gti_aw"]],
+    [
+      "Clio road trims vs RS",
+      ["renault_clio_10_tce", "renault_clio_13_tce", "renault_clio_e_tech", "renault_clio_rs_200", "renault_clio_rs_trophy"],
+    ],
+    ["Mustang hierarchy", ["ford_mustang_gt_s550", "ford_mustang_dark_horse_s650", "ford_mustang_gtd_s650"]],
+    ["911 hierarchy", ["porsche_911_carrera_992", "porsche_911_carrera_s_992", "porsche_911_gt3_992", "porsche_911_gt3_rs_992"]],
+    ["T10F RWD vs AWD", ["togg_t10f_rwd_standard_range", "togg_t10f_rwd_long_range", "togg_t10f_awd_performance"]],
+    ["Daily EV vs performance EV", ["renault_megane_e_tech_ev", "hyundai_kona_electric", "tesla_model_y_performance", "hyundai_ioniq_5n"]],
+    ["Daily premium vs performance", ["bmw_f40_118i", "bmw_m135i_f40", "audi_a3_30tfsi_8y", "audi_s3_8y", "mercedes_a180_w177", "mercedes_amg_a45_s_w177"]],
+  ] as const;
+
+  return groups.map(([title, codes]) => {
+    const groupRows = codes.map((code) => byCode.get(code)).filter(Boolean) as VehicleAuditRow[];
+
+    return [`### ${title}`, "", renderVehicleTable(groupRows)].join("\n");
+  }).join("\n\n");
 }
 
 function renderVehicleTable(rows: VehicleAuditRow[]) {
