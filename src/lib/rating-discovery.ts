@@ -225,7 +225,7 @@ type DemoModificationDefinition = Prisma.ModificationDefinitionGetPayload<{
   select: typeof modificationDefinitionDiscoverySelect;
 }>;
 
-const demoCandidateCodeGroups = [
+const focusRsDemoCandidateCodeGroups = [
   ["mountune_focus_rs_mk3_m380", "mountune_focus_rs_mk3_m365"],
   ["mountune_ford_intercooler", "cooling_intercooler_upgrade"],
   ["mountune_ford_oil_cooler", "cooling_oil_cooler"],
@@ -240,6 +240,29 @@ const demoCandidateCodeGroups = [
   ["tyre_michelin_pilot_sport_cup_2", "tyre_nankang_cr_s"],
   ["wheel_rays_volk_te37", "wheels_lightweight"],
   ["suspension_alignment_bushing_powerflex"],
+] as const;
+
+const fl5AccountDemoCandidateCodeGroups = [
+  [
+    "tune_hondata_fl5_flashpro_stage_1",
+    "tune_hondata_fl5_flashpro_base",
+  ],
+  ["intercooler_wagner_tuning_competition", "cooling_intercooler_upgrade"],
+  ["oil_cooler_hks_kit", "cooling_oil_cooler"],
+  ["suspension_coilover_kw_v3"],
+  ["brake_pad_ebc_sr21", "brake_pad_ebc_sr11"],
+  ["brake_fluid_castrol_react_srf_racing", "brakes_high_temperature_fluid"],
+  [
+    "brake_lines_goodridge_braided",
+    "brake_lines_hel_performance_braided",
+    "brakes_braided_lines",
+  ],
+  ["tyre_nankang_cr_s", "tyre_michelin_pilot_sport_cup_2"],
+  [
+    "suspension_adjustable_front_camber_hardware",
+    "suspension_camber_plate",
+    "suspension_alignment_bushing_powerflex",
+  ],
 ] as const;
 
 const categoryChipOrder = [
@@ -347,6 +370,45 @@ export function resolveRatingDiscoveryState(
       href: "#ats-rating-how-it-works",
       event: "rating_discovery_how_it_works_clicked",
     },
+  };
+}
+
+export function resolveAccountFl5DemoCta(
+  vehicles: DiscoveryVehicleSummary[],
+): RatingDiscoveryCta {
+  const activeBuild = vehicles.find(
+    (vehicle) => vehicle.vehicleDefinitionId && vehicle.modificationCount > 0,
+  );
+  const matchedVehicle = vehicles.find((vehicle) => vehicle.vehicleDefinitionId);
+
+  if (vehicles.length === 0) {
+    return {
+      label: "İlk Aracımı Ekle",
+      href: "/account/garage/new",
+      event: "account_fl5_demo_garage_clicked",
+    };
+  }
+
+  if (activeBuild) {
+    return {
+      label: "Build Profilimi Aç",
+      href: `/account/garage/${activeBuild.id}#build-profile`,
+      event: "account_fl5_demo_garage_clicked",
+    };
+  }
+
+  if (matchedVehicle) {
+    return {
+      label: "İlk Modifikasyonu Ekle",
+      href: `/account/garage/${matchedVehicle.id}#build-profile`,
+      event: "account_fl5_demo_garage_clicked",
+    };
+  }
+
+  return {
+    label: "Garajımı Aç",
+    href: "/account/garage",
+    event: "account_fl5_demo_garage_clicked",
   };
 }
 
@@ -548,9 +610,45 @@ function homepageStateWithPrimaryCta({
 }
 
 async function getFocusRsRatingDiscoveryDemo(): Promise<RatingDiscoveryDemo | null> {
+  return getVehicleRatingDiscoveryDemo({
+    vehicleCode: "ford_focus_rs_mk3",
+    vehicleLabel: "Ford Focus RS Mk3",
+    vehicleSubtitle: "2.3 EcoBoost",
+    presentationLabel: "Track Build",
+    sourceLabel: "Örnek ATS Build",
+    candidateCodeGroups: focusRsDemoCandidateCodeGroups,
+  });
+}
+
+export async function getFl5AccountRatingDemo(): Promise<RatingDiscoveryDemo | null> {
+  return getVehicleRatingDiscoveryDemo({
+    vehicleCode: "honda_civic_type_r_fl5",
+    vehicleLabel: "Honda Civic Type R FL5",
+    vehicleSubtitle: "2.0 VTEC Turbo",
+    presentationLabel: "Track Build",
+    sourceLabel: "Örnek ATS Build",
+    candidateCodeGroups: fl5AccountDemoCandidateCodeGroups,
+  });
+}
+
+async function getVehicleRatingDiscoveryDemo({
+  vehicleCode,
+  vehicleLabel,
+  vehicleSubtitle,
+  presentationLabel,
+  sourceLabel,
+  candidateCodeGroups,
+}: {
+  vehicleCode: string;
+  vehicleLabel: string;
+  vehicleSubtitle: string;
+  presentationLabel: string;
+  sourceLabel: string;
+  candidateCodeGroups: readonly (readonly string[])[];
+}): Promise<RatingDiscoveryDemo | null> {
   const vehicleDefinition = await prisma.vehicleDefinition.findUnique({
     where: {
-      code: "ford_focus_rs_mk3",
+      code: vehicleCode,
     },
     select: vehicleDefinitionRatingSelect,
   });
@@ -568,7 +666,7 @@ async function getFocusRsRatingDiscoveryDemo(): Promise<RatingDiscoveryDemo | nu
     return null;
   }
 
-  const candidateCodes = demoCandidateCodeGroups.flat();
+  const candidateCodes = candidateCodeGroups.flat();
   const candidateDefinitions = await prisma.modificationDefinition.findMany({
     where: {
       active: true,
@@ -595,24 +693,30 @@ async function getFocusRsRatingDiscoveryDemo(): Promise<RatingDiscoveryDemo | nu
     vehicle: vehicleForRules,
     hasNamedProviderEcuTune,
     hasNamedProviderTurbo,
+    candidateCodeGroups,
   });
+
+  if (selectedDefinitions.length === 0) {
+    return null;
+  }
+
   const { definitions: safeSelectedDefinitions, rating: buildRating } =
     keepDemoRatingBelowMaximum({
       vehicleDefinition,
       selectedDefinitions,
     });
 
-  if (!buildRating) {
+  if (!buildRating || safeSelectedDefinitions.length === 0) {
     return null;
   }
 
   const overallDelta = ratingDelta(stockRating.overall, buildRating.overall);
 
   return {
-    vehicleLabel: "Ford Focus RS Mk3",
-    vehicleSubtitle: "2.3 EcoBoost",
-    presentationLabel: "Track Build",
-    sourceLabel: "Örnek ATS Build",
+    vehicleLabel,
+    vehicleSubtitle,
+    presentationLabel,
+    sourceLabel,
     stockRating,
     buildRating,
     overallDelta,
@@ -634,7 +738,11 @@ async function getFocusRsRatingDiscoveryDemo(): Promise<RatingDiscoveryDemo | nu
       code: definition.code,
       label: formatModificationDefinition(definition),
       categoryLabel: modificationCategoryLabels[definition.category],
-      fitmentLabel: fitmentLabelForDemoPart(definition, vehicleDefinition.id),
+      fitmentLabel: fitmentLabelForDemoPart(
+        definition,
+        vehicleDefinition.id,
+        vehicleLabel,
+      ),
     })),
   };
 }
@@ -689,15 +797,17 @@ function selectDemoDefinitions({
   vehicle,
   hasNamedProviderEcuTune,
   hasNamedProviderTurbo,
+  candidateCodeGroups,
 }: {
   definitionsByCode: Map<string, DemoModificationDefinition>;
   vehicle: VehicleBuildVehicle;
   hasNamedProviderEcuTune: boolean;
   hasNamedProviderTurbo: boolean;
+  candidateCodeGroups: readonly (readonly string[])[];
 }) {
   const selectedDefinitions: DemoModificationDefinition[] = [];
 
-  for (const codeGroup of demoCandidateCodeGroups) {
+  for (const codeGroup of candidateCodeGroups) {
     for (const code of codeGroup) {
       const definition = definitionsByCode.get(code);
 
@@ -782,13 +892,14 @@ function toRatingModificationInput(
 function fitmentLabelForDemoPart(
   definition: DemoModificationDefinition,
   vehicleDefinitionId: string,
+  vehicleLabel: string,
 ) {
   const hasExactTemplateCompatibility = definition.compatibilities.some(
     (compatibility) => compatibility.vehicleDefinitionId === vehicleDefinitionId,
   );
 
   if (hasExactTemplateCompatibility) {
-    return "Focus RS Mk3 katalog uyumu";
+    return `${vehicleLabel} katalog uyumu`;
   }
 
   if (definition.compatibilities.length > 0) {

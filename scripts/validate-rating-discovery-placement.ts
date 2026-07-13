@@ -86,7 +86,7 @@ const checks = [
   {
     name: "Focus RS demo builder remains centralized and read-only",
     pass:
-      data.includes('code: "ford_focus_rs_mk3"') &&
+      data.includes('vehicleCode: "ford_focus_rs_mk3"') &&
       data.includes("calculateVehiclePerformanceRating") &&
       data.includes("evaluateModificationBatchAvailability") &&
       !data.includes("vehicleModification.create") &&

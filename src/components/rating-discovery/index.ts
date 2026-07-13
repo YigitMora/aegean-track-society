@@ -1,3 +1,4 @@
+export { AccountRatingDemo } from "./account-rating-demo";
 export { BuildImpactDemo } from "./build-impact-demo";
 export { RatingComponentBars } from "./rating-component-bars";
 export { RatingDemoCard } from "./rating-demo-card";
