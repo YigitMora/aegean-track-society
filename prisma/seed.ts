@@ -10495,8 +10495,747 @@ function intFromEnv(name: string): number {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
+type SeedPhaseLabel =
+  | "SEED_EVENTS"
+  | "SEED_MODIFICATION_DEFINITIONS"
+  | "SEED_PRODUCT_SPECIFICATIONS"
+  | "SEED_POWERTRAIN_APPLICABILITY"
+  | "SEED_RULES"
+  | "SEED_REQUIREMENTS"
+  | "SEED_CONFLICTS"
+  | "SEED_PLATFORM_FAMILIES"
+  | "SEED_ENGINE_FAMILIES"
+  | "SEED_VEHICLE_DEFINITIONS"
+  | "SEED_COMPATIBILITIES"
+  | "SEED_MODIFICATION_IMPACTS"
+  | "SEED_TUNING_SPECIFICATIONS"
+  | "SEED_TOTAL";
+
+type SeedPhaseCounts = {
+  inputCount: number;
+  createdCount: number;
+  updatedCount: number;
+  unchangedCount: number;
+};
+
+type SeedPhaseResult<T> = SeedPhaseCounts & {
+  value: T;
+};
+
+type IdRecord = {
+  id: string;
+};
+
+type SeedScalar = string | number | boolean | null | Prisma.Decimal;
+type SeedData = Record<string, SeedScalar>;
+
+const seedPhaseSummaries: SeedPhaseCounts[] = [];
+const seedUpdateConcurrency = 8;
+const seedDryRun = process.argv.includes("--dry-run") ||
+  process.argv.includes("--validate-only");
+const modificationCompatibilitySelect = {
+  id: true,
+  modificationDefinitionId: true,
+  vehicleDefinitionId: true,
+  platformFamilyId: true,
+  engineFamilyId: true,
+  vehicleBrand: true,
+  vehicleModel: true,
+  yearFrom: true,
+  yearTo: true,
+  active: true,
+} as const;
+
+function seedPhaseResult<T>(
+  value: T,
+  counts: Partial<SeedPhaseCounts> & Pick<SeedPhaseCounts, "inputCount">,
+): SeedPhaseResult<T> {
+  return {
+    value,
+    inputCount: counts.inputCount,
+    createdCount: counts.createdCount ?? 0,
+    updatedCount: counts.updatedCount ?? 0,
+    unchangedCount: counts.unchangedCount ?? 0,
+  };
+}
+
+async function timeSeedPhase<T>(
+  phase: SeedPhaseLabel,
+  inputCount: number,
+  worker: () => Promise<SeedPhaseResult<T>>,
+): Promise<T> {
+  const startedAt = Date.now();
+  const result = await worker();
+  const durationMs = Date.now() - startedAt;
+  const counts = {
+    inputCount,
+    createdCount: result.createdCount,
+    updatedCount: result.updatedCount,
+    unchangedCount: result.unchangedCount,
+  };
+
+  seedPhaseSummaries.push(counts);
+  logSeedTiming(phase, counts, durationMs);
+
+  return result.value;
+}
+
+function logSeedTiming(
+  phase: SeedPhaseLabel,
+  counts: SeedPhaseCounts,
+  durationMs: number,
+) {
+  console.log("SEED_PHASE", {
+    phase,
+    inputCount: counts.inputCount,
+    createdCount: counts.createdCount,
+    updatedCount: counts.updatedCount,
+    unchangedCount: counts.unchangedCount,
+    durationMs,
+  });
+}
+
+function logSeedTotal(durationMs: number) {
+  const totals = seedPhaseSummaries.reduce<SeedPhaseCounts>(
+    (summary, phase) => ({
+      inputCount: summary.inputCount + phase.inputCount,
+      createdCount: summary.createdCount + phase.createdCount,
+      updatedCount: summary.updatedCount + phase.updatedCount,
+      unchangedCount: summary.unchangedCount + phase.unchangedCount,
+    }),
+    {
+      inputCount: 0,
+      createdCount: 0,
+      updatedCount: 0,
+      unchangedCount: 0,
+    },
+  );
+
+  logSeedTiming("SEED_TOTAL", totals, durationMs);
+}
+
+async function runWithConcurrency<T>(
+  items: readonly T[],
+  concurrency: number,
+  worker: (item: T) => Promise<void>,
+) {
+  let nextIndex = 0;
+
+  async function runWorker() {
+    while (nextIndex < items.length) {
+      const item = items[nextIndex];
+      nextIndex += 1;
+      await worker(item);
+    }
+  }
+
+  const workerCount = Math.min(concurrency, items.length);
+  const workers = Array.from({ length: workerCount }, () => runWorker());
+
+  await Promise.all(workers);
+}
+
+function seedValuesChanged(existing: Record<string, unknown>, desired: SeedData) {
+  return Object.entries(desired).some(
+    ([key, value]) => !sameSeedValue(existing[key], value),
+  );
+}
+
+function sameSeedValue(existing: unknown, desired: SeedScalar) {
+  return normalizeSeedValue(existing) === normalizeSeedValue(desired);
+}
+
+function normalizeSeedValue(value: unknown) {
+  if (value instanceof Prisma.Decimal) {
+    return value.toString();
+  }
+
+  if (value === undefined) {
+    return null;
+  }
+
+  return value;
+}
+
+function requireSeedId(
+  recordsByCode: Map<string, IdRecord>,
+  code: string,
+  label: string,
+) {
+  const record = recordsByCode.get(code);
+
+  if (!record) {
+    throw new Error(`Missing ${label} ${code}`);
+  }
+
+  return record.id;
+}
+
+type SeedStableCodeRow = {
+  code: string;
+  data: SeedData;
+};
+
+type ExistingStableCodeRow = IdRecord & {
+  code: string;
+};
+
+async function seedStableCodeRows<TExisting extends ExistingStableCodeRow>({
+  desiredRows,
+  findExisting,
+  createMany,
+  updateOne,
+}: {
+  desiredRows: SeedStableCodeRow[];
+  findExisting: (codes: string[]) => Promise<TExisting[]>;
+  createMany: (rows: SeedStableCodeRow[]) => Promise<unknown>;
+  updateOne: (row: SeedStableCodeRow) => Promise<unknown>;
+}): Promise<SeedPhaseCounts & { recordsByCode: Map<string, IdRecord> }> {
+  const codes = desiredRows.map((row) => row.code);
+  const existingRows = await findExisting(codes);
+  const existingByCode = new Map(existingRows.map((row) => [row.code, row]));
+  const missingRows = desiredRows.filter((row) => !existingByCode.has(row.code));
+  const changedRows = desiredRows.filter((row) => {
+    const existing = existingByCode.get(row.code);
+
+    return existing ? seedValuesChanged(existing, row.data) : false;
+  });
+
+  if (missingRows.length > 0) {
+    await createMany(missingRows);
+  }
+
+  await runWithConcurrency(changedRows, seedUpdateConcurrency, async (row) => {
+    await updateOne(row);
+  });
+
+  const finalRows = await findExisting(codes);
+
+  return {
+    recordsByCode: idMapFromCodeRows(finalRows),
+    inputCount: desiredRows.length,
+    createdCount: missingRows.length,
+    updatedCount: changedRows.length,
+    unchangedCount: desiredRows.length - missingRows.length - changedRows.length,
+  };
+}
+
+type DesiredSpecificationRow = {
+  modificationDefinitionId: string;
+  data: SeedData;
+};
+
+type ExistingSpecificationRow = IdRecord & {
+  modificationDefinitionId: string;
+  active: boolean;
+};
+
+async function seedOneToOneSpecificationRows<
+  TExisting extends ExistingSpecificationRow,
+>({
+  desiredRows,
+  findExisting,
+  createMany,
+  updateOne,
+  updateActiveState,
+}: {
+  desiredRows: DesiredSpecificationRow[];
+  findExisting: () => Promise<TExisting[]>;
+  createMany: (rows: DesiredSpecificationRow[]) => Promise<unknown>;
+  updateOne: (row: DesiredSpecificationRow) => Promise<unknown>;
+  updateActiveState: (ids: string[], active: boolean) => Promise<unknown>;
+}): Promise<SeedPhaseResult<void>> {
+  const desiredDefinitionIds = new Set(
+    desiredRows.map((row) => row.modificationDefinitionId),
+  );
+  const existingRows = await findExisting();
+  const existingByDefinitionId = new Map(
+    existingRows.map((row) => [row.modificationDefinitionId, row]),
+  );
+  const missingRows = desiredRows.filter(
+    (row) => !existingByDefinitionId.has(row.modificationDefinitionId),
+  );
+  const changedRows = desiredRows.filter((row) => {
+    const existing = existingByDefinitionId.get(row.modificationDefinitionId);
+
+    return existing ? seedValuesChanged(existing, row.data) : false;
+  });
+  const staleIds = existingRows
+    .filter((row) => row.active)
+    .filter((row) => !desiredDefinitionIds.has(row.modificationDefinitionId))
+    .map((row) => row.id);
+
+  if (missingRows.length > 0) {
+    await createMany(missingRows);
+  }
+
+  await runWithConcurrency(changedRows, seedUpdateConcurrency, async (row) => {
+    await updateOne(row);
+  });
+
+  await updateIdsInBatches(staleIds, (ids) => updateActiveState(ids, false));
+
+  return seedPhaseResult(undefined, {
+    inputCount: desiredRows.length,
+    createdCount: missingRows.length,
+    updatedCount: changedRows.length + staleIds.length,
+    unchangedCount: desiredRows.length - missingRows.length - changedRows.length,
+  });
+}
+
+async function updateIdsInBatches(
+  ids: string[],
+  worker: (ids: string[]) => Promise<unknown>,
+  batchSize = 500,
+) {
+  for (let index = 0; index < ids.length; index += batchSize) {
+    await worker(ids.slice(index, index + batchSize));
+  }
+}
+
+function powertrainApplicabilityKey(
+  modificationDefinitionId: string,
+  powertrain: VehiclePowertrain,
+) {
+  return `${modificationDefinitionId}|${powertrain}`;
+}
+
+async function updatePowertrainApplicabilityActiveState(
+  ids: string[],
+  active: boolean,
+) {
+  await updateIdsInBatches(ids, (batchIds) =>
+    prisma.modificationDefinitionPowertrain.updateMany({
+      where: {
+        id: {
+          in: batchIds,
+        },
+      },
+      data: {
+        active,
+      },
+    }),
+  );
+}
+
+function exactCompatibilityKey(
+  modificationDefinitionId: string,
+  vehicleDefinitionId: string,
+) {
+  return `${modificationDefinitionId}|vehicle|${vehicleDefinitionId}`;
+}
+
+function familyCompatibilityKey(row: {
+  modificationDefinitionId: string;
+  platformFamilyId: string | null;
+  engineFamilyId: string | null;
+}) {
+  if (row.engineFamilyId) {
+    return `${row.modificationDefinitionId}|engine|${row.engineFamilyId}`;
+  }
+
+  if (row.platformFamilyId) {
+    return `${row.modificationDefinitionId}|platform|${row.platformFamilyId}`;
+  }
+
+  return `${row.modificationDefinitionId}|family|none`;
+}
+
+async function updateCompatibilityActiveState(ids: string[], active: boolean) {
+  await updateIdsInBatches(ids, (batchIds) =>
+    prisma.modificationCompatibility.updateMany({
+      where: {
+        id: {
+          in: batchIds,
+        },
+      },
+      data: {
+        active,
+      },
+    }),
+  );
+}
+
+function vehicleModificationImpactKey(
+  vehicleDefinitionId: string,
+  modificationDefinitionId: string,
+) {
+  return `${vehicleDefinitionId}|${modificationDefinitionId}`;
+}
+
+async function updateVehicleModificationImpactActiveState(
+  ids: string[],
+  active: boolean,
+) {
+  await updateIdsInBatches(ids, (batchIds) =>
+    prisma.vehicleModificationImpact.updateMany({
+      where: {
+        id: {
+          in: batchIds,
+        },
+      },
+      data: {
+        active,
+      },
+    }),
+  );
+}
+
+function modificationRuleKey(
+  sourceDefinitionId: string,
+  targetDefinitionId: string,
+  ruleType: string,
+) {
+  return `${sourceDefinitionId}|${targetDefinitionId}|${ruleType}`;
+}
+
+async function updateModificationRuleActiveState(ids: string[], active: boolean) {
+  await updateIdsInBatches(ids, (batchIds) =>
+    prisma.modificationRule.updateMany({
+      where: {
+        id: {
+          in: batchIds,
+        },
+      },
+      data: {
+        active,
+      },
+    }),
+  );
+}
+
+function requirementOptionKey(
+  requirementGroupId: string,
+  requiredDefinitionId: string,
+) {
+  return `${requirementGroupId}|${requiredDefinitionId}`;
+}
+
+function idMapFromCodeRows(rows: ExistingStableCodeRow[]) {
+  return new Map(rows.map((row) => [row.code, { id: row.id }]));
+}
+
+function modificationDefinitionData(
+  item: (typeof modificationCatalog)[number],
+): SeedData {
+  const optionalItem = item as typeof item &
+    Partial<{
+      brand: string;
+      variant: string;
+      componentTypeCode: string;
+      usageClass: ModificationUsageClass;
+      description: string;
+      active: boolean;
+      powerImpact: number;
+      handlingImpact: number;
+      brakingImpact: number;
+      reliabilityImpact: number;
+      trackReadinessImpact: number;
+    }>;
+
+  return {
+    category: item.category,
+    brand: optionalItem.brand ?? null,
+    name: item.name,
+    variant: optionalItem.variant ?? null,
+    componentTypeCode: optionalItem.componentTypeCode ?? null,
+    usageClass: optionalItem.usageClass ?? null,
+    description: optionalItem.description ?? null,
+    powerImpact: optionalItem.powerImpact ?? 0,
+    handlingImpact: optionalItem.handlingImpact ?? 0,
+    brakingImpact: optionalItem.brakingImpact ?? 0,
+    reliabilityImpact: optionalItem.reliabilityImpact ?? 0,
+    trackReadinessImpact: optionalItem.trackReadinessImpact ?? 0,
+    active: optionalItem.active ?? true,
+    sortOrder: item.sortOrder,
+  };
+}
+
+function vehicleDefinitionData(
+  item: (typeof vehicleDefinitions)[number],
+): SeedData {
+  const optionalItem = item as typeof item &
+    Partial<{
+      generation: string;
+      chassisCode: string;
+      variant: string;
+      yearFrom: number;
+      yearTo: number;
+      weightPenalty: number;
+    }>;
+
+  return {
+    brand: item.brand,
+    model: item.model,
+    generation: optionalItem.generation ?? null,
+    chassisCode: optionalItem.chassisCode ?? null,
+    variant: optionalItem.variant ?? null,
+    yearFrom: optionalItem.yearFrom ?? null,
+    yearTo: optionalItem.yearTo ?? null,
+    powertrain: item.powertrain,
+    drivetrain: item.drivetrain,
+    powerRating: item.powerRating,
+    handlingRating: item.handlingRating,
+    brakingRating: item.brakingRating,
+    reliabilityRating: item.reliabilityRating,
+    thermalRating: item.thermalRating,
+    trackReadinessRating: item.trackReadinessRating,
+    weightPenalty: optionalItem.weightPenalty ?? 0,
+    ratingStatus: item.ratingStatus,
+    active: true,
+    sortOrder: item.sortOrder,
+  };
+}
+
+function mergeSeedPhaseResults(
+  results: ReadonlyArray<SeedPhaseResult<unknown>>,
+): SeedPhaseResult<void> {
+  return seedPhaseResult(undefined, {
+    inputCount: results.reduce((total, result) => total + result.inputCount, 0),
+    createdCount: results.reduce((total, result) => total + result.createdCount, 0),
+    updatedCount: results.reduce((total, result) => total + result.updatedCount, 0),
+    unchangedCount: results.reduce(
+      (total, result) => total + result.unchangedCount,
+      0,
+    ),
+  });
+}
+
+function productSpecificationInputCount() {
+  return (
+    brakePadSpecifications.length +
+    sportSpringSpecifications.length +
+    bigBrakeKitSpecifications.length +
+    tyreSpecifications.length +
+    wheelSpecifications.length
+  );
+}
+
+function modificationRequirementInputCount() {
+  return modificationRequirementGroups.reduce<number>(
+    (total, group) => total + 1 + group.optionCodes.length,
+    inactiveRequirementGroupCodes.length,
+  );
+}
+
+function compatibilityInputCount() {
+  return (
+    platformModificationCompatibilities.length +
+    engineFamilyModificationCompatibilities.length +
+    platformFamilyModificationCompatibilities.length +
+    broadProductFamilyCompatibilityCodes.length
+  );
+}
+
+async function runSeedDryRun() {
+  validateSeedReferenceGraph();
+  logDryRunPhase("SEED_EVENTS", 4);
+  logDryRunPhase("SEED_MODIFICATION_DEFINITIONS", modificationCatalog.length);
+  logDryRunPhase("SEED_POWERTRAIN_APPLICABILITY", modificationPowertrainApplicabilities.length);
+  logDryRunPhase("SEED_PRODUCT_SPECIFICATIONS", productSpecificationInputCount());
+  logDryRunPhase("SEED_TUNING_SPECIFICATIONS", tuningPackageSpecifications.length);
+  logDryRunPhase("SEED_RULES", 0);
+  logDryRunPhase("SEED_CONFLICTS", modificationConflictCodePairs.length);
+  logDryRunPhase("SEED_REQUIREMENTS", modificationRequirementInputCount());
+  logDryRunPhase("SEED_PLATFORM_FAMILIES", vehiclePlatformFamilies.length);
+  logDryRunPhase("SEED_ENGINE_FAMILIES", vehicleEngineFamilies.length);
+  logDryRunPhase("SEED_VEHICLE_DEFINITIONS", vehicleDefinitions.length);
+  logDryRunPhase("SEED_COMPATIBILITIES", compatibilityInputCount());
+  logDryRunPhase(
+    "SEED_MODIFICATION_IMPACTS",
+    platformModificationImpacts.length + broadProductFamilyCompatibilityCodes.length,
+  );
+  console.log("SEED_DRY_RUN", {
+    status: "ok",
+    modificationDefinitions: modificationCatalog.length,
+    vehicleDefinitions: vehicleDefinitions.length,
+  });
+}
+
+function logDryRunPhase(phase: Exclude<SeedPhaseLabel, "SEED_TOTAL">, inputCount: number) {
+  const counts = {
+    inputCount,
+    createdCount: 0,
+    updatedCount: 0,
+    unchangedCount: inputCount,
+  };
+
+  seedPhaseSummaries.push(counts);
+  logSeedTiming(phase, counts, 0);
+}
+
+function validateSeedReferenceGraph() {
+  const modificationCodes = new Set(modificationCatalog.map((item) => item.code));
+  const vehicleCodes = new Set(vehicleDefinitions.map((item) => item.code));
+  const platformFamilyCodes = new Set(vehiclePlatformFamilies.map((item) => item.code));
+  const engineFamilyCodes = new Set(vehicleEngineFamilies.map((item) => item.code));
+
+  assertUniqueSeedCodes(
+    "modification definition",
+    modificationCatalog.map((item) => item.code),
+  );
+  assertUniqueSeedCodes(
+    "vehicle definition",
+    vehicleDefinitions.map((item) => item.code),
+  );
+  assertUniqueSeedCodes(
+    "platform family",
+    vehiclePlatformFamilies.map((item) => item.code),
+  );
+  assertUniqueSeedCodes(
+    "engine family",
+    vehicleEngineFamilies.map((item) => item.code),
+  );
+  assertSeedCodes(
+    "powertrain applicability modification",
+    modificationPowertrainApplicabilities.map((item) => item.modificationCode),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "brake pad specification modification",
+    brakePadSpecifications.map((item) => item.modificationCode),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "sport spring specification modification",
+    sportSpringSpecifications.map((item) => item.modificationCode),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "big brake kit specification modification",
+    bigBrakeKitSpecifications.map((item) => item.modificationCode),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "tyre specification modification",
+    tyreSpecifications.map((item) => item.modificationCode),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "wheel specification modification",
+    wheelSpecifications.map((item) => item.modificationCode),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "tuning specification modification",
+    tuningPackageSpecifications.map((item) => item.modificationCode),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "exact compatibility modification",
+    platformModificationCompatibilities.map((item) => item.modificationCode),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "exact compatibility vehicle",
+    platformModificationCompatibilities.map((item) => item.vehicleCode),
+    vehicleCodes,
+  );
+  assertSeedCodes(
+    "engine-family compatibility modification",
+    engineFamilyModificationCompatibilities.map((item) => item.modificationCode),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "engine-family compatibility family",
+    engineFamilyModificationCompatibilities.map((item) => item.familyCode),
+    engineFamilyCodes,
+  );
+  assertSeedCodes(
+    "platform-family compatibility modification",
+    platformFamilyModificationCompatibilities.map((item) => item.modificationCode),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "platform-family compatibility family",
+    platformFamilyModificationCompatibilities.map((item) => item.familyCode),
+    platformFamilyCodes,
+  );
+  assertSeedCodes(
+    "platform impact modification",
+    platformModificationImpacts.map((item) => item.modificationCode),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "platform impact vehicle",
+    platformModificationImpacts.map((item) => item.vehicleCode),
+    vehicleCodes,
+  );
+  assertSeedCodes(
+    "vehicle family link vehicle",
+    vehicleDefinitionFamilyLinks.map((item) => item.vehicleCode),
+    vehicleCodes,
+  );
+  assertSeedCodes(
+    "vehicle family link platform family",
+    vehicleDefinitionFamilyLinks
+      .map((item) => item.platformFamilyCode)
+      .filter((code): code is string => Boolean(code)),
+    platformFamilyCodes,
+  );
+  assertSeedCodes(
+    "vehicle family link engine family",
+    vehicleDefinitionFamilyLinks
+      .map((item) => item.engineFamilyCode)
+      .filter((code): code is string => Boolean(code)),
+    engineFamilyCodes,
+  );
+  assertSeedCodes(
+    "conflict modification",
+    modificationConflictCodePairs.flatMap(([sourceCode, targetCode]) => [
+      sourceCode,
+      targetCode,
+    ]),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "requirement source modification",
+    modificationRequirementGroups.map((item) => item.sourceCode),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "requirement option modification",
+    modificationRequirementGroups.flatMap((item) => item.optionCodes),
+    modificationCodes,
+  );
+  assertSeedCodes(
+    "broad product-family modification",
+    [...broadProductFamilyCompatibilityCodes],
+    modificationCodes,
+  );
+}
+
+function assertUniqueSeedCodes(label: string, codes: string[]) {
+  const seenCodes = new Set<string>();
+
+  for (const code of codes) {
+    if (seenCodes.has(code)) {
+      throw new Error(`Duplicate ${label} seed code ${code}`);
+    }
+
+    seenCodes.add(code);
+  }
+}
+
+function assertSeedCodes(label: string, codes: string[], knownCodes: Set<string>) {
+  for (const code of codes) {
+    if (!knownCodes.has(code)) {
+      throw new Error(`Missing ${label} seed code ${code}`);
+    }
+  }
+}
+
 async function main() {
-  const event = await prisma.event.upsert({
+  const totalStartedAt = Date.now();
+
+  if (seedDryRun) {
+    await runSeedDryRun();
+    logSeedTotal(Date.now() - totalStartedAt);
+    return;
+  }
+
+  const { event, links } = await timeSeedPhase("SEED_EVENTS", 4, async () => {
+    const event = await prisma.event.upsert({
     where: { slug: eventSlug },
     update: {
       code: "KULA",
@@ -10582,260 +11321,417 @@ async function main() {
     });
   }
 
-  const definitionsByCode = await seedModificationCatalog();
-  await seedModificationPowertrainApplicabilities(definitionsByCode);
-  await seedBrakePadSpecifications(definitionsByCode);
-  await seedSportSpringSpecifications(definitionsByCode);
-  await seedBigBrakeKitSpecifications(definitionsByCode);
-  await seedTyreSpecifications(definitionsByCode);
-  await seedWheelSpecifications(definitionsByCode);
-  await seedTuningPackageSpecifications(definitionsByCode);
-  await seedModificationConflicts(definitionsByCode);
-  await seedModificationRequirements(definitionsByCode);
-  await deactivateInactiveRequirementGroups();
-  const platformFamiliesByCode = await seedVehiclePlatformFamilies();
-  const engineFamiliesByCode = await seedVehicleEngineFamilies();
-  const vehicleDefinitionsByCode = await seedVehicleDefinitions();
-  await seedVehicleDefinitionFamilyLinks(
-    vehicleDefinitionsByCode,
-    platformFamiliesByCode,
-    engineFamiliesByCode,
+    return seedPhaseResult({ event, links }, {
+      inputCount: 4,
+      createdCount: 0,
+      updatedCount: 4,
+    });
+  });
+
+  const definitionsByCode = await timeSeedPhase(
+    "SEED_MODIFICATION_DEFINITIONS",
+    modificationCatalog.length,
+    seedModificationCatalog,
   );
-  await seedPlatformCompatibilities(definitionsByCode, vehicleDefinitionsByCode);
-  await seedFamilyCompatibilities(
-    definitionsByCode,
-    platformFamiliesByCode,
-    engineFamiliesByCode,
+  await timeSeedPhase(
+    "SEED_POWERTRAIN_APPLICABILITY",
+    modificationPowertrainApplicabilities.length,
+    () => seedModificationPowertrainApplicabilities(definitionsByCode),
   );
-  await seedPlatformImpacts(definitionsByCode, vehicleDefinitionsByCode);
-  await deactivateBroadProductFamilyRestrictions(definitionsByCode);
-  await reactivatePlatformDefinitions(definitionsByCode);
+  await timeSeedPhase("SEED_PRODUCT_SPECIFICATIONS", productSpecificationInputCount(), async () => {
+    const results = [
+      await seedBrakePadSpecifications(definitionsByCode),
+      await seedSportSpringSpecifications(definitionsByCode),
+      await seedBigBrakeKitSpecifications(definitionsByCode),
+      await seedTyreSpecifications(definitionsByCode),
+      await seedWheelSpecifications(definitionsByCode),
+    ];
+
+    return mergeSeedPhaseResults(results);
+  });
+  await timeSeedPhase(
+    "SEED_TUNING_SPECIFICATIONS",
+    tuningPackageSpecifications.length,
+    () => seedTuningPackageSpecifications(definitionsByCode),
+  );
+  await timeSeedPhase("SEED_RULES", 0, async () =>
+    seedPhaseResult(undefined, { inputCount: 0 }),
+  );
+  await timeSeedPhase("SEED_CONFLICTS", modificationConflictCodePairs.length, () =>
+    seedModificationConflicts(definitionsByCode),
+  );
+  await timeSeedPhase("SEED_REQUIREMENTS", modificationRequirementInputCount(), async () => {
+    const result = await seedModificationRequirements(definitionsByCode);
+    const inactiveResult = await deactivateInactiveRequirementGroups();
+
+    return mergeSeedPhaseResults([result, inactiveResult]);
+  });
+  const platformFamiliesByCode = await timeSeedPhase(
+    "SEED_PLATFORM_FAMILIES",
+    vehiclePlatformFamilies.length,
+    seedVehiclePlatformFamilies,
+  );
+  const engineFamiliesByCode = await timeSeedPhase(
+    "SEED_ENGINE_FAMILIES",
+    vehicleEngineFamilies.length,
+    seedVehicleEngineFamilies,
+  );
+  const vehicleDefinitionsByCode = await timeSeedPhase(
+    "SEED_VEHICLE_DEFINITIONS",
+    vehicleDefinitions.length,
+    async () => {
+      const definitionsResult = await seedVehicleDefinitions();
+      const familyLinkResult = await seedVehicleDefinitionFamilyLinks(
+        definitionsResult.value,
+        platformFamiliesByCode,
+        engineFamiliesByCode,
+      );
+
+      return seedPhaseResult(definitionsResult.value, {
+        inputCount: definitionsResult.inputCount + familyLinkResult.inputCount,
+        createdCount: definitionsResult.createdCount,
+        updatedCount: definitionsResult.updatedCount + familyLinkResult.updatedCount,
+        unchangedCount:
+          definitionsResult.unchangedCount + familyLinkResult.unchangedCount,
+      });
+    },
+  );
+  await timeSeedPhase("SEED_COMPATIBILITIES", compatibilityInputCount(), async () => {
+    const platformResult = await seedPlatformCompatibilities(
+      definitionsByCode,
+      vehicleDefinitionsByCode,
+    );
+    const familyResult = await seedFamilyCompatibilities(
+      definitionsByCode,
+      platformFamiliesByCode,
+      engineFamiliesByCode,
+    );
+    const broadResult = await deactivateBroadProductFamilyCompatibilityRestrictions(
+      definitionsByCode,
+    );
+    const reactivationResult = await reactivatePlatformDefinitions(definitionsByCode);
+
+    return mergeSeedPhaseResults([
+      platformResult,
+      familyResult,
+      broadResult,
+      reactivationResult,
+    ]);
+  });
+  await timeSeedPhase(
+    "SEED_MODIFICATION_IMPACTS",
+    platformModificationImpacts.length + broadProductFamilyCompatibilityCodes.length,
+    async () => {
+      const impactResult = await seedPlatformImpacts(
+        definitionsByCode,
+        vehicleDefinitionsByCode,
+      );
+      const broadResult = await deactivateBroadProductFamilyImpactRestrictions(
+        definitionsByCode,
+      );
+
+      return mergeSeedPhaseResults([impactResult, broadResult]);
+    },
+  );
 
   console.log(`Seeded ${event.name} with ${links.length} package-day links.`);
   console.log(`Seeded ${modificationCatalog.length} modification definitions.`);
   console.log(`Seeded ${vehiclePlatformFamilies.length} platform families.`);
   console.log(`Seeded ${vehicleEngineFamilies.length} engine families.`);
   console.log(`Seeded ${vehicleDefinitions.length} vehicle definitions.`);
+  logSeedTotal(Date.now() - totalStartedAt);
 }
 
-async function seedModificationCatalog() {
-  const definitionsByCode = new Map<string, { id: string }>();
+async function seedModificationCatalog(): Promise<
+  SeedPhaseResult<Map<string, IdRecord>>
+> {
+  const desiredDefinitions = modificationCatalog.map((item) => ({
+    code: item.code,
+    data: modificationDefinitionData(item),
+  }));
+  const codes = desiredDefinitions.map((item) => item.code);
+  const existingDefinitions = await prisma.modificationDefinition.findMany({
+    where: {
+      code: {
+        in: codes,
+      },
+    },
+    select: {
+      id: true,
+      code: true,
+      category: true,
+      brand: true,
+      name: true,
+      variant: true,
+      componentTypeCode: true,
+      usageClass: true,
+      description: true,
+      powerImpact: true,
+      handlingImpact: true,
+      brakingImpact: true,
+      reliabilityImpact: true,
+      trackReadinessImpact: true,
+      active: true,
+      sortOrder: true,
+    },
+  });
+  const existingByCode = new Map(
+    existingDefinitions.map((definition) => [definition.code, definition]),
+  );
+  const missingDefinitions = desiredDefinitions.filter(
+    (definition) => !existingByCode.has(definition.code),
+  );
+  const changedDefinitions = desiredDefinitions.filter((definition) => {
+    const existing = existingByCode.get(definition.code);
 
-  for (const item of modificationCatalog) {
-    const optionalItem = item as typeof item &
-      Partial<{
-        brand: string;
-        variant: string;
-        componentTypeCode: string;
-        usageClass: ModificationUsageClass;
-        description: string;
-        active: boolean;
-        powerImpact: number;
-        handlingImpact: number;
-        brakingImpact: number;
-        reliabilityImpact: number;
-        trackReadinessImpact: number;
-      }>;
-    const definition = await prisma.modificationDefinition.upsert({
-      where: { code: item.code },
-      update: {
-        category: item.category,
-        brand: optionalItem.brand ?? null,
-        name: item.name,
-        variant: optionalItem.variant ?? null,
-        componentTypeCode: optionalItem.componentTypeCode ?? null,
-        usageClass: optionalItem.usageClass ?? null,
-        description: optionalItem.description ?? null,
-        powerImpact: optionalItem.powerImpact ?? 0,
-        handlingImpact: optionalItem.handlingImpact ?? 0,
-        brakingImpact: optionalItem.brakingImpact ?? 0,
-        reliabilityImpact: optionalItem.reliabilityImpact ?? 0,
-        trackReadinessImpact: optionalItem.trackReadinessImpact ?? 0,
-        active: optionalItem.active ?? true,
-        sortOrder: item.sortOrder,
-      },
-      create: {
-        code: item.code,
-        category: item.category,
-        brand: optionalItem.brand ?? null,
-        name: item.name,
-        variant: optionalItem.variant ?? null,
-        componentTypeCode: optionalItem.componentTypeCode ?? null,
-        usageClass: optionalItem.usageClass ?? null,
-        description: optionalItem.description ?? null,
-        powerImpact: optionalItem.powerImpact ?? 0,
-        handlingImpact: optionalItem.handlingImpact ?? 0,
-        brakingImpact: optionalItem.brakingImpact ?? 0,
-        reliabilityImpact: optionalItem.reliabilityImpact ?? 0,
-        trackReadinessImpact: optionalItem.trackReadinessImpact ?? 0,
-        active: optionalItem.active ?? true,
-        sortOrder: item.sortOrder,
-      },
-      select: {
-        id: true,
-      },
+    return existing ? seedValuesChanged(existing, definition.data) : false;
+  });
+
+  if (missingDefinitions.length > 0) {
+    await prisma.modificationDefinition.createMany({
+      data: missingDefinitions.map((definition) => ({
+        code: definition.code,
+        ...definition.data,
+      })) as Prisma.ModificationDefinitionCreateManyInput[],
+      skipDuplicates: true,
     });
-
-    definitionsByCode.set(item.code, definition);
   }
 
-  return definitionsByCode;
+  await runWithConcurrency(
+    changedDefinitions,
+    seedUpdateConcurrency,
+    async (definition) => {
+      await prisma.modificationDefinition.update({
+        where: {
+          code: definition.code,
+        },
+        data: definition.data,
+      });
+    },
+  );
+
+  const finalDefinitions = await prisma.modificationDefinition.findMany({
+    where: {
+      code: {
+        in: codes,
+      },
+    },
+    select: {
+      id: true,
+      code: true,
+    },
+  });
+
+  return seedPhaseResult(idMapFromCodeRows(finalDefinitions), {
+    inputCount: desiredDefinitions.length,
+    createdCount: missingDefinitions.length,
+    updatedCount: changedDefinitions.length,
+    unchangedCount:
+      desiredDefinitions.length - missingDefinitions.length - changedDefinitions.length,
+  });
 }
 
-async function seedVehiclePlatformFamilies() {
-  const familiesByCode = new Map<string, { id: string }>();
+async function seedVehiclePlatformFamilies(): Promise<
+  SeedPhaseResult<Map<string, IdRecord>>
+> {
+  const desiredFamilies = vehiclePlatformFamilies.map((family) => ({
+    code: family.code,
+    data: {
+      brand: family.brand,
+      name: family.name,
+      generation: family.generation,
+      active: true,
+    } satisfies SeedData,
+  }));
+  const result = await seedStableCodeRows({
+    desiredRows: desiredFamilies,
+    findExisting: (codes) =>
+      prisma.vehiclePlatformFamily.findMany({
+        where: {
+          code: {
+            in: codes,
+          },
+        },
+        select: {
+          id: true,
+          code: true,
+          brand: true,
+          name: true,
+          generation: true,
+          active: true,
+        },
+      }),
+    createMany: (rows) =>
+      prisma.vehiclePlatformFamily.createMany({
+        data: rows.map((row) => ({
+          code: row.code,
+          ...row.data,
+        })) as Prisma.VehiclePlatformFamilyCreateManyInput[],
+        skipDuplicates: true,
+      }),
+    updateOne: (row) =>
+      prisma.vehiclePlatformFamily.update({
+        where: {
+          code: row.code,
+        },
+        data: row.data,
+      }),
+  });
 
-  for (const item of vehiclePlatformFamilies) {
-    const family = await prisma.vehiclePlatformFamily.upsert({
-      where: {
-        code: item.code,
-      },
-      update: {
-        brand: item.brand,
-        name: item.name,
-        generation: item.generation,
-        active: true,
-      },
-      create: {
-        code: item.code,
-        brand: item.brand,
-        name: item.name,
-        generation: item.generation,
-        active: true,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    familiesByCode.set(item.code, family);
-  }
-
-  return familiesByCode;
+  return seedPhaseResult(result.recordsByCode, result);
 }
 
-async function seedVehicleEngineFamilies() {
-  const familiesByCode = new Map<string, { id: string }>();
+async function seedVehicleEngineFamilies(): Promise<
+  SeedPhaseResult<Map<string, IdRecord>>
+> {
+  const desiredFamilies = vehicleEngineFamilies.map((family) => ({
+    code: family.code,
+    data: {
+      manufacturer: family.manufacturer,
+      name: family.name,
+      displacementCc: family.displacementCc,
+      cylinderCount: family.cylinderCount,
+      inductionType: family.inductionType,
+      fuelType: family.fuelType,
+      active: true,
+    } satisfies SeedData,
+  }));
+  const result = await seedStableCodeRows({
+    desiredRows: desiredFamilies,
+    findExisting: (codes) =>
+      prisma.vehicleEngineFamily.findMany({
+        where: {
+          code: {
+            in: codes,
+          },
+        },
+        select: {
+          id: true,
+          code: true,
+          manufacturer: true,
+          name: true,
+          displacementCc: true,
+          cylinderCount: true,
+          inductionType: true,
+          fuelType: true,
+          active: true,
+        },
+      }),
+    createMany: (rows) =>
+      prisma.vehicleEngineFamily.createMany({
+        data: rows.map((row) => ({
+          code: row.code,
+          ...row.data,
+        })) as Prisma.VehicleEngineFamilyCreateManyInput[],
+        skipDuplicates: true,
+      }),
+    updateOne: (row) =>
+      prisma.vehicleEngineFamily.update({
+        where: {
+          code: row.code,
+        },
+        data: row.data,
+      }),
+  });
 
-  for (const item of vehicleEngineFamilies) {
-    const family = await prisma.vehicleEngineFamily.upsert({
-      where: {
-        code: item.code,
-      },
-      update: {
-        manufacturer: item.manufacturer,
-        name: item.name,
-        displacementCc: item.displacementCc,
-        cylinderCount: item.cylinderCount,
-        inductionType: item.inductionType,
-        fuelType: item.fuelType,
-        active: true,
-      },
-      create: {
-        code: item.code,
-        manufacturer: item.manufacturer,
-        name: item.name,
-        displacementCc: item.displacementCc,
-        cylinderCount: item.cylinderCount,
-        inductionType: item.inductionType,
-        fuelType: item.fuelType,
-        active: true,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    familiesByCode.set(item.code, family);
-  }
-
-  return familiesByCode;
+  return seedPhaseResult(result.recordsByCode, result);
 }
 
-async function seedVehicleDefinitions() {
-  const vehicleDefinitionsByCode = new Map<string, { id: string }>();
+async function seedVehicleDefinitions(): Promise<
+  SeedPhaseResult<Map<string, IdRecord>>
+> {
+  const desiredDefinitions = vehicleDefinitions.map((definition) => ({
+    code: definition.code,
+    data: vehicleDefinitionData(definition),
+  }));
+  const result = await seedStableCodeRows({
+    desiredRows: desiredDefinitions,
+    findExisting: (codes) =>
+      prisma.vehicleDefinition.findMany({
+        where: {
+          code: {
+            in: codes,
+          },
+        },
+        select: {
+          id: true,
+          code: true,
+          brand: true,
+          model: true,
+          generation: true,
+          chassisCode: true,
+          variant: true,
+          yearFrom: true,
+          yearTo: true,
+          powertrain: true,
+          drivetrain: true,
+          powerRating: true,
+          handlingRating: true,
+          brakingRating: true,
+          reliabilityRating: true,
+          thermalRating: true,
+          trackReadinessRating: true,
+          weightPenalty: true,
+          ratingStatus: true,
+          active: true,
+          sortOrder: true,
+        },
+      }),
+    createMany: (rows) =>
+      prisma.vehicleDefinition.createMany({
+        data: rows.map((row) => ({
+          code: row.code,
+          ...row.data,
+        })) as Prisma.VehicleDefinitionCreateManyInput[],
+        skipDuplicates: true,
+      }),
+    updateOne: (row) =>
+      prisma.vehicleDefinition.update({
+        where: {
+          code: row.code,
+        },
+        data: row.data,
+      }),
+  });
 
-  for (const item of vehicleDefinitions) {
-    const optionalItem = item as typeof item &
-      Partial<{
-        generation: string;
-        chassisCode: string;
-        variant: string;
-        yearFrom: number;
-        yearTo: number;
-        weightPenalty: number;
-      }>;
-    const definition = await prisma.vehicleDefinition.upsert({
-      where: {
-        code: item.code,
-      },
-      update: {
-        brand: item.brand,
-        model: item.model,
-        generation: optionalItem.generation ?? null,
-        chassisCode: optionalItem.chassisCode ?? null,
-        variant: optionalItem.variant ?? null,
-        yearFrom: optionalItem.yearFrom ?? null,
-        yearTo: optionalItem.yearTo ?? null,
-        powertrain: item.powertrain,
-        drivetrain: item.drivetrain,
-        powerRating: item.powerRating,
-        handlingRating: item.handlingRating,
-        brakingRating: item.brakingRating,
-        reliabilityRating: item.reliabilityRating,
-        thermalRating: item.thermalRating,
-        trackReadinessRating: item.trackReadinessRating,
-        weightPenalty: optionalItem.weightPenalty ?? 0,
-        ratingStatus: item.ratingStatus,
-        active: true,
-        sortOrder: item.sortOrder,
-      },
-      create: {
-        code: item.code,
-        brand: item.brand,
-        model: item.model,
-        generation: optionalItem.generation ?? null,
-        chassisCode: optionalItem.chassisCode ?? null,
-        variant: optionalItem.variant ?? null,
-        yearFrom: optionalItem.yearFrom ?? null,
-        yearTo: optionalItem.yearTo ?? null,
-        powertrain: item.powertrain,
-        drivetrain: item.drivetrain,
-        powerRating: item.powerRating,
-        handlingRating: item.handlingRating,
-        brakingRating: item.brakingRating,
-        reliabilityRating: item.reliabilityRating,
-        thermalRating: item.thermalRating,
-        trackReadinessRating: item.trackReadinessRating,
-        weightPenalty: optionalItem.weightPenalty ?? 0,
-        ratingStatus: item.ratingStatus,
-        active: true,
-        sortOrder: item.sortOrder,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    vehicleDefinitionsByCode.set(item.code, definition);
-  }
-
-  return vehicleDefinitionsByCode;
+  return seedPhaseResult(result.recordsByCode, result);
 }
 
 async function seedVehicleDefinitionFamilyLinks(
   vehicleDefinitionsByCode: Map<string, { id: string }>,
   platformFamiliesByCode: Map<string, { id: string }>,
   engineFamiliesByCode: Map<string, { id: string }>,
-) {
+): Promise<SeedPhaseResult<void>> {
   const linksByVehicleCode = new Map(
     vehicleDefinitionFamilyLinks.map((link) => [link.vehicleCode, link]),
   );
+  const currentDefinitions = await prisma.vehicleDefinition.findMany({
+    where: {
+      code: {
+        in: vehicleDefinitions.map((item) => item.code),
+      },
+    },
+    select: {
+      id: true,
+      code: true,
+      platformFamilyId: true,
+      engineFamilyId: true,
+    },
+  });
+  const currentByCode = new Map(
+    currentDefinitions.map((definition) => [definition.code, definition]),
+  );
+  const changedDefinitions: Array<{
+    id: string;
+    platformFamilyId: string | null;
+    engineFamilyId: string | null;
+  }> = [];
 
   for (const item of vehicleDefinitions) {
     const vehicleDefinition = vehicleDefinitionsByCode.get(item.code);
+    const currentDefinition = currentByCode.get(item.code);
 
-    if (!vehicleDefinition) {
+    if (!vehicleDefinition || !currentDefinition) {
       throw new Error(`Missing vehicle definition for family link ${item.code}`);
     }
 
@@ -10855,387 +11751,514 @@ async function seedVehicleDefinitionFamilyLinks(
       throw new Error(`Missing engine family ${link.engineFamilyCode}`);
     }
 
+    const platformFamilyId = platformFamily?.id ?? null;
+    const engineFamilyId = engineFamily?.id ?? null;
+
+    if (
+      currentDefinition.platformFamilyId !== platformFamilyId ||
+      currentDefinition.engineFamilyId !== engineFamilyId
+    ) {
+      changedDefinitions.push({
+        id: vehicleDefinition.id,
+        platformFamilyId,
+        engineFamilyId,
+      });
+    }
+  }
+
+  await runWithConcurrency(changedDefinitions, seedUpdateConcurrency, async (definition) => {
     await prisma.vehicleDefinition.update({
       where: {
-        id: vehicleDefinition.id,
+        id: definition.id,
       },
       data: {
-        platformFamilyId: platformFamily?.id ?? null,
-        engineFamilyId: engineFamily?.id ?? null,
+        platformFamilyId: definition.platformFamilyId,
+        engineFamilyId: definition.engineFamilyId,
       },
     });
-  }
+  });
+
+  return seedPhaseResult(undefined, {
+    inputCount: vehicleDefinitions.length,
+    updatedCount: changedDefinitions.length,
+    unchangedCount: vehicleDefinitions.length - changedDefinitions.length,
+  });
 }
 
 async function seedModificationPowertrainApplicabilities(
   definitionsByCode: Map<string, { id: string }>,
-) {
-  const activePowertrainsByDefinitionId = new Map<string, Set<VehiclePowertrain>>();
+): Promise<SeedPhaseResult<void>> {
+  const desiredRows = modificationPowertrainApplicabilities.flatMap((applicability) => {
+    const modificationDefinitionId = requireSeedId(
+      definitionsByCode,
+      applicability.modificationCode,
+      "modification definition for powertrain applicability",
+    );
 
-  for (const applicability of modificationPowertrainApplicabilities) {
-    const modificationDefinition = definitionsByCode.get(applicability.modificationCode);
+    return applicability.powertrains.map((powertrain) => ({
+      modificationDefinitionId,
+      powertrain,
+      active: true,
+    }));
+  });
+  const desiredKeys = new Set(
+    desiredRows.map((row) =>
+      powertrainApplicabilityKey(row.modificationDefinitionId, row.powertrain),
+    ),
+  );
+  const existingRows = await prisma.modificationDefinitionPowertrain.findMany({
+    select: {
+      id: true,
+      modificationDefinitionId: true,
+      powertrain: true,
+      active: true,
+    },
+  });
+  const existingByKey = new Map(
+    existingRows.map((row) => [
+      powertrainApplicabilityKey(row.modificationDefinitionId, row.powertrain),
+      row,
+    ]),
+  );
+  const missingRows = desiredRows.filter(
+    (row) =>
+      !existingByKey.has(
+        powertrainApplicabilityKey(row.modificationDefinitionId, row.powertrain),
+      ),
+  );
+  const reactivateIds = desiredRows
+    .map((row) =>
+      existingByKey.get(
+        powertrainApplicabilityKey(row.modificationDefinitionId, row.powertrain),
+      ),
+    )
+    .filter((row): row is NonNullable<typeof row> => Boolean(row && !row.active))
+    .map((row) => row.id);
+  const deactivateIds = existingRows
+    .filter((row) => row.active)
+    .filter(
+      (row) =>
+        !desiredKeys.has(
+          powertrainApplicabilityKey(row.modificationDefinitionId, row.powertrain),
+        ),
+    )
+    .map((row) => row.id);
 
-    if (!modificationDefinition) {
-      throw new Error(
-        `Missing modification definition for powertrain applicability ${applicability.modificationCode}`,
-      );
-    }
-
-    const activePowertrains =
-      activePowertrainsByDefinitionId.get(modificationDefinition.id) ??
-      new Set<VehiclePowertrain>();
-
-    for (const powertrain of applicability.powertrains) {
-      activePowertrains.add(powertrain);
-
-      await prisma.modificationDefinitionPowertrain.upsert({
-        where: {
-          modificationDefinitionId_powertrain: {
-            modificationDefinitionId: modificationDefinition.id,
-            powertrain,
-          },
-        },
-        update: {
-          active: true,
-        },
-        create: {
-          modificationDefinitionId: modificationDefinition.id,
-          powertrain,
-          active: true,
-        },
-      });
-    }
-
-    activePowertrainsByDefinitionId.set(modificationDefinition.id, activePowertrains);
-  }
-
-  for (const [
-    modificationDefinitionId,
-    activePowertrains,
-  ] of activePowertrainsByDefinitionId) {
-    await prisma.modificationDefinitionPowertrain.updateMany({
-      where: {
-        modificationDefinitionId,
-        active: true,
-        powertrain: {
-          notIn: [...activePowertrains],
-        },
-      },
-      data: {
-        active: false,
-      },
+  if (missingRows.length > 0) {
+    await prisma.modificationDefinitionPowertrain.createMany({
+      data: missingRows,
+      skipDuplicates: true,
     });
   }
 
-  const activeRestrictedDefinitionIds = new Set(activePowertrainsByDefinitionId.keys());
+  await updatePowertrainApplicabilityActiveState(reactivateIds, true);
+  await updatePowertrainApplicabilityActiveState(deactivateIds, false);
 
-  await prisma.modificationDefinitionPowertrain.updateMany({
-    where: {
-      modificationDefinitionId: {
-        notIn: [...activeRestrictedDefinitionIds],
-      },
-      active: true,
-    },
-    data: {
-      active: false,
-    },
+  return seedPhaseResult(undefined, {
+    inputCount: desiredRows.length,
+    createdCount: missingRows.length,
+    updatedCount: reactivateIds.length + deactivateIds.length,
+    unchangedCount: desiredRows.length - missingRows.length - reactivateIds.length,
   });
 }
 
 async function seedBrakePadSpecifications(
   definitionsByCode: Map<string, { id: string }>,
-) {
-  const activeBrakePadDefinitionIds = new Set<string>();
-
-  for (const spec of brakePadSpecifications) {
-    const modificationDefinition = definitionsByCode.get(spec.modificationCode);
-
-    if (!modificationDefinition) {
-      throw new Error(
-        `Missing modification definition for brake pad specification ${spec.modificationCode}`,
-      );
-    }
-
-    activeBrakePadDefinitionIds.add(modificationDefinition.id);
-
-    await prisma.brakePadSpecification.upsert({
-      where: {
-        modificationDefinitionId: modificationDefinition.id,
-      },
-      update: {
-        coldPerformance: clampCatalogScore(spec.coldPerformance),
-        hotPerformance: clampCatalogScore(spec.hotPerformance),
-        modulation: clampCatalogScore(spec.modulation),
-        fadeResistance: clampCatalogScore(spec.fadeResistance),
-        endurance: clampCatalogScore(spec.endurance),
-        rotorWear: clampCatalogScore(spec.rotorWear),
-        streetSuitability: clampCatalogScore(spec.streetSuitability),
-        noiseLevel: clampCatalogScore(spec.noiseLevel),
-        minOperatingTempC: spec.minOperatingTempC ?? null,
-        maxOperatingTempC: spec.maxOperatingTempC ?? null,
-        sourceNote: spec.sourceNote ?? null,
-        active: true,
-      },
-      create: {
-        modificationDefinitionId: modificationDefinition.id,
-        coldPerformance: clampCatalogScore(spec.coldPerformance),
-        hotPerformance: clampCatalogScore(spec.hotPerformance),
-        modulation: clampCatalogScore(spec.modulation),
-        fadeResistance: clampCatalogScore(spec.fadeResistance),
-        endurance: clampCatalogScore(spec.endurance),
-        rotorWear: clampCatalogScore(spec.rotorWear),
-        streetSuitability: clampCatalogScore(spec.streetSuitability),
-        noiseLevel: clampCatalogScore(spec.noiseLevel),
-        minOperatingTempC: spec.minOperatingTempC ?? null,
-        maxOperatingTempC: spec.maxOperatingTempC ?? null,
-        sourceNote: spec.sourceNote ?? null,
-        active: true,
-      },
-    });
-  }
-
-  await prisma.brakePadSpecification.updateMany({
-    where: {
-      modificationDefinitionId: {
-        notIn: [...activeBrakePadDefinitionIds],
-      },
-    },
-    data: {
-      active: false,
-    },
+): Promise<SeedPhaseResult<void>> {
+  return seedOneToOneSpecificationRows({
+    desiredRows: brakePadSpecifications.map((spec) => ({
+      modificationDefinitionId: requireSeedId(
+        definitionsByCode,
+        spec.modificationCode,
+        "modification definition for brake pad specification",
+      ),
+      data: brakePadSpecificationData(spec),
+    })),
+    findExisting: () =>
+      prisma.brakePadSpecification.findMany({
+        select: {
+          id: true,
+          modificationDefinitionId: true,
+          coldPerformance: true,
+          hotPerformance: true,
+          modulation: true,
+          fadeResistance: true,
+          endurance: true,
+          rotorWear: true,
+          streetSuitability: true,
+          noiseLevel: true,
+          minOperatingTempC: true,
+          maxOperatingTempC: true,
+          sourceNote: true,
+          active: true,
+        },
+      }),
+    createMany: (rows) =>
+      prisma.brakePadSpecification.createMany({
+        data: rows.map((row) => ({
+          modificationDefinitionId: row.modificationDefinitionId,
+          ...row.data,
+        })) as Prisma.BrakePadSpecificationCreateManyInput[],
+        skipDuplicates: true,
+      }),
+    updateOne: (row) =>
+      prisma.brakePadSpecification.update({
+        where: {
+          modificationDefinitionId: row.modificationDefinitionId,
+        },
+        data: row.data,
+      }),
+    updateActiveState: (ids, active) =>
+      prisma.brakePadSpecification.updateMany({
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+        data: {
+          active,
+        },
+      }),
   });
 }
 
 async function seedSportSpringSpecifications(
   definitionsByCode: Map<string, { id: string }>,
-) {
-  const activeDefinitionIds = new Set<string>();
-
-  for (const spec of sportSpringSpecifications) {
-    const modificationDefinition = definitionsByCode.get(spec.modificationCode);
-
-    if (!modificationDefinition) {
-      throw new Error(
-        `Missing modification definition for sport spring specification ${spec.modificationCode}`,
-      );
-    }
-
-    activeDefinitionIds.add(modificationDefinition.id);
-
-    await prisma.sportSpringSpecification.upsert({
-      where: {
-        modificationDefinitionId: modificationDefinition.id,
-      },
-      update: {
-        approximateLoweringFrontMm: spec.approximateLoweringFrontMm ?? null,
-        approximateLoweringRearMm: spec.approximateLoweringRearMm ?? null,
-        progressiveRate: spec.progressiveRate ?? null,
-        roadSuitability: clampCatalogScore(spec.roadSuitability),
-        trackSuitability: clampCatalogScore(spec.trackSuitability),
-        sourceNote: spec.sourceNote ?? null,
-        active: spec.active ?? true,
-      },
-      create: {
-        modificationDefinitionId: modificationDefinition.id,
-        approximateLoweringFrontMm: spec.approximateLoweringFrontMm ?? null,
-        approximateLoweringRearMm: spec.approximateLoweringRearMm ?? null,
-        progressiveRate: spec.progressiveRate ?? null,
-        roadSuitability: clampCatalogScore(spec.roadSuitability),
-        trackSuitability: clampCatalogScore(spec.trackSuitability),
-        sourceNote: spec.sourceNote ?? null,
-        active: spec.active ?? true,
-      },
-    });
-  }
-
-  await prisma.sportSpringSpecification.updateMany({
-    where: {
-      modificationDefinitionId: {
-        notIn: [...activeDefinitionIds],
-      },
-    },
-    data: {
-      active: false,
-    },
+): Promise<SeedPhaseResult<void>> {
+  return seedOneToOneSpecificationRows({
+    desiredRows: sportSpringSpecifications.map((spec) => ({
+      modificationDefinitionId: requireSeedId(
+        definitionsByCode,
+        spec.modificationCode,
+        "modification definition for sport spring specification",
+      ),
+      data: sportSpringSpecificationData(spec),
+    })),
+    findExisting: () =>
+      prisma.sportSpringSpecification.findMany({
+        select: {
+          id: true,
+          modificationDefinitionId: true,
+          approximateLoweringFrontMm: true,
+          approximateLoweringRearMm: true,
+          progressiveRate: true,
+          roadSuitability: true,
+          trackSuitability: true,
+          sourceNote: true,
+          active: true,
+        },
+      }),
+    createMany: (rows) =>
+      prisma.sportSpringSpecification.createMany({
+        data: rows.map((row) => ({
+          modificationDefinitionId: row.modificationDefinitionId,
+          ...row.data,
+        })) as Prisma.SportSpringSpecificationCreateManyInput[],
+        skipDuplicates: true,
+      }),
+    updateOne: (row) =>
+      prisma.sportSpringSpecification.update({
+        where: {
+          modificationDefinitionId: row.modificationDefinitionId,
+        },
+        data: row.data,
+      }),
+    updateActiveState: (ids, active) =>
+      prisma.sportSpringSpecification.updateMany({
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+        data: {
+          active,
+        },
+      }),
   });
 }
 
 async function seedBigBrakeKitSpecifications(
   definitionsByCode: Map<string, { id: string }>,
-) {
-  const activeDefinitionIds = new Set<string>();
-
-  for (const spec of bigBrakeKitSpecifications) {
-    const modificationDefinition = definitionsByCode.get(spec.modificationCode);
-
-    if (!modificationDefinition) {
-      throw new Error(
-        `Missing modification definition for big brake kit specification ${spec.modificationCode}`,
-      );
-    }
-
-    activeDefinitionIds.add(modificationDefinition.id);
-
-    await prisma.bigBrakeKitSpecification.upsert({
-      where: {
-        modificationDefinitionId: modificationDefinition.id,
-      },
-      update: {
-        frontOrRear: spec.frontOrRear,
-        pistonCount: spec.pistonCount ?? null,
-        rotorDiameterMm: spec.rotorDiameterMm ?? null,
-        rotorThicknessMm: spec.rotorThicknessMm ?? null,
-        rotorConstruction: spec.rotorConstruction ?? null,
-        caliperType: spec.caliperType ?? null,
-        roadSuitability: clampCatalogScore(spec.roadSuitability),
-        trackSuitability: clampCatalogScore(spec.trackSuitability),
-        thermalCapacity: clampCatalogScore(spec.thermalCapacity),
-        sourceNote: spec.sourceNote ?? null,
-        active: spec.active ?? true,
-      },
-      create: {
-        modificationDefinitionId: modificationDefinition.id,
-        frontOrRear: spec.frontOrRear,
-        pistonCount: spec.pistonCount ?? null,
-        rotorDiameterMm: spec.rotorDiameterMm ?? null,
-        rotorThicknessMm: spec.rotorThicknessMm ?? null,
-        rotorConstruction: spec.rotorConstruction ?? null,
-        caliperType: spec.caliperType ?? null,
-        roadSuitability: clampCatalogScore(spec.roadSuitability),
-        trackSuitability: clampCatalogScore(spec.trackSuitability),
-        thermalCapacity: clampCatalogScore(spec.thermalCapacity),
-        sourceNote: spec.sourceNote ?? null,
-        active: spec.active ?? true,
-      },
-    });
-  }
-
-  await prisma.bigBrakeKitSpecification.updateMany({
-    where: {
-      modificationDefinitionId: {
-        notIn: [...activeDefinitionIds],
-      },
-    },
-    data: {
-      active: false,
-    },
+): Promise<SeedPhaseResult<void>> {
+  return seedOneToOneSpecificationRows({
+    desiredRows: bigBrakeKitSpecifications.map((spec) => ({
+      modificationDefinitionId: requireSeedId(
+        definitionsByCode,
+        spec.modificationCode,
+        "modification definition for big brake kit specification",
+      ),
+      data: bigBrakeKitSpecificationData(spec),
+    })),
+    findExisting: () =>
+      prisma.bigBrakeKitSpecification.findMany({
+        select: {
+          id: true,
+          modificationDefinitionId: true,
+          frontOrRear: true,
+          pistonCount: true,
+          rotorDiameterMm: true,
+          rotorThicknessMm: true,
+          rotorConstruction: true,
+          caliperType: true,
+          roadSuitability: true,
+          trackSuitability: true,
+          thermalCapacity: true,
+          sourceNote: true,
+          active: true,
+        },
+      }),
+    createMany: (rows) =>
+      prisma.bigBrakeKitSpecification.createMany({
+        data: rows.map((row) => ({
+          modificationDefinitionId: row.modificationDefinitionId,
+          ...row.data,
+        })) as Prisma.BigBrakeKitSpecificationCreateManyInput[],
+        skipDuplicates: true,
+      }),
+    updateOne: (row) =>
+      prisma.bigBrakeKitSpecification.update({
+        where: {
+          modificationDefinitionId: row.modificationDefinitionId,
+        },
+        data: row.data,
+      }),
+    updateActiveState: (ids, active) =>
+      prisma.bigBrakeKitSpecification.updateMany({
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+        data: {
+          active,
+        },
+      }),
   });
 }
 
-async function seedTyreSpecifications(definitionsByCode: Map<string, { id: string }>) {
-  const activeDefinitionIds = new Set<string>();
-
-  for (const spec of tyreSpecifications) {
-    const modificationDefinition = definitionsByCode.get(spec.modificationCode);
-
-    if (!modificationDefinition) {
-      throw new Error(
-        `Missing modification definition for tyre specification ${spec.modificationCode}`,
-      );
-    }
-
-    activeDefinitionIds.add(modificationDefinition.id);
-
-    await prisma.tyreSpecification.upsert({
-      where: {
-        modificationDefinitionId: modificationDefinition.id,
-      },
-      update: tyreSpecificationData(spec),
-      create: {
-        modificationDefinitionId: modificationDefinition.id,
-        ...tyreSpecificationData(spec),
-      },
-    });
-  }
-
-  await prisma.tyreSpecification.updateMany({
-    where: {
-      modificationDefinitionId: {
-        notIn: [...activeDefinitionIds],
-      },
-    },
-    data: {
-      active: false,
-    },
+async function seedTyreSpecifications(
+  definitionsByCode: Map<string, { id: string }>,
+): Promise<SeedPhaseResult<void>> {
+  return seedOneToOneSpecificationRows({
+    desiredRows: tyreSpecifications.map((spec) => ({
+      modificationDefinitionId: requireSeedId(
+        definitionsByCode,
+        spec.modificationCode,
+        "modification definition for tyre specification",
+      ),
+      data: tyreSpecificationData(spec),
+    })),
+    findExisting: () =>
+      prisma.tyreSpecification.findMany({
+        select: {
+          id: true,
+          modificationDefinitionId: true,
+          tyreClass: true,
+          dryGrip: true,
+          wetGrip: true,
+          coldPerformance: true,
+          heatTolerance: true,
+          trackConsistency: true,
+          roadSuitability: true,
+          wearLongevity: true,
+          noiseComfort: true,
+          roadLegal: true,
+          sourceNote: true,
+          active: true,
+        },
+      }),
+    createMany: (rows) =>
+      prisma.tyreSpecification.createMany({
+        data: rows.map((row) => ({
+          modificationDefinitionId: row.modificationDefinitionId,
+          ...row.data,
+        })) as Prisma.TyreSpecificationCreateManyInput[],
+        skipDuplicates: true,
+      }),
+    updateOne: (row) =>
+      prisma.tyreSpecification.update({
+        where: {
+          modificationDefinitionId: row.modificationDefinitionId,
+        },
+        data: row.data,
+      }),
+    updateActiveState: (ids, active) =>
+      prisma.tyreSpecification.updateMany({
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+        data: {
+          active,
+        },
+      }),
   });
 }
 
-async function seedWheelSpecifications(definitionsByCode: Map<string, { id: string }>) {
-  const activeDefinitionIds = new Set<string>();
-
-  for (const spec of wheelSpecifications) {
-    const modificationDefinition = definitionsByCode.get(spec.modificationCode);
-
-    if (!modificationDefinition) {
-      throw new Error(
-        `Missing modification definition for wheel specification ${spec.modificationCode}`,
-      );
-    }
-
-    activeDefinitionIds.add(modificationDefinition.id);
-
-    await prisma.wheelSpecification.upsert({
-      where: {
-        modificationDefinitionId: modificationDefinition.id,
-      },
-      update: wheelSpecificationData(spec),
-      create: {
-        modificationDefinitionId: modificationDefinition.id,
-        ...wheelSpecificationData(spec),
-      },
-    });
-  }
-
-  await prisma.wheelSpecification.updateMany({
-    where: {
-      modificationDefinitionId: {
-        notIn: [...activeDefinitionIds],
-      },
-    },
-    data: {
-      active: false,
-    },
+async function seedWheelSpecifications(
+  definitionsByCode: Map<string, { id: string }>,
+): Promise<SeedPhaseResult<void>> {
+  return seedOneToOneSpecificationRows({
+    desiredRows: wheelSpecifications.map((spec) => ({
+      modificationDefinitionId: requireSeedId(
+        definitionsByCode,
+        spec.modificationCode,
+        "modification definition for wheel specification",
+      ),
+      data: wheelSpecificationData(spec),
+    })),
+    findExisting: () =>
+      prisma.wheelSpecification.findMany({
+        select: {
+          id: true,
+          modificationDefinitionId: true,
+          construction: true,
+          nominalDiameterInches: true,
+          nominalWidthInches: true,
+          weightKg: true,
+          trackSuitability: true,
+          roadSuitability: true,
+          sourceNote: true,
+          active: true,
+        },
+      }),
+    createMany: (rows) =>
+      prisma.wheelSpecification.createMany({
+        data: rows.map((row) => ({
+          modificationDefinitionId: row.modificationDefinitionId,
+          ...row.data,
+        })) as Prisma.WheelSpecificationCreateManyInput[],
+        skipDuplicates: true,
+      }),
+    updateOne: (row) =>
+      prisma.wheelSpecification.update({
+        where: {
+          modificationDefinitionId: row.modificationDefinitionId,
+        },
+        data: row.data,
+      }),
+    updateActiveState: (ids, active) =>
+      prisma.wheelSpecification.updateMany({
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+        data: {
+          active,
+        },
+      }),
   });
 }
 
 async function seedTuningPackageSpecifications(
   definitionsByCode: Map<string, { id: string }>,
-) {
-  const activeDefinitionIds = new Set<string>();
-
-  for (const spec of tuningPackageSpecifications) {
-    const modificationDefinition = definitionsByCode.get(spec.modificationCode);
-
-    if (!modificationDefinition) {
-      throw new Error(
-        `Missing modification definition for tuning package specification ${spec.modificationCode}`,
-      );
-    }
-
-    activeDefinitionIds.add(modificationDefinition.id);
-
-    await prisma.tuningPackageSpecification.upsert({
-      where: {
-        modificationDefinitionId: modificationDefinition.id,
-      },
-      update: tuningPackageSpecificationData(spec),
-      create: {
-        modificationDefinitionId: modificationDefinition.id,
-        ...tuningPackageSpecificationData(spec),
-      },
-    });
-  }
-
-  await prisma.tuningPackageSpecification.updateMany({
-    where: {
-      modificationDefinitionId: {
-        notIn: [...activeDefinitionIds],
-      },
-    },
-    data: {
-      active: false,
-    },
+): Promise<SeedPhaseResult<void>> {
+  return seedOneToOneSpecificationRows({
+    desiredRows: tuningPackageSpecifications.map((spec) => ({
+      modificationDefinitionId: requireSeedId(
+        definitionsByCode,
+        spec.modificationCode,
+        "modification definition for tuning package specification",
+      ),
+      data: tuningPackageSpecificationData(spec),
+    })),
+    findExisting: () =>
+      prisma.tuningPackageSpecification.findMany({
+        select: {
+          id: true,
+          modificationDefinitionId: true,
+          tuneType: true,
+          measurementBasis: true,
+          mapStageLabel: true,
+          mapProgramCode: true,
+          claimedPowerMinHp: true,
+          claimedPowerMaxHp: true,
+          claimedTorqueMinNm: true,
+          claimedTorqueMaxNm: true,
+          minimumFuelOctaneRon: true,
+          requiredFuelNote: true,
+          hardwareRequirementNote: true,
+          transmissionLimitNote: true,
+          coolingRecommendationNote: true,
+          sourceNote: true,
+          confidence: true,
+          active: true,
+        },
+      }),
+    createMany: (rows) =>
+      prisma.tuningPackageSpecification.createMany({
+        data: rows.map((row) => ({
+          modificationDefinitionId: row.modificationDefinitionId,
+          ...row.data,
+        })) as Prisma.TuningPackageSpecificationCreateManyInput[],
+        skipDuplicates: true,
+      }),
+    updateOne: (row) =>
+      prisma.tuningPackageSpecification.update({
+        where: {
+          modificationDefinitionId: row.modificationDefinitionId,
+        },
+        data: row.data,
+      }),
+    updateActiveState: (ids, active) =>
+      prisma.tuningPackageSpecification.updateMany({
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+        data: {
+          active,
+        },
+      }),
   });
+}
+
+function brakePadSpecificationData(spec: BrakePadSpecSeed): SeedData {
+  return {
+    coldPerformance: clampCatalogScore(spec.coldPerformance),
+    hotPerformance: clampCatalogScore(spec.hotPerformance),
+    modulation: clampCatalogScore(spec.modulation),
+    fadeResistance: clampCatalogScore(spec.fadeResistance),
+    endurance: clampCatalogScore(spec.endurance),
+    rotorWear: clampCatalogScore(spec.rotorWear),
+    streetSuitability: clampCatalogScore(spec.streetSuitability),
+    noiseLevel: clampCatalogScore(spec.noiseLevel),
+    minOperatingTempC: spec.minOperatingTempC ?? null,
+    maxOperatingTempC: spec.maxOperatingTempC ?? null,
+    sourceNote: spec.sourceNote ?? null,
+    active: true,
+  };
+}
+
+function sportSpringSpecificationData(spec: SportSpringSpecSeed): SeedData {
+  return {
+    approximateLoweringFrontMm: spec.approximateLoweringFrontMm ?? null,
+    approximateLoweringRearMm: spec.approximateLoweringRearMm ?? null,
+    progressiveRate: spec.progressiveRate ?? null,
+    roadSuitability: clampCatalogScore(spec.roadSuitability),
+    trackSuitability: clampCatalogScore(spec.trackSuitability),
+    sourceNote: spec.sourceNote ?? null,
+    active: spec.active ?? true,
+  };
+}
+
+function bigBrakeKitSpecificationData(spec: BigBrakeKitSpecSeed): SeedData {
+  return {
+    frontOrRear: spec.frontOrRear,
+    pistonCount: spec.pistonCount ?? null,
+    rotorDiameterMm: spec.rotorDiameterMm ?? null,
+    rotorThicknessMm: spec.rotorThicknessMm ?? null,
+    rotorConstruction: spec.rotorConstruction ?? null,
+    caliperType: spec.caliperType ?? null,
+    roadSuitability: clampCatalogScore(spec.roadSuitability),
+    trackSuitability: clampCatalogScore(spec.trackSuitability),
+    thermalCapacity: clampCatalogScore(spec.thermalCapacity),
+    sourceNote: spec.sourceNote ?? null,
+    active: spec.active ?? true,
+  };
 }
 
 function tyreSpecificationData(spec: TyreSpecSeed) {
@@ -11292,302 +12315,400 @@ function tuningPackageSpecificationData(spec: TuningPackageSpecificationSeed) {
 async function seedPlatformCompatibilities(
   definitionsByCode: Map<string, { id: string }>,
   vehicleDefinitionsByCode: Map<string, { id: string }>,
-) {
-  const activeVehicleIdsByDefinitionId = new Map<string, Set<string>>();
+): Promise<SeedPhaseResult<void>> {
+  const desiredRows = platformModificationCompatibilities.map((compatibility) => {
+    const modificationDefinitionId = requireSeedId(
+      definitionsByCode,
+      compatibility.modificationCode,
+      "modification definition for platform compatibility",
+    );
+    const vehicleDefinitionId = requireSeedId(
+      vehicleDefinitionsByCode,
+      compatibility.vehicleCode,
+      "vehicle definition for platform compatibility",
+    );
 
-  for (const compatibility of platformModificationCompatibilities) {
-    const modificationDefinition = definitionsByCode.get(compatibility.modificationCode);
-    const vehicleDefinition = vehicleDefinitionsByCode.get(compatibility.vehicleCode);
+    return {
+      modificationDefinitionId,
+      vehicleDefinitionId,
+      platformFamilyId: null,
+      engineFamilyId: null,
+      vehicleBrand: null,
+      vehicleModel: null,
+      yearFrom: null,
+      yearTo: null,
+      active: true,
+    };
+  });
+  const desiredKeys = new Set(
+    desiredRows.map((row) =>
+      exactCompatibilityKey(row.modificationDefinitionId, row.vehicleDefinitionId),
+    ),
+  );
+  const desiredDefinitionIds = new Set(
+    desiredRows.map((row) => row.modificationDefinitionId),
+  );
+  const existingRows = await prisma.modificationCompatibility.findMany({
+    where: {
+      modificationDefinitionId: {
+        in: [...desiredDefinitionIds],
+      },
+    },
+    select: modificationCompatibilitySelect,
+  });
+  const existingExactByKey = new Map(
+    existingRows
+      .filter((row) => row.vehicleDefinitionId)
+      .map((row) => [
+        exactCompatibilityKey(row.modificationDefinitionId, row.vehicleDefinitionId ?? ""),
+        row,
+      ]),
+  );
+  const missingRows = desiredRows.filter(
+    (row) =>
+      !existingExactByKey.has(
+        exactCompatibilityKey(row.modificationDefinitionId, row.vehicleDefinitionId),
+      ),
+  );
+  const changedRows = desiredRows.filter((row) => {
+    const existing = existingExactByKey.get(
+      exactCompatibilityKey(row.modificationDefinitionId, row.vehicleDefinitionId),
+    );
 
-    if (!modificationDefinition || !vehicleDefinition) {
-      throw new Error(
-        `Missing definition for platform compatibility ${compatibility.modificationCode}:${compatibility.vehicleCode}`,
-      );
-    }
+    return existing ? seedValuesChanged(existing, row) : false;
+  });
+  const staleIds = existingRows
+    .filter((row) => row.active)
+    .filter((row) => {
+      if (row.vehicleDefinitionId) {
+        return !desiredKeys.has(
+          exactCompatibilityKey(row.modificationDefinitionId, row.vehicleDefinitionId),
+        );
+      }
 
-    const activeVehicleIds =
-      activeVehicleIdsByDefinitionId.get(modificationDefinition.id) ?? new Set<string>();
+      return true;
+    })
+    .map((row) => row.id);
 
-    activeVehicleIds.add(vehicleDefinition.id);
-    activeVehicleIdsByDefinitionId.set(modificationDefinition.id, activeVehicleIds);
+  if (missingRows.length > 0) {
+    await prisma.modificationCompatibility.createMany({
+      data: missingRows,
+      skipDuplicates: true,
+    });
+  }
 
-    await prisma.modificationCompatibility.upsert({
+  await runWithConcurrency(changedRows, seedUpdateConcurrency, async (row) => {
+    await prisma.modificationCompatibility.update({
       where: {
         modificationDefinitionId_vehicleDefinitionId: {
-          modificationDefinitionId: modificationDefinition.id,
-          vehicleDefinitionId: vehicleDefinition.id,
+          modificationDefinitionId: row.modificationDefinitionId,
+          vehicleDefinitionId: row.vehicleDefinitionId,
         },
       },
-      update: {
-        vehicleBrand: null,
-        vehicleModel: null,
-        platformFamilyId: null,
-        engineFamilyId: null,
-        yearFrom: null,
-        yearTo: null,
-        active: true,
-      },
-      create: {
-        modificationDefinitionId: modificationDefinition.id,
-        vehicleDefinitionId: vehicleDefinition.id,
-        platformFamilyId: null,
-        engineFamilyId: null,
-        active: true,
-      },
+      data: row,
     });
-  }
+  });
 
-  for (const [
-    modificationDefinitionId,
-    activeVehicleDefinitionIds,
-  ] of activeVehicleIdsByDefinitionId) {
-    await prisma.modificationCompatibility.updateMany({
-      where: {
-        modificationDefinitionId,
-        active: true,
-        OR: [
-          {
-            vehicleDefinitionId: {
-              notIn: [...activeVehicleDefinitionIds],
-            },
-          },
-          {
-            vehicleDefinitionId: null,
-          },
-        ],
-      },
-      data: {
-        active: false,
-      },
-    });
-  }
+  await updateCompatibilityActiveState(staleIds, false);
+
+  return seedPhaseResult(undefined, {
+    inputCount: desiredRows.length,
+    createdCount: missingRows.length,
+    updatedCount: changedRows.length + staleIds.length,
+    unchangedCount: desiredRows.length - missingRows.length - changedRows.length,
+  });
 }
 
 async function seedFamilyCompatibilities(
   definitionsByCode: Map<string, { id: string }>,
   platformFamiliesByCode: Map<string, { id: string }>,
   engineFamiliesByCode: Map<string, { id: string }>,
-) {
-  const activeCompatibilityIdsByDefinitionId = new Map<string, Set<string>>();
-
-  for (const compatibility of engineFamilyModificationCompatibilities) {
-    const modificationDefinition = definitionsByCode.get(compatibility.modificationCode);
-    const engineFamily = engineFamiliesByCode.get(compatibility.familyCode);
-
-    if (!modificationDefinition || !engineFamily) {
-      throw new Error(
-        `Missing engine family compatibility ${compatibility.modificationCode}:${compatibility.familyCode}`,
-      );
-    }
-
-    const row = await prisma.modificationCompatibility.upsert({
-      where: {
-        modificationDefinitionId_engineFamilyId: {
-          modificationDefinitionId: modificationDefinition.id,
-          engineFamilyId: engineFamily.id,
-        },
-      },
-      update: {
-        vehicleDefinitionId: null,
-        vehicleBrand: null,
-        vehicleModel: null,
-        platformFamilyId: null,
-        yearFrom: null,
-        yearTo: null,
-        active: true,
-      },
-      create: {
-        modificationDefinitionId: modificationDefinition.id,
-        engineFamilyId: engineFamily.id,
-        active: true,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    addActiveCompatibilityId(
-      activeCompatibilityIdsByDefinitionId,
-      modificationDefinition.id,
-      row.id,
+): Promise<SeedPhaseResult<void>> {
+  const engineRows = engineFamilyModificationCompatibilities.map((compatibility) => {
+    const modificationDefinitionId = requireSeedId(
+      definitionsByCode,
+      compatibility.modificationCode,
+      "modification definition for engine-family compatibility",
     );
+    const engineFamilyId = requireSeedId(
+      engineFamiliesByCode,
+      compatibility.familyCode,
+      "engine family for compatibility",
+    );
+
+    return {
+      modificationDefinitionId,
+      vehicleDefinitionId: null,
+      platformFamilyId: null,
+      engineFamilyId,
+      vehicleBrand: null,
+      vehicleModel: null,
+      yearFrom: null,
+      yearTo: null,
+      active: true,
+    };
+  });
+  const platformRows = platformFamilyModificationCompatibilities.map((compatibility) => {
+    const modificationDefinitionId = requireSeedId(
+      definitionsByCode,
+      compatibility.modificationCode,
+      "modification definition for platform-family compatibility",
+    );
+    const platformFamilyId = requireSeedId(
+      platformFamiliesByCode,
+      compatibility.familyCode,
+      "platform family for compatibility",
+    );
+
+    return {
+      modificationDefinitionId,
+      vehicleDefinitionId: null,
+      platformFamilyId,
+      engineFamilyId: null,
+      vehicleBrand: null,
+      vehicleModel: null,
+      yearFrom: null,
+      yearTo: null,
+      active: true,
+    };
+  });
+  const desiredRows = [...engineRows, ...platformRows];
+  const desiredKeys = new Set(desiredRows.map(familyCompatibilityKey));
+  const desiredDefinitionIds = new Set(
+    desiredRows.map((row) => row.modificationDefinitionId),
+  );
+  const existingRows = await prisma.modificationCompatibility.findMany({
+    where: {
+      modificationDefinitionId: {
+        in: [...desiredDefinitionIds],
+      },
+      vehicleDefinitionId: null,
+      vehicleBrand: null,
+      vehicleModel: null,
+      OR: [
+        {
+          platformFamilyId: {
+            not: null,
+          },
+        },
+        {
+          engineFamilyId: {
+            not: null,
+          },
+        },
+      ],
+    },
+    select: modificationCompatibilitySelect,
+  });
+  const existingByKey = new Map(existingRows.map((row) => [familyCompatibilityKey(row), row]));
+  const missingRows = desiredRows.filter((row) => !existingByKey.has(familyCompatibilityKey(row)));
+  const changedRows = desiredRows.filter((row) => {
+    const existing = existingByKey.get(familyCompatibilityKey(row));
+
+    return existing ? seedValuesChanged(existing, row) : false;
+  });
+  const staleIds = existingRows
+    .filter((row) => row.active)
+    .filter((row) => !desiredKeys.has(familyCompatibilityKey(row)))
+    .map((row) => row.id);
+
+  if (missingRows.length > 0) {
+    await prisma.modificationCompatibility.createMany({
+      data: missingRows,
+      skipDuplicates: true,
+    });
   }
 
-  for (const compatibility of platformFamilyModificationCompatibilities) {
-    const modificationDefinition = definitionsByCode.get(compatibility.modificationCode);
-    const platformFamily = platformFamiliesByCode.get(compatibility.familyCode);
-
-    if (!modificationDefinition || !platformFamily) {
-      throw new Error(
-        `Missing platform family compatibility ${compatibility.modificationCode}:${compatibility.familyCode}`,
-      );
+  await runWithConcurrency(changedRows, seedUpdateConcurrency, async (row) => {
+    if (row.engineFamilyId) {
+      await prisma.modificationCompatibility.update({
+        where: {
+          modificationDefinitionId_engineFamilyId: {
+            modificationDefinitionId: row.modificationDefinitionId,
+            engineFamilyId: row.engineFamilyId,
+          },
+        },
+        data: row,
+      });
+      return;
     }
 
-    const row = await prisma.modificationCompatibility.upsert({
+    if (!row.platformFamilyId) {
+      throw new Error("Missing platform family compatibility key");
+    }
+
+    await prisma.modificationCompatibility.update({
       where: {
         modificationDefinitionId_platformFamilyId: {
-          modificationDefinitionId: modificationDefinition.id,
-          platformFamilyId: platformFamily.id,
+          modificationDefinitionId: row.modificationDefinitionId,
+          platformFamilyId: row.platformFamilyId,
         },
       },
-      update: {
-        vehicleDefinitionId: null,
-        vehicleBrand: null,
-        vehicleModel: null,
-        engineFamilyId: null,
-        yearFrom: null,
-        yearTo: null,
-        active: true,
-      },
-      create: {
-        modificationDefinitionId: modificationDefinition.id,
-        platformFamilyId: platformFamily.id,
-        active: true,
-      },
-      select: {
-        id: true,
-      },
+      data: row,
     });
+  });
 
-    addActiveCompatibilityId(
-      activeCompatibilityIdsByDefinitionId,
-      modificationDefinition.id,
-      row.id,
-    );
-  }
+  await updateCompatibilityActiveState(staleIds, false);
 
-  for (const [
-    modificationDefinitionId,
-    activeCompatibilityIds,
-  ] of activeCompatibilityIdsByDefinitionId) {
-    await prisma.modificationCompatibility.updateMany({
-      where: {
-        modificationDefinitionId,
-        active: true,
-        vehicleDefinitionId: null,
-        vehicleBrand: null,
-        vehicleModel: null,
-        id: {
-          notIn: [...activeCompatibilityIds],
-        },
-        OR: [
-          {
-            platformFamilyId: {
-              not: null,
-            },
-          },
-          {
-            engineFamilyId: {
-              not: null,
-            },
-          },
-        ],
-      },
-      data: {
-        active: false,
-      },
-    });
-  }
-}
-
-function addActiveCompatibilityId(
-  activeCompatibilityIdsByDefinitionId: Map<string, Set<string>>,
-  modificationDefinitionId: string,
-  compatibilityId: string,
-) {
-  const activeCompatibilityIds =
-    activeCompatibilityIdsByDefinitionId.get(modificationDefinitionId) ??
-    new Set<string>();
-
-  activeCompatibilityIds.add(compatibilityId);
-  activeCompatibilityIdsByDefinitionId.set(
-    modificationDefinitionId,
-    activeCompatibilityIds,
-  );
+  return seedPhaseResult(undefined, {
+    inputCount: desiredRows.length,
+    createdCount: missingRows.length,
+    updatedCount: changedRows.length + staleIds.length,
+    unchangedCount: desiredRows.length - missingRows.length - changedRows.length,
+  });
 }
 
 async function seedPlatformImpacts(
   definitionsByCode: Map<string, { id: string }>,
   vehicleDefinitionsByCode: Map<string, { id: string }>,
-) {
-  const activeVehicleIdsByDefinitionId = new Map<string, Set<string>>();
+): Promise<SeedPhaseResult<void>> {
+  const desiredRows = platformModificationImpacts.map((impactValue) => {
+    const modificationDefinitionId = requireSeedId(
+      definitionsByCode,
+      impactValue.modificationCode,
+      "modification definition for platform impact",
+    );
+    const vehicleDefinitionId = requireSeedId(
+      vehicleDefinitionsByCode,
+      impactValue.vehicleCode,
+      "vehicle definition for platform impact",
+    );
 
-  for (const impactValue of platformModificationImpacts) {
-    const modificationDefinition = definitionsByCode.get(impactValue.modificationCode);
-    const vehicleDefinition = vehicleDefinitionsByCode.get(impactValue.vehicleCode);
+    return {
+      vehicleDefinitionId,
+      modificationDefinitionId,
+      data: vehicleModificationImpactData(impactValue),
+    };
+  });
+  const desiredKeys = new Set(
+    desiredRows.map((row) =>
+      vehicleModificationImpactKey(
+        row.vehicleDefinitionId,
+        row.modificationDefinitionId,
+      ),
+    ),
+  );
+  const desiredDefinitionIds = new Set(
+    desiredRows.map((row) => row.modificationDefinitionId),
+  );
+  const existingRows = await prisma.vehicleModificationImpact.findMany({
+    where: {
+      modificationDefinitionId: {
+        in: [...desiredDefinitionIds],
+      },
+    },
+    select: {
+      id: true,
+      vehicleDefinitionId: true,
+      modificationDefinitionId: true,
+      powerImpact: true,
+      handlingImpact: true,
+      brakingImpact: true,
+      reliabilityImpact: true,
+      thermalImpact: true,
+      trackReadinessImpact: true,
+      confidence: true,
+      sourceNote: true,
+      claimedPowerDeltaHp: true,
+      claimedTorqueDeltaNm: true,
+      active: true,
+    },
+  });
+  const existingByKey = new Map(
+    existingRows.map((row) => [
+      vehicleModificationImpactKey(
+        row.vehicleDefinitionId,
+        row.modificationDefinitionId,
+      ),
+      row,
+    ]),
+  );
+  const missingRows = desiredRows.filter(
+    (row) =>
+      !existingByKey.has(
+        vehicleModificationImpactKey(
+          row.vehicleDefinitionId,
+          row.modificationDefinitionId,
+        ),
+      ),
+  );
+  const changedRows = desiredRows.filter((row) => {
+    const existing = existingByKey.get(
+      vehicleModificationImpactKey(
+        row.vehicleDefinitionId,
+        row.modificationDefinitionId,
+      ),
+    );
 
-    if (!modificationDefinition || !vehicleDefinition) {
-      throw new Error(
-        `Missing definition for platform impact ${impactValue.modificationCode}:${impactValue.vehicleCode}`,
-      );
-    }
+    return existing ? seedValuesChanged(existing, row.data) : false;
+  });
+  const staleIds = existingRows
+    .filter((row) => row.active)
+    .filter(
+      (row) =>
+        !desiredKeys.has(
+          vehicleModificationImpactKey(
+            row.vehicleDefinitionId,
+            row.modificationDefinitionId,
+          ),
+        ),
+    )
+    .map((row) => row.id);
 
-    const activeVehicleIds =
-      activeVehicleIdsByDefinitionId.get(modificationDefinition.id) ?? new Set<string>();
+  if (missingRows.length > 0) {
+    await prisma.vehicleModificationImpact.createMany({
+      data: missingRows.map((row) => ({
+        vehicleDefinitionId: row.vehicleDefinitionId,
+        modificationDefinitionId: row.modificationDefinitionId,
+        ...row.data,
+      })),
+      skipDuplicates: true,
+    });
+  }
 
-    activeVehicleIds.add(vehicleDefinition.id);
-    activeVehicleIdsByDefinitionId.set(modificationDefinition.id, activeVehicleIds);
-
-    await prisma.vehicleModificationImpact.upsert({
+  await runWithConcurrency(changedRows, seedUpdateConcurrency, async (row) => {
+    await prisma.vehicleModificationImpact.update({
       where: {
         vehicleDefinitionId_modificationDefinitionId: {
-          vehicleDefinitionId: vehicleDefinition.id,
-          modificationDefinitionId: modificationDefinition.id,
+          vehicleDefinitionId: row.vehicleDefinitionId,
+          modificationDefinitionId: row.modificationDefinitionId,
         },
       },
-      update: {
-        powerImpact: impactValue.powerImpact ?? 0,
-        handlingImpact: impactValue.handlingImpact ?? 0,
-        brakingImpact: impactValue.brakingImpact ?? 0,
-        reliabilityImpact: impactValue.reliabilityImpact ?? 0,
-        thermalImpact: impactValue.thermalImpact ?? 0,
-        trackReadinessImpact: impactValue.trackReadinessImpact ?? 0,
-        confidence: impactValue.confidence ?? "LOW",
-        sourceNote: impactValue.sourceNote ?? null,
-        claimedPowerDeltaHp: impactValue.claimedPowerDeltaHp ?? null,
-        claimedTorqueDeltaNm: impactValue.claimedTorqueDeltaNm ?? null,
-        active: true,
-      },
-      create: {
-        vehicleDefinitionId: vehicleDefinition.id,
-        modificationDefinitionId: modificationDefinition.id,
-        powerImpact: impactValue.powerImpact ?? 0,
-        handlingImpact: impactValue.handlingImpact ?? 0,
-        brakingImpact: impactValue.brakingImpact ?? 0,
-        reliabilityImpact: impactValue.reliabilityImpact ?? 0,
-        thermalImpact: impactValue.thermalImpact ?? 0,
-        trackReadinessImpact: impactValue.trackReadinessImpact ?? 0,
-        confidence: impactValue.confidence ?? "LOW",
-        sourceNote: impactValue.sourceNote ?? null,
-        claimedPowerDeltaHp: impactValue.claimedPowerDeltaHp ?? null,
-        claimedTorqueDeltaNm: impactValue.claimedTorqueDeltaNm ?? null,
-        active: true,
-      },
+      data: row.data,
     });
-  }
+  });
 
-  for (const [
-    modificationDefinitionId,
-    activeVehicleDefinitionIds,
-  ] of activeVehicleIdsByDefinitionId) {
-    await prisma.vehicleModificationImpact.updateMany({
-      where: {
-        modificationDefinitionId,
-        active: true,
-        vehicleDefinitionId: {
-          notIn: [...activeVehicleDefinitionIds],
-        },
-      },
-      data: {
-        active: false,
-      },
-    });
-  }
+  await updateVehicleModificationImpactActiveState(staleIds, false);
+
+  return seedPhaseResult(undefined, {
+    inputCount: desiredRows.length,
+    createdCount: missingRows.length,
+    updatedCount: changedRows.length + staleIds.length,
+    unchangedCount: desiredRows.length - missingRows.length - changedRows.length,
+  });
 }
 
-async function deactivateBroadProductFamilyRestrictions(
+function vehicleModificationImpactData(
+  impactValue: (typeof platformModificationImpacts)[number],
+): SeedData {
+  return {
+    powerImpact: impactValue.powerImpact ?? 0,
+    handlingImpact: impactValue.handlingImpact ?? 0,
+    brakingImpact: impactValue.brakingImpact ?? 0,
+    reliabilityImpact: impactValue.reliabilityImpact ?? 0,
+    thermalImpact: impactValue.thermalImpact ?? 0,
+    trackReadinessImpact: impactValue.trackReadinessImpact ?? 0,
+    confidence: impactValue.confidence ?? "LOW",
+    sourceNote: impactValue.sourceNote ?? null,
+    claimedPowerDeltaHp: impactValue.claimedPowerDeltaHp ?? null,
+    claimedTorqueDeltaNm: impactValue.claimedTorqueDeltaNm ?? null,
+    active: true,
+  };
+}
+
+async function deactivateBroadProductFamilyCompatibilityRestrictions(
   definitionsByCode: Map<string, { id: string }>,
-) {
+): Promise<SeedPhaseResult<void>> {
   const definitionIds = broadProductFamilyCompatibilityCodes.map((modificationCode) => {
     const definition = definitionsByCode.get(modificationCode);
 
@@ -11598,7 +12719,7 @@ async function deactivateBroadProductFamilyRestrictions(
     return definition.id;
   });
 
-  await prisma.modificationCompatibility.updateMany({
+  const result = await prisma.modificationCompatibility.updateMany({
     where: {
       modificationDefinitionId: {
         in: definitionIds,
@@ -11610,7 +12731,26 @@ async function deactivateBroadProductFamilyRestrictions(
     },
   });
 
-  await prisma.vehicleModificationImpact.updateMany({
+  return seedPhaseResult(undefined, {
+    inputCount: definitionIds.length,
+    updatedCount: result.count,
+  });
+}
+
+async function deactivateBroadProductFamilyImpactRestrictions(
+  definitionsByCode: Map<string, { id: string }>,
+): Promise<SeedPhaseResult<void>> {
+  const definitionIds = broadProductFamilyCompatibilityCodes.map((modificationCode) => {
+    const definition = definitionsByCode.get(modificationCode);
+
+    if (!definition) {
+      throw new Error(`Missing broad product-family definition ${modificationCode}`);
+    }
+
+    return definition.id;
+  });
+
+  const result = await prisma.vehicleModificationImpact.updateMany({
     where: {
       modificationDefinitionId: {
         in: definitionIds,
@@ -11620,139 +12760,276 @@ async function deactivateBroadProductFamilyRestrictions(
     data: {
       active: false,
     },
+  });
+
+  return seedPhaseResult(undefined, {
+    inputCount: definitionIds.length,
+    updatedCount: result.count,
   });
 }
 
 async function reactivatePlatformDefinitions(
   definitionsByCode: Map<string, { id: string }>,
-) {
+): Promise<SeedPhaseResult<void>> {
   const compatibleModificationCodes = new Set(
     platformModificationCompatibilities.map(
       (compatibility) => compatibility.modificationCode,
     ),
   );
-
-  for (const modificationCode of compatibleModificationCodes) {
-    const definition = definitionsByCode.get(modificationCode);
-
-    if (!definition) {
-      throw new Error(`Missing modification definition ${modificationCode}`);
-    }
-
-    await prisma.modificationDefinition.update({
-      where: {
-        id: definition.id,
+  const definitionIds = [...compatibleModificationCodes].map((modificationCode) =>
+    requireSeedId(
+      definitionsByCode,
+      modificationCode,
+      "modification definition for platform activation",
+    ),
+  );
+  const result = await prisma.modificationDefinition.updateMany({
+    where: {
+      id: {
+        in: definitionIds,
       },
-      data: {
-        active: true,
-      },
-    });
-  }
+      active: false,
+    },
+    data: {
+      active: true,
+    },
+  });
+
+  return seedPhaseResult(undefined, {
+    inputCount: definitionIds.length,
+    updatedCount: result.count,
+    unchangedCount: definitionIds.length - result.count,
+  });
 }
 
 async function seedModificationConflicts(
   definitionsByCode: Map<string, { id: string }>,
-) {
-  for (const [sourceCode, targetCode] of modificationConflictCodePairs) {
-    const sourceDefinition = definitionsByCode.get(sourceCode);
-    const targetDefinition = definitionsByCode.get(targetCode);
+): Promise<SeedPhaseResult<void>> {
+  const desiredRows = modificationConflictCodePairs.map(([sourceCode, targetCode]) => ({
+    sourceDefinitionId: requireSeedId(
+      definitionsByCode,
+      sourceCode,
+      "modification definition for conflict source",
+    ),
+    targetDefinitionId: requireSeedId(
+      definitionsByCode,
+      targetCode,
+      "modification definition for conflict target",
+    ),
+    ruleType: "CONFLICTS_WITH" as const,
+    active: true,
+  }));
+  const existingRows = await prisma.modificationRule.findMany({
+    where: {
+      ruleType: "CONFLICTS_WITH",
+    },
+    select: {
+      id: true,
+      sourceDefinitionId: true,
+      targetDefinitionId: true,
+      ruleType: true,
+      active: true,
+    },
+  });
+  const existingByKey = new Map(
+    existingRows.map((row) => [
+      modificationRuleKey(row.sourceDefinitionId, row.targetDefinitionId, row.ruleType),
+      row,
+    ]),
+  );
+  const missingRows = desiredRows.filter(
+    (row) =>
+      !existingByKey.has(
+        modificationRuleKey(row.sourceDefinitionId, row.targetDefinitionId, row.ruleType),
+      ),
+  );
+  const reactivateIds = desiredRows
+    .map((row) =>
+      existingByKey.get(
+        modificationRuleKey(row.sourceDefinitionId, row.targetDefinitionId, row.ruleType),
+      ),
+    )
+    .filter((row): row is NonNullable<typeof row> => Boolean(row && !row.active))
+    .map((row) => row.id);
 
-    if (!sourceDefinition || !targetDefinition) {
-      throw new Error(`Missing modification definition for conflict ${sourceCode}:${targetCode}`);
-    }
-
-    await prisma.modificationRule.upsert({
-      where: {
-        sourceDefinitionId_targetDefinitionId_ruleType: {
-          sourceDefinitionId: sourceDefinition.id,
-          targetDefinitionId: targetDefinition.id,
-          ruleType: "CONFLICTS_WITH",
-        },
-      },
-      update: {
-        active: true,
-      },
-      create: {
-        sourceDefinitionId: sourceDefinition.id,
-        targetDefinitionId: targetDefinition.id,
-        ruleType: "CONFLICTS_WITH",
-        active: true,
-      },
+  if (missingRows.length > 0) {
+    await prisma.modificationRule.createMany({
+      data: missingRows,
+      skipDuplicates: true,
     });
   }
+
+  await updateModificationRuleActiveState(reactivateIds, true);
+
+  return seedPhaseResult(undefined, {
+    inputCount: desiredRows.length,
+    createdCount: missingRows.length,
+    updatedCount: reactivateIds.length,
+    unchangedCount: desiredRows.length - missingRows.length - reactivateIds.length,
+  });
 }
 
 async function seedModificationRequirements(
   definitionsByCode: Map<string, { id: string }>,
-) {
-  for (const group of modificationRequirementGroups) {
-    const sourceDefinition = definitionsByCode.get(group.sourceCode);
+): Promise<SeedPhaseResult<void>> {
+  const desiredGroups = modificationRequirementGroups.map((group) => ({
+    code: group.code,
+    data: {
+      sourceDefinitionId: requireSeedId(
+        definitionsByCode,
+        group.sourceCode,
+        "modification definition for requirement",
+      ),
+      description: group.description,
+      active: true,
+      sortOrder: group.sortOrder,
+    },
+    optionCodes: group.optionCodes,
+  }));
+  const groupCodes = desiredGroups.map((group) => group.code);
+  const existingGroups = await prisma.modificationRequirementGroup.findMany({
+    where: {
+      code: {
+        in: groupCodes,
+      },
+    },
+    select: {
+      id: true,
+      code: true,
+      sourceDefinitionId: true,
+      description: true,
+      active: true,
+      sortOrder: true,
+    },
+  });
+  const existingGroupsByCode = new Map(
+    existingGroups.map((group) => [group.code, group]),
+  );
+  const missingGroups = desiredGroups.filter(
+    (group) => !existingGroupsByCode.has(group.code),
+  );
+  const changedGroups = desiredGroups.filter((group) => {
+    const existing = existingGroupsByCode.get(group.code);
 
-    if (!sourceDefinition) {
-      throw new Error(`Missing modification definition for requirement ${group.code}`);
-    }
+    return existing ? seedValuesChanged(existing, group.data) : false;
+  });
 
-    const requirementGroup = await prisma.modificationRequirementGroup.upsert({
-      where: {
+  if (missingGroups.length > 0) {
+    await prisma.modificationRequirementGroup.createMany({
+      data: missingGroups.map((group) => ({
         code: group.code,
-      },
-      update: {
-        sourceDefinitionId: sourceDefinition.id,
-        description: group.description,
-        active: true,
-        sortOrder: group.sortOrder,
-      },
-      create: {
-        code: group.code,
-        sourceDefinitionId: sourceDefinition.id,
-        description: group.description,
-        active: true,
-        sortOrder: group.sortOrder,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    const activeRequiredIds = new Set<string>();
-
-    for (const optionCode of group.optionCodes) {
-      const requiredDefinition = definitionsByCode.get(optionCode);
-
-      if (!requiredDefinition) {
-        throw new Error(`Missing modification definition for requirement option ${optionCode}`);
-      }
-
-      activeRequiredIds.add(requiredDefinition.id);
-
-      await prisma.modificationRequirementOption.upsert({
-        where: {
-          requirementGroupId_requiredDefinitionId: {
-            requirementGroupId: requirementGroup.id,
-            requiredDefinitionId: requiredDefinition.id,
-          },
-        },
-        update: {},
-        create: {
-          requirementGroupId: requirementGroup.id,
-          requiredDefinitionId: requiredDefinition.id,
-        },
-      });
-    }
-
-    await prisma.modificationRequirementOption.deleteMany({
-      where: {
-        requirementGroupId: requirementGroup.id,
-        requiredDefinitionId: {
-          notIn: [...activeRequiredIds],
-        },
-      },
+        ...group.data,
+      })),
+      skipDuplicates: true,
     });
   }
+
+  await runWithConcurrency(changedGroups, seedUpdateConcurrency, async (group) => {
+    await prisma.modificationRequirementGroup.update({
+      where: {
+        code: group.code,
+      },
+      data: group.data,
+    });
+  });
+
+  const finalGroups = await prisma.modificationRequirementGroup.findMany({
+    where: {
+      code: {
+        in: groupCodes,
+      },
+    },
+    select: {
+      id: true,
+      code: true,
+    },
+  });
+  const groupIdsByCode = new Map(finalGroups.map((group) => [group.code, group.id]));
+  const desiredOptions = desiredGroups.flatMap((group) => {
+    const requirementGroupId = groupIdsByCode.get(group.code);
+
+    if (!requirementGroupId) {
+      throw new Error(`Missing requirement group ${group.code}`);
+    }
+
+    return group.optionCodes.map((optionCode) => ({
+      requirementGroupId,
+      requiredDefinitionId: requireSeedId(
+        definitionsByCode,
+        optionCode,
+        "modification definition for requirement option",
+      ),
+    }));
+  });
+  const desiredOptionKeys = new Set(
+    desiredOptions.map((option) =>
+      requirementOptionKey(option.requirementGroupId, option.requiredDefinitionId),
+    ),
+  );
+  const existingOptions = await prisma.modificationRequirementOption.findMany({
+    where: {
+      requirementGroupId: {
+        in: [...groupIdsByCode.values()],
+      },
+    },
+    select: {
+      id: true,
+      requirementGroupId: true,
+      requiredDefinitionId: true,
+    },
+  });
+  const existingOptionKeys = new Set(
+    existingOptions.map((option) =>
+      requirementOptionKey(option.requirementGroupId, option.requiredDefinitionId),
+    ),
+  );
+  const missingOptions = desiredOptions.filter(
+    (option) =>
+      !existingOptionKeys.has(
+        requirementOptionKey(option.requirementGroupId, option.requiredDefinitionId),
+      ),
+  );
+  const staleOptionIds = existingOptions
+    .filter(
+      (option) =>
+        !desiredOptionKeys.has(
+          requirementOptionKey(option.requirementGroupId, option.requiredDefinitionId),
+        ),
+    )
+    .map((option) => option.id);
+
+  if (missingOptions.length > 0) {
+    await prisma.modificationRequirementOption.createMany({
+      data: missingOptions,
+      skipDuplicates: true,
+    });
+  }
+
+  await updateIdsInBatches(staleOptionIds, (ids) =>
+    prisma.modificationRequirementOption.deleteMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+    }),
+  );
+
+  return seedPhaseResult(undefined, {
+    inputCount: desiredGroups.length + desiredOptions.length,
+    createdCount: missingGroups.length + missingOptions.length,
+    updatedCount: changedGroups.length + staleOptionIds.length,
+    unchangedCount:
+      desiredGroups.length +
+      desiredOptions.length -
+      missingGroups.length -
+      missingOptions.length -
+      changedGroups.length,
+  });
 }
 
-async function deactivateInactiveRequirementGroups() {
-  await prisma.modificationRequirementGroup.updateMany({
+async function deactivateInactiveRequirementGroups(): Promise<SeedPhaseResult<void>> {
+  const result = await prisma.modificationRequirementGroup.updateMany({
     where: {
       code: {
         in: [...inactiveRequirementGroupCodes],
@@ -11762,6 +13039,12 @@ async function deactivateInactiveRequirementGroups() {
     data: {
       active: false,
     },
+  });
+
+  return seedPhaseResult(undefined, {
+    inputCount: inactiveRequirementGroupCodes.length,
+    updatedCount: result.count,
+    unchangedCount: inactiveRequirementGroupCodes.length - result.count,
   });
 }
 
