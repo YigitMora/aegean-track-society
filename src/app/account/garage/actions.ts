@@ -3,6 +3,11 @@
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import {
+  canAddActiveVehicle,
+  canArchiveVehicleCount,
+  canRestoreVehicleCount,
+} from "@/lib/garage-capacity";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { normalizeMemberReturnTo } from "@/lib/member-auth";
 import { prisma } from "@/lib/prisma";
@@ -95,72 +100,91 @@ export async function createVehicleAction(formData: FormData) {
   }
 
   try {
-    const duplicateVehicle = await prisma.vehicle.findFirst({
-      where: {
-        userId: memberUser.id,
-        plateNumber: vehicleInput.plateNumber,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-      },
-    });
+    const result = await runGarageSerializableTransaction(async (tx) => {
+      const activeVehicleCount = await tx.vehicle.count({
+        where: {
+          userId: memberUser.id,
+          deletedAt: null,
+        },
+      });
 
-    if (duplicateVehicle) {
-      redirectWithError("/account/garage/new", "duplicate_plate");
-    }
+      if (!canAddActiveVehicle(activeVehicleCount)) {
+        return {
+          ok: false as const,
+          code: "active_vehicle_limit_reached" as const,
+        };
+      }
 
-    const activePrimaryCount = await prisma.vehicle.count({
-      where: {
-        userId: memberUser.id,
-        deletedAt: null,
-        isPrimary: true,
-      },
-    });
-    const shouldBecomePrimary = vehicleInput.isPrimary || activePrimaryCount === 0;
+      const duplicateVehicle = await tx.vehicle.findFirst({
+        where: {
+          userId: memberUser.id,
+          plateNumber: vehicleInput.plateNumber,
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+        },
+      });
 
-    const vehicleData = {
-      userId: memberUser.id,
-      vehicleDefinitionId: vehicleInput.vehicleDefinitionId,
-      brand: vehicleInput.brand,
-      model: vehicleInput.model,
-      year: vehicleInput.year,
-      plateNumber: vehicleInput.plateNumber,
-      color: vehicleInput.color,
-      isPrimary: shouldBecomePrimary,
-    };
+      if (duplicateVehicle) {
+        return {
+          ok: false as const,
+          code: "duplicate_plate" as const,
+        };
+      }
 
-    const vehicle = shouldBecomePrimary
-      ? (
-          await prisma.$transaction([
-            prisma.vehicle.updateMany({
-              where: {
-                userId: memberUser.id,
-                deletedAt: null,
-                isPrimary: true,
-              },
-              data: {
-                isPrimary: false,
-              },
-            }),
-            prisma.vehicle.create({
-              data: vehicleData,
-              select: {
-                id: true,
-              },
-            }),
-          ])
-        )[1]
-      : await prisma.vehicle.create({
-          data: vehicleData,
-          select: {
-            id: true,
+      const activePrimaryCount = await tx.vehicle.count({
+        where: {
+          userId: memberUser.id,
+          deletedAt: null,
+          isPrimary: true,
+        },
+      });
+      const shouldBecomePrimary =
+        vehicleInput.isPrimary || activePrimaryCount === 0;
+
+      if (shouldBecomePrimary) {
+        await tx.vehicle.updateMany({
+          where: {
+            userId: memberUser.id,
+            deletedAt: null,
+            isPrimary: true,
+          },
+          data: {
+            isPrimary: false,
           },
         });
+      }
+
+      const vehicle = await tx.vehicle.create({
+        data: {
+          userId: memberUser.id,
+          vehicleDefinitionId: vehicleInput.vehicleDefinitionId,
+          brand: vehicleInput.brand,
+          model: vehicleInput.model,
+          year: vehicleInput.year,
+          plateNumber: vehicleInput.plateNumber,
+          color: vehicleInput.color,
+          isPrimary: shouldBecomePrimary,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      return {
+        ok: true as const,
+        vehicleId: vehicle.id,
+      };
+    });
+
+    if (!result.ok) {
+      redirectWithError("/account/garage/new", result.code);
+    }
 
     console.log("GARAGE_VEHICLE_CREATED", {
       userId: memberUser.id,
-      vehicleId: vehicle.id,
+      vehicleId: result.vehicleId,
       operation: "create",
     });
   } catch (error) {
@@ -169,7 +193,7 @@ export async function createVehicleAction(formData: FormData) {
     }
 
     logGarageFailure(memberUser.id, "create", error);
-    redirectWithError("/account/garage/new", errorCodeForVehicleWrite(error, "duplicate_plate"));
+    redirectWithError("/account/garage/new", errorCodeForVehicleWrite(error, "failed"));
   }
 
   revalidateGarage();
@@ -437,66 +461,99 @@ export async function restoreVehicleAction(vehicleId: string) {
   const memberUser = await requireCompleteMemberUser(garagePath);
 
   try {
-    const vehicle = await prisma.vehicle.findFirst({
-      where: {
-        id: vehicleId,
-        userId: memberUser.id,
-        deletedAt: {
-          not: null,
+    const result = await runGarageSerializableTransaction(async (tx) => {
+      const vehicle = await tx.vehicle.findFirst({
+        where: {
+          id: vehicleId,
+          userId: memberUser.id,
+          deletedAt: {
+            not: null,
+          },
         },
-      },
-      select: {
-        id: true,
-        plateNumber: true,
-      },
-    });
-
-    if (!vehicle) {
-      redirectWithError(garagePath, "not_found");
-    }
-
-    const duplicateVehicle = await prisma.vehicle.findFirst({
-      where: {
-        userId: memberUser.id,
-        plateNumber: vehicle.plateNumber,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (duplicateVehicle) {
-      redirectWithError(garagePath, "restore_conflict");
-    }
-
-    const activePrimaryVehicle = await prisma.vehicle.findFirst({
-      where: {
-        userId: memberUser.id,
-        deletedAt: null,
-        isPrimary: true,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    const restoredVehicle = await prisma.vehicle.updateMany({
-      where: {
-        id: vehicleId,
-        userId: memberUser.id,
-        deletedAt: {
-          not: null,
+        select: {
+          id: true,
+          plateNumber: true,
         },
-      },
-      data: {
-        deletedAt: null,
-        isPrimary: !activePrimaryVehicle,
-      },
+      });
+
+      if (!vehicle) {
+        return {
+          ok: false as const,
+          code: "not_found" as const,
+        };
+      }
+
+      const activeVehicleCount = await tx.vehicle.count({
+        where: {
+          userId: memberUser.id,
+          deletedAt: null,
+        },
+      });
+
+      if (!canRestoreVehicleCount(activeVehicleCount, 1)) {
+        return {
+          ok: false as const,
+          code: "active_vehicle_limit_reached" as const,
+        };
+      }
+
+      const duplicateVehicle = await tx.vehicle.findFirst({
+        where: {
+          userId: memberUser.id,
+          plateNumber: vehicle.plateNumber,
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (duplicateVehicle) {
+        return {
+          ok: false as const,
+          code: "restore_conflict" as const,
+        };
+      }
+
+      const activePrimaryVehicle = await tx.vehicle.findFirst({
+        where: {
+          userId: memberUser.id,
+          deletedAt: null,
+          isPrimary: true,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const restoredVehicle = await tx.vehicle.updateMany({
+        where: {
+          id: vehicleId,
+          userId: memberUser.id,
+          deletedAt: {
+            not: null,
+          },
+        },
+        data: {
+          deletedAt: null,
+          isPrimary: !activePrimaryVehicle,
+        },
+      });
+
+      if (restoredVehicle.count === 0) {
+        return {
+          ok: false as const,
+          code: "not_found" as const,
+        };
+      }
+
+      return {
+        ok: true as const,
+      };
     });
 
-    if (restoredVehicle.count === 0) {
-      redirectWithError(garagePath, "not_found");
+    if (!result.ok) {
+      redirectWithError(garagePath, result.code);
     }
 
     console.log("GARAGE_VEHICLE_RESTORED", {
@@ -1597,7 +1654,7 @@ function normalizeVehicleIds(formData: FormData) {
 async function archiveVehiclesForMember(userId: string, vehicleIds: string[]) {
   const transactionStartedAt = lifecycleNow();
 
-  const result = await prisma.$transaction(
+  const result = await runGarageSerializableTransaction(
     async (tx) => {
       const validationStartedAt = lifecycleNow();
       const vehicles = await tx.vehicle.findMany({
@@ -1632,6 +1689,23 @@ async function archiveVehiclesForMember(userId: string, vehicleIds: string[]) {
         return {
           ok: false as const,
           code: "archive_failed" as const,
+          hadPrimaryVehicle: false,
+        };
+      }
+
+      const archivedVehicleCount = await tx.vehicle.count({
+        where: {
+          userId,
+          deletedAt: {
+            not: null,
+          },
+        },
+      });
+
+      if (!canArchiveVehicleCount(archivedVehicleCount, vehicleIds.length)) {
+        return {
+          ok: false as const,
+          code: "archived_vehicle_limit_reached" as const,
           hadPrimaryVehicle: false,
         };
       }
@@ -1711,9 +1785,6 @@ async function archiveVehiclesForMember(userId: string, vehicleIds: string[]) {
         hadPrimaryVehicle: archivedPrimary,
       };
     },
-    {
-      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-    },
   );
 
   logLifecycleTiming("GARAGE_ARCHIVE_BATCH", {
@@ -1725,6 +1796,33 @@ async function archiveVehiclesForMember(userId: string, vehicleIds: string[]) {
   });
 
   return result;
+}
+
+async function runGarageSerializableTransaction<T>(
+  operation: (tx: Prisma.TransactionClient) => Promise<T>,
+) {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      return await prisma.$transaction(operation, {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      });
+    } catch (error) {
+      if (attempt < 3 && isGarageSerializableConflict(error)) {
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  throw new Error("Garage serializable transaction failed.");
+}
+
+function isGarageSerializableConflict(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2034"
+  );
 }
 
 async function deleteArchivedVehiclesForMember(userId: string, vehicleIds: string[]) {
@@ -1899,6 +1997,10 @@ function lifecycleSuccessMessage(
 
 function lifecycleErrorMessage(code: GarageError) {
   const messages: Partial<Record<GarageError, string>> = {
+    active_vehicle_limit_reached:
+      "Garajınızda en fazla 5 aktif araç bulunabilir. Arşivdeki aracı geri yüklemek için önce aktif araçlardan birini arşivleyin.",
+    archived_vehicle_limit_reached:
+      "Arşivinizde en fazla 5 araç bulunabilir. Yeni bir araç arşivlemek için arşivdeki araçlardan birini kalıcı olarak silin veya geri yükleyin.",
     batch_empty: "İşlem için en az bir araç seçin.",
     batch_too_large: "Tek seferde seçilebilecek araç sınırı aşıldı.",
     not_found: "Araç bulunamadı veya bu işlem için uygun değil.",

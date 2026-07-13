@@ -1,6 +1,8 @@
 export type GarageLifecycleErrorCode =
   | "invalid"
   | "duplicate_plate"
+  | "active_vehicle_limit_reached"
+  | "archived_vehicle_limit_reached"
   | "not_found"
   | "archive_failed"
   | "batch_empty"
