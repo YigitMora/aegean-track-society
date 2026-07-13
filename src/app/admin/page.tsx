@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { formatDateTime } from "@/lib/admin-format";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { requireOwnerAdmin } from "@/lib/admin-authorization";
 import { kulaCheckInDate, kulaEventSlug, kulaPackageCode } from "@/lib/event-config";
 import { prisma } from "@/lib/prisma";
 import { getAdminReadinessWarnings } from "@/lib/production-readiness";
@@ -12,7 +12,7 @@ import { measureServerTiming } from "@/lib/server-timing";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-  await requireAdminSession();
+  await requireOwnerAdmin();
 
   const event = await measureServerTiming("ADMIN_DASHBOARD_QUERY", () =>
     prisma.event.findUnique({

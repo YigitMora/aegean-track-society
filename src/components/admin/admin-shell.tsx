@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { adminHasCapability, getCurrentAdminActor, isOwnerAdmin } from "@/lib/admin-authorization";
 
 type AdminShellProps = {
   title: string;
@@ -8,13 +9,20 @@ type AdminShellProps = {
   children: ReactNode;
 };
 
-export function AdminShell({ title, eyebrow, actions, children }: AdminShellProps) {
+export async function AdminShell({ title, eyebrow, actions, children }: AdminShellProps) {
+  const adminActor = await getCurrentAdminActor();
+  const canReadMembers = adminHasCapability(adminActor?.role, "members.read");
+  const canReadRegistrations = adminHasCapability(adminActor?.role, "registrations.read");
+  const canManageCheckIn = adminHasCapability(adminActor?.role, "checkin.manage");
+  const isOwner = isOwnerAdmin(adminActor?.role);
+  const homeHref = isOwner ? "/admin" : canManageCheckIn ? "/admin/check-in" : "/admin/login";
+
   return (
     <main className="min-h-screen bg-asphalt text-white">
       <header className="border-b border-white/10 bg-asphalt/95">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <div>
-            <Link href="/admin" className="text-sm font-black uppercase tracking-wide">
+            <Link href={homeHref} className="text-sm font-black uppercase tracking-wide">
               Aegean Track Days Ops
             </Link>
             <p className="mt-1 text-xs font-semibold uppercase text-white/45">
@@ -22,36 +30,46 @@ export function AdminShell({ title, eyebrow, actions, children }: AdminShellProp
             </p>
           </div>
           <nav className="flex flex-wrap items-center gap-2 text-sm font-bold">
-            <Link
-              href="/admin"
-              className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/admin/participants"
-              className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
-            >
-              Participants
-            </Link>
-            <Link
-              href="/admin/members"
-              className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
-            >
-              Members
-            </Link>
-            <Link
-              href="/admin/check-in"
-              className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
-            >
-              Check-in
-            </Link>
-            <Link
-              href="/admin/export"
-              className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
-            >
-              Export CSV
-            </Link>
+            {isOwner ? (
+              <Link
+                href="/admin"
+                className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
+              >
+                Dashboard
+              </Link>
+            ) : null}
+            {canReadRegistrations ? (
+              <Link
+                href="/admin/participants"
+                className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
+              >
+                Katılımcılar
+              </Link>
+            ) : null}
+            {canReadMembers ? (
+              <Link
+                href="/admin/members"
+                className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
+              >
+                Üyeler
+              </Link>
+            ) : null}
+            {canManageCheckIn ? (
+              <Link
+                href="/admin/check-in"
+                className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
+              >
+                Check-in
+              </Link>
+            ) : null}
+            {isOwner ? (
+              <Link
+                href="/admin/export"
+                className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
+              >
+                Export CSV
+              </Link>
+            ) : null}
             <form action="/admin/logout" method="post">
               <button
                 type="submit"

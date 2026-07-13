@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { StatusBadge } from "@/components/admin/status-badge";
 import { formatDateTime } from "@/lib/admin-format";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { adminHasCapability, requireAdminCapability } from "@/lib/admin-authorization";
 import {
   MAX_ACTIVE_GARAGE_VEHICLES,
   MAX_ARCHIVED_GARAGE_VEHICLES,
@@ -23,6 +24,32 @@ type ProfileFilter = (typeof profileFilters)[number];
 type MarketingFilter = (typeof marketingFilters)[number];
 type SortOption = (typeof sortOptions)[number];
 
+type MemberListRow = {
+  id: string;
+  email: string;
+  status: string;
+  createdAt?: Date;
+  memberKvkkAcceptedAt: Date | null;
+  memberTermsAcceptedAt: Date | null;
+  profile: {
+    fullName: string | null;
+    displayName?: string | null;
+    phone: string | null;
+  } | null;
+  vehicles?: Array<{
+    deletedAt: Date | null;
+  }>;
+  registrations?: Array<{
+    status: string;
+    event: {
+      name: string;
+    };
+  }>;
+  _count: {
+    registrations: number;
+  };
+};
+
 type MembersPageProps = {
   searchParams: Promise<{
     q?: string;
@@ -37,20 +64,98 @@ type MembersPageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminMembersPage({ searchParams }: MembersPageProps) {
-  await requireAdminSession();
+  const adminActor = await requireAdminCapability("members.read");
+  const canViewGarageData = adminHasCapability(adminActor.role, "garages.manage");
 
   const params = await searchParams;
   const query = normalizeQuery(params.q);
   const status = isStatusFilter(params.status) ? params.status : "all";
   const profile = isProfileFilter(params.profile) ? params.profile : "all";
-  const marketing = isMarketingFilter(params.marketing) ? params.marketing : "all";
+  const marketing =
+    canViewGarageData && isMarketingFilter(params.marketing) ? params.marketing : "all";
   const sort = isSortOption(params.sort) ? params.sort : "newest";
   const page = normalizePage(params.page);
-  const where = buildMemberWhere({ query, status, profile, marketing });
+  const where = buildMemberWhere({
+    query,
+    status,
+    profile,
+    marketing,
+    includeMarketingFilter: canViewGarageData,
+    includeVehicleSearch: canViewGarageData,
+  });
   const orderBy = orderByForSort(sort);
   const skip = (page - 1) * pageSize;
+  const memberSelect: Prisma.UserSelect = {
+    id: true,
+    email: true,
+    status: true,
+    memberKvkkAcceptedAt: true,
+    memberTermsAcceptedAt: true,
+    profile: {
+      select: {
+        fullName: true,
+        phone: true,
+      },
+    },
+    _count: {
+      select: {
+        registrations: {
+          where: {
+            deletedAt: null,
+          },
+        },
+      },
+    },
+  };
 
-  const [totalMembers, members] = await measureServerTiming("ADMIN_MEMBERS_QUERY", () =>
+  if (canViewGarageData) {
+    memberSelect.role = true;
+    memberSelect.memberMarketingConsentAt = true;
+    memberSelect.memberMarketingConsentRevokedAt = true;
+    memberSelect.createdAt = true;
+    memberSelect.profile = {
+      select: {
+        fullName: true,
+        displayName: true,
+        phone: true,
+      },
+    };
+    memberSelect.vehicles = {
+      select: {
+        deletedAt: true,
+      },
+    };
+  } else {
+    memberSelect.registrations = {
+      where: {
+        deletedAt: null,
+        event: {
+          status: {
+            in: ["PUBLISHED", "SOLD_OUT"],
+          },
+        },
+      },
+      orderBy: [
+        {
+          createdAt: "desc",
+        },
+        {
+          id: "asc",
+        },
+      ],
+      take: 1,
+      select: {
+        status: true,
+        event: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    };
+  }
+
+  const [totalMembers, members] = (await measureServerTiming("ADMIN_MEMBERS_QUERY", () =>
     prisma.$transaction([
       prisma.user.count({ where }),
       prisma.user.findMany({
@@ -58,41 +163,10 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
         orderBy,
         skip,
         take: pageSize,
-        select: {
-          id: true,
-          email: true,
-          role: true,
-          status: true,
-          memberKvkkAcceptedAt: true,
-          memberTermsAcceptedAt: true,
-          memberMarketingConsentAt: true,
-          memberMarketingConsentRevokedAt: true,
-          createdAt: true,
-          profile: {
-            select: {
-              fullName: true,
-              displayName: true,
-              phone: true,
-            },
-          },
-          vehicles: {
-            select: {
-              deletedAt: true,
-            },
-          },
-          _count: {
-            select: {
-              registrations: {
-                where: {
-                  deletedAt: null,
-                },
-              },
-            },
-          },
-        },
+        select: memberSelect,
       }),
     ]),
-  );
+  )) as unknown as [number, MemberListRow[]];
 
   const totalPages = Math.max(Math.ceil(totalMembers / pageSize), 1);
   const startRow = totalMembers === 0 ? 0 : skip + 1;
@@ -103,18 +177,24 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
       title="Üyeler"
       eyebrow="Members CRM"
       actions={
-        <Link
-          href="/admin"
-          className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-black text-white/75 transition hover:border-white hover:text-white"
-        >
-          Dashboard
-        </Link>
+        canViewGarageData ? (
+          <Link
+            href="/admin"
+            className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-black text-white/75 transition hover:border-white hover:text-white"
+          >
+            Dashboard
+          </Link>
+        ) : null
       }
     >
       <form
         action="/admin/members"
         method="get"
-        className="grid gap-3 rounded-lg border border-white/10 bg-white/10 p-4 lg:grid-cols-[1fr_150px_150px_150px_150px_auto_auto]"
+        className={`grid gap-3 rounded-lg border border-white/10 bg-white/10 p-4 ${
+          canViewGarageData
+            ? "lg:grid-cols-[1fr_150px_150px_150px_150px_auto_auto]"
+            : "lg:grid-cols-[1fr_150px_150px_150px_auto_auto]"
+        }`}
       >
         <label className="block">
           <span className="text-xs font-black uppercase text-white/50">Üye ara</span>
@@ -122,7 +202,9 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
             name="q"
             defaultValue={query}
             maxLength={maxQueryLength}
-            placeholder="E-posta, ad, telefon veya plaka"
+            placeholder={
+              canViewGarageData ? "E-posta, ad, telefon veya plaka" : "E-posta, ad veya telefon"
+            }
             className="mt-2 h-11 w-full rounded-md border border-white/15 bg-white px-3 text-sm font-semibold text-asphalt outline-none transition focus:border-signal"
           />
         </label>
@@ -146,16 +228,18 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
             ["incomplete", "Eksik"],
           ]}
         />
-        <FilterSelect
-          label="Pazarlama izni"
-          name="marketing"
-          value={marketing}
-          options={[
-            ["all", "Tümü"],
-            ["active", "Açık"],
-            ["inactive", "Kapalı"],
-          ]}
-        />
+        {canViewGarageData ? (
+          <FilterSelect
+            label="Pazarlama izni"
+            name="marketing"
+            value={marketing}
+            options={[
+              ["all", "Tümü"],
+              ["active", "Açık"],
+              ["inactive", "Kapalı"],
+            ]}
+          />
+        ) : null}
         <FilterSelect
           label="Sıralama"
           name="sort"
@@ -190,7 +274,11 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
           </p>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1080px] text-left text-sm">
+          <table
+            className={`w-full text-left text-sm ${
+              canViewGarageData ? "min-w-[1080px]" : "min-w-[900px]"
+            }`}
+          >
             <thead className="bg-white/5 text-xs font-black uppercase text-white/50">
               <tr>
                 <th className="px-5 py-3">Üye</th>
@@ -198,21 +286,27 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
                 <th className="px-5 py-3">Telefon</th>
                 <th className="px-5 py-3">Hesap</th>
                 <th className="px-5 py-3">Profil</th>
-                <th className="px-5 py-3">Garaj</th>
+                {canViewGarageData ? <th className="px-5 py-3">Garaj</th> : null}
                 <th className="px-5 py-3">Başvurular</th>
-                <th className="px-5 py-3">Üyelik tarihi</th>
+                {canViewGarageData ? (
+                  <th className="px-5 py-3">Üyelik tarihi</th>
+                ) : (
+                  <th className="px-5 py-3">Aktif etkinlik</th>
+                )}
                 <th className="px-5 py-3">Detay</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
               {members.map((member) => {
                 const profileComplete = isMemberProfileComplete(member);
-                const activeVehicleCount = member.vehicles.filter(
-                  (vehicle) => !vehicle.deletedAt,
-                ).length;
-                const archivedVehicleCount = member.vehicles.filter(
-                  (vehicle) => vehicle.deletedAt,
-                ).length;
+                const vehicles =
+                  canViewGarageData && "vehicles" in member ? member.vehicles ?? [] : [];
+                const activeEventRegistration =
+                  !canViewGarageData && "registrations" in member
+                    ? member.registrations?.[0] ?? null
+                    : null;
+                const activeVehicleCount = vehicles.filter((vehicle) => !vehicle.deletedAt).length;
+                const archivedVehicleCount = vehicles.filter((vehicle) => vehicle.deletedAt).length;
                 const capacityExceeded =
                   activeVehicleCount > MAX_ACTIVE_GARAGE_VEHICLES ||
                   archivedVehicleCount > MAX_ARCHIVED_GARAGE_VEHICLES;
@@ -226,11 +320,13 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
                       >
                         {member.profile?.fullName ?? "İsimsiz üye"}
                       </Link>
-                      <p className="mt-1 text-xs font-semibold text-white/45">
-                        {member.profile?.displayName
-                          ? `Görünen ad: ${member.profile.displayName}`
-                          : `ID: ${member.id}`}
-                      </p>
+                      {canViewGarageData ? (
+                        <p className="mt-1 text-xs font-semibold text-white/45">
+                          {member.profile?.displayName
+                            ? `Görünen ad: ${member.profile.displayName}`
+                            : `ID: ${member.id}`}
+                        </p>
+                      ) : null}
                     </td>
                     <td className="px-5 py-4 text-white/75">{member.email}</td>
                     <td className="px-5 py-4 text-white/75">
@@ -242,25 +338,42 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
                     <td className="px-5 py-4">
                       <ProfileStatusBadge complete={profileComplete} />
                     </td>
-                    <td className="px-5 py-4">
-                      <p className="font-black text-white">
-                        {activeVehicleCount} / {MAX_ACTIVE_GARAGE_VEHICLES} aktif
-                      </p>
-                      <p className="mt-1 text-xs font-semibold text-white/55">
-                        {archivedVehicleCount} / {MAX_ARCHIVED_GARAGE_VEHICLES} arşiv
-                      </p>
-                      {capacityExceeded ? (
-                        <p className="mt-1 text-xs font-black uppercase text-signal">
-                          Kapasite üstü
+                    {canViewGarageData ? (
+                      <td className="px-5 py-4">
+                        <p className="font-black text-white">
+                          {activeVehicleCount} / {MAX_ACTIVE_GARAGE_VEHICLES} aktif
                         </p>
-                      ) : null}
-                    </td>
+                        <p className="mt-1 text-xs font-semibold text-white/55">
+                          {archivedVehicleCount} / {MAX_ARCHIVED_GARAGE_VEHICLES} arşiv
+                        </p>
+                        {capacityExceeded ? (
+                          <p className="mt-1 text-xs font-black uppercase text-signal">
+                            Kapasite üstü
+                          </p>
+                        ) : null}
+                      </td>
+                    ) : null}
                     <td className="px-5 py-4 font-black text-white">
                       {member._count.registrations}
                     </td>
-                    <td className="px-5 py-4 text-white/65">
-                      {formatDateTime(member.createdAt)}
-                    </td>
+                    {canViewGarageData ? (
+                      <td className="px-5 py-4 text-white/65">
+                        {formatDateTime(member.createdAt)}
+                      </td>
+                    ) : (
+                      <td className="px-5 py-4 text-white/65">
+                        {activeEventRegistration ? (
+                          <>
+                            <StatusBadge value={activeEventRegistration.status} />
+                            <p className="mt-2 text-xs font-semibold text-white/45">
+                              {activeEventRegistration.event.name}
+                            </p>
+                          </>
+                        ) : (
+                          "Yok"
+                        )}
+                      </td>
+                    )}
                     <td className="px-5 py-4">
                       <Link
                         href={`/admin/members/${member.id}`}
@@ -274,7 +387,7 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
               })}
               {members.length === 0 ? (
                 <tr>
-                  <td className="px-5 py-8 text-white/60" colSpan={9}>
+                  <td className="px-5 py-8 text-white/60" colSpan={canViewGarageData ? 9 : 8}>
                     Geçerli arama ve filtrelerle eşleşen üye bulunamadı.
                   </td>
                 </tr>
@@ -312,11 +425,15 @@ function buildMemberWhere({
   status,
   profile,
   marketing,
+  includeMarketingFilter,
+  includeVehicleSearch,
 }: {
   query: string;
   status: StatusFilter;
   profile: ProfileFilter;
   marketing: MarketingFilter;
+  includeMarketingFilter: boolean;
+  includeVehicleSearch: boolean;
 }): Prisma.UserWhereInput {
   const where: Prisma.UserWhereInput = {
     deletedAt: null,
@@ -337,7 +454,7 @@ function buildMemberWhere({
     });
   }
 
-  if (marketing === "active") {
+  if (includeMarketingFilter && marketing === "active") {
     andFilters.push({
       memberMarketingConsentAt: {
         not: null,
@@ -346,7 +463,7 @@ function buildMemberWhere({
     });
   }
 
-  if (marketing === "inactive") {
+  if (includeMarketingFilter && marketing === "inactive") {
     andFilters.push({
       OR: [
         {
@@ -362,14 +479,21 @@ function buildMemberWhere({
   }
 
   if (query) {
+    const searchFilters: Prisma.UserWhereInput[] = [
+      { email: { contains: query, mode: "insensitive" } },
+      { profile: { is: { fullName: { contains: query, mode: "insensitive" } } } },
+      { profile: { is: { displayName: { contains: query, mode: "insensitive" } } } },
+      { profile: { is: { phone: { contains: query, mode: "insensitive" } } } },
+    ];
+
+    if (includeVehicleSearch) {
+      searchFilters.push({
+        vehicles: { some: { plateNumber: { contains: query, mode: "insensitive" } } },
+      });
+    }
+
     andFilters.push({
-      OR: [
-        { email: { contains: query, mode: "insensitive" } },
-        { profile: { is: { fullName: { contains: query, mode: "insensitive" } } } },
-        { profile: { is: { displayName: { contains: query, mode: "insensitive" } } } },
-        { profile: { is: { phone: { contains: query, mode: "insensitive" } } } },
-        { vehicles: { some: { plateNumber: { contains: query, mode: "insensitive" } } } },
-      ],
+      OR: searchFilters,
     });
   }
 

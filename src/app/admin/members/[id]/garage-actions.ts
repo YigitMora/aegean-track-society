@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { requireAdminCapability } from "@/lib/admin-authorization";
 import { prisma } from "@/lib/prisma";
 import {
   archiveGarageVehicles,
@@ -233,34 +233,15 @@ export async function matchMemberGarageVehicleDefinitionAction(
 }
 
 async function requireGarageAdminActor(memberId: string): Promise<AdminGarageActor> {
-  const session = await requireAdminSession();
-  const adminUser = await prisma.adminUser.findUnique({
-    where: {
-      email: normalizeAdminEmail(session.email),
-    },
-    select: {
-      id: true,
-      role: true,
-    },
+  const adminUser = await requireAdminCapability("garages.manage", {
+    deniedPath: garageResultPath(memberId, "admin_permission_denied"),
   });
-
-  if (!adminUser || !canWriteGarageRole(adminUser.role)) {
-    redirectWithGarageResult(memberId, "admin_permission_denied");
-  }
 
   return {
     type: "admin",
     adminUserId: adminUser.id,
     ipAddress: await getActionIpAddress(),
   };
-}
-
-function canWriteGarageRole(role: unknown) {
-  return role === "OWNER" || role === "STAFF";
-}
-
-function normalizeAdminEmail(email: string) {
-  return email.trim().toLowerCase();
 }
 
 function withReason(actor: AdminGarageActor, reason: string): AdminGarageActor {
@@ -276,6 +257,23 @@ function redirectWithGarageResult(
   blockingModifications?: string[],
   vehicleId?: string,
 ): never {
+  redirect(garageResultPath(memberId, code, blockingModifications, vehicleId));
+}
+
+function garageResultPath(
+  memberId: string,
+  code:
+    | GarageServiceErrorCode
+    | "created"
+    | "updated"
+    | "archived"
+    | "restored"
+    | "deleted"
+    | "matched"
+    | "primary",
+  blockingModifications?: string[],
+  vehicleId?: string,
+) {
   const url = new URL(`/admin/members/${memberId}`, "https://ats.local");
   url.searchParams.set("garageResult", code);
 
@@ -287,7 +285,7 @@ function redirectWithGarageResult(
     url.searchParams.set("blocked", blockingModifications.join(", "));
   }
 
-  redirect(`${url.pathname}${url.search}`);
+  return `${url.pathname}${url.search}`;
 }
 
 function revalidateAdminGarage(memberId: string) {

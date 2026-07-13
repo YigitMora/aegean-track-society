@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminSessionForRoute } from "@/lib/admin-auth";
+import { adminHasCapability, getAdminActorForRoute } from "@/lib/admin-authorization";
 import { formatDateOnly } from "@/lib/admin-format";
 import { kulaEventSlug } from "@/lib/event-config";
 import { prisma } from "@/lib/prisma";
@@ -23,12 +23,16 @@ const headers = [
 ];
 
 export async function GET(request: Request) {
-  const session = await requireAdminSessionForRoute();
+  const adminActor = await getAdminActorForRoute();
 
-  if (!session) {
+  if (!adminActor) {
     return NextResponse.redirect(new URL("/admin/login", request.url), {
       status: 303,
     });
+  }
+
+  if (!adminHasCapability(adminActor.role, "registrations.manage")) {
+    return new NextResponse("Forbidden", { status: 403 });
   }
 
   const registrations = await prisma.registration.findMany({

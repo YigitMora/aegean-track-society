@@ -8,7 +8,7 @@ import {
   getCheckInRegistrationById,
   searchCheckInRegistrations,
 } from "@/lib/check-in";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { requireCheckinOrOwner } from "@/lib/admin-authorization";
 import { confirmManualCheckIn, lookupQrInput } from "./actions";
 
 type AdminCheckInPageProps = {
@@ -22,7 +22,7 @@ type AdminCheckInPageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminCheckInPage({ searchParams }: AdminCheckInPageProps) {
-  await requireAdminSession();
+  const adminActor = await requireCheckinOrOwner();
 
   const { q, registrationId, result } = await searchParams;
   const query = q?.trim() ?? "";
@@ -39,12 +39,14 @@ export default async function AdminCheckInPage({ searchParams }: AdminCheckInPag
       title="Check-in"
       eyebrow="Pit-lane mode"
       actions={
-        <Link
-          href="/admin"
-          className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-black text-white/75 transition hover:border-white hover:text-white"
-        >
-          Dashboard
-        </Link>
+        adminActor.role === "OWNER" ? (
+          <Link
+            href="/admin"
+            className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-black text-white/75 transition hover:border-white hover:text-white"
+          >
+            Dashboard
+          </Link>
+        ) : null
       }
     >
       <div className="mx-auto max-w-4xl space-y-6">

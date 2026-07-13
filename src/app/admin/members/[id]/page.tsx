@@ -12,7 +12,7 @@ import { VehicleForm } from "@/components/vehicle-form";
 import type { VehicleTemplateOption } from "@/components/vehicle-template-fields";
 import { VehiclePerformanceRatingCard } from "@/components/vehicle-rating-card";
 import { formatDateTime, formatStatus } from "@/lib/admin-format";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { adminHasCapability, requireAdminCapability } from "@/lib/admin-authorization";
 import {
   MAX_ACTIVE_GARAGE_VEHICLES,
   MAX_ARCHIVED_GARAGE_VEHICLES,
@@ -143,8 +143,8 @@ export default async function AdminMemberDetailPage({
   params,
   searchParams,
 }: MemberDetailPageProps) {
-  const [session, { id }, queryParams] = await Promise.all([
-    requireAdminSession(),
+  const [adminActor, { id }, queryParams] = await Promise.all([
+    requireAdminCapability("members.read"),
     params,
     searchParams,
   ]);
@@ -153,15 +153,13 @@ export default async function AdminMemberDetailPage({
     notFound();
   }
 
-  const [adminUser, member, vehicleDefinitions] = await Promise.all([
-    prisma.adminUser.findUnique({
-      where: {
-        email: session.email,
-      },
-      select: {
-        role: true,
-      },
-    }),
+  const canManageGarages = adminHasCapability(adminActor.role, "garages.manage");
+
+  if (!canManageGarages) {
+    return renderCheckinMemberDetail(id);
+  }
+
+  const [member, vehicleDefinitions] = await Promise.all([
     prisma.user.findFirst({
       where: {
         id,
@@ -333,7 +331,7 @@ export default async function AdminMemberDetailPage({
 
   const activeVehicles = member.vehicles.filter((vehicle) => !vehicle.deletedAt);
   const archivedVehicles = member.vehicles.filter((vehicle) => vehicle.deletedAt);
-  const canWriteGarage = (adminUser?.role ?? "OWNER") !== "CHECKIN";
+  const canWriteGarage = true;
   const registrationCountsByVehicleId = member.registrations.reduce(
     (counts, registration) => {
       if (registration.vehicleId) {
@@ -579,6 +577,173 @@ export default async function AdminMemberDetailPage({
                 {member.registrations.length === 0 ? (
                   <tr>
                     <td className="px-4 py-8 text-white/60" colSpan={9}>
+                      Bu üyeye bağlı etkinlik başvurusu yok.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </DetailSection>
+      </section>
+    </AdminShell>
+  );
+}
+
+async function renderCheckinMemberDetail(memberId: string) {
+  const member = await prisma.user.findFirst({
+    where: {
+      id: memberId,
+      deletedAt: null,
+    },
+    select: {
+      email: true,
+      status: true,
+      memberKvkkAcceptedAt: true,
+      memberTermsAcceptedAt: true,
+      profile: {
+        select: {
+          fullName: true,
+          phone: true,
+        },
+      },
+      registrations: {
+        where: {
+          deletedAt: null,
+        },
+        orderBy: [
+          {
+            createdAt: "desc",
+          },
+          {
+            id: "asc",
+          },
+        ],
+        select: {
+          id: true,
+          participantCode: true,
+          status: true,
+          paymentStatus: true,
+          carBrandModel: true,
+          plateNumber: true,
+          event: {
+            select: {
+              name: true,
+              startsAt: true,
+            },
+          },
+          package: {
+            select: {
+              name: true,
+              code: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!member) {
+    notFound();
+  }
+
+  const profileComplete = isMemberProfileComplete(member);
+
+  return (
+    <AdminShell
+      title={member.profile?.fullName ?? "Üye detayı"}
+      eyebrow="Operasyon üye görünümü"
+      actions={
+        <>
+          <Link
+            href="/admin/members"
+            className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-black text-white/75 transition hover:border-white hover:text-white"
+          >
+            Üyelere dön
+          </Link>
+          <Link
+            href="/admin/participants"
+            className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-black text-white/75 transition hover:border-white hover:text-white"
+          >
+            Katılımcılar
+          </Link>
+        </>
+      }
+    >
+      <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <DetailSection title="Kimlik">
+          <DetailGrid>
+            <DetailRow label="Ad soyad" value={member.profile?.fullName ?? "-"} />
+            <DetailRow label="E-posta" value={member.email} />
+            <DetailRow label="Telefon" value={member.profile?.phone ?? "-"} />
+            <DetailRow
+              label="Hesap durumu"
+              value={<AccountStatusBadge status={member.status} />}
+            />
+            <DetailRow
+              label="Profil durumu"
+              value={<ProfileStatusBadge complete={profileComplete} />}
+            />
+          </DetailGrid>
+        </DetailSection>
+
+        <DetailSection title="Etkinlik başvuruları">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[780px] text-left text-sm">
+              <thead className="bg-white/5 text-xs font-black uppercase text-white/50">
+                <tr>
+                  <th className="px-4 py-3">Etkinlik</th>
+                  <th className="px-4 py-3">Paket</th>
+                  <th className="px-4 py-3">Durum</th>
+                  <th className="px-4 py-3">Ödeme</th>
+                  <th className="px-4 py-3">Araç snapshot</th>
+                  <th className="px-4 py-3">Kod</th>
+                  <th className="px-4 py-3">Detay</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10">
+                {member.registrations.map((registration) => (
+                  <tr key={registration.id} className="align-top transition hover:bg-white/5">
+                    <td className="px-4 py-4 font-black text-white">
+                      {registration.event.name}
+                      <p className="mt-1 text-xs font-semibold text-white/45">
+                        {formatDateTime(registration.event.startsAt)}
+                      </p>
+                    </td>
+                    <td className="px-4 py-4 text-white/70">
+                      {registration.package.name}
+                      <p className="mt-1 text-xs font-black text-white/45">
+                        {registration.package.code}
+                      </p>
+                    </td>
+                    <td className="px-4 py-4">
+                      <StatusBadge value={registration.status} />
+                    </td>
+                    <td className="px-4 py-4">
+                      <StatusBadge value={registration.paymentStatus} />
+                    </td>
+                    <td className="px-4 py-4 text-white/70">
+                      {registration.carBrandModel}
+                      <p className="mt-1 text-xs font-black text-white/45">
+                        {registration.plateNumber}
+                      </p>
+                    </td>
+                    <td className="px-4 py-4 text-white/70">
+                      {registration.participantCode ?? "-"}
+                    </td>
+                    <td className="px-4 py-4">
+                      <Link
+                        href={`/admin/participants/${registration.id}`}
+                        className="font-black text-signal transition hover:text-white"
+                      >
+                        Aç
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+                {member.registrations.length === 0 ? (
+                  <tr>
+                    <td className="px-4 py-8 text-white/60" colSpan={7}>
                       Bu üyeye bağlı etkinlik başvurusu yok.
                     </td>
                   </tr>

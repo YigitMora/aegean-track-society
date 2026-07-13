@@ -10,7 +10,7 @@ import {
   formatDateTime,
   formatStatus,
 } from "@/lib/admin-format";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { adminHasCapability, requireAdminCapability } from "@/lib/admin-authorization";
 import { prisma } from "@/lib/prisma";
 import {
   addAdminNote,
@@ -32,10 +32,16 @@ export default async function ParticipantDetailPage({
   params,
   searchParams,
 }: ParticipantDetailPageProps) {
-  await requireAdminSession();
+  const adminActor = await requireAdminCapability("registrations.read");
 
   const { id } = await params;
   const { paymentResult, actionResult } = await searchParams;
+  const canManageRegistrations = adminHasCapability(adminActor.role, "registrations.manage");
+
+  if (!canManageRegistrations) {
+    return renderCheckinParticipantDetail(id);
+  }
+
   const registration = await prisma.registration.findUnique({
     where: { id },
     select: {
@@ -443,6 +449,218 @@ export default async function ParticipantDetailPage({
             ) : null}
           </div>
         </DetailSection>
+      </section>
+    </AdminShell>
+  );
+}
+
+async function renderCheckinParticipantDetail(registrationId: string) {
+  const registration = await prisma.registration.findUnique({
+    where: { id: registrationId },
+    select: {
+      id: true,
+      participantCode: true,
+      fullName: true,
+      phone: true,
+      email: true,
+      carBrandModel: true,
+      plateNumber: true,
+      experienceLevel: true,
+      emergencyContactName: true,
+      emergencyContactPhone: true,
+      status: true,
+      paymentStatus: true,
+      qrIssuedAt: true,
+      deletedAt: true,
+      createdAt: true,
+      event: {
+        select: {
+          name: true,
+          venue: true,
+          startsAt: true,
+          endsAt: true,
+          timezone: true,
+        },
+      },
+      package: {
+        select: {
+          code: true,
+          name: true,
+        },
+      },
+      checkIns: {
+        orderBy: { eventDate: "asc" },
+        select: {
+          id: true,
+          eventDate: true,
+          status: true,
+          checkedInAt: true,
+          duplicateAttemptCount: true,
+          updatedAt: true,
+          checkedInByAdmin: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!registration) {
+    notFound();
+  }
+
+  return (
+    <AdminShell
+      title={registration.fullName}
+      eyebrow={registration.participantCode ?? `Reference ${registration.id}`}
+      actions={
+        <>
+          <Link
+            href="/admin/participants"
+            className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-black text-white/75 transition hover:border-white hover:text-white"
+          >
+            Back to list
+          </Link>
+          <Link
+            href="/admin/check-in"
+            className="inline-flex h-11 items-center rounded-full bg-kerb px-5 text-sm font-black text-white transition hover:bg-white hover:text-asphalt"
+          >
+            Check-in
+          </Link>
+        </>
+      }
+    >
+      {registration.deletedAt ? (
+        <section className="mb-6 rounded-lg border border-signal/40 bg-signal/10 p-4 text-signal">
+          <p className="text-sm font-black uppercase">Archived registration</p>
+          <p className="mt-2 text-sm font-semibold text-white/75">
+            Archived at {formatDateTime(registration.deletedAt)}.
+          </p>
+        </section>
+      ) : null}
+
+      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="space-y-6">
+          <DetailSection title="Participant profile">
+            <DetailGrid>
+              <DetailRow label="Name" value={registration.fullName} />
+              <DetailRow label="Email" value={registration.email} />
+              <DetailRow label="Phone" value={registration.phone} />
+              <DetailRow
+                label="Participant code/reference"
+                value={registration.participantCode ?? registration.id}
+              />
+              <DetailRow label="Created" value={formatDateTime(registration.createdAt)} />
+              <DetailRow
+                label="Registration status"
+                value={<StatusBadge value={registration.status} />}
+              />
+              <DetailRow
+                label="Payment status"
+                value={<StatusBadge value={registration.paymentStatus} />}
+              />
+            </DetailGrid>
+          </DetailSection>
+
+          <DetailSection title="Event and package">
+            <DetailGrid>
+              <DetailRow
+                label="Event"
+                value={`${registration.event.name}, ${registration.event.venue}`}
+              />
+              <DetailRow
+                label="Event window"
+                value={`${formatDateOnly(registration.event.startsAt)} - ${formatDateOnly(
+                  registration.event.endsAt,
+                )}`}
+              />
+              <DetailRow label="Timezone" value={registration.event.timezone} />
+              <DetailRow
+                label="Package"
+                value={`${registration.package.name} (${registration.package.code})`}
+              />
+            </DetailGrid>
+          </DetailSection>
+
+          <DetailSection title="Vehicle">
+            <DetailGrid>
+              <DetailRow label="Vehicle" value={registration.carBrandModel} />
+              <DetailRow label="Plate" value={registration.plateNumber} />
+              <DetailRow
+                label="Driving experience"
+                value={formatExperienceLevel(registration.experienceLevel)}
+              />
+            </DetailGrid>
+          </DetailSection>
+        </div>
+
+        <div className="space-y-6">
+          <DetailSection title="Emergency contact">
+            <DetailGrid>
+              <DetailRow
+                label="Emergency contact"
+                value={registration.emergencyContactName}
+              />
+              <DetailRow label="Emergency phone" value={registration.emergencyContactPhone} />
+            </DetailGrid>
+          </DetailSection>
+
+          <DetailSection title="Participant code and QR">
+            <DetailGrid>
+              <DetailRow
+                label="Participant code"
+                value={registration.participantCode ?? "Pending approval"}
+              />
+              <DetailRow label="QR issued" value={formatDateTime(registration.qrIssuedAt)} />
+            </DetailGrid>
+          </DetailSection>
+
+          <DetailSection title="Check-in status">
+            <div className="space-y-3">
+              {registration.checkIns.map((checkIn) => (
+                <div
+                  key={checkIn.id}
+                  className="rounded-md border border-white/10 bg-white/5 p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="font-black text-white">{formatDateOnly(checkIn.eventDate)}</p>
+                    <StatusBadge value={checkIn.status} />
+                  </div>
+                  <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                    <DetailRow
+                      label="Checked in at"
+                      value={formatDateTime(checkIn.checkedInAt)}
+                      compact
+                    />
+                    <DetailRow
+                      label="Checked in by"
+                      value={checkIn.checkedInByAdmin?.email ?? "-"}
+                      compact
+                    />
+                    <DetailRow
+                      label="Duplicate scans"
+                      value={checkIn.duplicateAttemptCount.toString()}
+                      compact
+                    />
+                    <DetailRow
+                      label="Last update"
+                      value={formatDateTime(checkIn.updatedAt)}
+                      compact
+                    />
+                  </dl>
+                </div>
+              ))}
+              {registration.checkIns.length === 0 ? (
+                <p className="text-sm font-semibold text-white/60">
+                  No eligible check-in row has been created yet.
+                </p>
+              ) : null}
+            </div>
+          </DetailSection>
+        </div>
       </section>
     </AdminShell>
   );

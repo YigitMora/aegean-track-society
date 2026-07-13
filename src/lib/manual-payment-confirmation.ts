@@ -22,30 +22,16 @@ export type ManualPaymentConfirmationResult =
 
 export async function confirmManualRegistrationPayment({
   registrationId,
-  adminEmail,
+  adminUserId,
   ipAddress,
 }: {
   registrationId: string;
-  adminEmail: string;
+  adminUserId: string;
   ipAddress?: string | null;
 }): Promise<ManualPaymentConfirmationResult> {
   const confirmation = await runSerializableTransaction(() =>
     prisma.$transaction(
       async (tx) => {
-        const adminUser = await tx.adminUser.upsert({
-          where: {
-            email: adminEmail,
-          },
-          update: {},
-          create: {
-            email: adminEmail,
-            name: adminEmail,
-            role: "OWNER",
-          },
-          select: {
-            id: true,
-          },
-        });
         const registration = await tx.registration.findUnique({
           where: {
             id: registrationId,
@@ -68,7 +54,7 @@ export async function confirmManualRegistrationPayment({
         if (!registration) {
           await tx.auditLog.create({
             data: {
-              adminUserId: adminUser.id,
+              adminUserId,
               action: "MANUAL_PAYMENT_REJECTED",
               after: {
                 registrationId,
@@ -97,7 +83,7 @@ export async function confirmManualRegistrationPayment({
         if (registration.status !== "PENDING_PAYMENT" || registration.paymentStatus !== "UNPAID") {
           await tx.auditLog.create({
             data: {
-              adminUserId: adminUser.id,
+              adminUserId,
               registrationId: registration.id,
               action: "MANUAL_PAYMENT_REJECTED",
               before: {
@@ -190,7 +176,7 @@ export async function confirmManualRegistrationPayment({
 
         await tx.auditLog.create({
           data: {
-            adminUserId: adminUser.id,
+            adminUserId,
             registrationId: registration.id,
             action: "PAYMENT_CONFIRMED",
             before: {
@@ -208,7 +194,7 @@ export async function confirmManualRegistrationPayment({
 
         await tx.auditLog.create({
           data: {
-            adminUserId: adminUser.id,
+            adminUserId,
             registrationId: registration.id,
             action: "APPROVED",
             before: {
