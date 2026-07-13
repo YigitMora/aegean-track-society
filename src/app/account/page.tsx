@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/auth/actions";
-import { RatingDiscoveryBanner } from "@/components/rating-discovery";
+import { AccountRatingDemo } from "@/components/rating-discovery";
 import { requireMemberUser } from "@/lib/member-auth";
 import { isMemberProfileComplete } from "@/lib/member-profile-validation";
 import { prisma } from "@/lib/prisma";
-import { getRatingDiscoveryBannerData } from "@/lib/rating-discovery";
+import {
+  getFl5AccountRatingDemo,
+  resolveAccountFl5DemoCta,
+} from "@/lib/rating-discovery";
 import { measureServerTiming } from "@/lib/server-timing";
 
 type AccountPageProps = {
@@ -26,30 +29,37 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     redirect("/account/onboarding");
   }
 
-  const [
-    activeVehicleCount,
-    primaryVehicle,
-    activeRegistrationCount,
-    ratingDiscoveryBanner,
-  ] =
+  const [activeVehicles, activeRegistrationCount, fl5AccountRatingDemo] =
     await measureServerTiming("ACCOUNT_SUMMARY_QUERY", () =>
       Promise.all([
-        prisma.vehicle.count({
+        prisma.vehicle.findMany({
           where: {
             userId: memberUser.id,
             deletedAt: null,
           },
-        }),
-        prisma.vehicle.findFirst({
-          where: {
-            userId: memberUser.id,
-            deletedAt: null,
-            isPrimary: true,
-          },
+          orderBy: [
+            {
+              isPrimary: "desc",
+            },
+            {
+              createdAt: "asc",
+            },
+          ],
           select: {
+            id: true,
+            vehicleDefinitionId: true,
             brand: true,
             model: true,
             plateNumber: true,
+            isPrimary: true,
+            modifications: {
+              where: {
+                deletedAt: null,
+              },
+              select: {
+                id: true,
+              },
+            },
           },
         }),
         prisma.registration.count({
@@ -58,25 +68,44 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             deletedAt: null,
           },
         }),
-        getRatingDiscoveryBannerData(memberUser.id),
+        getFl5AccountRatingDemo(),
       ]),
     );
+  const activeVehicleCount = activeVehicles.length;
+  const primaryVehicle =
+    activeVehicles.find((vehicle) => vehicle.isPrimary) ?? activeVehicles[0] ?? null;
+  const accountFl5DemoCta = resolveAccountFl5DemoCta(
+    activeVehicles.map((vehicle) => ({
+      id: vehicle.id,
+      vehicleDefinitionId: vehicle.vehicleDefinitionId,
+      modificationCount: vehicle.modifications.length,
+    })),
+  );
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">
       <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-ats-blue">
-            Üye alanı
-          </p>
-          <h1 className="mt-5 text-5xl font-black leading-none text-ats-text sm:text-7xl">
-            Hesabınız hazır.
-          </h1>
-          <p className="mt-6 text-base leading-7 text-ats-muted sm:text-lg sm:leading-8">
-            Bu alan Aegean Track Society üyelik altyapısının merkezidir.
-            Garajınızı yönetebilir, profil bilgilerinizi güncelleyebilir ve
-            sonraki fazlarda etkinlik kayıt geçmişinize ulaşabilirsiniz.
-          </p>
+        <div className="space-y-8 lg:sticky lg:top-28 lg:self-start">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-ats-blue">
+              Üye alanı
+            </p>
+            <h1 className="mt-5 text-5xl font-black leading-none text-ats-text sm:text-7xl">
+              Hesabınız hazır.
+            </h1>
+            <p className="mt-6 text-base leading-7 text-ats-muted sm:text-lg sm:leading-8">
+              Bu alan Aegean Track Society üyelik altyapısının merkezidir.
+              Garajınızı yönetebilir, profil bilgilerinizi güncelleyebilir ve
+              sonraki fazlarda etkinlik kayıt geçmişinize ulaşabilirsiniz.
+            </p>
+          </div>
+
+          {fl5AccountRatingDemo ? (
+            <AccountRatingDemo
+              demo={fl5AccountRatingDemo}
+              cta={accountFl5DemoCta}
+            />
+          ) : null}
         </div>
 
         <div className="space-y-5">
@@ -85,8 +114,6 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               Profil bilgileriniz güncellendi.
             </p>
           ) : null}
-
-          <RatingDiscoveryBanner data={ratingDiscoveryBanner} />
 
           <section className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-muted">
