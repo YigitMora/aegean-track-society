@@ -1194,6 +1194,7 @@ function modificationTypeLabel(definition: {
     rear_wing: "Arka Kanat",
     aero_kit: "Aero Kit",
     lsd: "LSD",
+    dogbone_mount: "Dogbone Mount",
     clutch: "Debriyaj",
     flywheel: "Volan",
     driveshaft_axle: "Aks / Şaft",
@@ -1288,6 +1289,7 @@ function fitmentNoteForDefinition(definition: {
     componentTypeCode === "adjustable_ball_joint" ||
     componentTypeCode === "adjustable_control_arm" ||
     componentTypeCode === "bushings" ||
+    componentTypeCode === "dogbone_mount" ||
     componentTypeCode === "strut_brace" ||
     componentTypeCode === "chassis_brace"
   ) {

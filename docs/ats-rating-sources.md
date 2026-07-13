@@ -30,6 +30,24 @@ Damper records receive modest Handling/Track Readiness values and require an act
 
 Turbo rows use the existing rating formula and platform-impact override behavior. Named turbo families receive engine-family gated impacts; generic Hybrid Turbo and Big Turbo rows are lower-confidence fallback declarations and are suppressed when a compatible named turbo exists. No turbo row creates hard requirements for ECU software, downpipe, intercooler, fuel, or drivetrain upgrades.
 
+## Sprint 4L RacingLine Rating Safeguards
+
+Sprint 4L keeps the rating formula unchanged. RacingLine OEM+ ECU and Dynamic TCU rows use the same platform-impact path as existing named provider tunes, with conservative Power/Track Readiness gains and Reliability/Thermal penalties where calibration load increases. RacingLine hardware rows are exact-template gated to MQB/MQB Evo vehicles; intake and inlet rows receive small Power/Readiness values, intercooler rows add Thermal support, and brake/suspension rows use the existing catalog category scoring.
+
+The new VAG templates added in Sprint 4L remain `PROVISIONAL` unless they extend an already calibrated platform pattern. Their ratings are generated through `calculateVehicleCalibrationScores`; no separate formula or client-side recalculation was introduced.
+
+| Code | Source title | Publisher | URL | Values used | Uncertainty note |
+| --- | --- | --- | --- | --- | --- |
+| `vw_golf_gti_mk75_performance` | Golf GTI 7/7.5 model family and RacingLine selector | Volkswagen / RacingLine | https://www.volkswagen-newsroom.com/ and https://www.racingline.com/ | GTI Performance output class, FWD MQB platform, brakes/chassis relative to Mk7 GTI. | Provisional; market trim/DSG/manual curb weights vary. |
+| `vw_golf_gti_clubsport_mk7` | Golf GTI Clubsport model family and RacingLine selector | Volkswagen / RacingLine | https://www.volkswagen-newsroom.com/ and https://www.racingline.com/ | Clubsport higher-output GTI class and stronger track intent. | Provisional; official regional weights vary. |
+| `vw_golf_gti_tcr_mk75` | Golf GTI TCR model family and RacingLine selector | Volkswagen / RacingLine | https://www.volkswagen-newsroom.com/ and https://www.racingline.com/ | TCR 290 PS class, FWD MQB, stronger braking/chassis assumptions. | Provisional; production-market data varies. |
+| `vw_golf_r_mk75` | Golf R 7/7.5 model family and RacingLine selector | Volkswagen / RacingLine | https://www.volkswagen-newsroom.com/ and https://www.racingline.com/ | Golf R 310 PS AWD class and MQB brake/chassis baseline. | Provisional; hatch/estate and market weights vary. |
+| `vw_polo_gti_aw` | Polo GTI AW product family | Volkswagen / RacingLine | https://www.volkswagen-newsroom.com/ and https://www.racingline.com/ | 2.0 TSI FWD compact hot-hatch class and RacingLine Polo AW intercooler support. | Provisional; smaller-platform thermal/readiness values kept conservative. |
+| `audi_s3_8v_facelift` | Audi S3 8V product family and RacingLine selector | Audi / RacingLine | https://www.audi-mediacenter.com/ and https://www.racingline.com/ | Facelift 310 PS quattro class and MQB S3 baseline. | Provisional; Sportback/sedan market weights vary. |
+| `cupra_leon_5f_cupra` | CUPRA Leon 5F product family and RacingLine selector | CUPRA / RacingLine | https://www.cupraofficial.com/ and https://www.racingline.com/ | 290 PS FWD MQB hot-hatch class. | Provisional; trim and brake-package variance remains. |
+| `skoda_octavia_vrs_mk4` | Octavia vRS product family and RacingLine selector | Skoda / RacingLine | https://www.skoda-storyboard.com/ and https://www.racingline.com/ | 2.0 TSI 245 PS FWD MQB Evo family with larger-car mass penalty. | Provisional; estate/sedan mass and brake data vary. |
+| `cupra_formentor_vz_20` | Formentor VZ product family and RacingLine selector | CUPRA / RacingLine | https://www.cupraofficial.com/ and https://www.racingline.com/ | 2.0 TSI 310 PS AWD MQB Evo crossover class. | Provisional; high-mass crossover penalty applied. |
+
 ## Brake Pad Compounds
 
 | Code | Source title | Publisher | URL | Values used | Uncertainty note |
