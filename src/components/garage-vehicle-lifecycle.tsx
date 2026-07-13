@@ -195,19 +195,45 @@ function VehicleLifecycleSection({
   if (vehicles.length === 0 && mode === "active") {
     return (
       <div className="mt-10 rounded-lg border border-ats-border bg-ats-surface p-8 shadow-soft">
-        <p className="text-2xl font-black text-ats-text">Garajınız henüz boş.</p>
-        <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-ats-muted">
-          İlk aracınızı eklediğinizde otomatik olarak birincil aracınız olur.
+        <p className="text-3xl font-black text-ats-text">
+          İlk build'ini oluşturmaya başla
         </p>
+        <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-ats-muted">
+          Aracını ekle, stok ATS Ratingini keşfet ve kullandığın gerçek parçalarla
+          build profilini geliştir.
+        </p>
+        <ul className="mt-5 grid gap-2 text-sm font-semibold text-ats-muted sm:grid-cols-2">
+          {[
+            "Aracını seç",
+            "Base ratingini gör",
+            "Modifikasyonlarını ekle",
+            "Projected rating değişimini takip et",
+          ].map((item) => (
+            <li key={item} className="flex gap-2">
+              <span className="mt-2 h-1.5 w-1.5 rounded-full bg-ats-blue" aria-hidden="true" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
         <p className="mt-3 text-sm font-black text-ats-text">
           Aktif araçlar: {capacity.count} / {capacity.max}
         </p>
-        <Link
-          href="/account/garage/new"
-          className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-ats-blue px-6 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover"
-        >
-          İlk aracımı ekle
-        </Link>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <Link
+            href="/account/garage/new"
+            data-analytics-event="rating_discovery_add_vehicle_clicked"
+            className="inline-flex h-12 items-center justify-center rounded-full bg-ats-blue px-6 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover"
+          >
+            İlk Aracımı Ekle
+          </Link>
+          <a
+            href="#focus-rs-demo"
+            data-analytics-event="rating_discovery_demo_viewed"
+            className="inline-flex h-12 items-center justify-center rounded-full border border-ats-border px-6 text-sm font-black text-ats-text transition hover:border-ats-blue hover:text-ats-blue"
+          >
+            Örnek Build'i İncele
+          </a>
+        </div>
       </div>
     );
   }
@@ -724,6 +750,11 @@ function BuildDiscoveryPanel({ vehicle }: { vehicle: GarageLifecycleVehicle }) {
     ? `${clampRatingScore(vehicle.rating.overall)}`
     : "Hazır değil";
   const hasModifications = vehicle.modificationCount > 0;
+  const strongestComponent = vehicle.rating
+    ? strongestRatingComponent(vehicle.rating)
+    : null;
+  const weakestComponent = vehicle.rating ? weakestRatingComponent(vehicle.rating) : null;
+  const completenessLabel = buildCompletenessLabel(vehicle.modificationCount);
 
   return (
     <section className="mx-6 mt-4 rounded-md border border-ats-border bg-ats-black p-4">
@@ -731,11 +762,10 @@ function BuildDiscoveryPanel({ vehicle }: { vehicle: GarageLifecycleVehicle }) {
         <div className="min-w-0">
           <p className="text-sm font-black text-ats-text">Build ve Modifikasyonlar</p>
           <p className="mt-2 text-sm font-semibold leading-6 text-ats-muted">
-            Takılı parçalarını ekle, build profilini oluştur ve tahmini ATS Rating
-            değişimini gör.
+            Gerçek parçalarını ekleyerek rating değişimini gör.
           </p>
         </div>
-        <div className="grid shrink-0 grid-cols-2 gap-2 text-right sm:min-w-40">
+        <div className="grid shrink-0 grid-cols-3 gap-2 text-right sm:min-w-56">
           <div>
             <p className="text-[11px] font-black uppercase tracking-[0.1em] text-ats-muted">
               ATS
@@ -750,21 +780,48 @@ function BuildDiscoveryPanel({ vehicle }: { vehicle: GarageLifecycleVehicle }) {
               {vehicle.modificationCount}
             </p>
           </div>
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.1em] text-ats-muted">
+              Build
+            </p>
+            <p className="text-sm font-black text-ats-text">{completenessLabel}</p>
+          </div>
         </div>
       </div>
+      {strongestComponent && weakestComponent ? (
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <div className="rounded-md border border-ats-border bg-ats-surface p-3">
+            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-ats-muted">
+              En güçlü bileşen
+            </p>
+            <p className="mt-1 text-sm font-black text-ats-text">
+              {strongestComponent.label} · {strongestComponent.score}
+            </p>
+          </div>
+          <div className="rounded-md border border-ats-border bg-ats-surface p-3">
+            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-ats-muted">
+              Gelişim alanı
+            </p>
+            <p className="mt-1 text-sm font-black text-ats-text">
+              {weakestComponent.label} · {weakestComponent.score}
+            </p>
+          </div>
+        </div>
+      ) : null}
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm font-black text-ats-text">
           {hasModifications ? "Build profili mevcut" : "Henüz modifikasyon eklenmedi"}
         </p>
         <Link
-          href={`/account/garage/${vehicle.id}/modifications`}
+          href={`/account/garage/${vehicle.id}#build-profile`}
+          data-analytics-event="rating_discovery_build_clicked"
           className={`inline-flex h-10 items-center justify-center rounded-full px-4 text-xs font-black uppercase tracking-[0.12em] transition ${
             hasModifications
               ? "border border-ats-border text-ats-text hover:border-ats-blue hover:text-ats-blue"
               : "bg-ats-blue text-ats-black hover:bg-ats-blue-hover"
           }`}
         >
-          {hasModifications ? "Build'i Görüntüle" : "İlk Modifikasyonu Ekle"}
+          {hasModifications ? "Build Profilini Aç" : "İlk Modifikasyonu Ekle"}
         </Link>
       </div>
     </section>
@@ -870,6 +927,36 @@ function RatingStatusBadge({ status }: { status: string }) {
 
 function clampRatingScore(score: number) {
   return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function strongestRatingComponent(rating: NonNullable<GarageRating>) {
+  return ratingComponentRows
+    .map(([label, key]) => ({
+      label,
+      score: clampRatingScore(rating[key]),
+    }))
+    .sort((first, second) => second.score - first.score)[0];
+}
+
+function weakestRatingComponent(rating: NonNullable<GarageRating>) {
+  return ratingComponentRows
+    .map(([label, key]) => ({
+      label,
+      score: clampRatingScore(rating[key]),
+    }))
+    .sort((first, second) => first.score - second.score)[0];
+}
+
+function buildCompletenessLabel(modificationCount: number) {
+  if (modificationCount === 0) {
+    return "Başlangıç";
+  }
+
+  if (modificationCount < 3) {
+    return "Temel";
+  }
+
+  return "Aktif";
 }
 
 function vehicleSummary(vehicle: GarageLifecycleVehicle) {
