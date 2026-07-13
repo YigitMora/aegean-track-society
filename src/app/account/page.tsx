@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/auth/actions";
+import { RatingDiscoveryBanner } from "@/components/rating-discovery";
 import { requireMemberUser } from "@/lib/member-auth";
 import { isMemberProfileComplete } from "@/lib/member-profile-validation";
 import { prisma } from "@/lib/prisma";
+import { getRatingDiscoveryBannerData } from "@/lib/rating-discovery";
 import { measureServerTiming } from "@/lib/server-timing";
 
 type AccountPageProps = {
@@ -24,7 +26,12 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     redirect("/account/onboarding");
   }
 
-  const [activeVehicleCount, primaryVehicle, activeRegistrationCount] =
+  const [
+    activeVehicleCount,
+    primaryVehicle,
+    activeRegistrationCount,
+    ratingDiscoveryBanner,
+  ] =
     await measureServerTiming("ACCOUNT_SUMMARY_QUERY", () =>
       Promise.all([
         prisma.vehicle.count({
@@ -51,6 +58,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             deletedAt: null,
           },
         }),
+        getRatingDiscoveryBannerData(memberUser.id),
       ]),
     );
 
@@ -77,6 +85,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               Profil bilgileriniz güncellendi.
             </p>
           ) : null}
+
+          <RatingDiscoveryBanner data={ratingDiscoveryBanner} />
 
           <section className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-muted">

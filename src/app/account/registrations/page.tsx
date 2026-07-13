@@ -1,40 +1,47 @@
 import Link from "next/link";
+import { RatingDiscoveryBanner } from "@/components/rating-discovery";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
+import { getRatingDiscoveryBannerData } from "@/lib/rating-discovery";
 import { measureServerTiming } from "@/lib/server-timing";
 
 export default async function AccountRegistrationsPage() {
   const memberUser = await requireCompleteMemberUser("/account/registrations");
-  const registrations = await measureServerTiming("REGISTRATIONS_QUERY", () =>
-    prisma.registration.findMany({
-      where: {
-        userId: memberUser.id,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-        carBrandModel: true,
-        plateNumber: true,
-        status: true,
-        paymentStatus: true,
-        participantCode: true,
-        createdAt: true,
-        event: {
-          select: {
-            name: true,
-            startsAt: true,
+  const [registrations, ratingDiscoveryBanner] = await measureServerTiming(
+    "REGISTRATIONS_QUERY",
+    () =>
+      Promise.all([
+        prisma.registration.findMany({
+          where: {
+            userId: memberUser.id,
+            deletedAt: null,
           },
-        },
-        package: {
           select: {
-            name: true,
+            id: true,
+            carBrandModel: true,
+            plateNumber: true,
+            status: true,
+            paymentStatus: true,
+            participantCode: true,
+            createdAt: true,
+            event: {
+              select: {
+                name: true,
+                startsAt: true,
+              },
+            },
+            package: {
+              select: {
+                name: true,
+              },
+            },
           },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    }),
+          orderBy: {
+            createdAt: "desc",
+          },
+        }),
+        getRatingDiscoveryBannerData(memberUser.id),
+      ]),
   );
 
   return (
@@ -51,6 +58,8 @@ export default async function AccountRegistrationsPage() {
           edebilirsiniz.
         </p>
       </div>
+
+      <RatingDiscoveryBanner data={ratingDiscoveryBanner} className="mt-8" />
 
       {registrations.length > 0 ? (
         <div className="mt-10 overflow-hidden rounded-lg border border-ats-border bg-ats-surface shadow-soft">
