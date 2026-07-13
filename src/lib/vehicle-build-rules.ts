@@ -246,6 +246,7 @@ export const singleInstanceComponentTypes = new Set([
   "ecu_software",
   "platform_tune_package",
   "transmission_software",
+  "dogbone_mount",
   "clutch",
   "flywheel",
   "lsd",

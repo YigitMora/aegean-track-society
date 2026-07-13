@@ -30,6 +30,26 @@ Reviewed on 2026-07-13.
 
 Family compatibility precedence is implemented in code as: powertrain, exact vehicle definition, engine family, platform family, legacy brand/model/year, then universal only when no active compatibility rows exist for that definition.
 
+## Sprint 4L RacingLine VAG Ecosystem
+
+Reviewed on 2026-07-13. RacingLine rows are seeded as product-family metadata for supported VAG MQB/MQB Evo templates only. Software rows do not store manufacturer dyno values; ATS impact remains conservative and model/gearbox verification stays outside the seed.
+
+| Seed code | Product family | Source | Compatibility basis | ATS limitation / advisory behavior |
+| --- | --- | --- | --- | --- |
+| `racingline_ea888_gen3_oem_plus_stage_1` | RacingLine OEM+ Stage 1 EA888 Gen 3 | https://www.racinglinetuning.com/ | `vag_ea888_gen3` | Stage label only; fuel, ECU version, and exact model support must be verified by dealer/software selector. |
+| `racingline_ea888_gen4_oem_plus_stage_1` | RacingLine OEM+ Stage 1 EA888 Gen 4 | https://www.racinglinetuning.com/ | `vag_ea888_gen4` | Stage label only; hardware recommendations are advisory and not hard requirements. |
+| `racingline_dsg_dq381_dynamic_tcu` | RacingLine Dynamic TCU DQ381/DQ381 G2 | https://www.racinglinetuning.com/ | Exact MQB Evo DSG templates | No universal DSG row; gearbox controller, bootloader/support state, and torque limit remain vehicle-specific. |
+| `racingline_mqb_r600_intake` | RacingLine R600 intake | https://www.racingline.com/ | Exact MQB/MQB Evo templates | Fitment family only; inlet, hose, engine-cover, and market variant details remain owner-verified. |
+| `racingline_mqb_turbo_inlet` | RacingLine MQB/MQB Evo turbo inlet | https://www.racingline.com/ | Exact MQB/MQB Evo templates | Small ATS power impact only; exact elbow/hose fitment is not inferred universally. |
+| `racingline_mqb_evo_intercooler` | RacingLine MQB Evo performance intercooler | https://www.racingline.com/ | Exact MQB Evo EA888 Gen 4 templates | Thermal/readiness support only; no power claim stored. |
+| `racingline_polo_aw_intercooler` | RacingLine Polo GTI AW/AW.2 intercooler | https://www.racingline.com/ | `vw_polo_gti_aw` exact template | Polo-specific row; no Golf/Cupra/Skoda applicability inferred. |
+| `racingline_ea888_gen4_boost_hose_kit` | RacingLine 2.0 TSI Gen 4 boost hose kit | https://www.racingline.com/ | Exact MQB Evo EA888 Gen 4 templates | Support-hardware metadata only; no power or calibration claim stored. |
+| `racingline_twin_dogbone_inserts` | RacingLine Twin Dogbone Inserts | https://www.racingline.com/ | Exact MQB/MQB Evo templates | Drivetrain-mount family row; NVH and physical bushing fitment remain owner-verified. |
+| `racingline_mqb_sport_springs` | RacingLine sport springs | https://www.racingline.com/ | Exact MQB/MQB Evo templates | Spring family row; drop, axle load, damper pairing, and model-year fitment remain owner-verified. |
+| `racingline_tracksport_coilovers` | RacingLine Tracksport coilovers | https://www.racingline.com/ | Exact MQB/MQB Evo templates | Track suspension family row; spring rate/top-mount fitment is not universal. |
+| `racingline_stage_3_big_brake_kit` | RacingLine Stage 3 big brake kit | https://www.racingline.com/ | Exact MQB/MQB Evo templates | Wheel clearance, axle/disc size, and caliper bracket fitment remain owner-verified. |
+| `racingline_rp700_mqb_evo_brake_pads` | RacingLine RP700 MQB Evo brake pads | https://www.racingline.com/ | Exact MQB Evo templates | Pad-family row; pad shape and axle fitment remain owner-verified. |
+
 ## Sprint 4K Turbo Platform Catalog
 
 Reviewed on 2026-07-13. Turbo rows are product-family and compatibility metadata only. ATS does not model a hard dependency chain for downpipe, intercooler, fuel pump, injectors, ethanol content, clutch/gearbox, or ECU calibration; those remain advisory through descriptions and fitment notes. Generic turbo rows are visible only to matched ICE templates when no named turbo family is compatible.

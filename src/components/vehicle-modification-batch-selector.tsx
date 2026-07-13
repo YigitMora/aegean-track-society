@@ -981,6 +981,7 @@ function isChassisHardwareComponent(value?: string | null) {
         "adjustable_ball_joint",
         "adjustable_control_arm",
         "bushings",
+        "dogbone_mount",
         "strut_brace",
         "chassis_brace",
       ].includes(value),
