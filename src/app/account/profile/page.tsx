@@ -1,5 +1,7 @@
 import { MemberProfileForm } from "@/components/member-profile-form";
+import { RatingDiscoveryBanner } from "@/components/rating-discovery";
 import { requireMemberUser } from "@/lib/member-auth";
+import { getRatingDiscoveryBannerData } from "@/lib/rating-discovery";
 
 type AccountProfilePageProps = {
   searchParams: Promise<{
@@ -15,6 +17,9 @@ export default async function AccountProfilePage({ searchParams }: AccountProfil
   ]);
   const requireMissingConsents =
     !memberUser.memberKvkkAcceptedAt || !memberUser.memberTermsAcceptedAt;
+  const ratingDiscoveryBanner = requireMissingConsents
+    ? null
+    : await getRatingDiscoveryBannerData(memberUser.id);
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">
@@ -40,6 +45,10 @@ export default async function AccountProfilePage({ searchParams }: AccountProfil
         <p className="mb-5 rounded-md border border-red-300/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-100">
           Lütfen ad soyad ve Türkiye mobil telefon numarası alanlarını kontrol edin.
         </p>
+      ) : null}
+
+      {ratingDiscoveryBanner ? (
+        <RatingDiscoveryBanner data={ratingDiscoveryBanner} className="mb-6" />
       ) : null}
 
       <MemberProfileForm

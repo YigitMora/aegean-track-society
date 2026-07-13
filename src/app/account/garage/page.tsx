@@ -4,6 +4,12 @@ import {
   type GarageLifecycleVehicle,
 } from "@/components/garage-vehicle-lifecycle";
 import {
+  BuildImpactDemo,
+  RatingDiscoveryHero,
+  RatingDiscoverySteps,
+  RealPartsCloud,
+} from "@/components/rating-discovery";
+import {
   MAX_ACTIVE_GARAGE_VEHICLES,
   MAX_ARCHIVED_GARAGE_VEHICLES,
   canAddActiveVehicle,
@@ -12,6 +18,10 @@ import {
 } from "@/lib/garage-capacity";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
+import {
+  getRatingDiscoveryGarageContent,
+  resolveRatingDiscoveryState,
+} from "@/lib/rating-discovery";
 import { measureServerTiming } from "@/lib/server-timing";
 import { calculateVehiclePerformanceRating } from "@/lib/vehicle-performance-rating";
 import { createOwnedVehicleImageSignedUrl } from "@/lib/vehicle-images";
@@ -141,6 +151,11 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
   }));
   const activeLifecycleVehicles = activeVehicleCards.map(toGarageLifecycleVehicle);
   const archivedLifecycleVehicles = archivedVehicleCards.map(toGarageLifecycleVehicle);
+  const ratingDiscoveryContent = await measureServerTiming(
+    "GARAGE_QUERY",
+    getRatingDiscoveryGarageContent,
+  );
+  const ratingDiscoveryState = resolveRatingDiscoveryState(activeLifecycleVehicles);
   const activeCapacity = {
     count: activeVehicles.length,
     max: MAX_ACTIVE_GARAGE_VEHICLES,
@@ -164,8 +179,8 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
             Garajım
           </h1>
           <p className="mt-6 text-base leading-7 text-ats-muted sm:text-lg sm:leading-8">
-            Üyelik hesabınıza ait araçları yönetin. Etkinlik kayıtları bu
-            sprintte garaj araçlarına bağlanmaz.
+            Üyelik hesabınıza ait araçları yönetin, ATS kataloğuyla eşleştirin ve
+            build profilinizdeki rating değişimini takip edin.
           </p>
         </div>
         <div className="sm:text-right">
@@ -193,6 +208,14 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
         </div>
       </div>
 
+      <RatingDiscoveryHero
+        state={ratingDiscoveryState}
+        demo={ratingDiscoveryContent.demo}
+      />
+      <BuildImpactDemo demo={ratingDiscoveryContent.demo} />
+      <RatingDiscoverySteps />
+      <RealPartsCloud catalog={ratingDiscoveryContent.catalog} />
+
       <div className="mt-8 grid gap-3 rounded-md border border-ats-border bg-ats-surface p-4 text-sm font-black text-ats-text sm:grid-cols-[1fr_auto_auto] sm:items-center">
         <p className="text-ats-muted">
           Garaj kapasitesi: {MAX_ACTIVE_GARAGE_VEHICLES} aktif +{" "}
@@ -202,7 +225,6 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
         <p>Arşiv: {archivedCapacity.count} / {archivedCapacity.max}</p>
       </div>
 
-      <GarageBuildIntroPanel vehicles={activeLifecycleVehicles} />
       <GarageCatalogSupportPanel vehicles={activeLifecycleVehicles} />
 
       <GarageMessage garage={params.garage} garageError={params.garageError} />
@@ -259,51 +281,6 @@ function toGarageLifecycleVehicle(vehicle: {
         }
       : null,
   };
-}
-
-function GarageBuildIntroPanel({
-  vehicles,
-}: {
-  vehicles: GarageLifecycleVehicle[];
-}) {
-  const catalogMatchedVehicles = vehicles.filter(
-    (vehicle) => vehicle.vehicleDefinitionId !== null,
-  );
-  const singleVehicle = catalogMatchedVehicles.length === 1 ? catalogMatchedVehicles[0] : null;
-  const actionHref = singleVehicle
-    ? `/account/garage/${singleVehicle.id}/modifications`
-    : catalogMatchedVehicles.length > 1
-      ? "/account/garage#active-garage-vehicles"
-      : null;
-
-  return (
-    <div className="mt-5 rounded-md border border-ats-border bg-ats-surface p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="max-w-3xl">
-          <p className="text-sm font-black text-ats-text">
-            Aracının gerçek build profilini oluştur
-          </p>
-          <p className="mt-2 text-sm font-semibold leading-6 text-ats-muted">
-            Takılı modifikasyonları ekleyerek aracının Güç, Yol Tutuş, Fren, Termal
-            ve Pist Hazırlığı puanlarındaki tahmini değişimi görebilirsin.
-          </p>
-        </div>
-        {actionHref ? (
-          <Link
-            href={actionHref}
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-full border border-ats-blue/50 px-4 text-xs font-black uppercase tracking-[0.12em] text-ats-blue transition hover:bg-ats-blue hover:text-ats-black"
-          >
-            Modifikasyonları Keşfet
-          </Link>
-        ) : null}
-      </div>
-      {catalogMatchedVehicles.length === 0 ? (
-        <p className="mt-3 text-xs font-semibold leading-5 text-ats-muted">
-          Modifikasyon özellikleri, ATS kataloğuyla eşleşen araçlarda kullanılabilir.
-        </p>
-      ) : null}
-    </div>
-  );
 }
 
 function GarageCatalogSupportPanel({
