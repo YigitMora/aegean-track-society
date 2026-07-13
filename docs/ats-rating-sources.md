@@ -52,6 +52,12 @@ Mountune power packages affect modified build previews only; they do not alter s
 | Daily Golf/Polo/Clio and peers | Manufacturer model pages/newsrooms | Road-trim output, drivetrain, mass, and acceleration classes | Kept materially below GTI/RS/ST/AMG/M/RS performance variants in Track Readiness. |
 | Mountune, RacingLine, Garrett, Hondata, KTuner | `docs/ats-mountune-sources.md`, `docs/ats-racingline-sources.md`, `docs/ats-platform-tuning-sources.md` | Provider product naming, claimed package labels, and fitment basis | Exact or family compatibility only; no local formula changes. |
 
+## Sprint 4P Daily Catalog Evidence
+
+Sprint 4P adds a broad provisional daily-car layer and current-generation Ford Courier templates. The rating formula and elite recalibration are unchanged. Manual/automatic, ICE/hybrid/EV, commercial/passenger, and material powertrain splits are separate vehicle definitions; cosmetic package duplicates are not added. Courier diesel rows use Ford's current `EcoBlue` nomenclature, while older `TDCi` naming remains reserved for legacy vehicles.
+
+Detailed family source rows are tracked in `docs/ats-daily-vehicle-sources.md`. The audit script now includes Sprint 4P rows and checks Courier commercial/passenger ordering, ordinary Golf/Polo/Clio hierarchy, Focus daily trims below ST/RS, daily EV moderation, and the no-daily-over-75 guardrail.
+
 ## Sprint 4O Elite Rating Recalibration Evidence
 
 Sprint 4O recalibrates stock `VehicleDefinition` component evidence and the deterministic rating helper. It does not change modification impacts, user vehicle records, registration, garage behavior, catalog selection, or powertrain filtering. Official manufacturer pages and newsrooms are primary sources; non-official lap discussions and opinion rankings are excluded from seeded evidence.

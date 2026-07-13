@@ -3,6 +3,10 @@ import { Prisma } from "@prisma/client";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { formatDateTime } from "@/lib/admin-format";
 import { requireAdminSession } from "@/lib/admin-auth";
+import {
+  MAX_ACTIVE_GARAGE_VEHICLES,
+  MAX_ARCHIVED_GARAGE_VEHICLES,
+} from "@/lib/garage-capacity";
 import { isMemberProfileComplete } from "@/lib/member-profile-validation";
 import { prisma } from "@/lib/prisma";
 import { measureServerTiming } from "@/lib/server-timing";
@@ -71,13 +75,13 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
               phone: true,
             },
           },
+          vehicles: {
+            select: {
+              deletedAt: true,
+            },
+          },
           _count: {
             select: {
-              vehicles: {
-                where: {
-                  deletedAt: null,
-                },
-              },
               registrations: {
                 where: {
                   deletedAt: null,
@@ -194,7 +198,7 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
                 <th className="px-5 py-3">Telefon</th>
                 <th className="px-5 py-3">Hesap</th>
                 <th className="px-5 py-3">Profil</th>
-                <th className="px-5 py-3">Aktif araçlar</th>
+                <th className="px-5 py-3">Garaj</th>
                 <th className="px-5 py-3">Başvurular</th>
                 <th className="px-5 py-3">Üyelik tarihi</th>
                 <th className="px-5 py-3">Detay</th>
@@ -203,6 +207,15 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
             <tbody className="divide-y divide-white/10">
               {members.map((member) => {
                 const profileComplete = isMemberProfileComplete(member);
+                const activeVehicleCount = member.vehicles.filter(
+                  (vehicle) => !vehicle.deletedAt,
+                ).length;
+                const archivedVehicleCount = member.vehicles.filter(
+                  (vehicle) => vehicle.deletedAt,
+                ).length;
+                const capacityExceeded =
+                  activeVehicleCount > MAX_ACTIVE_GARAGE_VEHICLES ||
+                  archivedVehicleCount > MAX_ARCHIVED_GARAGE_VEHICLES;
 
                 return (
                   <tr key={member.id} className="align-top transition hover:bg-white/5">
@@ -229,8 +242,18 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
                     <td className="px-5 py-4">
                       <ProfileStatusBadge complete={profileComplete} />
                     </td>
-                    <td className="px-5 py-4 font-black text-white">
-                      {member._count.vehicles}
+                    <td className="px-5 py-4">
+                      <p className="font-black text-white">
+                        {activeVehicleCount} / {MAX_ACTIVE_GARAGE_VEHICLES} aktif
+                      </p>
+                      <p className="mt-1 text-xs font-semibold text-white/55">
+                        {archivedVehicleCount} / {MAX_ARCHIVED_GARAGE_VEHICLES} arşiv
+                      </p>
+                      {capacityExceeded ? (
+                        <p className="mt-1 text-xs font-black uppercase text-signal">
+                          Kapasite üstü
+                        </p>
+                      ) : null}
                     </td>
                     <td className="px-5 py-4 font-black text-white">
                       {member._count.registrations}

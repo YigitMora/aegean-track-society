@@ -185,6 +185,12 @@ const eliteReviewCodes = new Set([
 
 const root = process.cwd();
 const seedText = readFileSync(resolve(root, "prisma/seed.ts"), "utf8");
+let sprint4PVehicleCodes = new Set<string>();
+const sprint4PDailyRows = extractVehicleRows("sprint4PDailyVehicleDefinitions");
+sprint4PVehicleCodes = new Set(sprint4PDailyRows.map((row) => row.code));
+sprint4PDailyRows.forEach((row) => {
+  row.notes.push("Sprint 4P daily template; official source trail documented as provisional.");
+});
 
 const vehicleRows = [
   ...extractVehicleRows("baseVehicleDefinitions"),
@@ -192,6 +198,7 @@ const vehicleRows = [
   ...extractVehicleRows("sprint4NPerformanceVehicleDefinitions"),
   ...extractVehicleRows("sprint4OReferenceVehicleDefinitions"),
   ...extractVehicleRows("sprint4NDailyVehicleDefinitions"),
+  ...sprint4PDailyRows,
 ].sort((a, b) => a.sortOrder - b.sortOrder || a.code.localeCompare(b.code));
 
 const auditIssues = [
@@ -203,6 +210,7 @@ const auditIssues = [
   ...detectHeavyVehicleInflation(vehicleRows),
   ...detectTrackSpecialReadiness(vehicleRows),
   ...detectHierarchyIssues(vehicleRows),
+  ...detectSprint4PGuardrails(vehicleRows),
   ...comparePowerToWeightConsistency(vehicleRows),
   ...compareAccelerationConsistency(vehicleRows),
   ...compareMassPenaltyConsistency(vehicleRows),
@@ -434,6 +442,80 @@ export function detectHierarchyIssues(rows: VehicleAuditRow[]): AuditIssue[] {
   return issues;
 }
 
+export function detectSprint4PGuardrails(rows: VehicleAuditRow[]): AuditIssue[] {
+  const byCode = new Map(rows.map((row) => [row.code, row]));
+  const issues: AuditIssue[] = [];
+  const sprintRows = rows.filter((row) => sprint4PVehicleCodes.has(row.code));
+  const courierRows = sprintRows.filter((row) =>
+    row.code.includes("_courier") || row.code.includes("e_transit_courier"),
+  );
+  const transitCourierRows = courierRows.filter((row) =>
+    row.model.toLowerCase().includes("transit"),
+  );
+  const tourneoCourierRows = courierRows.filter((row) =>
+    row.model.toLowerCase().includes("tourneo"),
+  );
+  const tourneoTrackCeiling = Math.max(
+    ...tourneoCourierRows.map((row) => row.scores.trackReadiness),
+    0,
+  );
+
+  for (const row of sprintRows) {
+    if (row.overall > 75) {
+      issues.push({
+        code: row.code,
+        message: `Sprint 4P daily vehicle exceeds 75 Overall at ${row.overall}`,
+      });
+    }
+
+    if (
+      row.powertrain === "ELECTRIC" &&
+      (row.overall > 70 || row.scores.trackReadiness > 35)
+    ) {
+      issues.push({
+        code: row.code,
+        message: "daily EV acceleration is inflating Overall or Track Readiness",
+      });
+    }
+  }
+
+  for (const row of courierRows) {
+    if (row.scores.handling > 55 || row.scores.trackReadiness > 32) {
+      issues.push({
+        code: row.code,
+        message: "Courier handling/readiness exceeds ordinary-road commercial guardrail",
+      });
+    }
+  }
+
+  for (const row of transitCourierRows) {
+    if (row.scores.trackReadiness > tourneoTrackCeiling) {
+      issues.push({
+        code: row.code,
+        message: "Transit Courier outranks Tourneo Courier in Track Readiness",
+      });
+    }
+  }
+
+  const performanceComparisons = [
+    ["ford_focus_st_mk4", "ford_focus_10_ecoboost_6mt"],
+    ["ford_focus_st_mk4", "ford_focus_10_ecoboost_8at"],
+    ["ford_focus_st_mk4", "ford_focus_15_ecoblue_6mt"],
+    ["ford_focus_st_mk4", "ford_focus_15_ecoblue_8at"],
+    ["ford_focus_rs_mk3", "ford_focus_10_ecoboost_6mt"],
+    ["ford_focus_rs_mk3", "ford_focus_15_ecoblue_8at"],
+    ["vw_golf_gti_mk8", "vw_golf_15_etsi_mk8_dsg"],
+    ["vw_polo_gti_aw", "vw_polo_10_tsi_aw_dsg"],
+    ["renault_clio_rs_200", "renault_clio_e_tech_full_hybrid"],
+  ] as const;
+
+  for (const [leaderCode, followerCode] of performanceComparisons) {
+    requireOverallLead(byCode, leaderCode, followerCode, issues);
+  }
+
+  return issues;
+}
+
 export function comparePowerToWeightConsistency(rows: VehicleAuditRow[]): AuditIssue[] {
   const issues: AuditIssue[] = [];
 
@@ -627,6 +709,7 @@ function renderAuditDocument(rows: VehicleAuditRow[], issues: AuditIssue[]) {
   const sprint4LRows = rows.filter((row) => sprint4LVehicleCodes.has(row.code));
   const sprint4NRows = rows.filter((row) => sprint4NVehicleCodes.has(row.code));
   const sprint4ORows = rows.filter((row) => sprint4OReferenceVehicleCodes.has(row.code));
+  const sprint4PRows = rows.filter((row) => sprint4PVehicleCodes.has(row.code));
   const eliteCandidateRows = rows.filter((row) => isEliteFactoryTrackCandidate(row));
   const ordinaryRows = ordinaryPreservationCodes
     .map((code) => rows.find((row) => row.code === code))
@@ -672,6 +755,10 @@ function renderAuditDocument(rows: VehicleAuditRow[], issues: AuditIssue[]) {
     "## Sprint 4O Reference Templates",
     "",
     renderVehicleTable(sprint4ORows),
+    "",
+    "## Sprint 4P Daily Templates",
+    "",
+    renderVehicleTable(sprint4PRows),
     "",
     "## Sprint 4O Hierarchy Checks",
     "",
@@ -741,6 +828,7 @@ function renderHierarchyComparisons(rows: VehicleAuditRow[]) {
       "Golf daily, GTI, Clubsport, R",
       [
         "vw_golf_15_tsi_mk8",
+        "vw_golf_15_etsi_mk8_dsg",
         "vw_golf_gti_mk8",
         "vw_golf_gti_clubsport_mk8",
         "vw_golf_r_mk8",
@@ -749,10 +837,23 @@ function renderHierarchyComparisons(rows: VehicleAuditRow[]) {
         "vw_golf_r_mk85",
       ],
     ],
-    ["Polo daily vs GTI", ["vw_polo_10_tsi_aw", "vw_polo_gti_6r", "vw_polo_gti_aw"]],
+    ["Polo daily vs GTI", ["vw_polo_10_mpi_aw_5mt", "vw_polo_10_tsi_aw_dsg", "vw_polo_gti_6r", "vw_polo_gti_aw"]],
     [
       "Clio road trims vs RS",
-      ["renault_clio_10_tce", "renault_clio_13_tce", "renault_clio_e_tech", "renault_clio_rs_200", "renault_clio_rs_trophy"],
+      ["renault_clio_10_sce", "renault_clio_10_tce_xtronic", "renault_clio_e_tech_full_hybrid", "renault_clio_rs_200", "renault_clio_rs_trophy"],
+    ],
+    [
+      "Courier passenger vs commercial",
+      [
+        "ford_tourneo_courier_10_ecoboost_6mt",
+        "ford_e_tourneo_courier",
+        "ford_transit_courier_10_ecoboost_125_7dct",
+        "ford_e_transit_courier",
+      ],
+    ],
+    [
+      "Focus daily vs ST/RS",
+      ["ford_focus_10_ecoboost_6mt", "ford_focus_15_ecoblue_8at", "ford_focus_st_mk4", "ford_focus_rs_mk3"],
     ],
     ["Mustang hierarchy", ["ford_mustang_gt_s550", "ford_mustang_dark_horse_s650", "ford_mustang_gtd_s650"]],
     ["911 GT hierarchy", ["porsche_911_gt3_992", "porsche_911_gt3_rs_9912", "porsche_911_gt3_rs_992", "porsche_911_gt2_rs_9912"]],
@@ -1259,6 +1360,10 @@ function initialNotesForCode(code: string) {
 
   if (sprint4NVehicleCodes.has(code)) {
     return ["Sprint 4N expanded template; source trail and hierarchy reviewed."];
+  }
+
+  if (sprint4PVehicleCodes.has(code)) {
+    return ["Sprint 4P daily template; official source trail documented as provisional."];
   }
 
   return [];

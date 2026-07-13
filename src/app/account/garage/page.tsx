@@ -3,6 +3,13 @@ import {
   GarageVehicleLifecycle,
   type GarageLifecycleVehicle,
 } from "@/components/garage-vehicle-lifecycle";
+import {
+  MAX_ACTIVE_GARAGE_VEHICLES,
+  MAX_ARCHIVED_GARAGE_VEHICLES,
+  canAddActiveVehicle,
+  getRemainingActiveVehicleSlots,
+  getRemainingArchivedVehicleSlots,
+} from "@/lib/garage-capacity";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
 import { measureServerTiming } from "@/lib/server-timing";
@@ -134,6 +141,17 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
   }));
   const activeLifecycleVehicles = activeVehicleCards.map(toGarageLifecycleVehicle);
   const archivedLifecycleVehicles = archivedVehicleCards.map(toGarageLifecycleVehicle);
+  const activeCapacity = {
+    count: activeVehicles.length,
+    max: MAX_ACTIVE_GARAGE_VEHICLES,
+    remaining: getRemainingActiveVehicleSlots(activeVehicles.length),
+  };
+  const archivedCapacity = {
+    count: archivedVehicles.length,
+    max: MAX_ARCHIVED_GARAGE_VEHICLES,
+    remaining: getRemainingArchivedVehicleSlots(archivedVehicles.length),
+  };
+  const activeVehicleSlotAvailable = canAddActiveVehicle(activeVehicles.length);
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">
@@ -150,12 +168,38 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
             sprintte garaj araçlarına bağlanmaz.
           </p>
         </div>
-        <Link
-          href="/account/garage/new"
-          className="inline-flex h-12 items-center justify-center rounded-full bg-ats-blue px-6 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover focus:outline-none focus:ring-2 focus:ring-ats-blue/40"
-        >
-          Araç ekle
-        </Link>
+        <div className="sm:text-right">
+          {activeVehicleSlotAvailable ? (
+            <Link
+              href="/account/garage/new"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-ats-blue px-6 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover focus:outline-none focus:ring-2 focus:ring-ats-blue/40"
+            >
+              Yeni Araç Ekle
+            </Link>
+          ) : (
+            <span
+              aria-disabled="true"
+              className="inline-flex h-12 cursor-not-allowed items-center justify-center rounded-full border border-ats-border bg-ats-surface px-6 text-sm font-black text-ats-muted"
+            >
+              Yeni Araç Ekle
+            </span>
+          )}
+          {!activeVehicleSlotAvailable ? (
+            <p className="mt-3 max-w-xs text-sm font-semibold leading-6 text-ats-muted">
+              Garajınızda en fazla 5 aktif araç bulunabilir. Yeni araç eklemek için
+              mevcut araçlardan birini arşivleyin.
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="mt-8 grid gap-3 rounded-md border border-ats-border bg-ats-surface p-4 text-sm font-black text-ats-text sm:grid-cols-[1fr_auto_auto] sm:items-center">
+        <p className="text-ats-muted">
+          Garaj kapasitesi: {MAX_ACTIVE_GARAGE_VEHICLES} aktif +{" "}
+          {MAX_ARCHIVED_GARAGE_VEHICLES} arşiv araç.
+        </p>
+        <p>Aktif araçlar: {activeCapacity.count} / {activeCapacity.max}</p>
+        <p>Arşiv: {archivedCapacity.count} / {archivedCapacity.max}</p>
       </div>
 
       <GarageMessage garage={params.garage} garageError={params.garageError} />
@@ -163,6 +207,8 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
       <GarageVehicleLifecycle
         activeVehicles={activeLifecycleVehicles}
         archivedVehicles={archivedLifecycleVehicles}
+        activeCapacity={activeCapacity}
+        archivedCapacity={archivedCapacity}
       />
     </section>
   );
@@ -288,6 +334,14 @@ function successMessage(value?: string) {
 }
 
 function errorMessage(value?: string) {
+  if (value === "active_vehicle_limit_reached") {
+    return "Garajınızda en fazla 5 aktif araç bulunabilir. Arşivdeki aracı geri yüklemek için önce aktif araçlardan birini arşivleyin.";
+  }
+
+  if (value === "archived_vehicle_limit_reached") {
+    return "Arşivinizde en fazla 5 araç bulunabilir. Yeni bir araç arşivlemek için arşivdeki araçlardan birini kalıcı olarak silin veya geri yükleyin.";
+  }
+
   if (value === "duplicate_plate") {
     return "Bu plaka ile aktif bir araç garajınızda zaten bulunuyor.";
   }
