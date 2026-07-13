@@ -3,6 +3,7 @@ import "server-only";
 import type { AdminRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 import {
+  type AdminAuthSource,
   getAdminSession,
   requireAdminSession,
   requireAdminSessionWithReturn,
@@ -24,6 +25,7 @@ export type AdminActor = {
   id: string;
   email: string;
   role: AdminRole;
+  authSource: AdminAuthSource;
 };
 
 const ownerCapabilities = new Set<AdminCapability>([
@@ -38,6 +40,11 @@ const ownerCapabilities = new Set<AdminCapability>([
 ]);
 
 const checkinCapabilities = new Set<AdminCapability>([
+  "registrations.read",
+  "checkin.manage",
+]);
+
+const staffCapabilities = new Set<AdminCapability>([
   "members.read",
   "registrations.read",
   "checkin.manage",
@@ -56,6 +63,10 @@ export function adminCapabilitiesForRole(role: unknown): ReadonlySet<AdminCapabi
 
   if (role === "CHECKIN") {
     return checkinCapabilities;
+  }
+
+  if (role === "STAFF") {
+    return staffCapabilities;
   }
 
   return noCapabilities;
@@ -81,6 +92,26 @@ export async function getCurrentAdminActor() {
 
 export async function getAdminActorForRoute() {
   return getCurrentAdminActor();
+}
+
+export async function getAdminActorFromOwnerSession() {
+  const session = await getAdminSession();
+
+  if (session?.authSource !== "OWNER_SESSION") {
+    return null;
+  }
+
+  return findAdminActorForSession(session);
+}
+
+export async function getAdminActorFromMemberSession() {
+  const session = await getAdminSession();
+
+  if (session?.authSource !== "MEMBER_SESSION") {
+    return null;
+  }
+
+  return findAdminActorForSession(session);
 }
 
 export async function requireAdminCapability(
@@ -111,23 +142,56 @@ export async function requireAdminRole(roles: readonly AdminRole[]) {
 }
 
 export async function requireOwnerAdmin() {
-  return requireAdminRole(["OWNER"]);
+  const adminActor = await requireAdminRole(["OWNER"]);
+
+  if (adminActor.authSource !== "OWNER_SESSION") {
+    redirect("/admin/login?teamError=owner_login_required");
+  }
+
+  return adminActor;
 }
 
 export async function requireCheckinOrOwner(returnTo?: string) {
   return requireAdminCapability("checkin.manage", { returnTo });
 }
 
+export async function requireMemberLinkedAdmin() {
+  const session = await requireAdminSession();
+  const adminActor = await findAdminActorForSession(session);
+
+  if (!adminActor || adminActor.authSource !== "MEMBER_SESSION") {
+    redirect("/admin/login?teamError=member_admin_not_assigned");
+  }
+
+  return adminActor;
+}
+
+export function adminDefaultPathForRole(role: unknown) {
+  if (role === "OWNER") {
+    return "/admin";
+  }
+
+  if (role === "STAFF") {
+    return "/admin/members";
+  }
+
+  if (role === "CHECKIN") {
+    return "/admin/participants";
+  }
+
+  return "/admin/login";
+}
+
 function adminDeniedPath(adminActor: AdminActor | null) {
-  if (adminActor?.role === "CHECKIN") {
-    return "/admin/check-in?adminError=permission_denied";
+  if (adminActor?.role === "STAFF" || adminActor?.role === "CHECKIN") {
+    return `${adminDefaultPathForRole(adminActor.role)}?adminError=permission_denied`;
   }
 
   return "/admin/login";
 }
 
 async function findAdminActorForSession(session: AdminSession): Promise<AdminActor | null> {
-  return prisma.adminUser.findUnique({
+  const adminUser = await prisma.adminUser.findUnique({
     where: {
       email: normalizeAdminEmail(session.email),
     },
@@ -137,4 +201,25 @@ async function findAdminActorForSession(session: AdminSession): Promise<AdminAct
       role: true,
     },
   });
+
+  if (!adminUser) {
+    return null;
+  }
+
+  if (session.authSource === "OWNER_SESSION" && adminUser.role !== "OWNER") {
+    return null;
+  }
+
+  if (
+    session.authSource === "MEMBER_SESSION" &&
+    adminUser.role !== "STAFF" &&
+    adminUser.role !== "CHECKIN"
+  ) {
+    return null;
+  }
+
+  return {
+    ...adminUser,
+    authSource: session.authSource,
+  };
 }

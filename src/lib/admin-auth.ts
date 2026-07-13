@@ -5,9 +5,12 @@ import { redirect } from "next/navigation";
 const adminCookieName = "atd_admin_session";
 const sessionDurationMs = 1000 * 60 * 60 * 8;
 
+export type AdminAuthSource = "OWNER_SESSION" | "MEMBER_SESSION";
+
 export type AdminSession = {
   email: string;
   expiresAt: number;
+  authSource: AdminAuthSource;
 };
 
 export async function getAdminSession() {
@@ -57,10 +60,19 @@ export async function requireAdminSessionForRoute() {
   return session;
 }
 
-export async function createAdminSessionCookie(email: string) {
+export async function createAdminSessionCookie(
+  email: string,
+  options: { authSource?: AdminAuthSource } = {},
+) {
   const cookieStore = await cookies();
   const expiresAt = Date.now() + sessionDurationMs;
-  const payload = Buffer.from(JSON.stringify({ email, expiresAt })).toString("base64url");
+  const payload = Buffer.from(
+    JSON.stringify({
+      email: email.trim().toLowerCase(),
+      expiresAt,
+      authSource: options.authSource ?? "OWNER_SESSION",
+    }),
+  ).toString("base64url");
   const signature = sign(payload);
 
   cookieStore.set(adminCookieName, `${payload}.${signature}`, {
@@ -70,6 +82,10 @@ export async function createAdminSessionCookie(email: string) {
     path: "/",
     expires: new Date(expiresAt),
   });
+}
+
+export async function createMemberAdminSessionCookie(email: string) {
+  return createAdminSessionCookie(email, { authSource: "MEMBER_SESSION" });
 }
 
 export async function clearAdminSessionCookie() {
@@ -126,16 +142,38 @@ function verifySessionCookie(value: string): AdminSession | null {
   }
 
   try {
-    const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as AdminSession;
+    const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Partial<AdminSession>;
 
     if (!parsed.email || !parsed.expiresAt || parsed.expiresAt <= Date.now()) {
       return null;
     }
 
-    return parsed;
+    const authSource = parseAdminAuthSource(parsed.authSource);
+
+    if (!authSource) {
+      return null;
+    }
+
+    return {
+      email: parsed.email.trim().toLowerCase(),
+      expiresAt: parsed.expiresAt,
+      authSource,
+    };
   } catch {
     return null;
   }
+}
+
+function parseAdminAuthSource(value: unknown): AdminAuthSource | null {
+  if (value === undefined) {
+    return "OWNER_SESSION";
+  }
+
+  if (value === "OWNER_SESSION" || value === "MEMBER_SESSION") {
+    return value;
+  }
+
+  return null;
 }
 
 function sign(payload: string) {

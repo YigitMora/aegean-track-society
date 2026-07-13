@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminPermissionBanner } from "@/components/admin/admin-permission-banner";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { BrowserQrScanner } from "@/components/admin/browser-qr-scanner";
 import { CheckInCard } from "@/components/admin/check-in-card";
@@ -16,6 +17,7 @@ type AdminCheckInPageProps = {
     q?: string;
     registrationId?: string;
     result?: string;
+    adminError?: string;
   }>;
 };
 
@@ -24,7 +26,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminCheckInPage({ searchParams }: AdminCheckInPageProps) {
   const adminActor = await requireCheckinOrOwner();
 
-  const { q, registrationId, result } = await searchParams;
+  const { q, registrationId, result, adminError } = await searchParams;
   const query = q?.trim() ?? "";
   const selectedRegistration = registrationId
     ? await getCheckInRegistrationById(registrationId)
@@ -49,6 +51,8 @@ export default async function AdminCheckInPage({ searchParams }: AdminCheckInPag
         ) : null
       }
     >
+      <AdminPermissionBanner code={adminError} />
+
       <div className="mx-auto max-w-4xl space-y-6">
         <CheckInResultBanner result={result} registration={selectedRegistration} />
 

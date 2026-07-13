@@ -35,7 +35,10 @@ for (const capability of ownerCapabilities) {
 
 assert.match(adminAuthorization, /role === "OWNER"/);
 assert.match(adminAuthorization, /role === "CHECKIN"/);
-assert.doesNotMatch(adminAuthorization, /role === "STAFF"/);
+assert.match(adminAuthorization, /role === "STAFF"/);
+assert.match(adminAuthorization, /authSource: AdminAuthSource/);
+assert.match(adminAuthorization, /session\.authSource === "OWNER_SESSION" && adminUser\.role !== "OWNER"/);
+assert.match(adminAuthorization, /session\.authSource === "MEMBER_SESSION"/);
 assert.match(adminAuthorization, /return noCapabilities/);
 assert.match(adminAuthorization, /prisma\.adminUser\.findUnique/);
 assert.match(adminAuthorization, /email: normalizeAdminEmail\(session\.email\)/);
@@ -45,9 +48,9 @@ assert.match(adminAuthorization, /redirect\(adminDeniedPath\(adminActor\)\)/);
 const checkinCapabilityBlock = sliceBetween(
   adminAuthorization,
   "const checkinCapabilities",
-  "const noCapabilities",
+  "const staffCapabilities",
 );
-assert.match(checkinCapabilityBlock, /"members\.read"/);
+assert.doesNotMatch(checkinCapabilityBlock, /"members\.read"/);
 assert.match(checkinCapabilityBlock, /"registrations\.read"/);
 assert.match(checkinCapabilityBlock, /"checkin\.manage"/);
 assert.doesNotMatch(checkinCapabilityBlock, /"garages\.manage"/);
@@ -56,6 +59,20 @@ assert.doesNotMatch(checkinCapabilityBlock, /"registrations\.manage"/);
 assert.doesNotMatch(checkinCapabilityBlock, /"events\.manage"/);
 assert.doesNotMatch(checkinCapabilityBlock, /"admins\.manage"/);
 
+const staffCapabilityBlock = sliceBetween(
+  adminAuthorization,
+  "const staffCapabilities",
+  "const noCapabilities",
+);
+assert.match(staffCapabilityBlock, /"members\.read"/);
+assert.match(staffCapabilityBlock, /"registrations\.read"/);
+assert.match(staffCapabilityBlock, /"checkin\.manage"/);
+assert.doesNotMatch(staffCapabilityBlock, /"garages\.manage"/);
+assert.doesNotMatch(staffCapabilityBlock, /"payments\.manage"/);
+assert.doesNotMatch(staffCapabilityBlock, /"registrations\.manage"/);
+assert.doesNotMatch(staffCapabilityBlock, /"events\.manage"/);
+assert.doesNotMatch(staffCapabilityBlock, /"admins\.manage"/);
+
 assert.match(adminShell, /adminHasCapability\(adminActor\?\.role, "members\.read"\)/);
 assert.match(adminShell, /adminHasCapability\(adminActor\?\.role, "registrations\.read"\)/);
 assert.match(adminShell, /adminHasCapability\(adminActor\?\.role, "checkin\.manage"\)/);
@@ -63,6 +80,7 @@ assert.match(adminShell, /isOwnerAdmin\(adminActor\?\.role\)/);
 assert.match(adminShell, /Üyeler/u);
 assert.match(adminShell, /Katılımcılar/u);
 assert.match(adminShell, /Check-in/);
+assert.match(adminShell, /Ekip ve Yetkiler/u);
 
 assert.match(adminDashboard, /requireOwnerAdmin\(\)/);
 assert.match(adminExport, /adminHasCapability\(adminActor\.role, "registrations\.manage"\)/);
@@ -133,7 +151,7 @@ const capabilityExpectations = [
   ["OWNER", "members.read", true],
   ["OWNER", "garages.manage", true],
   ["OWNER", "payments.manage", true],
-  ["CHECKIN", "members.read", true],
+  ["CHECKIN", "members.read", false],
   ["CHECKIN", "registrations.read", true],
   ["CHECKIN", "checkin.manage", true],
   ["CHECKIN", "garages.manage", false],
@@ -141,8 +159,13 @@ const capabilityExpectations = [
   ["CHECKIN", "registrations.manage", false],
   ["CHECKIN", "events.manage", false],
   ["CHECKIN", "admins.manage", false],
-  ["STAFF", "members.read", false],
+  ["STAFF", "members.read", true],
+  ["STAFF", "registrations.read", true],
+  ["STAFF", "checkin.manage", true],
   ["STAFF", "garages.manage", false],
+  ["STAFF", "payments.manage", false],
+  ["STAFF", "registrations.manage", false],
+  ["STAFF", "admins.manage", false],
   ["SUPPORT", "members.read", false],
   [null, "members.read", false],
 ] as const;
@@ -177,6 +200,10 @@ function hasCapability(role: unknown, capability: string) {
   }
 
   if (role === "CHECKIN") {
+    return ["registrations.read", "checkin.manage"].includes(capability);
+  }
+
+  if (role === "STAFF") {
     return ["members.read", "registrations.read", "checkin.manage"].includes(capability);
   }
 
