@@ -1,20 +1,21 @@
 import "server-only";
 
 import { ModificationCategory, type VehicleRatingStatus } from "@prisma/client";
+import {
+  applyWeightPenalty,
+  calculateVehicleOverall,
+  clampRating,
+  ratingComponents,
+  vehicleRatingWeights,
+  weightedOverall,
+  type MutableRatingScoreSet,
+  type RatingComponent,
+} from "@/lib/vehicle-rating-core";
+
+export { vehicleRatingWeights };
 
 export const vehicleRatingDisclaimer =
   "ATS Performance Rating; resmi güç, homologasyon veya tur zamanı ölçümü değildir. Araç platformu ve build profiline göre oluşturulan topluluk içi karşılaştırma göstergesidir.";
-
-export const vehicleRatingWeights = {
-  power: 0.18,
-  handling: 0.24,
-  braking: 0.18,
-  reliability: 0.12,
-  thermal: 0.12,
-  trackReadiness: 0.16,
-} as const;
-
-type RatingComponent = keyof typeof vehicleRatingWeights;
 
 export type VehicleRatingDefinitionInput = {
   id: string;
@@ -61,7 +62,7 @@ type MutableRating = Record<RatingComponent, number> & {
   overallCap?: number;
 };
 
-type ImpactTotals = Record<RatingComponent, number>;
+type ImpactTotals = MutableRatingScoreSet;
 
 const universalBaseImpactCategories = new Set<ModificationCategory>([
   ModificationCategory.SUSPENSION,
@@ -83,7 +84,7 @@ export function calculateVehiclePerformanceRating({
     return null;
   }
 
-  const baseRating = applyWeightPenalty({
+  const baseRating: MutableRating = applyWeightPenalty({
     power: vehicleDefinition.powerRating,
     handling: vehicleDefinition.handlingRating,
     braking: vehicleDefinition.brakingRating,
@@ -91,7 +92,7 @@ export function calculateVehiclePerformanceRating({
     thermal: vehicleDefinition.thermalRating,
     trackReadiness: vehicleDefinition.trackReadinessRating,
   }, vehicleDefinition.weightPenalty);
-  const rating = { ...baseRating };
+  const rating: MutableRating = { ...baseRating };
   const impactTotals = emptyImpactTotals();
   const installedCategories = new Set<ModificationCategory>();
   let hasSlickTyres = false;
@@ -122,7 +123,11 @@ export function calculateVehiclePerformanceRating({
 
   return {
     ...rating,
-    overall: weightedOverall(rating),
+    overall: calculateVehicleOverall({
+      rating,
+      status: vehicleDefinition.ratingStatus,
+      overallCap: rating.overallCap,
+    }).overall,
     status: vehicleDefinition.ratingStatus,
   };
 }
@@ -156,15 +161,6 @@ export function calculateProjectedVehiclePerformanceRating({
   });
 }
 
-const ratingComponents = [
-  "power",
-  "handling",
-  "braking",
-  "reliability",
-  "thermal",
-  "trackReadiness",
-] as const satisfies readonly RatingComponent[];
-
 function impactForDefinition(
   definition: VehicleRatingModificationInput["modificationDefinition"],
   vehicleDefinitionId: string,
@@ -195,22 +191,6 @@ function impactForDefinition(
     reliability: definition.reliabilityImpact,
     thermal: 0,
     trackReadiness: definition.trackReadinessImpact,
-  };
-}
-
-function applyWeightPenalty(
-  rating: MutableRating,
-  weightPenalty: number,
-): MutableRating {
-  if (weightPenalty <= 0) {
-    return rating;
-  }
-
-  return {
-    ...rating,
-    handling: rating.handling - Math.ceil(weightPenalty * 0.4),
-    braking: rating.braking - Math.ceil(weightPenalty * 0.3),
-    trackReadiness: rating.trackReadiness - weightPenalty,
   };
 }
 
@@ -249,22 +229,6 @@ function applyBuildBalancePenalties({
   }
 }
 
-function weightedOverall(rating: MutableRating) {
-  const uncappedOverall = clampRating(
-    rating.power * vehicleRatingWeights.power +
-      rating.handling * vehicleRatingWeights.handling +
-      rating.braking * vehicleRatingWeights.braking +
-      rating.reliability * vehicleRatingWeights.reliability +
-      rating.thermal * vehicleRatingWeights.thermal +
-      rating.trackReadiness * vehicleRatingWeights.trackReadiness,
-  );
-  const overallCap = rating.overallCap ?? null;
-
-  return overallCap === null
-    ? uncappedOverall
-    : Math.min(uncappedOverall, clampRating(overallCap));
-}
-
 function emptyImpactTotals(): ImpactTotals {
   return {
     power: 0,
@@ -274,10 +238,6 @@ function emptyImpactTotals(): ImpactTotals {
     thermal: 0,
     trackReadiness: 0,
   };
-}
-
-function clampRating(value: number) {
-  return Math.max(0, Math.min(100, Math.round(value)));
 }
 
 function ratingModificationKey(modification: VehicleRatingModificationInput) {
