@@ -14,6 +14,7 @@ const files = {
   lifecycle: read("src/components/garage-vehicle-lifecycle.tsx"),
   hero: read("src/components/rating-discovery/rating-discovery-hero.tsx"),
   demo: read("src/components/rating-discovery/build-impact-demo.tsx"),
+  accountDemo: read("src/components/rating-discovery/account-rating-demo.tsx"),
   bars: read("src/components/rating-discovery/rating-component-bars.tsx"),
   banner: read("src/components/rating-discovery/rating-discovery-banner.tsx"),
   steps: read("src/components/rating-discovery/rating-discovery-steps.tsx"),
@@ -44,7 +45,7 @@ const checks = [
   {
     name: "demo uses Focus RS Mk3 catalog template",
     pass:
-      files.data.includes('code: "ford_focus_rs_mk3"') &&
+      files.data.includes('vehicleCode: "ford_focus_rs_mk3"') &&
       files.demo.includes("Örnek ATS Build") === false &&
       files.data.includes("Örnek ATS Build"),
   },
@@ -52,7 +53,7 @@ const checks = [
     name: "demo respects compatibility and slot validation",
     pass:
       files.data.includes("evaluateModificationBatchAvailability") &&
-      files.data.includes("demoCandidateCodeGroups") &&
+      files.data.includes("focusRsDemoCandidateCodeGroups") &&
       files.data.includes("mountune_focus_rs_mk3_m380") &&
       files.data.includes("mountune_focus_rs_mk3_m365"),
   },
@@ -115,9 +116,10 @@ const checks = [
       files.lifecycle.includes("showBars={mode === \"active\"}"),
   },
   {
-    name: "compact banners appear only on selected account pages",
+    name: "compact banners remain only on selected secondary account pages",
     pass:
-      files.account.includes("RatingDiscoveryBanner") &&
+      !files.account.includes("RatingDiscoveryBanner") &&
+      files.account.includes("AccountRatingDemo") &&
       files.registrations.includes("RatingDiscoveryBanner") &&
       files.profile.includes("RatingDiscoveryBanner") &&
       !files.homepage.includes("RatingDiscoveryBanner"),
@@ -136,7 +138,10 @@ const checks = [
       allSource.includes("rating_discovery_viewed") &&
       allSource.includes("rating_discovery_add_vehicle_clicked") &&
       allSource.includes("rating_discovery_demo_viewed") &&
-      allSource.includes("rating_discovery_build_clicked"),
+      allSource.includes("rating_discovery_build_clicked") &&
+      allSource.includes("account_fl5_demo_viewed") &&
+      allSource.includes("account_fl5_demo_garage_clicked") &&
+      allSource.includes("account_fl5_demo_how_it_works_clicked"),
   },
   {
     name: "accessibility labels and meters are present",
