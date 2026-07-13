@@ -4,12 +4,6 @@ import {
   type GarageLifecycleVehicle,
 } from "@/components/garage-vehicle-lifecycle";
 import {
-  BuildImpactDemo,
-  RatingDiscoveryHero,
-  RatingDiscoverySteps,
-  RealPartsCloud,
-} from "@/components/rating-discovery";
-import {
   MAX_ACTIVE_GARAGE_VEHICLES,
   MAX_ARCHIVED_GARAGE_VEHICLES,
   canAddActiveVehicle,
@@ -18,10 +12,6 @@ import {
 } from "@/lib/garage-capacity";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
-import {
-  getRatingDiscoveryGarageContent,
-  resolveRatingDiscoveryState,
-} from "@/lib/rating-discovery";
 import { measureServerTiming } from "@/lib/server-timing";
 import { calculateVehiclePerformanceRating } from "@/lib/vehicle-performance-rating";
 import { createOwnedVehicleImageSignedUrl } from "@/lib/vehicle-images";
@@ -151,11 +141,6 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
   }));
   const activeLifecycleVehicles = activeVehicleCards.map(toGarageLifecycleVehicle);
   const archivedLifecycleVehicles = archivedVehicleCards.map(toGarageLifecycleVehicle);
-  const ratingDiscoveryContent = await measureServerTiming(
-    "GARAGE_QUERY",
-    getRatingDiscoveryGarageContent,
-  );
-  const ratingDiscoveryState = resolveRatingDiscoveryState(activeLifecycleVehicles);
   const activeCapacity = {
     count: activeVehicles.length,
     max: MAX_ACTIVE_GARAGE_VEHICLES,
@@ -179,8 +164,8 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
             Garajım
           </h1>
           <p className="mt-6 text-base leading-7 text-ats-muted sm:text-lg sm:leading-8">
-            Üyelik hesabınıza ait araçları yönetin, ATS kataloğuyla eşleştirin ve
-            build profilinizdeki rating değişimini takip edin.
+            Üyelik hesabınıza ait araçları yönetin. Etkinlik başvurularında
+            kullanacağınız araç bilgilerini güncel tutun.
           </p>
         </div>
         <div className="sm:text-right">
@@ -207,14 +192,6 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
           ) : null}
         </div>
       </div>
-
-      <RatingDiscoveryHero
-        state={ratingDiscoveryState}
-        demo={ratingDiscoveryContent.demo}
-      />
-      <BuildImpactDemo demo={ratingDiscoveryContent.demo} />
-      <RatingDiscoverySteps />
-      <RealPartsCloud catalog={ratingDiscoveryContent.catalog} />
 
       <div className="mt-8 grid gap-3 rounded-md border border-ats-border bg-ats-surface p-4 text-sm font-black text-ats-text sm:grid-cols-[1fr_auto_auto] sm:items-center">
         <p className="text-ats-muted">

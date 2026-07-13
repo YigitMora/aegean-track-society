@@ -1,6 +1,7 @@
 import "server-only";
 
 import { ModificationCategory, Prisma } from "@prisma/client";
+import { getOptionalAuthenticatedMemberIdentity } from "@/lib/member-auth";
 import { prisma } from "@/lib/prisma";
 import {
   evaluateModificationBatchAvailability,
@@ -423,7 +424,19 @@ export async function getRatingDiscoveryBannerData(
   };
 }
 
-export async function getRatingDiscoveryGarageContent() {
+export async function getRatingDiscoveryHomepageContent() {
+  const [showcaseContent, state] = await Promise.all([
+    getRatingDiscoveryShowcaseContent(),
+    getHomepageRatingDiscoveryState(),
+  ]);
+
+  return {
+    ...showcaseContent,
+    state,
+  };
+}
+
+export async function getRatingDiscoveryShowcaseContent() {
   const [demo, catalog] = await Promise.all([
     getFocusRsRatingDiscoveryDemo(),
     getRatingDiscoveryCatalogShowcase(),
@@ -432,6 +445,105 @@ export async function getRatingDiscoveryGarageContent() {
   return {
     demo,
     catalog,
+  };
+}
+
+async function getHomepageRatingDiscoveryState(): Promise<RatingDiscoveryState> {
+  const identity = await getOptionalAuthenticatedMemberIdentity();
+
+  if (!identity) {
+    return homepageStateWithPrimaryCta({
+      state: "empty",
+      label: "Üye Ol ve Garajını Oluştur",
+      href: "/auth/sign-up?returnTo=%2Faccount%2Fgarage",
+      event: "rating_discovery_add_vehicle_clicked",
+    });
+  }
+
+  const vehicles = await prisma.vehicle.findMany({
+    where: {
+      userId: identity.id,
+      deletedAt: null,
+    },
+    orderBy: [
+      {
+        isPrimary: "desc",
+      },
+      {
+        createdAt: "asc",
+      },
+    ],
+    select: {
+      id: true,
+      vehicleDefinitionId: true,
+      modifications: {
+        where: {
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+        },
+      },
+    },
+  });
+  const activeBuild = vehicles.find(
+    (vehicle) => vehicle.vehicleDefinitionId && vehicle.modifications.length > 0,
+  );
+  const matchedVehicle = vehicles.find((vehicle) => vehicle.vehicleDefinitionId);
+
+  if (vehicles.length === 0) {
+    return homepageStateWithPrimaryCta({
+      state: "empty",
+      label: "İlk Aracımı Ekle",
+      href: "/account/garage/new",
+      event: "rating_discovery_add_vehicle_clicked",
+    });
+  }
+
+  const buildTargetVehicle = activeBuild ?? matchedVehicle;
+
+  if (buildTargetVehicle) {
+    return homepageStateWithPrimaryCta({
+      state: activeBuild ? "active_build" : "matched_unmodified",
+      label: "Build Profilimi Geliştir",
+      href: `/account/garage/${buildTargetVehicle.id}#build-profile`,
+      event: "rating_discovery_build_clicked",
+    });
+  }
+
+  return homepageStateWithPrimaryCta({
+    state: "catalog_free",
+    label: "Garajımı Aç",
+    href: "/account/garage",
+    event: "rating_discovery_build_clicked",
+  });
+}
+
+function homepageStateWithPrimaryCta({
+  state,
+  label,
+  href,
+  event,
+}: {
+  state: RatingDiscoveryUserState;
+  label: string;
+  href: string;
+  event: string;
+}): RatingDiscoveryState {
+  return {
+    state,
+    title: "Aracının gerçek potansiyelini keşfet",
+    body: "Aracını ATS kataloğundan seç, kullandığın gerçek modifikasyonları build profiline ekle ve Güç, Yol Tutuş, Fren, Güvenilirlik, Termal Yönetim ve Pist Hazırlığı puanlarındaki tahmini değişimi gör.",
+    primaryCta: {
+      label,
+      href,
+      event,
+    },
+    secondaryCta: {
+      label: "Focus RS Örneği",
+      href: "#focus-rs-demo",
+      event: "rating_discovery_demo_viewed",
+    },
   };
 }
 

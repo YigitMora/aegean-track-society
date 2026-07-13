@@ -2,6 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { PublicNav } from "@/components/public-nav";
+import {
+  BuildImpactDemo,
+  RatingDiscoveryHero,
+  RatingDiscoverySteps,
+  RealPartsCloud,
+} from "@/components/rating-discovery";
+import { getRatingDiscoveryHomepageContent } from "@/lib/rating-discovery";
 
 const registerHref = "/events/kula-mytrack-2026/register";
 
@@ -76,7 +83,9 @@ const whyItems = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const ratingDiscovery = await getRatingDiscoveryHomepageContent();
+
   return (
     <main className="min-h-screen bg-ats-black text-ats-text">
       <section className="relative isolate flex min-h-[100svh] overflow-hidden bg-ats-black">
@@ -254,6 +263,18 @@ export default function HomePage() {
           </div>
         </div>
       </StorySection>
+
+      <section className="ats-section-reveal bg-ats-black px-6 py-24 sm:px-10 sm:py-28 lg:px-12 lg:py-32">
+        <div className="mx-auto max-w-7xl">
+          <RatingDiscoveryHero
+            state={ratingDiscovery.state}
+            demo={ratingDiscovery.demo}
+          />
+          <BuildImpactDemo demo={ratingDiscovery.demo} />
+          <RealPartsCloud catalog={ratingDiscovery.catalog} />
+          <RatingDiscoverySteps />
+        </div>
+      </section>
 
       <section className="ats-section-reveal bg-ats-black px-6 py-28 text-center sm:px-10 sm:py-32 lg:px-12 lg:py-40">
         <div className="mx-auto max-w-5xl">

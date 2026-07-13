@@ -9,6 +9,7 @@ function read(path: string) {
 
 const files = {
   data: read("src/lib/rating-discovery.ts"),
+  homepage: read("src/app/page.tsx"),
   garage: read("src/app/account/garage/page.tsx"),
   lifecycle: read("src/components/garage-vehicle-lifecycle.tsx"),
   hero: read("src/components/rating-discovery/rating-discovery-hero.tsx"),
@@ -71,27 +72,40 @@ const checks = [
       files.lifecycle.includes("ratingComponentRows"),
   },
   {
-    name: "garage hierarchy includes discovery, demo, steps, catalog, capacity, vehicles",
+    name: "homepage includes discovery, demo, catalog, steps before final CTA",
     pass:
-      files.garage.lastIndexOf("RatingDiscoveryHero") <
-        files.garage.lastIndexOf("BuildImpactDemo") &&
-      files.garage.lastIndexOf("BuildImpactDemo") <
-        files.garage.lastIndexOf("RatingDiscoverySteps") &&
-      files.garage.lastIndexOf("RatingDiscoverySteps") <
-        files.garage.lastIndexOf("RealPartsCloud") &&
-      files.garage.lastIndexOf("RealPartsCloud") <
-        files.garage.indexOf("Garaj kapasitesi") &&
+      files.homepage.indexOf("Neden Aegean Track Society?") <
+        files.homepage.lastIndexOf("RatingDiscoveryHero") &&
+      files.homepage.lastIndexOf("RatingDiscoveryHero") <
+        files.homepage.lastIndexOf("BuildImpactDemo") &&
+      files.homepage.lastIndexOf("BuildImpactDemo") <
+        files.homepage.lastIndexOf("RealPartsCloud") &&
+      files.homepage.lastIndexOf("RealPartsCloud") <
+        files.homepage.lastIndexOf("RatingDiscoverySteps") &&
+      files.homepage.lastIndexOf("RatingDiscoverySteps") <
+        files.homepage.lastIndexOf("Hazırsan"),
+  },
+  {
+    name: "garage does not render full promotional discovery sections",
+    pass:
+      !files.garage.includes("RatingDiscoveryHero") &&
+      !files.garage.includes("BuildImpactDemo") &&
+      !files.garage.includes("RatingDiscoverySteps") &&
+      !files.garage.includes("RealPartsCloud") &&
       files.garage.indexOf("Garaj kapasitesi") <
         files.garage.lastIndexOf("GarageVehicleLifecycle"),
   },
   {
-    name: "empty garage state has requested checklist and CTAs",
+    name: "empty garage state is compact and operational",
     pass:
-      files.lifecycle.includes("İlk build'ini oluşturmaya başla") &&
-      files.lifecycle.includes("Aracını seç") &&
-      files.lifecycle.includes("Base ratingini gör") &&
+      files.lifecycle.includes("Garajınız henüz boş") &&
+      files.lifecycle.includes(
+        "Etkinlik başvurularında kullanmak veya ATS Rating profilini oluşturmak",
+      ) &&
       files.lifecycle.includes("İlk Aracımı Ekle") &&
-      files.lifecycle.includes("Örnek Build'i İncele"),
+      files.lifecycle.includes("ATS Rating nasıl çalışır?") &&
+      !files.lifecycle.includes("Projected rating değişimini takip et") &&
+      !files.lifecycle.includes("Örnek Build'i İncele"),
   },
   {
     name: "catalog-free vehicles do not render fake bars",
@@ -105,7 +119,16 @@ const checks = [
     pass:
       files.account.includes("RatingDiscoveryBanner") &&
       files.registrations.includes("RatingDiscoveryBanner") &&
-      files.profile.includes("RatingDiscoveryBanner"),
+      files.profile.includes("RatingDiscoveryBanner") &&
+      !files.homepage.includes("RatingDiscoveryBanner"),
+  },
+  {
+    name: "homepage CTA labels are authentication aware",
+    pass:
+      files.data.includes("Üye Ol ve Garajını Oluştur") &&
+      files.data.includes("İlk Aracımı Ekle") &&
+      files.data.includes("Build Profilimi Geliştir") &&
+      files.data.includes("Garajımı Aç"),
   },
   {
     name: "analytics data attributes are present",
