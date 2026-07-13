@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   archiveVehiclesLifecycleAction,
-  type GarageLifecycleActionState,
   makePrimaryVehicleAction,
   permanentlyDeleteArchivedVehiclesLifecycleAction,
   restoreVehicleAction,
 } from "@/app/account/garage/actions";
+import { initialGarageLifecycleActionState } from "@/lib/garage-lifecycle-state";
 import { ratingComponentRows } from "@/lib/vehicle-rating-deltas";
 import { ratingToneForScore } from "@/lib/vehicle-rating-tone";
 
@@ -39,15 +39,6 @@ export type GarageLifecycleVehicle = {
 type GarageVehicleLifecycleProps = {
   activeVehicles: GarageLifecycleVehicle[];
   archivedVehicles: GarageLifecycleVehicle[];
-};
-
-const initialLifecycleState: GarageLifecycleActionState = {
-  ok: false,
-  code: null,
-  message: null,
-  operation: null,
-  vehicleIds: [],
-  submittedAt: 0,
 };
 
 export function GarageVehicleLifecycle({
@@ -86,11 +77,11 @@ function VehicleLifecycleSection({
   const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([]);
   const [archiveState, archiveFormAction, archivePending] = useActionState(
     archiveVehiclesLifecycleAction,
-    initialLifecycleState,
+    initialGarageLifecycleActionState,
   );
   const [deleteState, deleteFormAction, deletePending] = useActionState(
     permanentlyDeleteArchivedVehiclesLifecycleAction,
-    initialLifecycleState,
+    initialGarageLifecycleActionState,
   );
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const pendingArchiveIdSet = useMemo(
