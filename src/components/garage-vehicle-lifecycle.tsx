@@ -195,26 +195,11 @@ function VehicleLifecycleSection({
   if (vehicles.length === 0 && mode === "active") {
     return (
       <div className="mt-10 rounded-lg border border-ats-border bg-ats-surface p-8 shadow-soft">
-        <p className="text-3xl font-black text-ats-text">
-          İlk build'ini oluşturmaya başla
-        </p>
+        <p className="text-3xl font-black text-ats-text">Garajınız henüz boş</p>
         <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-ats-muted">
-          Aracını ekle, stok ATS Ratingini keşfet ve kullandığın gerçek parçalarla
-          build profilini geliştir.
+          Etkinlik başvurularında kullanmak veya ATS Rating profilini oluşturmak
+          için ilk aracınızı ekleyin.
         </p>
-        <ul className="mt-5 grid gap-2 text-sm font-semibold text-ats-muted sm:grid-cols-2">
-          {[
-            "Aracını seç",
-            "Base ratingini gör",
-            "Modifikasyonlarını ekle",
-            "Projected rating değişimini takip et",
-          ].map((item) => (
-            <li key={item} className="flex gap-2">
-              <span className="mt-2 h-1.5 w-1.5 rounded-full bg-ats-blue" aria-hidden="true" />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
         <p className="mt-3 text-sm font-black text-ats-text">
           Aktif araçlar: {capacity.count} / {capacity.max}
         </p>
@@ -227,11 +212,11 @@ function VehicleLifecycleSection({
             İlk Aracımı Ekle
           </Link>
           <a
-            href="#focus-rs-demo"
-            data-analytics-event="rating_discovery_demo_viewed"
+            href="/#ats-rating-discovery"
+            data-analytics-event="rating_discovery_how_it_works_clicked"
             className="inline-flex h-12 items-center justify-center rounded-full border border-ats-border px-6 text-sm font-black text-ats-text transition hover:border-ats-blue hover:text-ats-blue"
           >
-            Örnek Build'i İncele
+            ATS Rating nasıl çalışır?
           </a>
         </div>
       </div>
