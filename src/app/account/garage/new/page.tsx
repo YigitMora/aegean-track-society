@@ -132,6 +132,7 @@ export default async function NewVehiclePage({ searchParams }: NewVehiclePagePro
       <VehicleForm
         action={createVehicleAction}
         submitLabel="Aracı Kaydet"
+        pendingSubmitLabel="Araç ekleniyor..."
         showPrimaryOption
         returnTo={returnTo}
         vehicleDefinitions={vehicleDefinitions}
@@ -157,7 +158,7 @@ function VehicleErrorMessage({ garageError }: { garageError?: string }) {
 
 function errorMessage(value?: string) {
   if (value === "active_vehicle_limit_reached") {
-    return "Garajınızda en fazla 5 aktif araç bulunabilir. Yeni araç eklemek için mevcut araçlardan birini arşivleyin.";
+    return "Garaj kapasiteniz dolu.";
   }
 
   if (value === "duplicate_plate") {

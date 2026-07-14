@@ -1,13 +1,16 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
+import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   archiveVehiclesLifecycleAction,
   makePrimaryVehicleAction,
   permanentlyDeleteArchivedVehiclesLifecycleAction,
+  requestVehicleCatalogMatchAction,
   restoreVehicleAction,
+  type CatalogMatchRequestActionState,
 } from "@/app/account/garage/actions";
 import { initialGarageLifecycleActionState } from "@/lib/garage-lifecycle-state";
 import { ratingComponentRows } from "@/lib/vehicle-rating-deltas";
@@ -24,6 +27,14 @@ type GarageRating = {
   status: string;
 } | null;
 
+type GarageCatalogMatchRequest = {
+  id: string;
+  status: "PENDING" | "IN_REVIEW" | "COMPLETED" | "REJECTED";
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt: string | null;
+} | null;
+
 export type GarageLifecycleVehicle = {
   id: string;
   brand: string;
@@ -35,6 +46,7 @@ export type GarageLifecycleVehicle = {
   coverImageUrl: string | null;
   vehicleDefinitionId: string | null;
   modificationCount: number;
+  catalogMatchRequest: GarageCatalogMatchRequest;
   rating: GarageRating;
 };
 
@@ -714,19 +726,28 @@ function VehicleCoverPreview({
 
 function BuildDiscoveryPanel({ vehicle }: { vehicle: GarageLifecycleVehicle }) {
   if (!vehicle.vehicleDefinitionId) {
+    const requestState = catalogMatchRequestDisplay(vehicle.catalogMatchRequest);
+
     return (
       <div className="mx-6 mt-4 rounded-md border border-amber-300/25 bg-amber-400/10 p-4">
-        <p className="text-sm font-black text-amber-100">Katalog dışı araç</p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <p className="text-sm font-black text-amber-100">Katalog dışı araç</p>
+          {requestState?.badge ? (
+            <span className={requestState.badgeClassName}>{requestState.badge}</span>
+          ) : null}
+        </div>
         <p className="mt-2 text-sm font-semibold leading-6 text-ats-muted">
           Bu araç etkinlik başvurularında kullanılabilir. ATS Rating ve uyumlu
           modifikasyon özellikleri için aracın katalogla eşleşmesi gerekir.
         </p>
-        <a
-          href="#garage-catalog-support"
-          className="mt-3 inline-flex h-10 items-center justify-center rounded-full border border-amber-300/40 px-4 text-xs font-black uppercase tracking-[0.12em] text-amber-100"
-        >
-          Katalog eşleştirmesi iste
-        </a>
+        {requestState ? (
+          <p className="mt-3 rounded-md border border-amber-300/20 bg-ats-black/45 px-3 py-2 text-sm font-semibold leading-6 text-ats-muted">
+            {requestState.body}
+          </p>
+        ) : null}
+        {requestState?.allowNewRequest === false ? null : (
+          <CatalogMatchRequestForm vehicle={vehicle} />
+        )}
       </div>
     );
   }
@@ -810,6 +831,105 @@ function BuildDiscoveryPanel({ vehicle }: { vehicle: GarageLifecycleVehicle }) {
         </Link>
       </div>
     </section>
+  );
+}
+
+function CatalogMatchRequestForm({ vehicle }: { vehicle: GarageLifecycleVehicle }) {
+  const router = useRouter();
+  const requestAction = requestVehicleCatalogMatchAction.bind(null, vehicle.id);
+  const [state, formAction, pending] = useActionState(
+    requestAction,
+    initialCatalogMatchRequestActionState,
+  );
+
+  useEffect(() => {
+    if (state.ok && state.requestId) {
+      router.refresh();
+    }
+  }, [router, state]);
+
+  return (
+    <form action={formAction} className="mt-3">
+      <CatalogMatchRequestSubmitButton pending={pending} />
+      {pending || state.message ? (
+        <p
+          className={`mt-3 text-sm font-semibold leading-6 ${
+            state.ok || pending ? "text-ats-blue" : "text-red-100"
+          }`}
+          aria-live="polite"
+        >
+          {pending ? "Talep gönderiliyor..." : state.message}
+        </p>
+      ) : null}
+    </form>
+  );
+}
+
+const initialCatalogMatchRequestActionState: CatalogMatchRequestActionState = {
+  ok: false,
+  code: null,
+  message: null,
+  requestId: null,
+  submittedAt: 0,
+};
+
+function catalogMatchRequestDisplay(request: GarageCatalogMatchRequest) {
+  if (!request) {
+    return null;
+  }
+
+  if (request.status === "PENDING") {
+    return {
+      badge: "Talep beklemede",
+      badgeClassName:
+        "rounded-full border border-amber-300/35 bg-amber-400/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-amber-100",
+      body: "Talebiniz ATS ekibine iletildi.",
+      allowNewRequest: false,
+    };
+  }
+
+  if (request.status === "IN_REVIEW") {
+    return {
+      badge: "İnceleniyor",
+      badgeClassName:
+        "rounded-full border border-ats-blue/40 bg-ats-blue/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-ats-blue",
+      body: "Aracınızın katalog uyumu ATS ekibi tarafından inceleniyor.",
+      allowNewRequest: false,
+    };
+  }
+
+  if (request.status === "REJECTED") {
+    return {
+      badge: "Talep sonuçlandırılamadı",
+      badgeClassName:
+        "rounded-full border border-red-300/35 bg-red-500/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-red-100",
+      body: "Talep sonuçlandırılamadı. Araç bilgilerinizi güncelleyip yeniden talep gönderebilirsiniz.",
+      allowNewRequest: true,
+    };
+  }
+
+  return {
+    badge: "Eşleştirme kontrolü gerekli",
+    badgeClassName:
+      "rounded-full border border-red-300/35 bg-red-500/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-red-100",
+    body: "Talep tamamlandı olarak işaretlenmiş ancak araç henüz katalogla eşleşmemiş görünüyor. ATS ekibi kontrol edecek.",
+    allowNewRequest: false,
+  };
+}
+
+function CatalogMatchRequestSubmitButton({ pending }: { pending: boolean }) {
+  const { pending: formPending } = useFormStatus();
+  const isPending = pending || formPending;
+
+  return (
+    <button
+      type="submit"
+      disabled={isPending}
+      aria-busy={isPending}
+      className="inline-flex h-10 items-center justify-center rounded-full border border-amber-300/40 px-4 text-xs font-black uppercase tracking-[0.12em] text-amber-100 transition hover:bg-amber-300/10 disabled:cursor-wait disabled:border-ats-border disabled:text-ats-muted"
+    >
+      {isPending ? "Talep gönderiliyor..." : "Katalog eşleştirmesi iste"}
+    </button>
   );
 }
 

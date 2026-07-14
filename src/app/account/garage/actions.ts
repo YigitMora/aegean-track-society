@@ -1,8 +1,14 @@
 "use server";
 
 import { Prisma } from "@prisma/client";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import {
+  createCatalogMatchRequestForMember,
+  recordCatalogRequestAdminNotificationResult,
+} from "@/lib/catalog-match-requests";
+import { sendCatalogMatchRequestAdminEmail } from "@/lib/email";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { normalizeMemberReturnTo } from "@/lib/member-auth";
 import { prisma } from "@/lib/prisma";
@@ -85,16 +91,30 @@ export type VehicleRatingPreviewState = {
   submittedAt: number;
 };
 
+export type CatalogMatchRequestActionState = {
+  ok: boolean;
+  code:
+    | null
+    | "invalid_vehicle"
+    | "vehicle_not_found"
+    | "vehicle_not_active"
+    | "vehicle_already_matched"
+    | "request_already_open"
+    | "failed";
+  message: string | null;
+  requestId: string | null;
+  submittedAt: number;
+};
+
 export async function createVehicleAction(formData: FormData) {
   const memberUser = await requireCompleteMemberUser("/account/garage/new");
-  const returnTo = vehicleCreateSuccessReturnTo(
-    normalizeMemberReturnTo(formData.get("returnTo")),
-  );
   const parsed = parseVehicleForm(formData);
 
   if (!parsed.ok) {
     redirectWithError("/account/garage/new", "invalid");
   }
+
+  let redirectPath: string | null = null;
 
   try {
     const result = await createGarageVehicle({
@@ -103,14 +123,19 @@ export async function createVehicleAction(formData: FormData) {
     });
 
     if (!result.ok) {
-      redirectWithError("/account/garage/new", result.code);
+      if (result.code === "duplicate_plate" && result.existingVehicleId) {
+        redirectPath = `${garagePath}/${result.existingVehicleId}?garage=duplicate_opened`;
+      } else {
+        redirectWithError("/account/garage/new", result.code);
+      }
+    } else {
+      console.log("GARAGE_VEHICLE_CREATED", {
+        userId: memberUser.id,
+        vehicleId: result.vehicleId,
+        operation: "create",
+      });
+      redirectPath = `${garagePath}/${result.vehicleId}?garage=created`;
     }
-
-    console.log("GARAGE_VEHICLE_CREATED", {
-      userId: memberUser.id,
-      vehicleId: result.vehicleId,
-      operation: "create",
-    });
   } catch (error) {
     if (isRedirectError(error)) {
       throw error;
@@ -121,13 +146,69 @@ export async function createVehicleAction(formData: FormData) {
   }
 
   revalidateGarage();
-  revalidatePath(returnTo);
-
-  if (returnTo !== garagePath) {
-    redirect(returnTo);
+  if (redirectPath) {
+    revalidatePath(redirectPath);
+    redirect(redirectPath);
   }
 
-  redirect(`${garagePath}?garage=created`);
+  redirectWithError("/account/garage/new", "failed");
+}
+
+export async function requestVehicleCatalogMatchAction(
+  vehicleId: string,
+  _state: CatalogMatchRequestActionState,
+  formData: FormData,
+): Promise<CatalogMatchRequestActionState> {
+  const memberUser = await requireCompleteMemberUser(garagePath);
+  const ipAddress = await getActionIpAddress();
+  const memberNote = normalizeOptionalText(formData.get("memberNote"), 500);
+
+  try {
+    const result = await createCatalogMatchRequestForMember({
+      userId: memberUser.id,
+      vehicleId,
+      memberNote,
+      ipAddress,
+    });
+
+    if (!result.ok) {
+      return catalogMatchRequestState({
+        code: result.code,
+        requestId: null,
+      });
+    }
+
+    if (!result.created) {
+      return catalogMatchRequestState({
+        ok: true,
+        code: "request_already_open",
+        requestId: result.requestId,
+      });
+    }
+
+    const emailResult = await sendCatalogMatchRequestAdminEmail(result.notification);
+    await recordCatalogRequestAdminNotificationResult({
+      requestId: result.requestId,
+      sent: emailResult.status === "sent",
+      ipAddress,
+    });
+
+    revalidateGarage();
+    revalidatePath(`${garagePath}/${vehicleId}`);
+
+    return catalogMatchRequestState({
+      ok: true,
+      code: null,
+      requestId: result.requestId,
+    });
+  } catch (error) {
+    logGarageFailure(memberUser.id, "catalog_match_request", error, vehicleId);
+
+    return catalogMatchRequestState({
+      code: "failed",
+      requestId: null,
+    });
+  }
 }
 
 export async function updateVehicleAction(vehicleId: string, formData: FormData) {
@@ -1357,14 +1438,6 @@ function redirectWithError(pathname: string, error: GarageError): never {
   redirect(`${url.pathname}${url.search}${url.hash}`);
 }
 
-function vehicleCreateSuccessReturnTo(returnTo: string) {
-  if (returnTo.startsWith("/events/") && returnTo.endsWith("/register")) {
-    return returnTo;
-  }
-
-  return garagePath;
-}
-
 function normalizeBatchDefinitionIds(formData: FormData) {
   const ids = formData
     .getAll("modificationDefinitionIds")
@@ -1373,6 +1446,70 @@ function normalizeBatchDefinitionIds(formData: FormData) {
     .filter(Boolean);
 
   return Array.from(new Set(ids));
+}
+
+function catalogMatchRequestState({
+  ok = false,
+  code,
+  requestId,
+}: {
+  ok?: boolean;
+  code: CatalogMatchRequestActionState["code"];
+  requestId: string | null;
+}): CatalogMatchRequestActionState {
+  return {
+    ok,
+    code,
+    requestId,
+    message: catalogMatchRequestMessage(code, ok),
+    submittedAt: Date.now(),
+  };
+}
+
+function catalogMatchRequestMessage(
+  code: CatalogMatchRequestActionState["code"],
+  ok: boolean,
+) {
+  if (ok && code === "request_already_open") {
+    return "Bu araç için katalog eşleştirme talebi zaten beklemede.";
+  }
+
+  if (ok) {
+    return "Talebiniz alındı. Araç bilgileri ATS ekibi tarafından incelenecek.";
+  }
+
+  if (code === "vehicle_already_matched") {
+    return "Bu araç zaten ATS kataloğuyla eşleşmiş.";
+  }
+
+  if (code === "vehicle_not_active") {
+    return "Arşivlenen araçlar için katalog eşleştirme talebi oluşturulamaz.";
+  }
+
+  if (code === "vehicle_not_found" || code === "invalid_vehicle") {
+    return "Araç bulunamadı.";
+  }
+
+  return "Talep oluşturulamadı. Lütfen tekrar deneyin.";
+}
+
+function normalizeOptionalText(value: FormDataEntryValue | null, maxLength: number) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim();
+
+  return normalized ? normalized.slice(0, maxLength) : null;
+}
+
+async function getActionIpAddress() {
+  const headerStore = await headers();
+  const forwardedFor = headerStore.get("x-forwarded-for");
+  const realIp = headerStore.get("x-real-ip");
+  const ip = forwardedFor?.split(",")[0]?.trim() || realIp?.trim();
+
+  return ip || null;
 }
 
 function normalizeVehicleIds(formData: FormData) {

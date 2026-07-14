@@ -54,6 +54,14 @@ export async function AdminShell({ title, eyebrow, actions, children }: AdminShe
                 Üyeler
               </Link>
             ) : null}
+            {isOwner ? (
+              <Link
+                href="/admin/catalog-requests"
+                className="rounded-full border border-white/15 px-4 py-2 text-white/75 transition hover:border-white hover:text-white"
+              >
+                Katalog Talepleri
+              </Link>
+            ) : null}
             {canManageCheckIn ? (
               <Link
                 href="/admin/check-in"

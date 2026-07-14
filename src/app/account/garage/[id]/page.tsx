@@ -19,6 +19,7 @@ import {
 } from "@/components/vehicle-modification-batch-selector";
 import { VehiclePerformanceRatingCard } from "@/components/vehicle-rating-card";
 import { VehicleImageSubmitButton } from "@/components/vehicle-image-submit-button";
+import { getRecentCatalogMatchCompletionNotices } from "@/lib/catalog-match-requests";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { prisma } from "@/lib/prisma";
 import { measureServerTiming } from "@/lib/server-timing";
@@ -138,7 +139,7 @@ export default async function EditVehiclePage({
   const coverImageUrl = await measureServerTiming("GARAGE_SIGNED_URLS", () =>
     createOwnedVehicleImageSignedUrl(vehicle, memberUser.id),
   );
-  const [catalog, vehicleDefinitions] = await Promise.all([
+  const [catalog, vehicleDefinitions, completionNotices] = await Promise.all([
     prisma.modificationDefinition.findMany({
       where: {
         active: true,
@@ -172,6 +173,11 @@ export default async function EditVehiclePage({
         },
       ],
       select: vehicleDefinitionTemplateSelect,
+    }),
+    getRecentCatalogMatchCompletionNotices({
+      userId: memberUser.id,
+      vehicleId: vehicle.id,
+      limit: 1,
     }),
   ]);
   const safeVehicleDefinitions = safeVehicleDefinitionSuggestions(
@@ -225,6 +231,8 @@ export default async function EditVehiclePage({
           {vehicle.brand} {vehicle.model} · {vehicle.plateNumber}
         </p>
       </div>
+
+      <CatalogCompletionNotice notices={completionNotices} />
 
       <VehicleMessage
         build={query.build}
@@ -609,6 +617,32 @@ function VehicleCoverPanel({
   );
 }
 
+function CatalogCompletionNotice({
+  notices,
+}: {
+  notices: Awaited<ReturnType<typeof getRecentCatalogMatchCompletionNotices>>;
+}) {
+  if (notices.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mb-5 rounded-md border border-emerald-300/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold leading-6 text-emerald-100">
+      <p className="font-black">Katalog eşleştirmeniz tamamlandı.</p>
+      <p className="mt-1 text-emerald-100/85">
+        Aracınız için ATS Rating ve uyumlu modifikasyon özellikleri artık
+        kullanılabilir.
+      </p>
+      <Link
+        href="#build-profile"
+        className="mt-3 inline-flex h-10 items-center justify-center rounded-full border border-emerald-200/50 px-4 text-xs font-black uppercase tracking-[0.12em] text-emerald-100 transition hover:bg-emerald-200 hover:text-ats-black"
+      >
+        Build Profilini Aç
+      </Link>
+    </div>
+  );
+}
+
 function VehicleMessage({
   build,
   garage,
@@ -642,6 +676,14 @@ function VehicleMessage({
 }
 
 function successMessage(value?: string) {
+  if (value === "created") {
+    return "Araç garajınıza eklendi.";
+  }
+
+  if (value === "duplicate_opened") {
+    return "Bu araç zaten garajınızda. Mevcut araç kaydı açıldı.";
+  }
+
   if (value === "image_uploaded") {
     return "Araç fotoğrafı eklendi.";
   }

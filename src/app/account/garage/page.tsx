@@ -3,6 +3,7 @@ import {
   GarageVehicleLifecycle,
   type GarageLifecycleVehicle,
 } from "@/components/garage-vehicle-lifecycle";
+import { getRecentCatalogMatchCompletionNotices } from "@/lib/catalog-match-requests";
 import {
   MAX_ACTIVE_GARAGE_VEHICLES,
   MAX_ARCHIVED_GARAGE_VEHICLES,
@@ -90,8 +91,21 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
       },
       select: vehicleRatingModificationSelect,
     },
+    catalogMatchRequests: {
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 1,
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        resolvedAt: true,
+      },
+    },
   } as const;
-  const [activeVehicles, archivedVehicles] = await measureServerTiming(
+  const [activeVehicles, archivedVehicles, completionNotices] = await measureServerTiming(
     "GARAGE_QUERY",
     () =>
       Promise.all([
@@ -124,6 +138,9 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
             deletedAt: "desc",
           },
           select: vehicleSelect,
+        }),
+        getRecentCatalogMatchCompletionNotices({
+          userId: memberUser.id,
         }),
       ]),
   );
@@ -202,6 +219,8 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
         <p>Arşiv: {archivedCapacity.count} / {archivedCapacity.max}</p>
       </div>
 
+      <CatalogCompletionNoticePanel notices={completionNotices} />
+
       <GarageCatalogSupportPanel vehicles={activeLifecycleVehicles} />
 
       <GarageMessage garage={params.garage} garageError={params.garageError} />
@@ -228,6 +247,13 @@ function toGarageLifecycleVehicle(vehicle: {
   vehicleDefinitionId: string | null;
   vehicleDefinition: Parameters<typeof calculateVehiclePerformanceRating>[0]["vehicleDefinition"];
   modifications: Parameters<typeof calculateVehiclePerformanceRating>[0]["installedModifications"];
+  catalogMatchRequests: Array<{
+    id: string;
+    status: NonNullable<GarageLifecycleVehicle["catalogMatchRequest"]>["status"];
+    createdAt: Date;
+    updatedAt: Date;
+    resolvedAt: Date | null;
+  }>;
 }): GarageLifecycleVehicle {
   const rating = calculateVehiclePerformanceRating({
     vehicleDefinition: vehicle.vehicleDefinition,
@@ -245,6 +271,15 @@ function toGarageLifecycleVehicle(vehicle: {
     coverImageUrl: vehicle.coverImageUrl,
     vehicleDefinitionId: vehicle.vehicleDefinitionId,
     modificationCount: vehicle.modifications.length,
+    catalogMatchRequest: vehicle.catalogMatchRequests[0]
+      ? {
+          id: vehicle.catalogMatchRequests[0].id,
+          status: vehicle.catalogMatchRequests[0].status,
+          createdAt: vehicle.catalogMatchRequests[0].createdAt.toISOString(),
+          updatedAt: vehicle.catalogMatchRequests[0].updatedAt.toISOString(),
+          resolvedAt: vehicle.catalogMatchRequests[0].resolvedAt?.toISOString() ?? null,
+        }
+      : null,
     rating: rating
       ? {
           overall: rating.overall,
@@ -258,6 +293,34 @@ function toGarageLifecycleVehicle(vehicle: {
         }
       : null,
   };
+}
+
+function CatalogCompletionNoticePanel({
+  notices,
+}: {
+  notices: Awaited<ReturnType<typeof getRecentCatalogMatchCompletionNotices>>;
+}) {
+  if (notices.length === 0) {
+    return null;
+  }
+
+  const notice = notices[0];
+
+  return (
+    <div className="mt-6 rounded-md border border-emerald-300/30 bg-emerald-500/10 p-4 text-sm font-semibold leading-6 text-emerald-100">
+      <p className="font-black">Katalog eşleştirmeniz tamamlandı.</p>
+      <p className="mt-2 text-emerald-100/85">
+        {notice.vehicleLabel} için ATS Rating ve uyumlu modifikasyon özellikleri artık
+        kullanılabilir.
+      </p>
+      <Link
+        href={notice.href}
+        className="mt-3 inline-flex h-10 items-center justify-center rounded-full border border-emerald-200/50 px-4 text-xs font-black uppercase tracking-[0.12em] text-emerald-100 transition hover:bg-emerald-200 hover:text-ats-black"
+      >
+        Build Profilini Aç
+      </Link>
+    </div>
+  );
 }
 
 function GarageCatalogSupportPanel({
@@ -323,6 +386,10 @@ function successMessage(value?: string) {
     return "Araç garajınıza eklendi.";
   }
 
+  if (value === "duplicate_opened") {
+    return "Bu araç zaten garajınızda. Mevcut araç kaydı açıldı.";
+  }
+
   if (value === "updated") {
     return "Araç bilgileri güncellendi.";
   }
@@ -368,7 +435,7 @@ function successMessage(value?: string) {
 
 function errorMessage(value?: string) {
   if (value === "active_vehicle_limit_reached") {
-    return "Garajınızda en fazla 5 aktif araç bulunabilir. Arşivdeki aracı geri yüklemek için önce aktif araçlardan birini arşivleyin.";
+    return "Garaj kapasiteniz dolu.";
   }
 
   if (value === "archived_vehicle_limit_reached") {

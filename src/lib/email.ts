@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { buildAppUrl } from "./app-url";
 import { buildCheckInUrl, generateQrPngBase64 } from "./qr";
 
 type BaseRegistrationEmailInput = {
@@ -26,6 +27,27 @@ type RegistrationApprovedEmailInput = BaseRegistrationEmailInput & {
 
 type RegistrationRejectedEmailInput = BaseRegistrationEmailInput & {
   reason: string;
+};
+
+export type CatalogMatchRequestAdminEmailInput = {
+  requestId: string;
+  memberDisplayName: string;
+  memberEmail: string;
+  vehicleBrand: string;
+  vehicleModel: string;
+  vehicleYear: number | null;
+  plateNumber: string;
+  createdAt: Date;
+};
+
+export type CatalogMatchCompletedMemberEmailInput = {
+  to: string;
+  memberDisplayName: string;
+  vehicleId: string;
+  vehicleBrand: string;
+  vehicleModel: string;
+  vehicleYear: number | null;
+  plateNumber: string;
 };
 
 type ConfirmationEmailInput = Required<
@@ -149,6 +171,40 @@ export async function sendRegistrationRejectedEmail(
   });
 }
 
+export async function sendCatalogMatchRequestAdminEmail(
+  input: CatalogMatchRequestAdminEmailInput,
+) {
+  const adminRecipient = getCatalogRequestNotificationRecipient();
+
+  if (!adminRecipient) {
+    logEmailSkipped("catalog_match_request_admin", "admin_recipient_missing");
+    return {
+      status: "skipped",
+      reason: "config_missing",
+    } satisfies SendEmailResult;
+  }
+
+  return sendOperationalEmail({
+    type: "catalog_match_request_admin",
+    to: adminRecipient,
+    subject: `Yeni katalog eşleştirme talebi: ${catalogVehicleTitle(input)}`,
+    html: buildCatalogMatchRequestAdminHtml(input),
+    text: buildCatalogMatchRequestAdminText(input),
+  });
+}
+
+export async function sendCatalogMatchCompletedMemberEmail(
+  input: CatalogMatchCompletedMemberEmailInput,
+) {
+  return sendOperationalEmail({
+    type: "catalog_match_completed_member",
+    to: input.to,
+    subject: "Aracınız ATS kataloğuyla eşleştirildi",
+    html: buildCatalogMatchCompletedMemberHtml(input),
+    text: buildCatalogMatchCompletedMemberText(input),
+  });
+}
+
 export async function sendConfirmationEmail(input: ConfirmationEmailInput) {
   return sendRegistrationApprovedEmail(input);
 }
@@ -238,6 +294,14 @@ function getAdminNotificationRecipient() {
   return process.env.ADMIN_NOTIFICATION_EMAIL?.trim() || process.env.ADMIN_EMAIL?.trim() || null;
 }
 
+function getCatalogRequestNotificationRecipient() {
+  return (
+    process.env.CATALOG_REQUEST_NOTIFICATION_EMAIL?.trim() ||
+    process.env.ADMIN_EMAIL?.trim() ||
+    null
+  );
+}
+
 function logEmailSkipped(type: string, reason: string) {
   console.warn("EMAIL_SKIPPED_CONFIG_MISSING", {
     type,
@@ -246,6 +310,7 @@ function logEmailSkipped(type: string, reason: string) {
     hasEmailFrom: Boolean(process.env.EMAIL_FROM?.trim()),
     hasResendApiKey: Boolean(process.env.RESEND_API_KEY?.trim()),
     hasAdminRecipient: Boolean(getAdminNotificationRecipient()),
+    hasCatalogRequestRecipient: Boolean(getCatalogRequestNotificationRecipient()),
   });
 }
 
@@ -517,6 +582,76 @@ function buildRegistrationRejectedText(input: RegistrationRejectedEmailInput) {
   ].join("\n");
 }
 
+function buildCatalogMatchRequestAdminHtml(
+  input: CatalogMatchRequestAdminEmailInput,
+) {
+  const adminUrl = buildAppUrl(`/admin/catalog-requests/${input.requestId}`);
+
+  return emailShell(`
+    <h1 style="margin:0 0 18px;font-size:28px;line-height:1.12;color:#05070a;">Yeni katalog eşleştirme talebi.</h1>
+    ${detailsTable([
+      ["Üye", input.memberDisplayName],
+      ["Üye e-postası", input.memberEmail],
+      ["Araç", catalogVehicleTitle(input)],
+      ["Plaka", input.plateNumber],
+      ["Talep zamanı", formatEmailDateTime(input.createdAt)],
+    ])}
+    <p style="margin:24px 0 0;">
+      <a href="${escapeHtml(adminUrl)}" style="display:inline-block;border-radius:999px;background:#4CC9F0;color:#05070a;font-weight:800;text-decoration:none;padding:12px 18px;">Talebi admin panelde aç</a>
+    </p>
+  `);
+}
+
+function buildCatalogMatchRequestAdminText(
+  input: CatalogMatchRequestAdminEmailInput,
+) {
+  return [
+    "Yeni katalog eşleştirme talebi.",
+    "",
+    `Üye: ${input.memberDisplayName}`,
+    `Üye e-postası: ${input.memberEmail}`,
+    `Araç: ${catalogVehicleTitle(input)}`,
+    `Plaka: ${input.plateNumber}`,
+    `Talep zamanı: ${formatEmailDateTime(input.createdAt)}`,
+    `Admin panel: ${buildAppUrl(`/admin/catalog-requests/${input.requestId}`)}`,
+  ].join("\n");
+}
+
+function buildCatalogMatchCompletedMemberHtml(
+  input: CatalogMatchCompletedMemberEmailInput,
+) {
+  const garageUrl = buildAppUrl(`/account/garage/${input.vehicleId}`);
+
+  return emailShell(`
+    <p style="margin:0 0 18px;font-size:16px;color:#111827;">Merhaba ${escapeHtml(input.memberDisplayName)},</p>
+    <h1 style="margin:0 0 18px;font-size:28px;line-height:1.12;color:#05070a;">Aracınız ATS kataloğuyla eşleştirildi.</h1>
+    <p style="margin:0 0 22px;color:#374151;">Aracınız ATS kataloğuyla başarıyla eşleştirildi. Artık ATS Rating değerini görüntüleyebilir, uyumlu modifikasyonları build profilinize ekleyebilir ve projected rating değişimini inceleyebilirsiniz.</p>
+    ${detailsTable([
+      ["Araç", catalogVehicleTitle(input)],
+      ["Plaka", input.plateNumber],
+    ])}
+    <p style="margin:24px 0 0;">
+      <a href="${escapeHtml(garageUrl)}" style="display:inline-block;border-radius:999px;background:#4CC9F0;color:#05070a;font-weight:800;text-decoration:none;padding:12px 18px;">Build profilini aç</a>
+    </p>
+  `);
+}
+
+function buildCatalogMatchCompletedMemberText(
+  input: CatalogMatchCompletedMemberEmailInput,
+) {
+  return [
+    "Aegean Track Society",
+    "",
+    `Merhaba ${input.memberDisplayName}`,
+    "Aracınız ATS kataloğuyla başarıyla eşleştirildi. Artık ATS Rating değerini görüntüleyebilir, uyumlu modifikasyonları build profilinize ekleyebilir ve projected rating değişimini inceleyebilirsiniz.",
+    `Araç: ${catalogVehicleTitle(input)}`,
+    `Plaka: ${input.plateNumber}`,
+    `Build profili: ${buildAppUrl(`/account/garage/${input.vehicleId}`)}`,
+    "",
+    ...contactFooterText(),
+  ].join("\n");
+}
+
 function emailShell(content: string) {
   return `
     <div style="margin:0;padding:0;background:#f5f7f8;">
@@ -581,13 +716,25 @@ function contactFooterText() {
 }
 
 function buildAdminRegistrationUrl(registrationId: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "";
+  return buildAppUrl(`/admin/participants/${registrationId}`);
+}
 
-  if (!baseUrl) {
-    return `/admin/participants/${registrationId}`;
-  }
+function catalogVehicleTitle(input: {
+  vehicleBrand: string;
+  vehicleModel: string;
+  vehicleYear: number | null;
+}) {
+  return [input.vehicleBrand, input.vehicleModel, input.vehicleYear]
+    .filter(Boolean)
+    .join(" ");
+}
 
-  return `${baseUrl.replace(/\/$/, "")}/admin/participants/${registrationId}`;
+function formatEmailDateTime(date: Date) {
+  return new Intl.DateTimeFormat("tr-TR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/Istanbul",
+  }).format(date);
 }
 
 function safeErrorMessage(error: unknown) {
