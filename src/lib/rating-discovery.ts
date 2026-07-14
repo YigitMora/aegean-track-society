@@ -1,6 +1,7 @@
 import "server-only";
 
 import { ModificationCategory, Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 import { getOptionalAuthenticatedMemberIdentity } from "@/lib/member-auth";
 import { prisma } from "@/lib/prisma";
 import {
@@ -24,6 +25,7 @@ import {
   type RatingComponentKey,
   type RatingDeltaTone,
 } from "@/lib/vehicle-rating-deltas";
+import { ratingToneForScore } from "@/lib/vehicle-rating-tone";
 
 export const ratingDiscoveryDisclaimer =
   "ATS Rating, araç ve build'leri karşılaştırmaya yardımcı olan tahmini bir değerlendirmedir; dyno veya resmi tur zamanı değildir.";
@@ -58,6 +60,24 @@ export type RatingDiscoveryBannerData = {
 export type RatingDiscoveryCatalogShowcase = {
   categoryChips: string[];
   brandChips: string[];
+};
+
+export type StockRatingLeaderboardSignal = {
+  key: RatingComponentKey;
+  label: string;
+  value: number;
+};
+
+export type StockRatingLeaderboardEntry = {
+  rank: number;
+  code: string;
+  brand: string;
+  model: string;
+  subtitle: string;
+  overall: number;
+  status: VehiclePerformanceRating["status"];
+  tierLabel: string;
+  strongestComponents: StockRatingLeaderboardSignal[];
 };
 
 export type RatingDiscoveryDemoPart = {
@@ -499,16 +519,72 @@ export async function getRatingDiscoveryHomepageContent() {
 }
 
 export async function getRatingDiscoveryShowcaseContent() {
-  const [demo, catalog] = await Promise.all([
+  const [demo, catalog, stockTopTen] = await Promise.all([
     getFocusRsRatingDiscoveryDemo(),
     getRatingDiscoveryCatalogShowcase(),
+    getStockRatingTopTen(),
   ]);
 
   return {
     demo,
     catalog,
+    stockTopTen,
   };
 }
+
+export const getStockRatingTopTen = unstable_cache(
+  async (): Promise<StockRatingLeaderboardEntry[]> => {
+    const vehicleDefinitions = await prisma.vehicleDefinition.findMany({
+      where: {
+        active: true,
+        ratingStatus: {
+          not: "UNAVAILABLE",
+        },
+      },
+      select: vehicleDefinitionRatingSelect,
+    });
+    const rows = vehicleDefinitions.flatMap((vehicleDefinition) => {
+      const rating = calculateVehiclePerformanceRating({
+        vehicleDefinition,
+        installedModifications: [],
+      });
+
+      if (!rating) {
+        return [];
+      }
+
+      return [{
+        vehicleDefinition,
+        rating,
+      }];
+    });
+
+    return rows
+      .sort((first, second) =>
+        second.rating.overall - first.rating.overall ||
+        second.rating.trackReadiness - first.rating.trackReadiness ||
+        second.rating.handling - first.rating.handling ||
+        first.vehicleDefinition.code.localeCompare(second.vehicleDefinition.code),
+      )
+      .slice(0, 10)
+      .map(({ vehicleDefinition, rating }, index) => ({
+        rank: index + 1,
+        code: vehicleDefinition.code,
+        brand: vehicleDefinition.brand,
+        model: vehicleDefinition.model,
+        subtitle: formatStockLeaderboardSubtitle(vehicleDefinition),
+        overall: rating.overall,
+        status: rating.status,
+        tierLabel: ratingToneForScore(rating.overall).label,
+        strongestComponents: strongestStockRatingComponents(rating),
+      }));
+  },
+  ["rating-discovery-stock-top-ten-v1"],
+  {
+    revalidate: 60 * 60 * 6,
+    tags: ["rating-discovery-stock-top-ten", "vehicle-definitions"],
+  },
+);
 
 async function getHomepageRatingDiscoveryState(): Promise<RatingDiscoveryState> {
   const identity = await getOptionalAuthenticatedMemberIdentity();
@@ -907,4 +983,43 @@ function fitmentLabelForDemoPart(
   }
 
   return "Genel build profili kategorisi";
+}
+
+function formatStockLeaderboardSubtitle(vehicleDefinition: DemoVehicleDefinition) {
+  return [
+    vehicleDefinition.generation,
+    vehicleDefinition.variant,
+    formatYearRange(vehicleDefinition.yearFrom, vehicleDefinition.yearTo),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function formatYearRange(yearFrom: number | null, yearTo: number | null) {
+  if (!yearFrom && !yearTo) {
+    return null;
+  }
+
+  if (yearFrom && yearTo) {
+    return `${yearFrom}-${yearTo}`;
+  }
+
+  if (yearFrom) {
+    return `${yearFrom}+`;
+  }
+
+  return `-${yearTo}`;
+}
+
+function strongestStockRatingComponents(
+  rating: VehiclePerformanceRating,
+): StockRatingLeaderboardSignal[] {
+  return ratingComponentRows
+    .map(([label, key]) => ({
+      key,
+      label,
+      value: Math.round(rating[key]),
+    }))
+    .sort((first, second) => second.value - first.value || first.label.localeCompare(second.label))
+    .slice(0, 2);
 }
