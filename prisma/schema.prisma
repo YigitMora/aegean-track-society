@@ -180,6 +180,13 @@ enum VehicleRatingStatus {
   UNAVAILABLE
 }
 
+enum VehicleCatalogMatchRequestStatus {
+  PENDING
+  IN_REVIEW
+  COMPLETED
+  REJECTED
+}
+
 enum EngineInductionType {
   NATURALLY_ASPIRATED
   TURBOCHARGED
@@ -365,6 +372,7 @@ model AdminUser {
   checkIns             CheckIn[]
   auditLogs            AuditLog[]
   adminNotes           AdminNote[]
+  resolvedCatalogMatchRequests VehicleCatalogMatchRequest[] @relation("CatalogMatchRequestResolver")
   deletedRegistrations Registration[] @relation("RegistrationDeletedBy")
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
@@ -445,6 +453,7 @@ model User {
   memberConsentIpAddress          String?        @db.VarChar(45)
   profile                         MemberProfile?
   vehicles                        Vehicle[]
+  vehicleCatalogMatchRequests     VehicleCatalogMatchRequest[]
   registrations                   Registration[]
   createdAt                       DateTime       @default(now())
   updatedAt                       DateTime       @updatedAt
@@ -469,6 +478,7 @@ model Vehicle {
   deletedAt           DateTime?
   registrations       Registration[]
   modifications       VehicleModification[]
+  catalogMatchRequests VehicleCatalogMatchRequest[]
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
@@ -476,6 +486,34 @@ model Vehicle {
   @@index([userId, isPrimary, deletedAt])
   @@index([vehicleDefinitionId])
   @@index([plateNumber])
+}
+
+model VehicleCatalogMatchRequest {
+  id                        String                           @id @default(cuid())
+  userId                    String                           @db.Uuid
+  user                      User                             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  vehicleId                 String?
+  vehicle                   Vehicle?                         @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  status                    VehicleCatalogMatchRequestStatus @default(PENDING)
+  memberNote                String?                          @db.Text
+  adminNote                 String?                          @db.Text
+  resolvedByAdminUserId     String?
+  resolvedByAdminUser       AdminUser?                       @relation("CatalogMatchRequestResolver", fields: [resolvedByAdminUserId], references: [id], onDelete: SetNull)
+  resolvedAt                DateTime?
+  memberNotifiedAt          DateTime?
+  adminNotificationEmailSentAt DateTime?
+  adminNotificationEmailFailedAt DateTime?
+  memberNotificationEmailSentAt DateTime?
+  memberNotificationEmailFailedAt DateTime?
+  createdAt                 DateTime                         @default(now())
+  updatedAt                 DateTime                         @updatedAt
+
+  @@index([vehicleId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([resolvedByAdminUserId])
 }
 
 model VehicleDefinition {
