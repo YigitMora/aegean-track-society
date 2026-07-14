@@ -39,6 +39,7 @@ const checks = [
     name: "demo uses centralized rating calculation",
     pass:
       files.data.includes("calculateVehiclePerformanceRating") &&
+      files.data.includes("getStockRatingTopTen") &&
       !files.demo.includes("powerRating +") &&
       !files.hero.includes("powerRating +"),
   },
@@ -84,7 +85,8 @@ const checks = [
       files.homepage.lastIndexOf("RealPartsCloud") <
         files.homepage.lastIndexOf("RatingDiscoverySteps") &&
       files.homepage.lastIndexOf("RatingDiscoverySteps") <
-        files.homepage.lastIndexOf("Hazırsan"),
+        files.homepage.lastIndexOf("Hazırsan") &&
+      files.homepage.includes("stockTopTen={ratingDiscovery.stockTopTen}"),
   },
   {
     name: "garage does not render full promotional discovery sections",
@@ -148,7 +150,8 @@ const checks = [
     pass:
       files.bars.includes('role="meter"') &&
       files.bars.includes("aria-valuenow") &&
-      files.demo.includes('role="img"') &&
+      files.demo.includes('aria-labelledby="stock-rating-top-ten-title"') &&
+      files.demo.includes("aria-label={`ATS ${entry.overall}") &&
       files.hero.includes("focus:ring"),
   },
   {
@@ -159,11 +162,33 @@ const checks = [
       files.steps.includes("motion-reduce"),
   },
   {
-    name: "vehicle artwork uses local future asset slot only",
+    name: "stock top 10 replaces the old decorative visual area",
     pass:
-      files.demo.includes("public/images/rating-demo/focus-rs-mk3.webp") &&
+      files.demo.includes("Stock ATS Rating Top 10") &&
+      files.demo.includes("Live catalog") &&
+      !files.demo.includes("public/images/rating-demo/focus-rs-mk3.webp") &&
       !files.demo.includes("http://") &&
       !files.demo.includes("https://"),
+  },
+  {
+    name: "stock top 10 is cached and dynamically sorted",
+    pass:
+      files.data.includes("unstable_cache") &&
+      files.data.includes('active: true') &&
+      files.data.includes('not: "UNAVAILABLE"') &&
+      files.data.includes("installedModifications: []") &&
+      files.data.includes("second.rating.trackReadiness") &&
+      files.data.includes("second.rating.handling") &&
+      files.data.includes("localeCompare"),
+  },
+  {
+    name: "Focus RS title is integrated with the right-side demo",
+    pass:
+      files.demo.includes("{demo.vehicleLabel}") &&
+      files.demo.includes("{demo.vehicleSubtitle} · {demo.presentationLabel}") &&
+      files.demo.includes("ATS PERFORMANCE INDEX") &&
+      files.demo.includes("order-1") &&
+      files.demo.includes("lg:order-2"),
   },
   {
     name: "no hardcoded 78 to 86 final result",
