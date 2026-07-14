@@ -220,6 +220,15 @@ const sprint4UEliteVehicleCodes = new Set(sprint4UEliteRows.map((row) => row.cod
 sprint4UEliteRows.forEach((row) => {
   row.notes.push("Sprint 4U elite stock reference; centralized rating remains authoritative.");
 });
+const productionCatalogExpansionRows = extractVehicleRows(
+  "productionCatalogExpansionVehicleDefinitions",
+);
+const productionCatalogExpansionVehicleCodes = new Set(
+  productionCatalogExpansionRows.map((row) => row.code),
+);
+productionCatalogExpansionRows.forEach((row) => {
+  row.notes.push("Production catalog breadth expansion; conservative provisional baseline.");
+});
 
 const vehicleRows = [
   ...extractVehicleRows("baseVehicleDefinitions"),
@@ -231,6 +240,7 @@ const vehicleRows = [
   ...sprint4UAlfaRomeoRows,
   ...sprint4UDailyPerformanceRows,
   ...sprint4UEliteRows,
+  ...productionCatalogExpansionRows,
 ].sort((a, b) => a.sortOrder - b.sortOrder || a.code.localeCompare(b.code));
 
 const auditIssues = [
@@ -780,6 +790,9 @@ function renderAuditDocument(rows: VehicleAuditRow[], issues: AuditIssue[]) {
     sprint4UDailyPerformanceVehicleCodes.has(row.code),
   );
   const sprint4UEliteRows = rows.filter((row) => sprint4UEliteVehicleCodes.has(row.code));
+  const productionCatalogExpansionRows = rows.filter((row) =>
+    productionCatalogExpansionVehicleCodes.has(row.code),
+  );
   const eliteCandidateRows = rows.filter((row) => isEliteFactoryTrackCandidate(row));
   const stock90Count = rows.filter((row) => row.overall >= 90).length;
   const stock95Count = rows.filter((row) => row.overall >= 95).length;
@@ -845,6 +858,10 @@ function renderAuditDocument(rows: VehicleAuditRow[], issues: AuditIssue[]) {
     "## Sprint 4U Elite Templates",
     "",
     renderVehicleTable(sprint4UEliteRows),
+    "",
+    "## Production Catalog Expansion Templates",
+    "",
+    renderVehicleTable(productionCatalogExpansionRows),
     "",
     "## Sprint 4O Hierarchy Checks",
     "",
@@ -1450,6 +1467,10 @@ function initialNotesForCode(code: string) {
 
   if (sprint4PVehicleCodes.has(code)) {
     return ["Sprint 4P daily template; official source trail documented as provisional."];
+  }
+
+  if (productionCatalogExpansionVehicleCodes.has(code)) {
+    return ["Production catalog breadth expansion; conservative provisional baseline."];
   }
 
   return [];
