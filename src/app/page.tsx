@@ -270,7 +270,10 @@ export default async function HomePage() {
             state={ratingDiscovery.state}
             demo={ratingDiscovery.demo}
           />
-          <BuildImpactDemo demo={ratingDiscovery.demo} />
+          <BuildImpactDemo
+            demo={ratingDiscovery.demo}
+            stockTopTen={ratingDiscovery.stockTopTen}
+          />
           <RealPartsCloud catalog={ratingDiscovery.catalog} />
           <RatingDiscoverySteps />
         </div>
