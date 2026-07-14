@@ -3,10 +3,12 @@ import {
   VehicleTemplateFields,
   type VehicleTemplateOption,
 } from "@/components/vehicle-template-fields";
+import { VehicleSubmitButton } from "@/components/vehicle-submit-button";
 
 type VehicleFormProps = {
   action: (formData: FormData) => void | Promise<void>;
   submitLabel: string;
+  pendingSubmitLabel?: string;
   vehicle?: {
     vehicleDefinitionId?: string | null;
     brand: string;
@@ -25,6 +27,7 @@ type VehicleFormProps = {
 export function VehicleForm({
   action,
   submitLabel,
+  pendingSubmitLabel = "Kaydediliyor...",
   vehicle,
   showPrimaryOption = false,
   returnTo = "/account/garage",
@@ -72,12 +75,9 @@ export function VehicleForm({
         </label>
       ) : null}
 
-      <button
-        type="submit"
-        className="mt-8 inline-flex h-12 items-center justify-center rounded-full bg-ats-blue px-6 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover focus:outline-none focus:ring-2 focus:ring-ats-blue/40"
-      >
+      <VehicleSubmitButton pendingLabel={pendingSubmitLabel}>
         {submitLabel}
-      </button>
+      </VehicleSubmitButton>
     </form>
   );
 }

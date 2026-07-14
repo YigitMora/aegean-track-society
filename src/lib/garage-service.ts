@@ -40,6 +40,7 @@ export type GarageServiceResult<T extends object = object> =
       ok: false;
       code: GarageServiceErrorCode;
       blockingModifications?: string[];
+      existingVehicleId?: string;
     };
 
 const memberActor: GarageActorContext = {
@@ -268,7 +269,9 @@ export async function createGarageVehicle({
     });
 
     if (duplicateVehicle) {
-      return garageFailure("duplicate_plate");
+      return garageFailure("duplicate_plate", {
+        existingVehicleId: duplicateVehicle.id,
+      });
     }
 
     const activePrimaryCount = await tx.vehicle.count({

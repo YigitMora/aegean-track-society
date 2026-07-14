@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/auth/actions";
 import { AccountRatingDemo } from "@/components/rating-discovery";
+import { getRecentCatalogMatchCompletionNotices } from "@/lib/catalog-match-requests";
 import { requireMemberUser } from "@/lib/member-auth";
 import { isMemberProfileComplete } from "@/lib/member-profile-validation";
 import { prisma } from "@/lib/prisma";
@@ -29,7 +30,12 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     redirect("/account/onboarding");
   }
 
-  const [activeVehicles, activeRegistrationCount, fl5AccountRatingDemo] =
+  const [
+    activeVehicles,
+    activeRegistrationCount,
+    fl5AccountRatingDemo,
+    completionNotices,
+  ] =
     await measureServerTiming("ACCOUNT_SUMMARY_QUERY", () =>
       Promise.all([
         prisma.vehicle.findMany({
@@ -69,6 +75,10 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           },
         }),
         getFl5AccountRatingDemo(),
+        getRecentCatalogMatchCompletionNotices({
+          userId: memberUser.id,
+          limit: 1,
+        }),
       ]),
     );
   const activeVehicleCount = activeVehicles.length;
@@ -114,6 +124,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               Profil bilgileriniz güncellendi.
             </p>
           ) : null}
+
+          <CatalogCompletionNotice notices={completionNotices} />
 
           <section className="rounded-lg border border-ats-border bg-ats-surface p-6 shadow-soft sm:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ats-muted">
@@ -207,6 +219,34 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         </div>
       </div>
     </section>
+  );
+}
+
+function CatalogCompletionNotice({
+  notices,
+}: {
+  notices: Awaited<ReturnType<typeof getRecentCatalogMatchCompletionNotices>>;
+}) {
+  if (notices.length === 0) {
+    return null;
+  }
+
+  const notice = notices[0];
+
+  return (
+    <div className="rounded-md border border-emerald-300/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold leading-6 text-emerald-100">
+      <p className="font-black">Katalog eşleştirmeniz tamamlandı.</p>
+      <p className="mt-1 text-emerald-100/85">
+        {notice.vehicleLabel} için ATS Rating ve uyumlu modifikasyon özellikleri artık
+        kullanılabilir.
+      </p>
+      <Link
+        href={notice.href}
+        className="mt-3 inline-flex h-10 items-center justify-center rounded-full border border-emerald-200/50 px-4 text-xs font-black uppercase tracking-[0.12em] text-emerald-100 transition hover:bg-emerald-200 hover:text-ats-black"
+      >
+        Build Profilini Aç
+      </Link>
+    </div>
   );
 }
 
