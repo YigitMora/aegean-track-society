@@ -58,15 +58,15 @@ function displayPackageName(name: string) {
 }
 
 const eventHeroImage = {
-  src: "/images/ats/FL5_Hero.jpg",
-  alt: "Kula MyTrack pist gününde Honda Civic Type R",
-  className: "object-[54%_46%] sm:object-[58%_48%]",
+  src: "/images/events/kula-mytrack-2026/event-hero-i20n.jpg",
+  alt: "Hyundai i20 N gün batımında Kula MyTrack pistinde",
+  className: "object-[62%_50%] sm:object-[60%_50%] lg:object-[58%_52%]",
 } as const;
 
 const eventConceptImage = {
-  src: "/images/ats/Community2.JPG",
-  alt: "ATS pist günü katılımcıları ve topluluk atmosferi",
-  className: "object-[50%_44%]",
+  src: "/images/events/kula-mytrack-2026/event-gallery-ats-lineup.jpg",
+  alt: "IONIQ 5 N, Honda Civic Type R ve Hyundai i20 N Kula MyTrack alanında",
+  className: "object-[50%_58%]",
 } as const;
 
 const eventExperienceItems = [
@@ -134,39 +134,28 @@ const eventIncludedItems = [
 
 const eventGalleryImages = [
   {
-    src: "/images/ats/FL5_BACK.jpg",
-    alt: "Honda Civic Type R viraj çıkışında pist çizgisini takip ediyor",
-    className: "md:col-span-8 md:row-span-2",
-    imageClassName: "object-[54%_58%]",
-    sizes: "(min-width: 1024px) 66vw, (min-width: 768px) 62vw, 100vw",
+    src: "/images/events/kula-mytrack-2026/event-gallery-i20n-track.jpg",
+    alt: "Hyundai i20 N pistte yüksek hızda viraj çıkışında",
+    className: "md:col-span-8",
+    aspectClassName: "aspect-[16/9]",
+    imageClassName: "object-[52%_50%]",
+    sizes: "(min-width: 1024px) 66vw, (min-width: 768px) 100vw, 100vw",
   },
   {
-    src: "/images/ats/FL5_BACK2.JPG",
-    alt: "Kula MyTrack üzerinde Honda Civic Type R arka açı",
+    src: "/images/events/kula-mytrack-2026/event-gallery-i20n-drift.jpg",
+    alt: "Hyundai i20 N viraj çıkışında pist kenarında toz kaldırırken",
     className: "md:col-span-4",
-    imageClassName: "object-[50%_54%]",
-    sizes: "(min-width: 1024px) 34vw, (min-width: 768px) 38vw, 100vw",
+    aspectClassName: "aspect-[4/5] md:aspect-[4/5]",
+    imageClassName: "object-[64%_50%]",
+    sizes: "(min-width: 1024px) 34vw, (min-width: 768px) 50vw, 100vw",
   },
   {
-    src: "/images/ats/FL5_SIDE_COOL.jpg",
-    alt: "Honda Civic Type R pistte yan profilden",
-    className: "md:col-span-4",
-    imageClassName: "object-[52%_46%]",
-    sizes: "(min-width: 1024px) 34vw, (min-width: 768px) 38vw, 100vw",
-  },
-  {
-    src: "/images/ats/i20NCOOOL.JPG",
-    alt: "Hyundai i20 N pist günü atmosferinde",
-    className: "md:col-span-6",
-    imageClassName: "object-[48%_52%]",
-    sizes: "(min-width: 768px) 50vw, 100vw",
-  },
-  {
-    src: "/images/ats/IONIQ5N.JPG",
-    alt: "Hyundai IONIQ 5 N pist günü seçkisinde",
-    className: "md:col-span-6",
-    imageClassName: "object-[50%_50%]",
-    sizes: "(min-width: 768px) 50vw, 100vw",
+    src: "/images/events/kula-mytrack-2026/event-gallery-i20n-close.jpg",
+    alt: "Hyundai i20 N pistte önden görünüm",
+    className: "md:col-span-12",
+    aspectClassName: "aspect-[16/9] lg:aspect-[16/8]",
+    imageClassName: "object-[50%_46%]",
+    sizes: "(min-width: 1024px) 100vw, (min-width: 768px) 50vw, 100vw",
   },
 ] as const;
 
@@ -265,7 +254,10 @@ export default async function EventDetailPage({ params }: EventPageProps) {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-ats-black text-ats-text">
-      <section id="event-hero" className="relative isolate min-h-[680px] overflow-hidden">
+      <section
+        id="event-hero"
+        className="relative isolate min-h-[88svh] overflow-hidden sm:min-h-[90svh]"
+      >
         <Image
           src={eventHeroImage.src}
           alt={eventHeroImage.alt}
@@ -274,17 +266,17 @@ export default async function EventDetailPage({ params }: EventPageProps) {
           sizes="100vw"
           className={`object-cover ${eventHeroImage.className}`}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-ats-black/80 via-ats-black/48 to-ats-black" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,8,10,0.82),rgba(5,8,10,0.38),rgba(5,8,10,0.62))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,11,15,0.92)_0%,rgba(8,11,15,0.58)_42%,rgba(8,11,15,0.14)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,11,15,0.30)_0%,rgba(8,11,15,0.04)_46%,rgba(8,11,15,0.70)_100%)]" />
 
         <div className="relative z-10">
           <PublicNav />
-          <div className="mx-auto flex max-w-6xl flex-col px-6 pb-16 pt-24 sm:px-8 lg:px-10 lg:pb-20 lg:pt-32">
-            <div className="max-w-3xl">
+          <div className="mx-auto flex max-w-6xl flex-col px-6 pb-20 pt-20 sm:px-8 sm:pt-24 lg:px-10 lg:pb-24 lg:pt-28">
+            <div className="max-w-2xl">
               <p className="text-xs font-black uppercase tracking-[0.28em] text-ats-blue">
                 KULA MYTRACK
               </p>
-              <h1 className="mt-5 max-w-3xl text-5xl font-black leading-[0.95] text-white sm:text-6xl lg:text-7xl">
+              <h1 className="mt-5 max-w-2xl text-5xl font-black leading-[0.95] text-white sm:text-6xl lg:text-7xl">
                 Kontrollü pist zamanı. Gerçek sürüş deneyimi.
               </h1>
               <p className="mt-5 text-xl font-black text-ats-text">
@@ -336,7 +328,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
               bilinçli zaman geçirmesini sağlamaktır.
             </p>
           </div>
-          <div className="relative min-h-[340px] overflow-hidden rounded-md border border-ats-border bg-ats-surface sm:min-h-[440px]">
+          <div className="relative aspect-[16/10] overflow-hidden rounded-md border border-ats-border bg-ats-surface">
             <Image
               src={eventConceptImage.src}
               alt={eventConceptImage.alt}
@@ -461,6 +453,39 @@ export default async function EventDetailPage({ params }: EventPageProps) {
         </div>
       </section>
 
+      <section id="event-gallery" className="border-b border-ats-border bg-ats-black">
+        <div className="mx-auto max-w-6xl px-6 py-16 sm:px-8 lg:px-10 lg:py-20">
+          <div className="max-w-2xl">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-ats-blue">
+              Galeri
+            </p>
+            <h2 className="mt-4 text-3xl font-black text-ats-text sm:text-4xl">
+              Fotoğraflar hikayeyi taşır; sayfayı kalabalıklaştırmaz.
+            </h2>
+            <p className="mt-5 text-sm leading-6 text-ats-muted">
+              Seçki; hız, pist kenarı dinamizmi ve otomobil karakterini üç
+              kontrollü kareyle anlatır.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-12">
+            {eventGalleryImages.map((image) => (
+              <div
+                key={image.src}
+                className={`relative overflow-hidden rounded-md border border-ats-border bg-ats-surface transition md:hover:border-ats-blue/60 md:hover:opacity-95 motion-reduce:transition-none ${image.aspectClassName} ${image.className}`}
+              >
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  fill
+                  sizes={image.sizes}
+                  className={`object-cover ${image.imageClassName}`}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section id="event-location" className="border-b border-ats-border">
         <div className="mx-auto grid max-w-6xl gap-8 px-6 py-16 sm:px-8 lg:grid-cols-[1fr_0.85fr] lg:items-center lg:px-10 lg:py-20">
           <div>
@@ -487,39 +512,6 @@ export default async function EventDetailPage({ params }: EventPageProps) {
             >
               Haritada Aç
             </Link>
-          </div>
-        </div>
-      </section>
-
-      <section id="event-gallery" className="border-b border-ats-border bg-ats-black">
-        <div className="mx-auto max-w-6xl px-6 py-16 sm:px-8 lg:px-10 lg:py-20">
-          <div className="max-w-2xl">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-ats-blue">
-              Galeri
-            </p>
-            <h2 className="mt-4 text-3xl font-black text-ats-text sm:text-4xl">
-              Fotoğraflar hikayeyi taşır; sayfayı kalabalıklaştırmaz.
-            </h2>
-            <p className="mt-5 text-sm leading-6 text-ats-muted">
-              Seçki, araç çizgisi, pist yüzeyi ve topluluk hissini dengeli
-              gösterecek şekilde beş görselle sınırlandı.
-            </p>
-          </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-12 md:auto-rows-[230px]">
-            {eventGalleryImages.map((image) => (
-              <div
-                key={image.src}
-                className={`relative min-h-[260px] overflow-hidden rounded-md border border-ats-border bg-ats-surface ${image.className}`}
-              >
-                <Image
-                  src={image.src}
-                  alt={image.alt}
-                  fill
-                  sizes={image.sizes}
-                  className={`object-cover ${image.imageClassName}`}
-                />
-              </div>
-            ))}
           </div>
         </div>
       </section>

@@ -1,12 +1,7 @@
-import {
-  assertCondition,
-  extractArrayBody,
-  readRepoFile,
-} from "./catalog-source-utils";
+import { assertCondition, extractArrayBody, readRepoFile } from "./catalog-source-utils";
 
 const eventPage = readRepoFile("src/app/events/[slug]/page.tsx");
 const registerPage = readRepoFile("src/app/events/[slug]/register/page.tsx");
-const photoInventory = readRepoFile("docs/ats-event-photo-inventory.md");
 const requiredSectionIds = [
   "event-hero",
   "event-facts",
@@ -15,14 +10,29 @@ const requiredSectionIds = [
   "event-schedule",
   "event-requirements",
   "event-included",
-  "event-location",
   "event-gallery",
+  "event-location",
   "event-faq",
   "event-final-cta",
 ] as const;
+const allowedEventImages = [
+  "/images/events/kula-mytrack-2026/event-hero-i20n.jpg",
+  "/images/events/kula-mytrack-2026/event-gallery-ats-lineup.jpg",
+  "/images/events/kula-mytrack-2026/event-gallery-i20n-track.jpg",
+  "/images/events/kula-mytrack-2026/event-gallery-i20n-drift.jpg",
+  "/images/events/kula-mytrack-2026/event-gallery-i20n-close.jpg",
+] as const;
+const expectedGalleryImages = [
+  "/images/events/kula-mytrack-2026/event-gallery-i20n-track.jpg",
+  "/images/events/kula-mytrack-2026/event-gallery-i20n-drift.jpg",
+  "/images/events/kula-mytrack-2026/event-gallery-i20n-close.jpg",
+] as const;
 const galleryBody = extractArrayBody(eventPage, "eventGalleryImages");
 const scheduleBody = extractArrayBody(eventPage, "eventScheduleItems");
-const galleryImages = Array.from(galleryBody.matchAll(/\bsrc:\s*"([^"]+)"/g), (match) => match[1]);
+const galleryImages = Array.from(
+  galleryBody.matchAll(/\bsrc:\s*"([^"]+)"/g),
+  (match) => match[1],
+);
 const galleryObjectPositions = Array.from(
   galleryBody.matchAll(/\bimageClassName:\s*"([^"]*object-\[[^"]+)"/g),
   (match) => match[1],
@@ -52,6 +62,13 @@ assertCondition(
   "hero must render exactly one primary image",
 );
 assertCondition(
+  eventPage.includes('src: "/images/events/kula-mytrack-2026/event-hero-i20n.jpg"') &&
+    eventPage.includes('alt: "Hyundai i20 N gün batımında Kula MyTrack pistinde"') &&
+    eventPage.includes("priority") &&
+    eventPage.includes('sizes="100vw"'),
+  "hero must use the dedicated i20 N image with required accessibility/performance settings",
+);
+assertCondition(
   eventPage.includes("eventFacts({") &&
     eventPage.includes("primaryPackage?.capacity") &&
     eventPage.includes("primaryPackage?.price") &&
@@ -66,8 +83,17 @@ assertCondition(
     scheduleBody.includes("Gün sonu"),
   "schedule must include the expected one-source timeline stages",
 );
-assertCondition(galleryImages.length <= 6, "initial gallery exceeds six images");
-assertCondition(galleryImages.length === 5, "initial gallery should use five curated images");
+assertCondition(
+  eventPage.includes('src: "/images/events/kula-mytrack-2026/event-gallery-ats-lineup.jpg"') &&
+    eventPage.includes("IONIQ 5 N, Honda Civic Type R ve Hyundai i20 N Kula MyTrack alanında") &&
+    eventPage.includes("aspect-[16/10]"),
+  "event concept must use the lineup image with the requested crop container",
+);
+assertCondition(galleryImages.length === 3, "gallery must use exactly three curated images");
+assertCondition(
+  expectedGalleryImages.every((image, index) => galleryImages[index] === image),
+  "gallery image order must be track, drift, close",
+);
 assertCondition(
   galleryObjectPositions.length === galleryImages.length,
   "every gallery image must have an intentional crop class",
@@ -75,9 +101,30 @@ assertCondition(
 assertCondition(
   eventPage.includes("overflow-x-hidden") &&
     eventPage.includes("md:grid-cols-12") &&
+    !eventPage.includes("md:auto-rows") &&
     !eventPage.includes("masonry"),
   "page must use controlled responsive gallery layout without masonry or horizontal overflow",
 );
+assertCondition(
+  !galleryBody.includes("absolute") &&
+    !galleryBody.includes("-mt-") &&
+    !galleryBody.includes("-mx-") &&
+    !galleryBody.includes("row-span"),
+  "gallery must not use overlapping, negative-margin, or row-span collage layout",
+);
+assertCondition(
+  allowedEventImages.every((image) => eventPage.includes(image)),
+  "event page must include all five event-specific media references",
+);
+
+for (const match of eventPage.matchAll(/\/images\/[^"]+/g)) {
+  assertCondition(
+    allowedEventImages.includes(match[0] as (typeof allowedEventImages)[number]) ||
+      match[0].startsWith("/images/events/kula-mytrack-2026/"),
+    `unexpected event page image reference ${match[0]}`,
+  );
+}
+
 assertCondition(
   eventPage.includes("<details") && eventPage.includes("<summary"),
   "FAQ must use keyboard-accessible details/summary controls",
@@ -99,13 +146,6 @@ assertCondition(
     registerPage.includes('export const dynamic = "force-dynamic"') &&
     !registerPage.includes("eventGalleryImages"),
   "registration page must remain a form route, not a marketing page",
-);
-assertCondition(
-  photoInventory.includes("Missing Asset Slots") &&
-    photoInventory.includes("Paddock overview") &&
-    photoInventory.includes("Driver briefing") &&
-    photoInventory.includes("Check-in / registration moment"),
-  "photo inventory must document missing operational asset slots",
 );
 
 console.log("PASS event page hierarchy follows requested order");
