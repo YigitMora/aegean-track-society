@@ -178,6 +178,11 @@ bounded, ignored when invalid or unreasonable, and never overwrite existing
 Prisma consent/profile data. Repeated signup attempts use neutral copy and
 direct users toward login or password reset without revealing account existence.
 
+Mobile API authentication for the public iOS app uses Supabase bearer tokens on
+versioned API routes. See [docs/mobile-api-authentication.md](docs/mobile-api-authentication.md)
+for the request format, `/api/mobile/v1/me` response contract, error envelope,
+and environment requirements.
+
 ## Participant Code
 
 Participant codes follow `ATD-KULA-2026-0001` and are generated inside the same database transaction that confirms payment.
