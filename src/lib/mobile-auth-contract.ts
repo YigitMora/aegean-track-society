@@ -11,6 +11,7 @@ export type MobileAuthErrorCode =
   | "MOBILE_AUTH_ACCOUNT_SUSPENDED"
   | "MOBILE_AUTH_ACCOUNT_UNAVAILABLE"
   | "MOBILE_AUTH_CONFIGURATION_ERROR"
+  | "MOBILE_AUTH_BACKEND_UNAVAILABLE"
   | "MOBILE_AUTH_PROVISIONING_FAILED"
   | "MOBILE_AUTH_INTERNAL_ERROR";
 
@@ -49,6 +50,10 @@ const mobileAuthErrors = {
     message: "Üyelik hesabınız bu işlem için uygun değil.",
   },
   MOBILE_AUTH_CONFIGURATION_ERROR: {
+    status: 503,
+    message: "Üyelik girişi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+  },
+  MOBILE_AUTH_BACKEND_UNAVAILABLE: {
     status: 503,
     message: "Üyelik girişi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
   },

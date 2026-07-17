@@ -22,7 +22,8 @@ The mobile API does not require or use Supabase service-role credentials.
 ## `GET /api/mobile/v1/me`
 
 Returns the minimum account/profile data needed to bootstrap the mobile app.
-Authenticated responses include `Cache-Control: no-store`.
+Every success and error response includes `Cache-Control: no-store`. Authentication
+failures with HTTP 401 also include `WWW-Authenticate: Bearer`.
 
 ### Example Request
 
@@ -39,11 +40,11 @@ curl \
   "data": {
     "member": {
       "id": "4e59e2e2-8c1e-4fd3-a7f6-9d8b9d4a6f52",
-      "email": "member@example.com",
-      "profileComplete": true,
-      "requiredConsentsComplete": true,
-      "marketingConsent": false
+      "email": "member@example.com"
     },
+    "profileComplete": true,
+    "requiredConsentsComplete": true,
+    "marketingConsent": false,
     "profile": {
       "fullName": "Ada Yılmaz",
       "displayName": "Ada",
@@ -55,7 +56,8 @@ curl \
 
 The endpoint intentionally omits admin data, service credentials, password
 state, event applications, payment data, garage vehicles, emergency contact
-details, and raw consent timestamps.
+details, raw consent timestamps, Supabase metadata, tokens, internal account
+status, and database timestamps.
 
 ## Error Contract
 
@@ -82,6 +84,7 @@ Current auth error codes:
 | `MOBILE_AUTH_ACCOUNT_SUSPENDED` | 403 | Prisma member account is suspended. |
 | `MOBILE_AUTH_ACCOUNT_UNAVAILABLE` | 403 | Prisma member account is deleted or unavailable. |
 | `MOBILE_AUTH_CONFIGURATION_ERROR` | 503 | Required server auth configuration is missing. |
+| `MOBILE_AUTH_BACKEND_UNAVAILABLE` | 503 | Supabase Auth is temporarily unreachable or failed. |
 | `MOBILE_AUTH_PROVISIONING_FAILED` | 500 | Prisma member provisioning/mapping failed. |
 | `MOBILE_AUTH_INTERNAL_ERROR` | 500 | Unexpected server error. |
 

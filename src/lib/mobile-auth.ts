@@ -1,13 +1,21 @@
-import { createClient, type User as SupabaseUser } from "@supabase/supabase-js";
+import {
+  createClient,
+  isAuthError,
+  isAuthRetryableFetchError,
+  type User as SupabaseUser,
+} from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { ensureMemberUser } from "@/lib/member-auth";
+import type { AtsMemberUser } from "@/lib/member-auth";
 import {
   getBearerTokenFromAuthorizationHeader,
   isAccessTokenExpired,
   mobileAuthErrorEnvelope,
   MobileAuthError,
 } from "@/lib/mobile-auth-contract";
-import { getSupabasePublicConfig } from "@/lib/supabase/config";
+import {
+  getSupabasePublicConfig,
+  type SupabasePublicConfig,
+} from "@/lib/supabase/config";
 
 export {
   getBearerTokenFromAuthorizationHeader,
@@ -16,39 +24,62 @@ export {
   MobileAuthError,
 };
 
-export type MobileMemberUser = Awaited<ReturnType<typeof ensureMemberUser>>;
+export type MobileMemberUser = AtsMemberUser;
 
 export type AuthenticatedMobileMember = {
-  supabaseUser: SupabaseUser;
   memberUser: MobileMemberUser;
 };
 
-export async function authenticateMobileMember(request: Request): Promise<AuthenticatedMobileMember> {
+type SupabaseUserLookupResult = {
+  data: {
+    user: SupabaseUser | null;
+  };
+  error: unknown;
+};
+
+export type MobileAuthDependencies = {
+  getSupabaseConfig: () => SupabasePublicConfig | null;
+  getSupabaseUser: (
+    config: SupabasePublicConfig,
+    accessToken: string,
+  ) => Promise<SupabaseUserLookupResult>;
+  resolveMemberUser: (supabaseUser: SupabaseUser) => Promise<MobileMemberUser>;
+};
+
+export async function authenticateMobileMember(
+  request: Request,
+  dependencyOverrides: Partial<MobileAuthDependencies> = {},
+): Promise<AuthenticatedMobileMember> {
+  const dependencies: MobileAuthDependencies = {
+    getSupabaseConfig: getSupabasePublicConfig,
+    getSupabaseUser,
+    resolveMemberUser: resolveMobileMemberUser,
+    ...dependencyOverrides,
+  };
   const accessToken = getBearerTokenFromAuthorizationHeader(
     request.headers.get("authorization"),
   );
-
-  if (isAccessTokenExpired(accessToken)) {
-    throw new MobileAuthError("MOBILE_AUTH_EXPIRED_TOKEN");
-  }
-
-  const config = getSupabasePublicConfig();
+  const config = dependencies.getSupabaseConfig();
 
   if (!config) {
     throw new MobileAuthError("MOBILE_AUTH_CONFIGURATION_ERROR");
   }
 
-  const supabase = createClient(config.url, config.publishableKey, {
-    auth: {
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-      persistSession: false,
-    },
-  });
+  let lookup: SupabaseUserLookupResult;
 
-  const { data, error } = await supabase.auth.getUser(accessToken);
+  try {
+    lookup = await dependencies.getSupabaseUser(config, accessToken);
+  } catch {
+    throw new MobileAuthError("MOBILE_AUTH_BACKEND_UNAVAILABLE");
+  }
+
+  const { data, error } = lookup;
 
   if (error || !data.user) {
+    if (error && isSupabaseInfrastructureFailure(error)) {
+      throw new MobileAuthError("MOBILE_AUTH_BACKEND_UNAVAILABLE");
+    }
+
     throw new MobileAuthError(
       isAccessTokenExpired(accessToken)
         ? "MOBILE_AUTH_EXPIRED_TOKEN"
@@ -56,7 +87,11 @@ export async function authenticateMobileMember(request: Request): Promise<Authen
     );
   }
 
-  const memberUser = await resolveMobileMemberUser(data.user);
+  if (!data.user.email || !isSupabaseEmailVerified(data.user)) {
+    throw new MobileAuthError("MOBILE_AUTH_EMAIL_UNVERIFIED");
+  }
+
+  const memberUser = await dependencies.resolveMemberUser(data.user);
 
   if (memberUser.deletedAt) {
     throw new MobileAuthError("MOBILE_AUTH_ACCOUNT_UNAVAILABLE");
@@ -71,7 +106,6 @@ export async function authenticateMobileMember(request: Request): Promise<Authen
   }
 
   return {
-    supabaseUser: data.user,
     memberUser,
   };
 }
@@ -88,12 +122,19 @@ export function mobileJsonResponse<TBody>(body: TBody, init: ResponseInit = {}) 
 
 export function mobileAuthErrorResponse(error: unknown) {
   if (error instanceof MobileAuthError) {
+    const headers = error.status === 401
+      ? {
+          "WWW-Authenticate": "Bearer",
+        }
+      : undefined;
+
     return mobileJsonResponse(mobileAuthErrorEnvelope(error), {
       status: error.status,
+      headers,
     });
   }
 
-  console.error("MOBILE_AUTH_UNHANDLED_ERROR", serializeMobileAuthError(error));
+  console.error("MOBILE_AUTH_UNHANDLED_ERROR");
 
   const fallback = new MobileAuthError("MOBILE_AUTH_INTERNAL_ERROR");
 
@@ -104,7 +145,12 @@ export function mobileAuthErrorResponse(error: unknown) {
 
 async function resolveMobileMemberUser(supabaseUser: SupabaseUser) {
   try {
-    return await ensureMemberUser(supabaseUser);
+    const { ensureMemberUser } = await import("@/lib/member-auth");
+
+    return await ensureMemberUser(supabaseUser, {
+      rejectUnavailableBeforeMutation: true,
+      suppressProvisioningLogs: true,
+    });
   } catch (error) {
     const code = getMemberAuthErrorCode(error);
 
@@ -120,8 +166,51 @@ async function resolveMobileMemberUser(supabaseUser: SupabaseUser) {
       throw new MobileAuthError("MOBILE_AUTH_PROVISIONING_FAILED");
     }
 
+    if (code === "ACCOUNT_SUSPENDED") {
+      throw new MobileAuthError("MOBILE_AUTH_ACCOUNT_SUSPENDED");
+    }
+
+    if (code === "ACCOUNT_UNAVAILABLE") {
+      throw new MobileAuthError("MOBILE_AUTH_ACCOUNT_UNAVAILABLE");
+    }
+
     throw error;
   }
+}
+
+async function getSupabaseUser(
+  config: SupabasePublicConfig,
+  accessToken: string,
+): Promise<SupabaseUserLookupResult> {
+  const supabase = createClient(config.url, config.publishableKey, {
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      persistSession: false,
+    },
+  });
+
+  return supabase.auth.getUser(accessToken);
+}
+
+function isSupabaseInfrastructureFailure(error: unknown) {
+  if (isAuthRetryableFetchError(error)) {
+    return true;
+  }
+
+  if (!isAuthError(error)) {
+    return true;
+  }
+
+  return (
+    !error.status ||
+    error.status === 429 ||
+    error.status >= 500
+  );
+}
+
+function isSupabaseEmailVerified(user: SupabaseUser) {
+  return Boolean(user.email_confirmed_at || user.confirmed_at);
 }
 
 function getMemberAuthErrorCode(error: unknown) {
@@ -132,30 +221,4 @@ function getMemberAuthErrorCode(error: unknown) {
   const code = (error as { code?: unknown }).code;
 
   return typeof code === "string" ? code : null;
-}
-
-function serializeMobileAuthError(error: unknown) {
-  if (error instanceof Error) {
-    return {
-      errorName: error.name,
-      errorMessage: sanitizeLogText(error.message),
-      stackFirstThreeLines: error.stack?.split("\n").slice(0, 3).map(sanitizeLogText) ?? [],
-    };
-  }
-
-  return {
-    errorName: "UnknownError",
-    errorMessage: sanitizeLogText(String(error)),
-    stackFirstThreeLines: [],
-  };
-}
-
-function sanitizeLogText(value: string) {
-  return value
-    .replace(/(authorization:?\s*bearer\s+)([^\s]+)/gi, "$1***")
-    .replace(/(access_token=)([^&\s]+)/gi, "$1***")
-    .replace(/(refresh_token=)([^&\s]+)/gi, "$1***")
-    .replace(/(token_hash=)([^&\s]+)/gi, "$1***")
-    .replace(/(password=)([^&\s]+)/gi, "$1***")
-    .replace(/(cookie:?\s*)(.+)/gi, "$1***");
 }

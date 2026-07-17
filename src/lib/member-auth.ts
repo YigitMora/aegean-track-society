@@ -60,6 +60,11 @@ export type RequiredMemberSignupMetadataInput = {
   memberConsentIpAddress: string | null;
 };
 
+export type EnsureMemberUserOptions = {
+  rejectUnavailableBeforeMutation?: boolean;
+  suppressProvisioningLogs?: boolean;
+};
+
 class MemberAuthError extends Error {
   constructor(readonly code: string, message: string) {
     super(message);
@@ -97,7 +102,10 @@ export async function getVerifiedSupabaseUser() {
   return data.user;
 }
 
-export async function ensureMemberUser(supabaseUser?: SupabaseUser | null) {
+export async function ensureMemberUser(
+  supabaseUser?: SupabaseUser | null,
+  options: EnsureMemberUserOptions = {},
+) {
   const user = supabaseUser ?? (await getVerifiedSupabaseUser());
 
   if (!user) {
@@ -122,6 +130,8 @@ export async function ensureMemberUser(supabaseUser?: SupabaseUser | null) {
           id: user.id,
         },
         select: {
+          status: true,
+          deletedAt: true,
           memberKvkkAcceptedAt: true,
           memberTermsAcceptedAt: true,
           memberMarketingConsentAt: true,
@@ -129,6 +139,25 @@ export async function ensureMemberUser(supabaseUser?: SupabaseUser | null) {
           memberConsentIpAddress: true,
         },
       });
+
+      if (options.rejectUnavailableBeforeMutation && existingUser?.deletedAt) {
+        throw new MemberAuthError("ACCOUNT_UNAVAILABLE", "ATS member account is unavailable.");
+      }
+
+      if (
+        options.rejectUnavailableBeforeMutation &&
+        existingUser?.status === "SUSPENDED"
+      ) {
+        throw new MemberAuthError("ACCOUNT_SUSPENDED", "ATS member account is suspended.");
+      }
+
+      if (
+        options.rejectUnavailableBeforeMutation &&
+        existingUser &&
+        existingUser.status !== "ACTIVE"
+      ) {
+        throw new MemberAuthError("ACCOUNT_UNAVAILABLE", "ATS member account is unavailable.");
+      }
 
       await tx.user.upsert({
         where: {
@@ -187,9 +216,11 @@ export async function ensureMemberUser(supabaseUser?: SupabaseUser | null) {
       throw new MemberAuthError("PROVISIONING_FAILED", "ATS member user was not found.");
     }
 
-    console.log("AUTH_USER_PROVISIONED", {
-      userId: user.id,
-    });
+    if (!options.suppressProvisioningLogs) {
+      console.log("AUTH_USER_PROVISIONED", {
+        userId: user.id,
+      });
+    }
 
     return memberUser;
   } catch (error) {
@@ -197,7 +228,9 @@ export async function ensureMemberUser(supabaseUser?: SupabaseUser | null) {
       throw error;
     }
 
-    console.error("AUTH_USER_PROVISION_FAILED", serializeAuthError(error));
+    if (!options.suppressProvisioningLogs) {
+      console.error("AUTH_USER_PROVISION_FAILED", serializeAuthError(error));
+    }
     throw new MemberAuthError("PROVISIONING_FAILED", "ATS member provisioning failed.");
   }
 }
