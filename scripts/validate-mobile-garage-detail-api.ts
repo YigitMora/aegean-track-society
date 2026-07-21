@@ -9,6 +9,7 @@ import {
 import {
   buildMobileGarageBuildResponseBody,
   buildMobileGarageImageUploadIntentResponseBody,
+  buildMobileGarageRatingPreviewResponseBody,
   buildMobileGarageVehicleDetailResponseBody,
   mobileGarageDetailContractHeader,
   mobileGarageDetailContractVersion,
@@ -472,6 +473,7 @@ function validateModificationBodies() {
 }
 
 function validateSafeResponses() {
+  const ratingWithInternalCap = { ...rating(), overallCap: 72 };
   const detail = buildMobileGarageVehicleDetailResponseBody({
     id: "vehicle-1",
     brand: "Ford",
@@ -497,7 +499,7 @@ function validateSafeResponses() {
       ratingStatus: "CALIBRATED",
     },
     catalogMatch: { latestStatus: null, canRequest: false },
-    rating: rating(),
+    rating: ratingWithInternalCap,
     ratingDisclosure: "Safe disclosure",
     modifications: [installedModification()],
     actions: {
@@ -515,11 +517,12 @@ function validateSafeResponses() {
   ok(!serializedDetail.includes("userId"));
   ok(!serializedDetail.includes("createdAt"));
   ok(!serializedDetail.includes("accessToken"));
+  ok(!serializedDetail.includes("overallCap"));
 
   const build = buildMobileGarageBuildResponseBody({
     vehicleId: "vehicle-1",
     archived: false,
-    currentRating: rating(),
+    currentRating: ratingWithInternalCap,
     installed: [installedModification()],
     catalog: [
       {
@@ -552,6 +555,13 @@ function validateSafeResponses() {
   ok(!serializedBuild.includes("installedAt"));
   ok(!serializedBuild.includes("componentTypeCode"));
   ok(!serializedBuild.includes("usageClass"));
+  ok(!serializedBuild.includes("overallCap"));
+
+  const preview = buildMobileGarageRatingPreviewResponseBody({
+    currentRating: ratingWithInternalCap,
+    projectedRating: ratingWithInternalCap,
+  });
+  ok(!JSON.stringify(preview).includes("overallCap"));
 }
 
 async function validateImageFiles() {

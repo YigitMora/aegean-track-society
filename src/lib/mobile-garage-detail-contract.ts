@@ -114,11 +114,25 @@ export type MobileGarageBuild = {
 export function buildMobileGarageVehicleDetailResponseBody(
   vehicle: MobileGarageVehicleDetail,
 ) {
-  return { data: { vehicle } };
+  return {
+    data: {
+      vehicle: {
+        ...vehicle,
+        rating: serializeMobileGarageRating(vehicle.rating),
+      },
+    },
+  };
 }
 
 export function buildMobileGarageBuildResponseBody(build: MobileGarageBuild) {
-  return { data: { build } };
+  return {
+    data: {
+      build: {
+        ...build,
+        currentRating: serializeMobileGarageRating(build.currentRating),
+      },
+    },
+  };
 }
 
 export function buildMobileGarageRatingPreviewResponseBody({
@@ -128,7 +142,31 @@ export function buildMobileGarageRatingPreviewResponseBody({
   currentRating: MobileGarageRating | null;
   projectedRating: MobileGarageRating | null;
 }) {
-  return { data: { currentRating, projectedRating } };
+  return {
+    data: {
+      currentRating: serializeMobileGarageRating(currentRating),
+      projectedRating: serializeMobileGarageRating(projectedRating),
+    },
+  };
+}
+
+function serializeMobileGarageRating(
+  rating: MobileGarageRating | null,
+): MobileGarageRating | null {
+  if (!rating) {
+    return null;
+  }
+
+  return {
+    overall: rating.overall,
+    power: rating.power,
+    handling: rating.handling,
+    braking: rating.braking,
+    reliability: rating.reliability,
+    thermal: rating.thermal,
+    trackReadiness: rating.trackReadiness,
+    status: rating.status,
+  };
 }
 
 export function buildMobileGarageMutationResponseBody(vehicleId: string) {
