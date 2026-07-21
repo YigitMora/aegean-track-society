@@ -58,10 +58,10 @@ assert.match(adminPage, /Uye Garajina Arac Ekle|Üye Garajına Araç Ekle/u);
 assert.match(adminPage, /ATS kataloğuyla eşleştir/u);
 assert.match(adminPage, /Bu işlemler üyenin garajını doğrudan değiştirir/u);
 
-assert.match(garagePage, /Aracının gerçek build profilini oluştur/u);
+assert.match(garagePage, /Garaj kapasitesi/u);
 assert.match(garageLifecycle, /Build ve Modifikasyonlar/);
 assert.match(garageLifecycle, /İlk Modifikasyonu Ekle/u);
-assert.match(garageLifecycle, /Build'i Görüntüle/);
+assert.match(garageLifecycle, /Build Profilini Aç/);
 assert.match(garageLifecycle, /Katalog dışı araç/u);
 
 assert.match(lifecycleState, /registration_preservation_required/);

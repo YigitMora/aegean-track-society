@@ -3,21 +3,34 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import {
   getRemainingActiveVehicleSlots,
+  getRemainingArchivedVehicleSlots,
   MAX_ACTIVE_GARAGE_VEHICLES,
+  MAX_ARCHIVED_GARAGE_VEHICLES,
 } from "@/lib/garage-capacity";
-import { createGarageVehicle } from "@/lib/garage-service";
+import {
+  archiveGarageVehicles,
+  createGarageVehicle,
+  permanentlyDeleteArchivedGarageVehicles,
+  restoreGarageVehicle,
+} from "@/lib/garage-service";
 import {
   buildMobileGarageCreateResponseBody,
   buildMobileGarageResponseBody,
   buildMobileVehicleDefinitionsResponseBody,
+  hasMobileGaragePermanentDeleteConfirmation,
   MobileGarageError,
   parseMobileGarageVehicleBody,
+  type MobileGarageArchivedVehicle,
   type MobileGarageVehicle,
   type MobileVehicleDefinition,
 } from "@/lib/mobile-garage-contract";
 import { prisma } from "@/lib/prisma";
+import { normalizePlateNumber } from "@/lib/registration-validation";
 import { calculateVehiclePerformanceRating } from "@/lib/vehicle-performance-rating";
-import { createOwnedVehicleImageSignedUrl } from "@/lib/vehicle-images";
+import {
+  createOwnedVehicleImageSignedUrl,
+  deleteOwnedVehicleImageObjects,
+} from "@/lib/vehicle-images";
 
 const mobileVehicleDefinitionRatingSelect = {
   id: true,
@@ -113,6 +126,22 @@ const mobileVehicleDefinitionSelect = {
   ratingStatus: true,
 } satisfies Prisma.VehicleDefinitionSelect;
 
+const mobileArchivedGarageVehicleSelect = {
+  id: true,
+  brand: true,
+  model: true,
+  year: true,
+  plateNumber: true,
+  modifications: {
+    where: {
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+    },
+  },
+} satisfies Prisma.VehicleSelect;
+
 type MobileGarageVehicleRow = Prisma.VehicleGetPayload<{
   select: typeof mobileGarageVehicleSelect;
 }>;
@@ -121,9 +150,14 @@ type MobileVehicleDefinitionRow = Prisma.VehicleDefinitionGetPayload<{
   select: typeof mobileVehicleDefinitionSelect;
 }>;
 
+type MobileArchivedGarageVehicleRow = Prisma.VehicleGetPayload<{
+  select: typeof mobileArchivedGarageVehicleSelect;
+}>;
+
 export async function getMobileGarageResponseBody(
   memberUserId: string,
   accessToken: string,
+  { includeArchived = false }: { includeArchived?: boolean } = {},
 ) {
   const vehicles = await prisma.vehicle.findMany({
     where: {
@@ -143,6 +177,25 @@ export async function getMobileGarageResponseBody(
     ],
     select: mobileGarageVehicleSelect,
   });
+  const archivedVehicles = includeArchived
+    ? await prisma.vehicle.findMany({
+      where: {
+        userId: memberUserId,
+        deletedAt: {
+          not: null,
+        },
+      },
+      orderBy: [
+        {
+          deletedAt: "desc",
+        },
+        {
+          id: "asc",
+        },
+      ],
+      select: mobileArchivedGarageVehicleSelect,
+    })
+    : [];
   const mobileVehicles = await Promise.all(
     vehicles.map((vehicle) =>
       serializeMobileGarageVehicle(vehicle, memberUserId, accessToken),
@@ -154,6 +207,118 @@ export async function getMobileGarageResponseBody(
     max: MAX_ACTIVE_GARAGE_VEHICLES,
     remaining: getRemainingActiveVehicleSlots(vehicles.length),
     vehicles: mobileVehicles,
+    archive: includeArchived
+      ? {
+          archived: archivedVehicles.length,
+          max: MAX_ARCHIVED_GARAGE_VEHICLES,
+          remaining: getRemainingArchivedVehicleSlots(archivedVehicles.length),
+          vehicles: archivedVehicles.map(serializeMobileArchivedGarageVehicle),
+        }
+      : undefined,
+  });
+}
+
+export async function archiveMobileGarageVehicle({
+  memberUserId,
+  vehicleId,
+  accessToken,
+}: {
+  memberUserId: string;
+  vehicleId: string;
+  accessToken: string;
+}) {
+  const result = await archiveGarageVehicles({
+    targetUserId: memberUserId,
+    vehicleIds: [vehicleId],
+  });
+
+  if (!result.ok) {
+    if (result.code === "not_found") {
+      throw new MobileGarageError("MOBILE_GARAGE_VEHICLE_NOT_FOUND");
+    }
+    if (result.code === "archived_vehicle_limit_reached") {
+      throw new MobileGarageError("MOBILE_GARAGE_ARCHIVED_CAPACITY_REACHED");
+    }
+    throw new MobileGarageError("MOBILE_GARAGE_ARCHIVE_FAILED");
+  }
+
+  return getMobileGarageResponseBody(memberUserId, accessToken, {
+    includeArchived: true,
+  });
+}
+
+export async function restoreMobileGarageVehicle({
+  memberUserId,
+  vehicleId,
+  accessToken,
+}: {
+  memberUserId: string;
+  vehicleId: string;
+  accessToken: string;
+}) {
+  const result = await restoreGarageVehicle({
+    targetUserId: memberUserId,
+    vehicleId,
+  });
+
+  if (!result.ok) {
+    if (result.code === "not_found") {
+      throw new MobileGarageError("MOBILE_GARAGE_VEHICLE_NOT_FOUND");
+    }
+    if (result.code === "active_vehicle_limit_reached") {
+      throw new MobileGarageError("MOBILE_GARAGE_CAPACITY_REACHED");
+    }
+    if (result.code === "restore_conflict") {
+      throw new MobileGarageError("MOBILE_GARAGE_RESTORE_CONFLICT");
+    }
+    throw new MobileGarageError("MOBILE_GARAGE_RESTORE_FAILED");
+  }
+
+  return getMobileGarageResponseBody(memberUserId, accessToken, {
+    includeArchived: true,
+  });
+}
+
+export async function permanentlyDeleteMobileGarageVehicle({
+  memberUserId,
+  vehicleId,
+  accessToken,
+  body,
+}: {
+  memberUserId: string;
+  vehicleId: string;
+  accessToken: string;
+  body: unknown;
+}) {
+  if (!hasMobileGaragePermanentDeleteConfirmation(body)) {
+    throw new MobileGarageError(
+      "MOBILE_GARAGE_DELETE_CONFIRMATION_REQUIRED",
+    );
+  }
+
+  const result = await permanentlyDeleteArchivedGarageVehicles({
+    targetUserId: memberUserId,
+    vehicleIds: [vehicleId],
+  });
+
+  if (!result.ok) {
+    if (result.code === "not_found") {
+      throw new MobileGarageError("MOBILE_GARAGE_VEHICLE_NOT_FOUND");
+    }
+    if (result.code === "active_delete_forbidden") {
+      throw new MobileGarageError("MOBILE_GARAGE_ACTIVE_DELETE_FORBIDDEN");
+    }
+    throw new MobileGarageError("MOBILE_GARAGE_DELETE_FAILED");
+  }
+
+  await deleteOwnedVehicleImageObjects({
+    imagePaths: result.imagePaths,
+    authenticatedUserId: memberUserId,
+    accessToken,
+  });
+
+  return getMobileGarageResponseBody(memberUserId, accessToken, {
+    includeArchived: true,
   });
 }
 
@@ -242,7 +407,7 @@ async function serializeMobileGarageVehicle(
     brand: vehicle.brand,
     model: vehicle.model,
     year: vehicle.year,
-    plateNumber: vehicle.plateNumber,
+    plateNumber: normalizePlateNumber(vehicle.plateNumber) ?? vehicle.plateNumber,
     color: vehicle.color,
     isPrimary: vehicle.isPrimary,
     coverImageUrl: await createMobileVehicleCoverImageUrl(
@@ -299,5 +464,18 @@ function serializeMobileVehicleDefinition(
     powertrain: definition.powertrain,
     drivetrain: definition.drivetrain,
     ratingStatus: definition.ratingStatus,
+  };
+}
+
+function serializeMobileArchivedGarageVehicle(
+  vehicle: MobileArchivedGarageVehicleRow,
+): MobileGarageArchivedVehicle {
+  return {
+    id: vehicle.id,
+    brand: vehicle.brand,
+    model: vehicle.model,
+    year: vehicle.year,
+    plateNumber: normalizePlateNumber(vehicle.plateNumber) ?? vehicle.plateNumber,
+    modificationCount: vehicle.modifications.length,
   };
 }

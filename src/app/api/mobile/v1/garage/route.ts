@@ -4,6 +4,8 @@ import {
 } from "@/lib/mobile-auth";
 import {
   mobileGarageErrorResponse,
+  mobileGarageLifecycleContractHeader,
+  mobileGarageLifecycleContractVersion,
   MobileGarageError,
 } from "@/lib/mobile-garage-contract";
 import {
@@ -17,7 +19,11 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
     const { accessToken, memberUser } = await authenticateMobileMember(request);
-    const body = await getMobileGarageResponseBody(memberUser.id, accessToken);
+    const body = await getMobileGarageResponseBody(memberUser.id, accessToken, {
+      includeArchived:
+        request.headers.get(mobileGarageLifecycleContractHeader) ===
+        mobileGarageLifecycleContractVersion,
+    });
 
     return mobileJsonResponse(body);
   } catch (error) {

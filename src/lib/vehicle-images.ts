@@ -130,6 +130,67 @@ export async function createOwnedVehicleImageSignedUrl(
   return data.signedUrl;
 }
 
+export async function deleteOwnedVehicleImageObjects({
+  imagePaths,
+  authenticatedUserId,
+  accessToken,
+}: {
+  imagePaths: string[];
+  authenticatedUserId: string;
+  accessToken: string;
+}) {
+  const userPathPrefix = `${authenticatedUserId}/`;
+  const uniqueImagePaths = Array.from(
+    new Set(imagePaths.filter((path) => path.startsWith(userPathPrefix))),
+  );
+
+  if (uniqueImagePaths.length !== new Set(imagePaths).size) {
+    console.warn("VEHICLE_IMAGE_CLEANUP_OWNERSHIP_MISMATCH", {
+      userId: authenticatedUserId,
+      requestedCount: new Set(imagePaths).size,
+      ownedCount: uniqueImagePaths.length,
+    });
+  }
+
+  if (uniqueImagePaths.length === 0) {
+    return;
+  }
+
+  try {
+    const supabase = createAccessTokenStorageClient(accessToken);
+
+    if (!supabase) {
+      console.warn("VEHICLE_IMAGE_CLEANUP_FAILED", {
+        userId: authenticatedUserId,
+        vehicleCount: uniqueImagePaths.length,
+        operation: "mobile_permanent_delete_cleanup",
+        errorCode: "STORAGE_CONFIGURATION_UNAVAILABLE",
+      });
+      return;
+    }
+
+    const { error } = await supabase.storage
+      .from(vehicleImagesBucket)
+      .remove(uniqueImagePaths);
+
+    if (error) {
+      console.warn("VEHICLE_IMAGE_CLEANUP_FAILED", {
+        userId: authenticatedUserId,
+        vehicleCount: uniqueImagePaths.length,
+        operation: "mobile_permanent_delete_cleanup",
+        errorCode: safeStorageErrorCode(error),
+      });
+    }
+  } catch (error) {
+    console.warn("VEHICLE_IMAGE_CLEANUP_FAILED", {
+      userId: authenticatedUserId,
+      vehicleCount: uniqueImagePaths.length,
+      operation: "mobile_permanent_delete_cleanup",
+      errorCode: safeStorageErrorCode(error),
+    });
+  }
+}
+
 function createAccessTokenStorageClient(accessToken: string) {
   const config = getSupabasePublicConfig();
 

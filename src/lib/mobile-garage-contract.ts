@@ -40,6 +40,15 @@ export type MobileGarageVehicle = {
   atsRating: MobileGarageRating | null;
 };
 
+export type MobileGarageArchivedVehicle = {
+  id: string;
+  brand: string;
+  model: string;
+  year: number | null;
+  plateNumber: string;
+  modificationCount: number;
+};
+
 export type MobileVehicleDefinition = {
   id: string;
   brand: string;
@@ -58,8 +67,20 @@ export type MobileGarageErrorCode =
   | "MOBILE_GARAGE_INVALID_BODY"
   | "MOBILE_GARAGE_DUPLICATE_PLATE"
   | "MOBILE_GARAGE_CAPACITY_REACHED"
+  | "MOBILE_GARAGE_ARCHIVED_CAPACITY_REACHED"
+  | "MOBILE_GARAGE_VEHICLE_NOT_FOUND"
+  | "MOBILE_GARAGE_ARCHIVE_FAILED"
+  | "MOBILE_GARAGE_RESTORE_CONFLICT"
+  | "MOBILE_GARAGE_RESTORE_FAILED"
+  | "MOBILE_GARAGE_ACTIVE_DELETE_FORBIDDEN"
+  | "MOBILE_GARAGE_DELETE_CONFIRMATION_REQUIRED"
+  | "MOBILE_GARAGE_DELETE_FAILED"
   | "MOBILE_GARAGE_CREATE_FAILED"
   | "MOBILE_GARAGE_INTERNAL_ERROR";
+
+export const mobileGaragePermanentDeleteConfirmation = "PERMANENT_DELETE";
+export const mobileGarageLifecycleContractHeader = "X-ATS-Garage-Contract";
+export const mobileGarageLifecycleContractVersion = "lifecycle-v1";
 
 const mobileGarageErrors = {
   MOBILE_GARAGE_INVALID_BODY: {
@@ -73,6 +94,38 @@ const mobileGarageErrors = {
   MOBILE_GARAGE_CAPACITY_REACHED: {
     status: 409,
     message: "Garajınızdaki aktif araç kapasitesi dolu.",
+  },
+  MOBILE_GARAGE_ARCHIVED_CAPACITY_REACHED: {
+    status: 409,
+    message: "Arşivinizdeki araç kapasitesi dolu.",
+  },
+  MOBILE_GARAGE_VEHICLE_NOT_FOUND: {
+    status: 404,
+    message: "Araç bulunamadı veya bu işlem için uygun değil.",
+  },
+  MOBILE_GARAGE_ARCHIVE_FAILED: {
+    status: 409,
+    message: "Araç arşivlenemedi. Garajı yenileyip tekrar deneyin.",
+  },
+  MOBILE_GARAGE_RESTORE_CONFLICT: {
+    status: 409,
+    message: "Aynı plakaya sahip aktif bir araç bulunduğu için araç geri yüklenemedi.",
+  },
+  MOBILE_GARAGE_RESTORE_FAILED: {
+    status: 500,
+    message: "Araç şu anda geri yüklenemedi. Lütfen tekrar deneyin.",
+  },
+  MOBILE_GARAGE_ACTIVE_DELETE_FORBIDDEN: {
+    status: 409,
+    message: "Kalıcı silme yalnızca arşivlenen araçlar için yapılabilir.",
+  },
+  MOBILE_GARAGE_DELETE_CONFIRMATION_REQUIRED: {
+    status: 422,
+    message: "Kalıcı silme için açık onay gerekiyor.",
+  },
+  MOBILE_GARAGE_DELETE_FAILED: {
+    status: 500,
+    message: "Araç şu anda kalıcı olarak silinemedi. Lütfen tekrar deneyin.",
   },
   MOBILE_GARAGE_CREATE_FAILED: {
     status: 500,
@@ -103,11 +156,18 @@ export function buildMobileGarageResponseBody({
   max,
   remaining,
   vehicles,
+  archive,
 }: {
   active: number;
   max: number;
   remaining: number;
   vehicles: MobileGarageVehicle[];
+  archive?: {
+    archived: number;
+    max: number;
+    remaining: number;
+    vehicles: MobileGarageArchivedVehicle[];
+  };
 }) {
   return {
     data: {
@@ -117,6 +177,16 @@ export function buildMobileGarageResponseBody({
         remaining,
       },
       vehicles,
+      ...(archive
+        ? {
+            archivedCapacity: {
+              archived: archive.archived,
+              max: archive.max,
+              remaining: archive.remaining,
+            },
+            archivedVehicles: archive.vehicles,
+          }
+        : {}),
     },
   };
 }
@@ -180,6 +250,14 @@ export function parseMobileGarageVehicleBody(value: unknown): VehicleInput | nul
   const parsed = parseVehicleForm(formData);
 
   return parsed.ok ? parsed.data : null;
+}
+
+export function hasMobileGaragePermanentDeleteConfirmation(value: unknown) {
+  return (
+    isPlainObject(value) &&
+    Object.keys(value).length === 1 &&
+    value.confirmation === mobileGaragePermanentDeleteConfirmation
+  );
 }
 
 export function mobileGarageErrorResponse(error: unknown) {
