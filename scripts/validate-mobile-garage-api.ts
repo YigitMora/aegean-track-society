@@ -170,6 +170,7 @@ function validateSourceGuards() {
   );
   const implementation = source("src/lib/mobile-garage.ts");
   const contract = source("src/lib/mobile-garage-contract.ts");
+  const vehicleImages = source("src/lib/vehicle-images.ts");
   const garagePostRoute = garageRoute.slice(
     garageRoute.indexOf("export async function POST"),
   );
@@ -184,7 +185,13 @@ function validateSourceGuards() {
 
   assert.ok(
     garageRoute.indexOf("authenticateMobileMember(request)") <
-      garageRoute.indexOf("getMobileGarageResponseBody(memberUser.id)"),
+      garageRoute.indexOf(
+        "getMobileGarageResponseBody(memberUser.id, accessToken)",
+      ),
+  );
+  assert.match(
+    garageRoute,
+    /getMobileGarageResponseBody\(memberUser\.id, accessToken\)/,
   );
   assert.ok(
     garagePostRoute.indexOf("authenticateMobileMember(request)") <
@@ -199,13 +206,18 @@ function validateSourceGuards() {
   assert.match(implementation, /deletedAt: null/);
   assert.match(implementation, /calculateVehiclePerformanceRating/);
   assert.match(implementation, /createOwnedVehicleImageSignedUrl/);
+  assert.match(implementation, /accessToken/);
   assert.match(implementation, /createGarageVehicle\(\{/);
   assert.match(implementation, /targetUserId: memberUserId/);
   assert.match(implementation, /MOBILE_GARAGE_IMAGE_SIGN_FAILED/);
   assert.match(implementation, /isPrimary: "desc"/);
   assert.doesNotMatch(implementation, /body\.userId|body\.email/);
   assert.doesNotMatch(contract, /imagePath/);
+  assert.doesNotMatch(contract, /accessToken/);
   assert.doesNotMatch(contract, /service_role|SUPABASE_SERVICE_ROLE/i);
+  assert.match(vehicleImages, /Authorization: `Bearer \$\{accessToken\}`/);
+  assert.match(vehicleImages, /persistSession: false/);
+  assert.doesNotMatch(vehicleImages, /console\.(warn|error)\([^\n]*accessToken/);
 }
 
 function source(path: string) {

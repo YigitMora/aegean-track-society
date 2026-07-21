@@ -16,8 +16,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    const { memberUser } = await authenticateMobileMember(request);
-    const body = await getMobileGarageResponseBody(memberUser.id);
+    const { accessToken, memberUser } = await authenticateMobileMember(request);
+    const body = await getMobileGarageResponseBody(memberUser.id, accessToken);
 
     return mobileJsonResponse(body);
   } catch (error) {

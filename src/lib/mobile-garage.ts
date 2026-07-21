@@ -121,7 +121,10 @@ type MobileVehicleDefinitionRow = Prisma.VehicleDefinitionGetPayload<{
   select: typeof mobileVehicleDefinitionSelect;
 }>;
 
-export async function getMobileGarageResponseBody(memberUserId: string) {
+export async function getMobileGarageResponseBody(
+  memberUserId: string,
+  accessToken: string,
+) {
   const vehicles = await prisma.vehicle.findMany({
     where: {
       userId: memberUserId,
@@ -141,7 +144,9 @@ export async function getMobileGarageResponseBody(memberUserId: string) {
     select: mobileGarageVehicleSelect,
   });
   const mobileVehicles = await Promise.all(
-    vehicles.map((vehicle) => serializeMobileGarageVehicle(vehicle, memberUserId)),
+    vehicles.map((vehicle) =>
+      serializeMobileGarageVehicle(vehicle, memberUserId, accessToken),
+    ),
   );
 
   return buildMobileGarageResponseBody({
@@ -225,6 +230,7 @@ export async function createMobileGarageVehicle({
 async function serializeMobileGarageVehicle(
   vehicle: MobileGarageVehicleRow,
   memberUserId: string,
+  accessToken: string,
 ): Promise<MobileGarageVehicle> {
   const rating = calculateVehiclePerformanceRating({
     vehicleDefinition: vehicle.vehicleDefinition,
@@ -239,7 +245,11 @@ async function serializeMobileGarageVehicle(
     plateNumber: vehicle.plateNumber,
     color: vehicle.color,
     isPrimary: vehicle.isPrimary,
-    coverImageUrl: await createMobileVehicleCoverImageUrl(vehicle, memberUserId),
+    coverImageUrl: await createMobileVehicleCoverImageUrl(
+      vehicle,
+      memberUserId,
+      accessToken,
+    ),
     vehicleDefinitionId: vehicle.vehicleDefinitionId,
     modificationCount: vehicle.modifications.length,
     latestCatalogMatchRequestStatus:
@@ -262,9 +272,12 @@ async function serializeMobileGarageVehicle(
 async function createMobileVehicleCoverImageUrl(
   vehicle: MobileGarageVehicleRow,
   memberUserId: string,
+  accessToken: string,
 ) {
   try {
-    return await createOwnedVehicleImageSignedUrl(vehicle, memberUserId);
+    return await createOwnedVehicleImageSignedUrl(vehicle, memberUserId, {
+      accessToken,
+    });
   } catch {
     console.warn("MOBILE_GARAGE_IMAGE_SIGN_FAILED");
     return null;

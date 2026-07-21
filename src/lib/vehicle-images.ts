@@ -1,4 +1,6 @@
 import { randomUUID } from "crypto";
+import { createClient } from "@supabase/supabase-js";
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createOptionalSupabaseServerClient } from "@/lib/supabase/server";
 
 export const vehicleImagesBucket = "vehicle-images";
@@ -37,6 +39,10 @@ export type OwnedVehicleImageInput = {
   userId: string;
   imagePath: string | null;
   deletedAt: Date | null;
+};
+
+type OwnedVehicleImageSigningOptions = {
+  accessToken?: string;
 };
 
 export function buildVehicleImagePath({
@@ -93,12 +99,15 @@ export async function validateVehicleImageFile(
 export async function createOwnedVehicleImageSignedUrl(
   vehicle: OwnedVehicleImageInput,
   authenticatedUserId: string,
+  options: OwnedVehicleImageSigningOptions = {},
 ) {
   if (!vehicle.imagePath || vehicle.userId !== authenticatedUserId || vehicle.deletedAt) {
     return null;
   }
 
-  const supabase = await createOptionalSupabaseServerClient();
+  const supabase = options.accessToken
+    ? createAccessTokenStorageClient(options.accessToken)
+    : await createOptionalSupabaseServerClient();
 
   if (!supabase) {
     return null;
@@ -119,6 +128,27 @@ export async function createOwnedVehicleImageSignedUrl(
   }
 
   return data.signedUrl;
+}
+
+function createAccessTokenStorageClient(accessToken: string) {
+  const config = getSupabasePublicConfig();
+
+  if (!config) {
+    return null;
+  }
+
+  return createClient(config.url, config.publishableKey, {
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      persistSession: false,
+    },
+    global: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  });
 }
 
 function isVehicleImageMimeType(value: string): value is VehicleImageMimeType {
