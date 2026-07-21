@@ -75,6 +75,27 @@ export type MobileGarageErrorCode =
   | "MOBILE_GARAGE_ACTIVE_DELETE_FORBIDDEN"
   | "MOBILE_GARAGE_DELETE_CONFIRMATION_REQUIRED"
   | "MOBILE_GARAGE_DELETE_FAILED"
+  | "MOBILE_GARAGE_EDIT_BLOCKED_BY_BUILD"
+  | "MOBILE_GARAGE_PRIMARY_FAILED"
+  | "MOBILE_GARAGE_IMAGE_UNSUPPORTED_FORMAT"
+  | "MOBILE_GARAGE_IMAGE_TOO_LARGE"
+  | "MOBILE_GARAGE_IMAGE_UPLOAD_FAILED"
+  | "MOBILE_GARAGE_IMAGE_REMOVE_FAILED"
+  | "MOBILE_GARAGE_STORAGE_UNAVAILABLE"
+  | "MOBILE_GARAGE_BUILD_UNAVAILABLE"
+  | "MOBILE_GARAGE_MODIFICATION_NOT_FOUND"
+  | "MOBILE_GARAGE_MODIFICATION_INACTIVE"
+  | "MOBILE_GARAGE_MODIFICATION_DUPLICATE"
+  | "MOBILE_GARAGE_MODIFICATION_SLOT_OCCUPIED"
+  | "MOBILE_GARAGE_MODIFICATION_INCOMPATIBLE"
+  | "MOBILE_GARAGE_MODIFICATION_CONFLICT"
+  | "MOBILE_GARAGE_MODIFICATION_REQUIREMENT_MISSING"
+  | "MOBILE_GARAGE_MODIFICATION_REQUIRED_BY_BUILD"
+  | "MOBILE_GARAGE_MODIFICATION_FAILED"
+  | "MOBILE_GARAGE_RATING_PREVIEW_FAILED"
+  | "MOBILE_GARAGE_CATALOG_MATCH_INVALID"
+  | "MOBILE_GARAGE_CATALOG_MATCH_ALREADY_OPEN"
+  | "MOBILE_GARAGE_CATALOG_MATCH_FAILED"
   | "MOBILE_GARAGE_CREATE_FAILED"
   | "MOBILE_GARAGE_INTERNAL_ERROR";
 
@@ -126,6 +147,90 @@ const mobileGarageErrors = {
   MOBILE_GARAGE_DELETE_FAILED: {
     status: 500,
     message: "Araç şu anda kalıcı olarak silinemedi. Lütfen tekrar deneyin.",
+  },
+  MOBILE_GARAGE_EDIT_BLOCKED_BY_BUILD: {
+    status: 409,
+    message: "Bu kimlik değişikliği yüklü modifikasyonlarla uyumlu değil.",
+  },
+  MOBILE_GARAGE_PRIMARY_FAILED: {
+    status: 500,
+    message: "Ana araç şu anda değiştirilemedi. Lütfen tekrar deneyin.",
+  },
+  MOBILE_GARAGE_IMAGE_UNSUPPORTED_FORMAT: {
+    status: 422,
+    message: "Yalnız JPEG, PNG veya WebP araç fotoğrafı seçebilirsiniz.",
+  },
+  MOBILE_GARAGE_IMAGE_TOO_LARGE: {
+    status: 413,
+    message: "Araç fotoğrafı en fazla 8 MB olabilir.",
+  },
+  MOBILE_GARAGE_IMAGE_UPLOAD_FAILED: {
+    status: 503,
+    message: "Araç fotoğrafı şu anda yüklenemedi. Lütfen tekrar deneyin.",
+  },
+  MOBILE_GARAGE_IMAGE_REMOVE_FAILED: {
+    status: 503,
+    message: "Araç fotoğrafı şu anda kaldırılamadı. Lütfen tekrar deneyin.",
+  },
+  MOBILE_GARAGE_STORAGE_UNAVAILABLE: {
+    status: 503,
+    message: "Görsel servisi geçici olarak kullanılamıyor.",
+  },
+  MOBILE_GARAGE_BUILD_UNAVAILABLE: {
+    status: 409,
+    message: "Build işlemleri bu araç için kullanılamıyor.",
+  },
+  MOBILE_GARAGE_MODIFICATION_NOT_FOUND: {
+    status: 404,
+    message: "Parça bulunamadı veya bu işlem için uygun değil.",
+  },
+  MOBILE_GARAGE_MODIFICATION_INACTIVE: {
+    status: 409,
+    message: "Bu parça şu anda build profiline eklenemez.",
+  },
+  MOBILE_GARAGE_MODIFICATION_DUPLICATE: {
+    status: 409,
+    message: "Bu parça build profiline zaten eklenmiş.",
+  },
+  MOBILE_GARAGE_MODIFICATION_SLOT_OCCUPIED: {
+    status: 409,
+    message: "Bu parça tipi için ayrılan slot dolu.",
+  },
+  MOBILE_GARAGE_MODIFICATION_INCOMPATIBLE: {
+    status: 409,
+    message: "Bu parça araçla uyumlu değil.",
+  },
+  MOBILE_GARAGE_MODIFICATION_CONFLICT: {
+    status: 409,
+    message: "Bu parça yüklü başka bir parçayla çakışıyor.",
+  },
+  MOBILE_GARAGE_MODIFICATION_REQUIREMENT_MISSING: {
+    status: 409,
+    message: "Bu parça için gerekli destekleyici parça yüklü değil.",
+  },
+  MOBILE_GARAGE_MODIFICATION_REQUIRED_BY_BUILD: {
+    status: 409,
+    message: "Bu parça build profilindeki başka bir parça tarafından gerekli.",
+  },
+  MOBILE_GARAGE_MODIFICATION_FAILED: {
+    status: 500,
+    message: "Build profili şu anda güncellenemedi. Lütfen tekrar deneyin.",
+  },
+  MOBILE_GARAGE_RATING_PREVIEW_FAILED: {
+    status: 500,
+    message: "Tahmini ATS Rating şu anda hesaplanamadı.",
+  },
+  MOBILE_GARAGE_CATALOG_MATCH_INVALID: {
+    status: 409,
+    message: "Bu araç için katalog eşleştirme talebi oluşturulamıyor.",
+  },
+  MOBILE_GARAGE_CATALOG_MATCH_ALREADY_OPEN: {
+    status: 409,
+    message: "Bu araç için açık bir katalog eşleştirme talebi zaten var.",
+  },
+  MOBILE_GARAGE_CATALOG_MATCH_FAILED: {
+    status: 500,
+    message: "Katalog eşleştirme talebi şu anda oluşturulamadı.",
   },
   MOBILE_GARAGE_CREATE_FAILED: {
     status: 500,

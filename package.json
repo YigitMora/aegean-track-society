@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "validate:mobile-api-auth": "tsx scripts/validate-mobile-api-auth.ts",
     "validate:mobile-garage": "tsx scripts/validate-mobile-garage-api.ts",
+    "validate:mobile-garage-detail": "tsx scripts/validate-mobile-garage-detail-api.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",

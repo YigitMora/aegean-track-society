@@ -17,7 +17,7 @@ const vehicleImageExtensions = {
   "image/webp": "webp",
 } as const;
 
-type VehicleImageMimeType = (typeof vehicleImageAcceptedMimeTypes)[number];
+export type VehicleImageMimeType = (typeof vehicleImageAcceptedMimeTypes)[number];
 
 export type VehicleImageValidationError =
   | "unsupported_format"
@@ -57,8 +57,61 @@ export function buildVehicleImagePath({
   return `${userId}/${vehicleId}/cover-${randomUUID()}.${vehicleImageExtensions[mimeType]}`;
 }
 
+export function validateVehicleImageMetadata({
+  mimeType,
+  fileSize,
+}: {
+  mimeType: string;
+  fileSize: number;
+}): VehicleImageValidationResult {
+  if (!isVehicleImageMimeType(mimeType)) {
+    return { ok: false, error: "unsupported_format" };
+  }
+
+  if (!Number.isInteger(fileSize) || fileSize <= 0) {
+    return { ok: false, error: "upload_failed" };
+  }
+
+  if (fileSize > maxVehicleImageBytes) {
+    return { ok: false, error: "file_too_large" };
+  }
+
+  return { ok: true, mimeType };
+}
+
+export function readOwnedVehicleImageMimeType({
+  objectPath,
+  userId,
+  vehicleId,
+}: {
+  objectPath: string;
+  userId: string;
+  vehicleId: string;
+}): VehicleImageMimeType | null {
+  const parts = objectPath.split("/");
+  if (
+    parts.length !== 3 ||
+    parts[0] !== userId ||
+    parts[1] !== vehicleId ||
+    !/^cover-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(jpg|png|webp)$/i.test(
+      parts[2],
+    )
+  ) {
+    return null;
+  }
+
+  const extension = parts[2].split(".").pop()?.toLowerCase();
+  if (extension === "jpg") {
+    return "image/jpeg";
+  }
+  if (extension === "png") {
+    return "image/png";
+  }
+  return extension === "webp" ? "image/webp" : null;
+}
+
 export async function validateVehicleImageFile(
-  file: File | null,
+  file: Blob | File | null,
 ): Promise<VehicleImageValidationResult> {
   if (!file || file.size === 0) {
     return {
@@ -191,7 +244,7 @@ export async function deleteOwnedVehicleImageObjects({
   }
 }
 
-function createAccessTokenStorageClient(accessToken: string) {
+export function createAccessTokenStorageClient(accessToken: string) {
   const config = getSupabasePublicConfig();
 
   if (!config) {
@@ -216,7 +269,7 @@ function isVehicleImageMimeType(value: string): value is VehicleImageMimeType {
   return vehicleImageAcceptedMimeTypes.includes(value as VehicleImageMimeType);
 }
 
-async function detectVehicleImageMimeType(file: File): Promise<VehicleImageMimeType | null> {
+async function detectVehicleImageMimeType(file: Blob): Promise<VehicleImageMimeType | null> {
   try {
     const bytes = new Uint8Array(await file.slice(0, 12).arrayBuffer());
 

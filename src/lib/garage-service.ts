@@ -331,12 +331,14 @@ export async function updateGarageVehicle({
   vehicleId,
   input,
   includeArchived = false,
+  preservePrimary = false,
   actor = memberActor,
 }: {
   targetUserId: string;
   vehicleId: string;
   input: VehicleInput;
   includeArchived?: boolean;
+  preservePrimary?: boolean;
   actor?: GarageActorContext;
 }): Promise<GarageServiceResult<{ vehicleId: string }>> {
   return runGarageSerializableTransaction(async (tx) => {
@@ -388,9 +390,13 @@ export async function updateGarageVehicle({
       return compatibility;
     }
 
+    const shouldBePrimary = preservePrimary
+      ? existingVehicle.isPrimary
+      : vehicleInput.isPrimary;
+
     if (
       existingVehicle.deletedAt === null &&
-      vehicleInput.isPrimary &&
+      shouldBePrimary &&
       !existingVehicle.isPrimary
     ) {
       await tx.vehicle.updateMany({
@@ -416,7 +422,7 @@ export async function updateGarageVehicle({
         year: vehicleInput.year,
         plateNumber: vehicleInput.plateNumber,
         color: vehicleInput.color,
-        ...(existingVehicle.deletedAt === null && vehicleInput.isPrimary
+        ...(existingVehicle.deletedAt === null && shouldBePrimary
           ? { isPrimary: true }
           : {}),
       },
