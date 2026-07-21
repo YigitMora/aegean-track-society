@@ -8,6 +8,7 @@ import {
 } from "@/lib/garage-capacity";
 import type { GarageLifecycleErrorCode } from "@/lib/garage-lifecycle-state";
 import { prisma } from "@/lib/prisma";
+import { arePlateNumbersEquivalent } from "@/lib/registration-validation";
 import {
   evaluateModificationBatchAvailability,
   formatModificationDefinition,
@@ -18,6 +19,7 @@ import {
   type VehicleBuildVehicle,
 } from "@/lib/vehicle-build-rules";
 import type { VehicleInput } from "@/lib/vehicle-validation";
+import { isCatalogVehicleYearAllowed } from "@/lib/vehicle-year-contract";
 
 export type GarageServiceErrorCode = GarageLifecycleErrorCode;
 
@@ -257,15 +259,10 @@ export async function createGarageVehicle({
       return garageFailure("active_vehicle_limit_reached");
     }
 
-    const duplicateVehicle = await tx.vehicle.findFirst({
-      where: {
-        userId: targetUserId,
-        plateNumber: vehicleInput.plateNumber,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-      },
+    const duplicateVehicle = await findActiveVehicleByPlate({
+      tx,
+      targetUserId,
+      plateNumber: vehicleInput.plateNumber,
     });
 
     if (duplicateVehicle) {
@@ -364,18 +361,11 @@ export async function updateGarageVehicle({
 
     const duplicateVehicle = existingVehicle.deletedAt
       ? null
-      : await tx.vehicle.findFirst({
-          where: {
-            userId: targetUserId,
-            plateNumber: vehicleInput.plateNumber,
-            deletedAt: null,
-            id: {
-              not: vehicleId,
-            },
-          },
-          select: {
-            id: true,
-          },
+      : await findActiveVehicleByPlate({
+          tx,
+          targetUserId,
+          plateNumber: vehicleInput.plateNumber,
+          excludeVehicleId: vehicleId,
         });
 
     if (duplicateVehicle) {
@@ -732,15 +722,10 @@ export async function restoreGarageVehicle({
       return garageFailure("active_vehicle_limit_reached");
     }
 
-    const duplicateVehicle = await tx.vehicle.findFirst({
-      where: {
-        userId: targetUserId,
-        plateNumber: vehicle.plateNumber,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-      },
+    const duplicateVehicle = await findActiveVehicleByPlate({
+      tx,
+      targetUserId,
+      plateNumber: vehicle.plateNumber,
     });
 
     if (duplicateVehicle) {
@@ -1094,6 +1079,36 @@ function isGarageSerializableConflict(error: unknown) {
   );
 }
 
+async function findActiveVehicleByPlate({
+  tx,
+  targetUserId,
+  plateNumber,
+  excludeVehicleId,
+}: {
+  tx: GarageTransaction;
+  targetUserId: string;
+  plateNumber: string;
+  excludeVehicleId?: string;
+}) {
+  const activeVehicles = await tx.vehicle.findMany({
+    where: {
+      userId: targetUserId,
+      deletedAt: null,
+      ...(excludeVehicleId ? { id: { not: excludeVehicleId } } : {}),
+    },
+    select: {
+      id: true,
+      plateNumber: true,
+    },
+  });
+
+  return (
+    activeVehicles.find(
+      (vehicle) => arePlateNumbersEquivalent(vehicle.plateNumber, plateNumber),
+    ) ?? null
+  );
+}
+
 async function resolveVehicleInputForWrite(
   tx: GarageTransaction,
   input: VehicleInput,
@@ -1289,15 +1304,7 @@ function isYearCompatible(
   year: number,
   definition: Pick<VehicleDefinitionValidationRow, "yearFrom" | "yearTo">,
 ) {
-  if (definition.yearFrom !== null && year < definition.yearFrom) {
-    return false;
-  }
-
-  if (definition.yearTo !== null && year > definition.yearTo) {
-    return false;
-  }
-
-  return true;
+  return isCatalogVehicleYearAllowed(year, definition);
 }
 
 async function createAdminAuditLogsForVehicles({

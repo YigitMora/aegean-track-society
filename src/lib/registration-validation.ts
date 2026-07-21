@@ -67,7 +67,20 @@ export function normalizeEmail(email: string) {
 }
 
 export function normalizePlateNumber(plateNumber: string) {
-  return plateNumber.trim().replace(/\s+/g, " ").toUpperCase();
+  const compact = plateNumber.toLocaleUpperCase("tr-TR").replace(/[\s-]/g, "");
+  const standardPlate = compact.match(
+    /^(0[1-9]|[1-7][0-9]|8[01])([A-Z]{1,3})(\d{2,5})$/,
+  );
+
+  return standardPlate
+    ? `${standardPlate[1]} ${standardPlate[2]} ${standardPlate[3]}`
+    : null;
+}
+
+export function arePlateNumbersEquivalent(left: string, right: string) {
+  const normalizedLeft = normalizePlateNumber(left);
+
+  return normalizedLeft !== null && normalizedLeft === normalizePlateNumber(right);
 }
 
 export function normalizeTurkishPhone(phone: string) {
