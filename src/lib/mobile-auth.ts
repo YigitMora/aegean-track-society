@@ -28,6 +28,7 @@ export type MobileMemberUser = AtsMemberUser;
 
 export type AuthenticatedMobileMember = {
   memberUser: MobileMemberUser;
+  accessToken: string;
 };
 
 type SupabaseUserLookupResult = {
@@ -107,6 +108,7 @@ export async function authenticateMobileMember(
 
   return {
     memberUser,
+    accessToken,
   };
 }
 

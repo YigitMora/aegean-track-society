@@ -304,6 +304,7 @@ async function validateSuccessfulSafeResponse() {
     dependencies(),
   );
   assert.equal(result.memberUser, activeMember);
+  assert.equal(result.accessToken, "valid-token");
 
   const body = buildMobileMeResponseBody(result.memberUser);
   const expectedBody = {
