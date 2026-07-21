@@ -1,6 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  getCatalogVehicleYearOptions,
+  getManualVehicleYearOptions,
+} from "@/lib/vehicle-year-contract";
 
 export type VehicleTemplateOption = {
   id: string;
@@ -21,8 +25,6 @@ type VehicleTemplateFieldsProps = {
   defaultYear?: number | null;
   defaultMode?: "catalog" | "manual";
 };
-
-const maxVehicleYear = new Date().getFullYear() + 1;
 
 export function VehicleTemplateFields({
   definitions,
@@ -222,18 +224,25 @@ function ManualVehicleFields({
   defaultModel: string;
   defaultYear: number | null;
 }) {
+  const [year, setYear] = useState(defaultYear ? String(defaultYear) : "");
+
   return (
     <div className="grid gap-5 sm:grid-cols-2">
       <TextField label="Marka" name="brand" defaultValue={defaultBrand} required />
       <TextField label="Model" name="model" defaultValue={defaultModel} required />
-      <TextField
+      <SelectField
         label="Model yılı"
+        value={year}
+        onChange={setYear}
+        required={false}
         name="year"
-        type="number"
-        defaultValue={defaultYear ? String(defaultYear) : ""}
-        inputMode="numeric"
-        min="1950"
-        max={String(maxVehicleYear)}
+        options={[
+          { label: "Belirtilmedi", value: "" },
+          ...getManualVehicleYearOptions().map((year) => ({
+            label: String(year),
+            value: String(year),
+          })),
+        ]}
       />
     </div>
   );
@@ -268,19 +277,24 @@ function SelectField({
   value,
   onChange,
   options,
+  name,
+  required = true,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   options: Array<{ label: string; value: string }>;
+  name?: string;
+  required?: boolean;
 }) {
   return (
     <label className="block">
       <span className="text-sm font-bold text-ats-text">{label}</span>
       <select
+        name={name}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        required
+        required={required}
         className="mt-2 h-12 w-full rounded-md border border-ats-border bg-ats-black px-3 text-sm font-semibold text-ats-text outline-none transition focus:border-ats-blue focus:ring-2 focus:ring-ats-blue/20"
       >
         {options.map((option) => (
@@ -339,15 +353,8 @@ function generationLabelForDefinition(definition: VehicleTemplateOption) {
 }
 
 function yearsForDefinition(definition: VehicleTemplateOption) {
-  const start = definition.yearFrom ?? 1950;
-  const end = Math.min(definition.yearTo ?? maxVehicleYear, maxVehicleYear);
-  const years: string[] = [];
-
-  for (let year = end; year >= start; year -= 1) {
-    years.push(String(year));
-  }
-
-  return years;
+  const options = getCatalogVehicleYearOptions(definition);
+  return options.ok ? options.years.map(String) : [];
 }
 
 function defaultYearForDefinition(

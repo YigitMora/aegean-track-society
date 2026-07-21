@@ -7,6 +7,15 @@ import {
   MobileGarageError,
   parseMobileGarageVehicleBody,
 } from "../src/lib/mobile-garage-contract";
+import {
+  getCatalogVehicleYearOptions,
+  getManualVehicleYearOptions,
+  isCatalogVehicleYearAllowed,
+} from "../src/lib/vehicle-year-contract";
+import {
+  arePlateNumbersEquivalent,
+  normalizePlateNumber,
+} from "../src/lib/registration-validation";
 
 void main().catch((error) => {
   console.error(error);
@@ -15,11 +24,59 @@ void main().catch((error) => {
 
 async function main() {
   validateVehicleCreateBody();
+  validateVehicleYearContract();
+  validatePlateContract();
   validateSafeResponseContracts();
   await validateStableErrorsAndHeaders();
   validateSourceGuards();
 
   console.log("validate-mobile-garage-api passed");
+}
+
+function validatePlateContract() {
+  assert.equal(normalizePlateNumber("  34   ats 123  "), "34 ATS 123");
+  assert.equal(normalizePlateNumber("34 ats 123"), "34 ATS 123");
+  assert.equal(normalizePlateNumber("34 ATS 123"), "34 ATS 123");
+  assert.equal(normalizePlateNumber("34ats123"), "34 ATS 123");
+  assert.equal(normalizePlateNumber("34 ATS123"), "34 ATS 123");
+  assert.equal(normalizePlateNumber("34-ats-123"), "34 ATS 123");
+  assert.equal(normalizePlateNumber("34A12345"), "34 A 12345");
+  assert.equal(normalizePlateNumber("82 ATS 123"), null);
+  assert.equal(normalizePlateNumber("not-a-plate"), null);
+  assert.equal(arePlateNumbersEquivalent("34ats123", "34 ATS 123"), true);
+  assert.equal(arePlateNumbersEquivalent("34-ats-123", "34 ATS123"), true);
+  assert.equal(arePlateNumbersEquivalent("34 ATS 123", "34 ATS 124"), false);
+  assert.equal(arePlateNumbersEquivalent("invalid", "also-invalid"), false);
+}
+
+function validateVehicleYearContract() {
+  const bounded = { yearFrom: 2020, yearTo: 2024 };
+  const current = { yearFrom: 2023, yearTo: null };
+
+  assert.equal(isCatalogVehicleYearAllowed(2020, bounded, 2026), true);
+  assert.equal(isCatalogVehicleYearAllowed(2024, bounded, 2026), true);
+  assert.equal(isCatalogVehicleYearAllowed(2019, bounded, 2026), false);
+  assert.equal(isCatalogVehicleYearAllowed(2025, bounded, 2026), false);
+  assert.equal(isCatalogVehicleYearAllowed(2020.5, bounded, 2026), false);
+  assert.equal(isCatalogVehicleYearAllowed("2020", bounded, 2026), false);
+  assert.equal(isCatalogVehicleYearAllowed(null, bounded, 2026), false);
+  assert.equal(
+    isCatalogVehicleYearAllowed(2024, { yearFrom: null, yearTo: 2024 }, 2026),
+    false,
+  );
+  assert.equal(
+    isCatalogVehicleYearAllowed(2024, { yearFrom: 2025, yearTo: 2024 }, 2026),
+    false,
+  );
+  assert.deepEqual(getCatalogVehicleYearOptions(bounded, 2026), {
+    ok: true,
+    years: [2024, 2023, 2022, 2021, 2020],
+  });
+  assert.deepEqual(getCatalogVehicleYearOptions(current, 2026), {
+    ok: true,
+    years: [2027, 2026, 2025, 2024, 2023],
+  });
+  assert.deepEqual(getManualVehicleYearOptions(1951), [1952, 1951, 1950]);
 }
 
 function validateVehicleCreateBody() {
@@ -54,6 +111,24 @@ function validateVehicleCreateBody() {
       model: "Civic",
       year: null,
       plateNumber: "invalid",
+      color: null,
+      isPrimary: false,
+    },
+    {
+      vehicleDefinitionId: null,
+      brand: "Honda",
+      model: "Civic",
+      year: 2024.5,
+      plateNumber: "34 ATS 123",
+      color: null,
+      isPrimary: false,
+    },
+    {
+      vehicleDefinitionId: null,
+      brand: "Honda",
+      model: "Civic",
+      year: "2024",
+      plateNumber: "34 ATS 123",
       color: null,
       isPrimary: false,
     },
@@ -171,6 +246,9 @@ function validateSourceGuards() {
   const implementation = source("src/lib/mobile-garage.ts");
   const contract = source("src/lib/mobile-garage-contract.ts");
   const vehicleImages = source("src/lib/vehicle-images.ts");
+  const garageService = source("src/lib/garage-service.ts");
+  const plateInput = source("src/components/turkish-plate-input.tsx");
+  const templateFields = source("src/components/vehicle-template-fields.tsx");
   const garagePostRoute = garageRoute.slice(
     garageRoute.indexOf("export async function POST"),
   );
@@ -189,6 +267,15 @@ function validateSourceGuards() {
         "getMobileGarageResponseBody(memberUser.id, accessToken)",
       ),
   );
+  assert.match(plateInput, /defaultValue=\{defaultValue \?\? ""\}/);
+  assert.match(plateInput, /autoCapitalize="none"/);
+  assert.doesNotMatch(plateInput, /onChange|toUpperCase|normalizeTurkishPlateInput/);
+  assert.match(templateFields, /getManualVehicleYearOptions/);
+  assert.match(templateFields, /<SelectField\s+label="Model yılı"/);
+  assert.doesNotMatch(templateFields, /label="Model yılı"[\s\S]{0,120}type="number"/);
+  assert.match(garageService, /plateNumber: vehicleInput\.plateNumber/);
+  assert.match(garageService, /findActiveVehicleByPlate\(\{/);
+  assert.match(garageService, /arePlateNumbersEquivalent\(vehicle\.plateNumber, plateNumber\)/);
   assert.match(
     garageRoute,
     /getMobileGarageResponseBody\(memberUser\.id, accessToken\)/,
@@ -218,6 +305,13 @@ function validateSourceGuards() {
   assert.match(vehicleImages, /Authorization: `Bearer \$\{accessToken\}`/);
   assert.match(vehicleImages, /persistSession: false/);
   assert.doesNotMatch(vehicleImages, /console\.(warn|error)\([^\n]*accessToken/);
+  assert.match(garageService, /isCatalogVehicleYearAllowed\(year, definition\)/);
+  assert.match(garageService, /id: input\.vehicleDefinitionId/);
+  assert.match(garageService, /if \(!definition \|\| !input\.year/);
+  assert.ok(
+    garageService.indexOf("resolveVehicleInputForWrite(tx, input)") <
+      garageService.indexOf("const vehicle = await tx.vehicle.create"),
+  );
 }
 
 function source(path: string) {
