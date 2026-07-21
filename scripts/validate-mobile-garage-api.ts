@@ -3,7 +3,11 @@ import { readFileSync } from "node:fs";
 import {
   buildMobileGarageResponseBody,
   buildMobileVehicleDefinitionsResponseBody,
+  hasMobileGaragePermanentDeleteConfirmation,
   mobileGarageErrorResponse,
+  mobileGarageLifecycleContractHeader,
+  mobileGarageLifecycleContractVersion,
+  mobileGaragePermanentDeleteConfirmation,
   MobileGarageError,
   parseMobileGarageVehicleBody,
 } from "../src/lib/mobile-garage-contract";
@@ -26,11 +30,34 @@ async function main() {
   validateVehicleCreateBody();
   validateVehicleYearContract();
   validatePlateContract();
+  validateLifecycleRequestContract();
   validateSafeResponseContracts();
   await validateStableErrorsAndHeaders();
   validateSourceGuards();
 
   console.log("validate-mobile-garage-api passed");
+}
+
+function validateLifecycleRequestContract() {
+  assert.equal(
+    hasMobileGaragePermanentDeleteConfirmation({
+      confirmation: mobileGaragePermanentDeleteConfirmation,
+    }),
+    true,
+  );
+
+  for (const invalidBody of [
+    null,
+    {},
+    { confirmation: true },
+    { confirmation: "yes" },
+    {
+      confirmation: mobileGaragePermanentDeleteConfirmation,
+      userId: "must-not-be-accepted",
+    },
+  ]) {
+    assert.equal(hasMobileGaragePermanentDeleteConfirmation(invalidBody), false);
+  }
 }
 
 function validatePlateContract() {
@@ -177,15 +204,50 @@ function validateSafeResponseContracts() {
         },
       },
     ],
+    archive: {
+      archived: 1,
+      max: 5,
+      remaining: 4,
+      vehicles: [
+        {
+          id: "archived-vehicle-1",
+          brand: "Renault",
+          model: "Megane RS",
+          year: 2020,
+          plateNumber: "35 ATS 456",
+          modificationCount: 1,
+        },
+      ],
+    },
   });
   const serialized = JSON.stringify(garage);
 
   assert.equal(garage.data.capacity.active, 1);
   assert.equal(garage.data.capacity.remaining, 4);
   assert.equal(garage.data.vehicles[0]?.atsRating?.overall, 82);
+  assert.ok(garage.data.archivedCapacity);
+  assert.ok(garage.data.archivedVehicles);
+  assert.equal(garage.data.archivedCapacity.archived, 1);
+  assert.equal(garage.data.archivedCapacity.remaining, 4);
+  assert.deepEqual(Object.keys(garage.data.archivedVehicles[0] ?? {}), [
+    "id",
+    "brand",
+    "model",
+    "year",
+    "plateNumber",
+    "modificationCount",
+  ]);
   assert.equal(serialized.includes("imagePath"), false);
   assert.equal(serialized.includes("userId"), false);
   assert.equal(serialized.includes("createdAt"), false);
+
+  const legacyGarage = buildMobileGarageResponseBody({
+    active: 0,
+    max: 5,
+    remaining: 5,
+    vehicles: [],
+  });
+  assert.deepEqual(Object.keys(legacyGarage.data), ["capacity", "vehicles"]);
 
   const definitions = buildMobileVehicleDefinitionsResponseBody([
     {
@@ -223,6 +285,14 @@ async function validateStableErrorsAndHeaders() {
     ["MOBILE_GARAGE_INVALID_BODY", 422],
     ["MOBILE_GARAGE_DUPLICATE_PLATE", 409],
     ["MOBILE_GARAGE_CAPACITY_REACHED", 409],
+    ["MOBILE_GARAGE_ARCHIVED_CAPACITY_REACHED", 409],
+    ["MOBILE_GARAGE_VEHICLE_NOT_FOUND", 404],
+    ["MOBILE_GARAGE_ARCHIVE_FAILED", 409],
+    ["MOBILE_GARAGE_RESTORE_CONFLICT", 409],
+    ["MOBILE_GARAGE_RESTORE_FAILED", 500],
+    ["MOBILE_GARAGE_ACTIVE_DELETE_FORBIDDEN", 409],
+    ["MOBILE_GARAGE_DELETE_CONFIRMATION_REQUIRED", 422],
+    ["MOBILE_GARAGE_DELETE_FAILED", 500],
     ["MOBILE_GARAGE_CREATE_FAILED", 500],
     ["MOBILE_GARAGE_INTERNAL_ERROR", 500],
   ] as const) {
@@ -252,6 +322,15 @@ function validateSourceGuards() {
   const garagePostRoute = garageRoute.slice(
     garageRoute.indexOf("export async function POST"),
   );
+  const archiveRoute = source(
+    "src/app/api/mobile/v1/garage/[vehicleId]/archive/route.ts",
+  );
+  const restoreRoute = source(
+    "src/app/api/mobile/v1/garage/[vehicleId]/restore/route.ts",
+  );
+  const deleteRoute = source(
+    "src/app/api/mobile/v1/garage/[vehicleId]/permanent-delete/route.ts",
+  );
 
   for (const route of [garageRoute, definitionsRoute]) {
     assert.match(route, /runtime = "nodejs"/);
@@ -261,11 +340,31 @@ function validateSourceGuards() {
     assert.doesNotMatch(route, /service_role|SUPABASE_SERVICE_ROLE|prisma\./i);
   }
 
+  for (const [route, domainCall] of [
+    [archiveRoute, "archiveMobileGarageVehicle"],
+    [restoreRoute, "restoreMobileGarageVehicle"],
+    [deleteRoute, "permanentlyDeleteMobileGarageVehicle"],
+  ] as const) {
+    assert.match(route, /runtime = "nodejs"/);
+    assert.match(route, /dynamic = "force-dynamic"/);
+    assert.match(route, /authenticateMobileMember\(request\)/);
+    assert.match(route, new RegExp(`${domainCall}\\(\\{`));
+    assert.match(route, /memberUserId: memberUser\.id/);
+    assert.match(route, /mobileJsonResponse/);
+    assert.doesNotMatch(route, /body\.userId|body\.email|prisma\./);
+    assert.ok(
+      route.indexOf("authenticateMobileMember(request)") <
+        route.indexOf(`${domainCall}({`),
+    );
+  }
+
+  assert.match(deleteRoute, /export async function DELETE/);
+  assert.match(deleteRoute, /readRequestBody\(request\)/);
+  assert.match(deleteRoute, /MOBILE_GARAGE_DELETE_CONFIRMATION_REQUIRED/);
+
   assert.ok(
     garageRoute.indexOf("authenticateMobileMember(request)") <
-      garageRoute.indexOf(
-        "getMobileGarageResponseBody(memberUser.id, accessToken)",
-      ),
+      garageRoute.indexOf("getMobileGarageResponseBody("),
   );
   assert.match(plateInput, /defaultValue=\{defaultValue \?\? ""\}/);
   assert.match(plateInput, /autoCapitalize="none"/);
@@ -278,7 +377,7 @@ function validateSourceGuards() {
   assert.match(garageService, /arePlateNumbersEquivalent\(vehicle\.plateNumber, plateNumber\)/);
   assert.match(
     garageRoute,
-    /getMobileGarageResponseBody\(memberUser\.id, accessToken\)/,
+    /getMobileGarageResponseBody\(memberUser\.id, accessToken, \{/,
   );
   assert.ok(
     garagePostRoute.indexOf("authenticateMobileMember(request)") <
@@ -298,13 +397,46 @@ function validateSourceGuards() {
   assert.match(implementation, /targetUserId: memberUserId/);
   assert.match(implementation, /MOBILE_GARAGE_IMAGE_SIGN_FAILED/);
   assert.match(implementation, /isPrimary: "desc"/);
+  assert.match(implementation, /deletedAt: "desc"/);
+  assert.match(implementation, /serializeMobileArchivedGarageVehicle/);
+  assert.match(
+    implementation,
+    /plateNumber: normalizePlateNumber\(vehicle\.plateNumber\) \?\? vehicle\.plateNumber/g,
+  );
+  assert.match(implementation, /archiveGarageVehicles\(\{/);
+  assert.match(implementation, /restoreGarageVehicle\(\{/);
+  assert.match(implementation, /permanentlyDeleteArchivedGarageVehicles\(\{/);
+  assert.match(implementation, /deleteOwnedVehicleImageObjects\(\{/);
+  assert.match(implementation, /targetUserId: memberUserId/);
+  assert.match(garageRoute, /mobileGarageLifecycleContractHeader/);
+  assert.match(garageRoute, /mobileGarageLifecycleContractVersion/);
+  assert.equal(mobileGarageLifecycleContractHeader, "X-ATS-Garage-Contract");
+  assert.equal(mobileGarageLifecycleContractVersion, "lifecycle-v1");
+  assert.doesNotMatch(
+    implementation.slice(
+      implementation.indexOf("function serializeMobileArchivedGarageVehicle"),
+    ),
+    /coverImageUrl|createOwnedVehicleImageSignedUrl/,
+  );
   assert.doesNotMatch(implementation, /body\.userId|body\.email/);
   assert.doesNotMatch(contract, /imagePath/);
   assert.doesNotMatch(contract, /accessToken/);
   assert.doesNotMatch(contract, /service_role|SUPABASE_SERVICE_ROLE/i);
   assert.match(vehicleImages, /Authorization: `Bearer \$\{accessToken\}`/);
   assert.match(vehicleImages, /persistSession: false/);
+  assert.match(vehicleImages, /path\.startsWith\(userPathPrefix\)/);
+  assert.match(vehicleImages, /mobile_permanent_delete_cleanup/);
   assert.doesNotMatch(vehicleImages, /console\.(warn|error)\([^\n]*accessToken/);
+  assert.match(garageService, /isolationLevel: Prisma\.TransactionIsolationLevel\.Serializable/);
+  assert.match(garageService, /error\.code === "P2034"/);
+  assert.match(garageService, /registration\.updateMany\(\{/);
+  assert.match(garageService, /vehicleId: null/);
+  assert.match(garageService, /preservedRegistrationSnapshots/);
+  assert.match(garageService, /vehicleModification\.deleteMany\(\{/);
+  assert.match(garageService, /active_delete_forbidden/);
+  assert.match(garageService, /restore_conflict/);
+  assert.match(garageService, /archived_vehicle_limit_reached/);
+  assert.match(garageService, /primary_reassignment/);
   assert.match(garageService, /isCatalogVehicleYearAllowed\(year, definition\)/);
   assert.match(garageService, /id: input\.vehicleDefinitionId/);
   assert.match(garageService, /if \(!definition \|\| !input\.year/);

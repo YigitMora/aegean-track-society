@@ -113,3 +113,80 @@ DATABASE_URL="postgresql://..."
 authentication.
 
 Do not configure a Supabase service-role key for the public mobile app.
+
+## Garage Lifecycle API
+
+All garage routes use the same bearer authentication, `Cache-Control: no-store`
+response policy, authenticated Prisma member mapping, and owner scoping described
+above. A request never accepts a user id or email address.
+
+### Read Garage
+
+`GET /api/mobile/v1/garage` preserves the existing active garage contract and
+adds the archive contract when the M2C client sends:
+
+```http
+X-ATS-Garage-Contract: lifecycle-v1
+```
+
+Existing clients that omit this header continue to receive exactly the original
+`capacity` and `vehicles` fields. This negotiation is required because the
+existing mobile response validator intentionally rejects unknown fields.
+
+```json
+{
+  "data": {
+    "capacity": { "active": 1, "max": 5, "remaining": 4 },
+    "vehicles": [],
+    "archivedCapacity": { "archived": 1, "max": 5, "remaining": 4 },
+    "archivedVehicles": [
+      {
+        "id": "vehicle-id",
+        "brand": "Honda",
+        "model": "Civic Type R",
+        "year": 2024,
+        "plateNumber": "34 ATS 123",
+        "modificationCount": 2
+      }
+    ]
+  }
+}
+```
+
+Archived vehicles are ordered by archive time descending and then by id. The
+archive representation intentionally omits signed image URLs, rating details,
+primary state, internal timestamps, storage paths, owner ids, and registration
+data.
+
+### Mutations
+
+| Operation | Method and route | Body |
+| --- | --- | --- |
+| Archive | `POST /api/mobile/v1/garage/{vehicleId}/archive` | none |
+| Restore | `POST /api/mobile/v1/garage/{vehicleId}/restore` | none |
+| Permanently delete | `DELETE /api/mobile/v1/garage/{vehicleId}/permanent-delete` | `{ "confirmation": "PERMANENT_DELETE" }` |
+
+Each successful mutation returns the same complete `data` object as the garage
+GET endpoint so the client renders the server-selected primary vehicle and
+capacities without predicting them locally. Permanent deletion is restricted to
+archived vehicles. It unlinks registrations while preserving their immutable
+vehicle snapshots and deletes vehicle modifications in the existing serializable
+database transaction. Image-object deletion runs after commit; storage cleanup
+failure is logged without exposing paths or credentials and does not misreport a
+committed database deletion as failed.
+
+### Garage Error Codes
+
+Garage errors use the standard mobile error envelope.
+
+| Code | HTTP | Meaning |
+| --- | ---: | --- |
+| `MOBILE_GARAGE_VEHICLE_NOT_FOUND` | 404 | Vehicle is absent, belongs to another member, or is not in the required state. |
+| `MOBILE_GARAGE_CAPACITY_REACHED` | 409 | Active garage capacity is full. |
+| `MOBILE_GARAGE_ARCHIVED_CAPACITY_REACHED` | 409 | Archive capacity is full. |
+| `MOBILE_GARAGE_RESTORE_CONFLICT` | 409 | An active vehicle has the same canonical plate. |
+| `MOBILE_GARAGE_ARCHIVE_FAILED` | 409 | Archive state changed or the operation could not be completed. |
+| `MOBILE_GARAGE_ACTIVE_DELETE_FORBIDDEN` | 409 | Permanent delete was attempted for an active vehicle. |
+| `MOBILE_GARAGE_DELETE_CONFIRMATION_REQUIRED` | 422 | Exact destructive confirmation is missing. |
+| `MOBILE_GARAGE_RESTORE_FAILED` | 500 | Restore failed unexpectedly. |
+| `MOBILE_GARAGE_DELETE_FAILED` | 500 | Permanent delete failed unexpectedly. |
