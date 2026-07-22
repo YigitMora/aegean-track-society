@@ -71,7 +71,9 @@ async function handleIyzicoCallback(request: Request) {
       );
     }
   } catch (error) {
-    console.error("Payment confirmation transaction failed", error);
+    console.error("PAYMENT_CONFIRMATION_TRANSACTION_FAILED", {
+      errorCode: error instanceof Error ? error.name : "UNKNOWN",
+    });
     return redirectTo(request, "/payment/failure");
   }
 
