@@ -5,10 +5,13 @@ import {
   sendAdminNewRegistrationEmail,
   sendRegistrationReceivedEmail,
 } from "@/lib/email";
+import { createMemberEventApplication } from "@/lib/event-applications";
 import { formatDecimal, initializeCheckoutForm } from "@/lib/iyzico";
 import { ensureMemberUser, getVerifiedSupabaseUser } from "@/lib/member-auth";
+import { MobileAuthError } from "@/lib/mobile-auth";
 import { isMemberProfileComplete } from "@/lib/member-profile-validation";
 import { getPaymentMode, manualReservationMessage } from "@/lib/payment-mode";
+import { MobileApplicationsError } from "@/lib/mobile-applications-contract";
 import { prisma } from "@/lib/prisma";
 import { consumeRateLimit, getRateLimitHeaders } from "@/lib/rate-limit";
 import {
@@ -102,13 +105,57 @@ export async function POST(request: Request) {
     );
   }
 
-  console.log("MEMBER_REGISTRATION_ATTEMPT", {
-    userId: memberUser.id,
-    vehicleId: input.vehicleId,
-    operation: "create",
-  });
-
   const paymentMode = getPaymentMode();
+
+  if (paymentMode === "manual") {
+    try {
+      const result = await createMemberEventApplication({
+        memberUser,
+        slug: eventSlug,
+        input,
+        consentIpAddress: clientIp === "unknown" ? null : clientIp,
+        source: "member_registration_form",
+      });
+
+      await Promise.allSettled([
+        sendRegistrationReceivedEmail({
+          registrationId: result.email.registrationId,
+          to: result.email.to,
+          fullName: result.email.fullName,
+          carBrandModel: result.email.carBrandModel,
+          plateNumber: result.email.plateNumber,
+        }),
+        sendAdminNewRegistrationEmail({
+          registrationId: result.email.registrationId,
+          to: result.email.to,
+          fullName: result.email.fullName,
+          email: result.email.to,
+          phone: result.email.phone,
+          carBrandModel: result.email.carBrandModel,
+          plateNumber: result.email.plateNumber,
+          experienceLevel: result.email.experienceLevel,
+          emergencyContactName: result.email.emergencyContactName,
+          emergencyContactPhone: result.email.emergencyContactPhone,
+        }),
+      ]);
+
+      return NextResponse.json(
+        {
+          message: manualReservationMessage,
+          paymentMode,
+          successUrl: `/registration/success?registrationId=${result.application.id}`,
+          registration: {
+            id: result.application.id,
+            status: "PENDING_PAYMENT",
+            paymentStatus: "UNPAID",
+          },
+        },
+        { status: 201 },
+      );
+    } catch (error) {
+      return legacyManualRegistrationErrorResponse(error);
+    }
+  }
 
   if (paymentMode === "iyzico") {
     const paymentInitializationLimit = consumeRateLimit({
@@ -193,13 +240,6 @@ export async function POST(request: Request) {
     });
 
     if (memberDuplicate) {
-      console.log("MEMBER_REGISTRATION_DUPLICATE", {
-        userId: memberUser.id,
-        vehicleId: vehicle.id,
-        registrationId: memberDuplicate.id,
-        operation: "duplicate_member_package",
-      });
-
       return NextResponse.json(
         {
           message: "Bu etkinlik paketi için aktif bir kayıt talebiniz zaten mevcut.",
@@ -231,13 +271,6 @@ export async function POST(request: Request) {
     });
 
     if (compatibilityDuplicate) {
-      console.log("MEMBER_REGISTRATION_DUPLICATE", {
-        userId: memberUser.id,
-        vehicleId: vehicle.id,
-        registrationId: compatibilityDuplicate.id,
-        operation: "duplicate_email_plate",
-      });
-
       return NextResponse.json(
         {
           message: "Bu bilgilerle aktif bir kayıt zaten mevcut.",
@@ -259,12 +292,6 @@ export async function POST(request: Request) {
     });
 
     if (eventPackage.capacity > 0 && reservedCount >= eventPackage.capacity) {
-      console.log("MEMBER_REGISTRATION_CAPACITY_FULL", {
-        userId: memberUser.id,
-        vehicleId: vehicle.id,
-        operation: "capacity_check",
-      });
-
       return NextResponse.json(
         { message: "Bu etkinlik paketi için kontenjan dolu." },
         { status: 409 },
@@ -336,13 +363,6 @@ export async function POST(request: Request) {
           })
         : null;
 
-    console.log("MEMBER_REGISTRATION_CREATED", {
-      userId: memberUser.id,
-      vehicleId: vehicle.id,
-      registrationId: registration.id,
-      operation: "create",
-    });
-
     await createRegistrationCreatedAuditLog(registration.id, consentIpAddress);
     await Promise.allSettled([
       sendRegistrationReceivedEmail({
@@ -365,22 +385,6 @@ export async function POST(request: Request) {
         emergencyContactPhone: registration.emergencyContactPhone,
       }),
     ]);
-
-    if (paymentMode === "manual") {
-      return NextResponse.json(
-        {
-          message: manualReservationMessage,
-          paymentMode,
-          successUrl: `/registration/success?registrationId=${registration.id}`,
-          registration: {
-            id: registration.id,
-            status: registration.status,
-            paymentStatus: registration.paymentStatus,
-          },
-        },
-        { status: 201 },
-      );
-    }
 
     if (!payment) {
       return NextResponse.json(
@@ -459,6 +463,22 @@ export async function POST(request: Request) {
     logMemberRegistrationFailure(memberUser.id, "create", error, input.vehicleId);
     return registrationErrorResponse(error);
   }
+}
+
+function legacyManualRegistrationErrorResponse(error: unknown) {
+  if (error instanceof MobileAuthError) {
+    return NextResponse.json(
+      { message: "Üyelik hesabınız bu işlem için uygun değil." },
+      { status: error.status },
+    );
+  }
+
+  if (error instanceof MobileApplicationsError) {
+    const status = error.status === 404 ? 404 : error.status;
+    return NextResponse.json({ message: error.message }, { status });
+  }
+
+  return registrationErrorResponse(error);
 }
 
 function registrationErrorResponse(error: unknown) {

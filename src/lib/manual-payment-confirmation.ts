@@ -119,9 +119,6 @@ export async function confirmManualRegistrationPayment({
               id: existingManualPayment.id,
             },
             data: {
-              provider: "MANUAL",
-              amount: registration.package.price,
-              currency: registration.package.currency,
               status: "SUCCESS",
               rawCallbackResponse: {
                 source: "admin_manual_confirmation",
