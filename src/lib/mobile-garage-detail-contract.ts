@@ -81,6 +81,11 @@ export type MobileGarageCatalogPart = {
   id: string;
   category: ModificationCategory;
   categoryLabel: string;
+  group: {
+    key: string;
+    label: string;
+  };
+  selectionGroupKey: string | null;
   label: string;
   brand: string | null;
   name: string;

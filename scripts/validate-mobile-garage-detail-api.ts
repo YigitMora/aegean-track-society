@@ -25,6 +25,7 @@ import {
   type MobileGarageErrorCode,
 } from "../src/lib/mobile-garage-contract";
 import { MobileAuthError } from "../src/lib/mobile-auth";
+import { modificationTypeGroup } from "../src/lib/modification-presentation";
 import {
   maxVehicleImageBytes,
   readOwnedVehicleImageMimeType,
@@ -529,6 +530,11 @@ function validateSafeResponses() {
         id: "definition-1",
         category: "BRAKES",
         categoryLabel: "Fren",
+        group: {
+          key: "BRAKES:brake_pad",
+          label: "Fren Balatası",
+        },
+        selectionGroupKey: "brake_pad",
         label: "ATS / Pist Balatası",
         brand: "ATS",
         name: "Pist Balatası",
@@ -556,6 +562,36 @@ function validateSafeResponses() {
   ok(!serializedBuild.includes("componentTypeCode"));
   ok(!serializedBuild.includes("usageClass"));
   ok(!serializedBuild.includes("overallCap"));
+  equal(build.data.build.catalog[0]?.group, {
+    key: "BRAKES:brake_pad",
+    label: "Fren Balatası",
+  });
+  equal(build.data.build.catalog[0]?.selectionGroupKey, "brake_pad");
+
+  equal(
+    modificationTypeGroup({
+      category: ModificationCategory.COOLING,
+      componentTypeCode: "oil_cooler",
+      name: "Fallback oil cooler name",
+    }),
+    { key: "COOLING:oil_cooler", label: "Yağ Soğutucu" },
+  );
+  equal(
+    modificationTypeGroup({
+      category: ModificationCategory.COOLING,
+      componentTypeCode: "intercooler",
+      name: "Fallback intercooler name",
+    }),
+    { key: "COOLING:intercooler", label: "Intercooler" },
+  );
+  equal(
+    modificationTypeGroup({
+      category: ModificationCategory.COOLING,
+      componentTypeCode: "radiator",
+      name: "Fallback radiator name",
+    }),
+    { key: "COOLING:radiator", label: "Radyatör" },
+  );
 
   const preview = buildMobileGarageRatingPreviewResponseBody({
     currentRating: ratingWithInternalCap,
