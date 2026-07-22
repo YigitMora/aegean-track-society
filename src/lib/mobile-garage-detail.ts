@@ -228,6 +228,8 @@ type InstalledModificationRow = Prisma.VehicleModificationGetPayload<{
   select: typeof installedModificationSelect;
 }>;
 
+const mobileGarageBuildTransactionTimeoutMs = 15_000;
+
 export async function getMobileGarageVehicleDetailResponseBody({
   memberUserId,
   vehicleId,
@@ -654,21 +656,27 @@ export async function addMobileGarageModifications({
       return { ok: false as const, code: "VEHICLE_NOT_FOUND" as const };
     }
 
-    const [definitions, catalog] = await Promise.all([
-      tx.modificationDefinition.findMany({
-        where: { id: { in: requestedDefinitionIds } },
-        select: definitionRuleSelect,
-      }),
-      tx.modificationDefinition.findMany({
-        where: { active: true },
-        select: definitionRuleSelect,
-      }),
-    ]);
+    const definitions = await tx.modificationDefinition.findMany({
+      where: { id: { in: requestedDefinitionIds } },
+      select: definitionRuleSelect,
+    });
     const orderedDefinitions = orderDefinitions(requestedDefinitionIds, definitions);
 
     if (!orderedDefinitions) {
       return { ok: false as const, code: "DEFINITION_NOT_FOUND" as const };
     }
+
+    const needsProviderFallbackCatalog = orderedDefinitions.some(
+      (definition) =>
+        isGenericEcuFallbackDefinition(definition) ||
+        isGenericTurboFallbackDefinition(definition),
+    );
+    const catalog = needsProviderFallbackCatalog
+      ? await tx.modificationDefinition.findMany({
+          where: { active: true },
+          select: definitionRuleSelect,
+        })
+      : [];
 
     const availability = evaluateBatchAvailability(
       vehicle,
@@ -690,7 +698,7 @@ export async function addMobileGarageModifications({
     return created.count === orderedDefinitions.length
       ? { ok: true as const }
       : { ok: false as const, code: "BATCH_WRITE_FAILED" as const };
-  });
+  }, { timeoutMs: mobileGarageBuildTransactionTimeoutMs });
 
   if (!result.ok) {
     throw new MobileGarageError(errorCodeForBuildResult(result.code));
@@ -749,7 +757,7 @@ export async function removeMobileGarageModification({
     return removed.count === 1
       ? { ok: true as const }
       : { ok: false as const, code: "MODIFICATION_WRITE_FAILED" as const };
-  });
+  }, { timeoutMs: mobileGarageBuildTransactionTimeoutMs });
 
   if (!result.ok) {
     throw new MobileGarageError(errorCodeForBuildResult(result.code));

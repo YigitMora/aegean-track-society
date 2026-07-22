@@ -1060,11 +1060,13 @@ export async function matchGarageVehicleDefinition({
 
 export async function runGarageSerializableTransaction<T>(
   operation: (tx: Prisma.TransactionClient) => Promise<T>,
+  { timeoutMs }: { timeoutMs?: number } = {},
 ) {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
       return await prisma.$transaction(operation, {
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        ...(timeoutMs === undefined ? {} : { timeout: timeoutMs }),
       });
     } catch (error) {
       if (attempt < 3 && isGarageSerializableConflict(error)) {
