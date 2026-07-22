@@ -116,22 +116,27 @@ Do not configure a Supabase service-role key for the public mobile app.
 
 ## Garage Lifecycle API
 
-All garage routes use the same bearer authentication, `Cache-Control: no-store`
-response policy, authenticated Prisma member mapping, and owner scoping described
-above. A request never accepts a user id or email address.
-
-### Read Garage
-
-`GET /api/mobile/v1/garage` preserves the existing active garage contract and
-adds the archive contract when the M2C client sends:
+All garage routes, including vehicle definitions, detail, media, build and
+modification operations, use the same bearer authentication,
+`Cache-Control: no-store` response policy, authenticated Prisma member mapping,
+and owner scoping described above. A request never accepts a user id or email
+address. After Bearer authentication, every covered request must send:
 
 ```http
 X-ATS-Garage-Contract: lifecycle-v1
 ```
 
-Existing clients that omit this header continue to receive exactly the original
-`capacity` and `vehicles` fields. This negotiation is required because the
-existing mobile response validator intentionally rejects unknown fields.
+Missing or unsupported lifecycle versions fail with HTTP 426 and
+`MOBILE_GARAGE_CONTRACT_UNSUPPORTED`. Every covered success and controlled error
+echoes the lifecycle response header. The authoritative 17-operation route set
+is `contracts/mobile-api-contract.json`.
+
+### Read Garage
+
+`GET /api/mobile/v1/garage` returns active and archived capacity when the current
+lifecycle contract is supplied. Older clients must remain on a backend version
+that advertises their supported contract; the current route fails closed rather
+than silently returning a different response shape.
 
 ```json
 {
@@ -195,8 +200,9 @@ Garage errors use the standard mobile error envelope.
 
 M2D adds owner-scoped detail, media, matching and build routes. All routes use
 the bearer authentication and error envelope above, run in the Node.js runtime,
-and return `Cache-Control: no-store`. M2D clients send the capability header and
-the API echoes the selected contract on every success/error response:
+and return `Cache-Control: no-store`. M2D clients send both the lifecycle header
+and the detail capability header. The API echoes both contracts on every
+success/error response:
 
 ```http
 X-ATS-Garage-Detail-Contract: build-v1

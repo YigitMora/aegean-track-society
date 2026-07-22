@@ -4,9 +4,16 @@ import { existsSync, readFileSync } from 'node:fs';
 const base = readOption('--base') ?? 'origin/main';
 runGit(['rev-parse', '--verify', `${base}^{commit}`]);
 
-const changedEntries = parseNameStatus(runGit(['diff', '--name-status', base, '--']));
+const changedEntries = parseNameStatus(
+  runGit(['diff', '--name-status', '--find-renames', '-z', base, '--']),
+);
 const knownPaths = new Set(changedEntries.map((entry) => entry.path));
-for (const path of runGit(['ls-files', '--others', '--exclude-standard']).split('\n')) {
+for (const path of runGit([
+  'ls-files',
+  '--others',
+  '--exclude-standard',
+  '-z',
+]).split('\0')) {
   if (path && !knownPaths.has(path)) {
     changedEntries.push({ status: 'A', path });
   }
@@ -22,9 +29,25 @@ for (const entry of migrationChanges) {
   }
 }
 
+const addedMigrationFiles = new Set(
+  migrationChanges
+    .filter((entry) => entry.status === 'A')
+    .map((entry) => entry.path),
+);
+for (const entry of migrationChanges.filter((entry) => entry.status === 'A')) {
+  const directory = entry.path.match(
+    /^(prisma\/migrations\/[^/]+)\/(?:[^/]+)$/,
+  )?.[1];
+  if (!directory || !addedMigrationFiles.has(`${directory}/migration.sql`)) {
+    failures.push(
+      `New migration content requires a newly added migration.sql: ${entry.path}`,
+    );
+  }
+}
+
 if (
   changedEntries.some((entry) => entry.path === 'prisma/schema.prisma') &&
-  !migrationChanges.some((entry) => entry.status === 'A')
+  ![...addedMigrationFiles].some((path) => path.endsWith('/migration.sql'))
 ) {
   failures.push('A Prisma schema change requires a new migration directory.');
 }
@@ -65,10 +88,15 @@ requireNoMatch(
 
 const packageJson = JSON.parse(read('package.json'));
 const buildCommand = String(packageJson.scripts?.build ?? '');
-if (/prisma\s+(?:migrate\s+deploy|db\s+seed)|prisma:(?:deploy|seed)/.test(buildCommand)) {
-  failures.push('The application build command must not migrate or seed production.');
+if (buildCommand !== 'prisma generate && next build') {
+  failures.push('The application build command must remain exactly prisma generate && next build.');
 }
-
+if (packageJson.scripts?.['prisma:deploy'] !== 'prisma migrate deploy') {
+  failures.push('The prisma:deploy script must remain exactly prisma migrate deploy.');
+}
+if (packageJson.scripts?.['prisma:seed'] !== 'prisma db seed') {
+  failures.push('The prisma:seed script must remain exactly prisma db seed.');
+}
 if (!/^PAYMENT_MODE=["']?manual["']?$/m.test(read('.env.example'))) {
   failures.push('The documented default PAYMENT_MODE must remain manual.');
 }
@@ -120,8 +148,23 @@ function parseNameStatus(value) {
   if (!value) {
     return [];
   }
-  return value.split('\n').map((line) => {
-    const [status, firstPath, secondPath] = line.split('\t');
-    return { status: status[0], path: secondPath ?? firstPath };
-  });
+  const fields = value.split('\0');
+  const entries = [];
+  for (let index = 0; index < fields.length; ) {
+    const status = fields[index++];
+    if (!status) {
+      break;
+    }
+    const firstPath = fields[index++];
+    if (firstPath) {
+      entries.push({ status: status[0], path: firstPath });
+    }
+    if (status.startsWith('R') || status.startsWith('C')) {
+      const secondPath = fields[index++];
+      if (secondPath) {
+        entries.push({ status: status[0], path: secondPath });
+      }
+    }
+  }
+  return entries;
 }

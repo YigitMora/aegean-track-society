@@ -17,17 +17,18 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           version: 11.7.0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: pnpm
@@ -67,8 +68,11 @@ jobs:
       - name: Validate release foundations
         run: pnpm validate:release-foundations
 
+      - name: Validate release safety fixtures
+        run: pnpm validate:release-safety
+
       - name: Scan tracked files for secret patterns
-        run: pnpm scan:secrets
+        run: pnpm scan:secrets -- --base "$BASE_SHA"
 
       - name: Validate repository and database safety
         run: pnpm validate:repository-safety -- --base "$BASE_SHA"

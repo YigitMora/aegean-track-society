@@ -180,6 +180,8 @@ const migrationWorkflow = read(".github/workflows/production-database.yml");
 const seedWorkflow = read(".github/workflows/production-seed.yml");
 const releaseWorkflow = read(".github/workflows/verify-production-release.yml");
 const ciWorkflow = read(".github/workflows/ci.yml");
+const secretScanner = read("scripts/release-safety/secret-scan.mjs");
+const repositorySafety = read("scripts/release-safety/repository-safety.mjs");
 assertProductionDatabaseWorkflow({
   source: migrationWorkflow,
   confirmationPrefix: "MIGRATE PRODUCTION",
@@ -193,7 +195,17 @@ assertProductionDatabaseWorkflow({
   forbiddenCommand: /pnpm prisma:deploy|prisma migrate deploy/,
 });
 assert.doesNotMatch(ciWorkflow, /DATABASE_URL|secrets\./);
+assertWorkflowActionPins(ciWorkflow, 3);
+assert.match(ciWorkflow, /persist-credentials:\s*false/);
+assert.match(ciWorkflow, /pnpm scan:secrets -- --base "\$BASE_SHA"/);
 assertReleaseWorkflow(releaseWorkflow);
+assert.match(secretScanner, /binary-file-review-required/);
+assert.match(secretScanner, /oversized-file-review-required/);
+assert.match(secretScanner, /VERCEL_ACCESS_TOKEN/);
+assert.match(secretScanner, /values are intentionally hidden/);
+assert.match(repositorySafety, /--name-status[\s\S]*--find-renames[\s\S]*-z/);
+assert.match(repositorySafety, /newly added migration\.sql/);
+assert.match(repositorySafety, /buildCommand !== 'prisma generate && next build'/);
 
 const paymentCallback = read("src/app/api/payments/iyzico/callback/route.ts");
 assert.match(paymentCallback, /PAYMENT_CONFIRMATION_TRANSACTION_FAILED/);
@@ -569,6 +581,8 @@ function assertProductionDatabaseWorkflow({
   assert.match(source, /DATABASE_URL:\s*\$\{\{ secrets\.DATABASE_URL \}\}/);
   assert.match(source, new RegExp(escapeRegExp(operationCommand)));
   assert.doesNotMatch(source, forbiddenCommand);
+  assert.match(source, /persist-credentials:\s*false/);
+  assertWorkflowActionPins(source, 3);
 }
 
 function assertReleaseWorkflow(source: string) {
@@ -602,8 +616,13 @@ function assertReleaseWorkflow(source: string) {
   assert.ok(installIndex >= 0 && secretIndex > installIndex);
   assert.ok(verificationIndex > secretIndex);
 
+  assertWorkflowActionPins(source, 4);
+}
+
+function assertWorkflowActionPins(source: string, expectedCount: number) {
   const actionPins = source.match(/uses:\s*[^\s]+@[0-9a-f]{40}\s+#\s+v\d+/g);
-  assert.equal(actionPins?.length, 4);
+  assert.equal(actionPins?.length, expectedCount);
+  assert.doesNotMatch(source, /uses:\s*[^\s]+@v\d+/);
 }
 
 function escapeRegExp(value: string) {

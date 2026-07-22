@@ -19,26 +19,41 @@ database-dependent build boundary is redesigned.
 
 1. Merge and deploy the backend release first.
 2. Wait for a successful GitHub Production deployment for the exact backend SHA.
-3. Run `Verify Production Release`. It uses the GitHub Deployments API to bind
-   that SHA to the unique Vercel deployment URL.
-4. Verify that both the unique deployment and canonical production domain serve
-   `/api/mobile/v1/release` with the exact SHA and compatible contract manifest.
-5. Verify the canonical mobile API with unauthenticated, read-only GET requests.
+3. Run `Verify Production Release`. It requires exactly one deployment created
+   by the trusted `vercel[bot]` integration for the expected SHA, then verifies
+   the configured Vercel project, team/account, linked GitHub repository,
+   `main` source ref, Production target, READY state and exact Git SHA through
+   the Vercel API.
+4. Verify through the Vercel API that the fixed canonical alias
+   `https://www.aegeantracksociety.com` is bound to that exact deployment.
+5. Verify that both the unique deployment and canonical production domain serve
+   `/api/mobile/v1/release` with the exact SHA and compatible contract manifest,
+   then probe the canonical API with unauthenticated, read-only GET requests.
 6. Only then may the mobile release-time contract gate accept the backend SHA.
 
-An HTTP status alone is not provenance. The verifier fails on redirects, HTML,
-missing no-store/Bearer/contract headers, an unavailable deployment URL, or a
-manifest SHA mismatch. It never sends an application Bearer token and never
-performs a mutation.
+An HTTP status, environment label, `.vercel.app` hostname or self-reported SHA
+alone is not provenance. The verifier fails on untrusted or ambiguous GitHub
+deployment metadata, project/team/repository/target/SHA mismatch, a stale
+canonical alias, redirects, HTML, malformed JSON, or missing
+no-store/Bearer/contract headers. The canonical origin is fixed in code and is
+not an operator input. The verifier never sends an application Bearer token and
+never performs a mutation.
 
 ## Contract versioning
 
 `contracts/mobile-api-contract.json` is the backend-owned manifest. Each domain
-publishes a response header and an array of supported versions. Keeping an older
-version in that array permits a future backend to remain compatible with mobile
-clients that still require it. The public release manifest is safe metadata only:
-it contains contract versions and `VERCEL_GIT_COMMIT_SHA`, never user data or
-credentials.
+publishes a response header and an array of supported versions. The garage
+lifecycle entry also defines the exact 17-operation route set and the secondary
+detail contract required by each applicable route. Keeping an older version in
+the version array permits a future backend to remain compatible with mobile
+clients that still require it. The public release manifest is safe metadata
+only: it contains route/contract versions and `VERCEL_GIT_COMMIT_SHA`, never user
+data or credentials, and is never accepted as provenance by itself.
+
+Live production verification probes only the manifest's four safe garage GET
+operations plus the existing read-only auth/application probes. Mutation route
+coverage comes from exact deployment provenance and deterministic backend/mobile
+route tests; unauthenticated GET probes do not prove mutation behavior.
 
 The mobile repository pins a deterministic copy for pull-request CI and declares
 one required version per domain. Mutable production is checked only by the
@@ -50,13 +65,23 @@ separate release-time gate.
 manual workflows. Both use the `Production` environment and the shared
 `production-database` concurrency group.
 
-- Migration requires the exact typed confirmation `MIGRATE PRODUCTION` and runs
-  only `prisma migrate deploy`.
-- Seed requires `SEED PRODUCTION`, validates its package inputs, and runs only
-  `prisma db seed`.
+- Migration requires `MIGRATE PRODUCTION <full-dispatch-SHA>` and runs only
+  `prisma migrate deploy`.
+- Seed requires `SEED PRODUCTION <full-dispatch-SHA>`, validates its package
+  inputs, and runs only `prisma db seed`.
 - Neither operation is triggered by a push, merge, Vercel deployment, or normal
-  CI. Each job records workflow name, actor, and exact commit SHA without printing
+  CI. Authorization rejects a non-`main` dispatch before dependency installation
+  or environment-secret access. The operation checks out the approved SHA with
+  persisted credentials disabled. `DATABASE_URL` exists only on the final Prisma
+  step. Each run records operation, actor, run URL and exact SHA without printing
   database credentials or rows.
+
+Repository CI blocks a Prisma schema change unless a newly added migration
+directory contains `migration.sql`, and rejects modification, deletion or rename
+of an existing migration. This is a structural policy only: without a disposable
+database or shadow database CI cannot prove semantic equivalence between schema
+and SQL. Schema changes therefore remain review-blocked unless accompanied by a
+new migration, and semantic validation remains a later isolated-database gate.
 
 Database rollback is never an automatic down migration. A failed schema rollout
 stops the release and requires a reviewed forward-fix migration. Application
@@ -65,11 +90,20 @@ the current database.
 
 ## Secrets and public configuration
 
-Normal CI requires no repository or environment secrets. Production database
-workflows require `DATABASE_URL` as a secret on the `Production` environment.
-The deployment verifier uses the workflow-provided `GITHUB_TOKEN` with read-only
-deployment access. Vercel must expose its standard `VERCEL_GIT_COMMIT_SHA` system
-value at runtime.
+Normal CI requires no repository or environment secrets. Its scanner checks
+tracked and non-ignored untracked text for repository-relevant credential
+families, hides matched values, and fails closed when a newly changed binary,
+non-regular or larger-than-5-MB file cannot be scanned safely.
+
+Production database workflows require `DATABASE_URL` as a secret on the
+`Production` environment. The deployment verifier requires the workflow-provided
+read-only `GITHUB_TOKEN`, a read-only `VERCEL_ACCESS_TOKEN` environment secret,
+and `VERCEL_PROJECT_ID` plus `VERCEL_TEAM_ID` environment variables. Vercel must
+expose its standard `VERCEL_GIT_COMMIT_SHA` system value at runtime.
+
+U1A adds no live secret or variable. The production release gate is intentionally
+inoperable until the Vercel secret and both identifiers are configured in the
+authorized settings phase; missing configuration fails closed.
 
 Expo `EXPO_PUBLIC_*` values are intentionally bundled into the mobile binary and
 are not secrets. Service-role keys, database URLs, private keys, payment-provider
@@ -92,6 +126,10 @@ verify the following after these workflows are reviewed:
   and restrict deployment branches to `main`.
 - Keep `DATABASE_URL` only as an environment secret. Do not expose it to normal
   CI or the deployment verifier.
+- Add a read-only Vercel token as the `Production` environment secret
+  `VERCEL_ACCESS_TOKEN`. Add the exact non-secret identifiers
+  `VERCEL_PROJECT_ID` and `VERCEL_TEAM_ID` as environment variables. Restrict the
+  environment to `main` before enabling the gate.
 - In Vercel, keep the Production branch set to `main`, verify that Git integration
   emits GitHub Deployment statuses with a unique `environment_url`, and enable
   standard System Environment Variables so `VERCEL_GIT_COMMIT_SHA` is available
