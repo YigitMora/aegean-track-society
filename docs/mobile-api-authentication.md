@@ -345,3 +345,18 @@ routes.
 No additional server environment variable is introduced by M2D. Storage uses
 the existing public Supabase URL/publishable key and the authenticated member's
 access token; no service-role key is used.
+
+## Event Applications API
+
+M3 adds the Bearer-authenticated `applications-v1` capability for event
+discovery, eligibility, application creation/history/detail and a read-only
+participant pass. Clients send and servers echo:
+
+```http
+X-ATS-Applications-Contract: applications-v1
+```
+
+The routes, strict request allowlist, lifecycle presentation, serializable
+duplicate/capacity protection, manual-payment snapshot and QR safety boundary
+are documented in [mobile-event-applications.md](./mobile-event-applications.md).
+No new environment variable or service-role credential is required.
