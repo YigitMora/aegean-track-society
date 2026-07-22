@@ -35,7 +35,10 @@ import {
 } from "@/lib/mobile-garage-contract";
 import { prisma } from "@/lib/prisma";
 import { normalizePlateNumber } from "@/lib/registration-validation";
-import { modificationTypeGroup } from "@/lib/modification-presentation";
+import {
+  modificationSelectionGroupKey,
+  modificationTypeGroup,
+} from "@/lib/modification-presentation";
 import {
   componentSlotKeyForDefinition,
   evaluateModificationAvailability,
@@ -1068,7 +1071,10 @@ function serializeCatalogPart({
     category: definition.category,
     categoryLabel: modificationCategoryLabels[definition.category],
     group: modificationTypeGroup(definition),
-    selectionGroupKey: componentSlotKeyForDefinition(definition),
+    selectionGroupKey: modificationSelectionGroupKey(
+      definition,
+      componentSlotKeyForDefinition(definition),
+    ),
     label: formatModificationDefinition(definition),
     brand: definition.brand,
     name: definition.name,

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { ModificationCategory } from "@prisma/client";
 
 const modificationTypeLabels: Record<string, string> = {
@@ -74,6 +75,8 @@ type ModificationTypeDefinition = {
   name: string;
 };
 
+const mobileCatalogKeyNamespace = "ats-mobile-build-v1";
+
 export function modificationTypeLabel(
   definition: Pick<ModificationTypeDefinition, "componentTypeCode" | "name">,
 ) {
@@ -87,7 +90,25 @@ export function modificationTypeGroup(definition: ModificationTypeDefinition) {
     definition.componentTypeCode ?? definition.name.toLocaleLowerCase("tr-TR");
 
   return {
-    key: `${definition.category}:${typeKey}`,
+    key: opaqueMobileCatalogKey("group", `${definition.category}:${typeKey}`),
     label: modificationTypeLabel(definition),
   };
+}
+
+export function modificationSelectionGroupKey(
+  definition: Pick<ModificationTypeDefinition, "category">,
+  slotKey: string | null,
+) {
+  return slotKey
+    ? opaqueMobileCatalogKey("slot", `${definition.category}:${slotKey}`)
+    : null;
+}
+
+function opaqueMobileCatalogKey(kind: "group" | "slot", value: string) {
+  const digest = createHash("sha256")
+    .update(`${mobileCatalogKeyNamespace}:${kind}:${value}`)
+    .digest("base64url")
+    .slice(0, 16);
+
+  return `${kind}_${digest}`;
 }

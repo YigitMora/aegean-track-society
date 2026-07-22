@@ -298,12 +298,13 @@ active status, compatibility, slots, exclusivity, duplicates, conflicts and
 prerequisites; a forged mobile request cannot bypass the catalog rules.
 
 Each catalog entry also includes a safe presentation `group` (`key` and Turkish
-`label`) and a nullable `selectionGroupKey`. Clients use `group` for the
+`label`) and a nullable `selectionGroupKey`. Both keys are deterministic,
+server-derived opaque identifiers; raw catalog component-type and technical-slot
+codes do not enter the mobile contract. Clients use `group` for the
 category-to-component-type browsing step and use `selectionGroupKey` to replace
-another pending selection for the same exclusive slot. Raw catalog
-`componentTypeCode` values are not exposed as a separate mobile field. These
-fields are UI guidance only; add and preview requests still contain definition
-ids and the server repeats every compatibility and slot check.
+another pending selection for the same exclusive slot. These fields are UI
+guidance only; add and preview requests still contain definition ids and the
+server repeats every compatibility and slot check.
 
 Preview executes the existing rating engine without a write and returns only
 current/projected rating components. Add/remove commits the build change, after

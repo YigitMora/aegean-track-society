@@ -25,7 +25,10 @@ import {
   type MobileGarageErrorCode,
 } from "../src/lib/mobile-garage-contract";
 import { MobileAuthError } from "../src/lib/mobile-auth";
-import { modificationTypeGroup } from "../src/lib/modification-presentation";
+import {
+  modificationSelectionGroupKey,
+  modificationTypeGroup,
+} from "../src/lib/modification-presentation";
 import {
   maxVehicleImageBytes,
   readOwnedVehicleImageMimeType,
@@ -458,6 +461,11 @@ function validateModificationBodies() {
     { modificationDefinitionIds: ["a", "a"] },
     { modificationDefinitionIds: Array.from({ length: 21 }, (_, index) => String(index)) },
     { modificationDefinitionIds: ["a"], userId: "must-not-be-accepted" },
+    { modificationDefinitionIds: ["a"], group: "forged-group" },
+    {
+      modificationDefinitionIds: ["a"],
+      selectionGroupKey: "forged-slot",
+    },
   ]) {
     equal(parseMobileGarageModificationIds(body), null);
   }
@@ -475,6 +483,15 @@ function validateModificationBodies() {
 
 function validateSafeResponses() {
   const ratingWithInternalCap = { ...rating(), overallCap: 72 };
+  const brakeGroup = modificationTypeGroup({
+    category: ModificationCategory.BRAKES,
+    componentTypeCode: "brake_pad",
+    name: "Fallback brake pad name",
+  });
+  const brakeSelectionGroupKey = modificationSelectionGroupKey(
+    { category: ModificationCategory.BRAKES },
+    "brake_pad",
+  );
   const detail = buildMobileGarageVehicleDetailResponseBody({
     id: "vehicle-1",
     brand: "Ford",
@@ -530,11 +547,8 @@ function validateSafeResponses() {
         id: "definition-1",
         category: "BRAKES",
         categoryLabel: "Fren",
-        group: {
-          key: "BRAKES:brake_pad",
-          label: "Fren Balatası",
-        },
-        selectionGroupKey: "brake_pad",
+        group: brakeGroup,
+        selectionGroupKey: brakeSelectionGroupKey,
         label: "ATS / Pist Balatası",
         brand: "ATS",
         name: "Pist Balatası",
@@ -562,36 +576,54 @@ function validateSafeResponses() {
   ok(!serializedBuild.includes("componentTypeCode"));
   ok(!serializedBuild.includes("usageClass"));
   ok(!serializedBuild.includes("overallCap"));
-  equal(build.data.build.catalog[0]?.group, {
-    key: "BRAKES:brake_pad",
-    label: "Fren Balatası",
-  });
-  equal(build.data.build.catalog[0]?.selectionGroupKey, "brake_pad");
+  ok(!serializedBuild.includes("brake_pad"));
+  equal(build.data.build.catalog[0]?.group, brakeGroup);
+  equal(build.data.build.catalog[0]?.selectionGroupKey, brakeSelectionGroupKey);
+  match(brakeGroup.key, /^group_[A-Za-z0-9_-]{16}$/);
+  match(brakeSelectionGroupKey ?? "", /^slot_[A-Za-z0-9_-]{16}$/);
+  equal(
+    modificationSelectionGroupKey(
+      { category: ModificationCategory.BRAKES },
+      "brake_pad",
+    ),
+    brakeSelectionGroupKey,
+  );
+  ok(
+    modificationSelectionGroupKey(
+      { category: ModificationCategory.COOLING },
+      "oil_cooler",
+    ) !== brakeSelectionGroupKey,
+  );
+  equal(
+    modificationSelectionGroupKey(
+      { category: ModificationCategory.COOLING },
+      null,
+    ),
+    null,
+  );
 
-  equal(
-    modificationTypeGroup({
-      category: ModificationCategory.COOLING,
-      componentTypeCode: "oil_cooler",
-      name: "Fallback oil cooler name",
-    }),
-    { key: "COOLING:oil_cooler", label: "Yağ Soğutucu" },
-  );
-  equal(
-    modificationTypeGroup({
-      category: ModificationCategory.COOLING,
-      componentTypeCode: "intercooler",
-      name: "Fallback intercooler name",
-    }),
-    { key: "COOLING:intercooler", label: "Intercooler" },
-  );
-  equal(
-    modificationTypeGroup({
-      category: ModificationCategory.COOLING,
-      componentTypeCode: "radiator",
-      name: "Fallback radiator name",
-    }),
-    { key: "COOLING:radiator", label: "Radyatör" },
-  );
+  const oilCoolerGroup = modificationTypeGroup({
+    category: ModificationCategory.COOLING,
+    componentTypeCode: "oil_cooler",
+    name: "Fallback oil cooler name",
+  });
+  const intercoolerGroup = modificationTypeGroup({
+    category: ModificationCategory.COOLING,
+    componentTypeCode: "intercooler",
+    name: "Fallback intercooler name",
+  });
+  const radiatorGroup = modificationTypeGroup({
+    category: ModificationCategory.COOLING,
+    componentTypeCode: "radiator",
+    name: "Fallback radiator name",
+  });
+  equal(oilCoolerGroup.label, "Yağ Soğutucu");
+  equal(intercoolerGroup.label, "Intercooler");
+  equal(radiatorGroup.label, "Radyatör");
+  match(oilCoolerGroup.key, /^group_[A-Za-z0-9_-]{16}$/);
+  ok(oilCoolerGroup.key !== intercoolerGroup.key);
+  ok(intercoolerGroup.key !== radiatorGroup.key);
+  ok(!oilCoolerGroup.key.includes("oil_cooler"));
 
   const preview = buildMobileGarageRatingPreviewResponseBody({
     currentRating: ratingWithInternalCap,
