@@ -1,4 +1,4 @@
-import { authenticateMobileMember } from "@/lib/mobile-auth";
+import { authenticateMobileGarageMember } from "@/lib/mobile-garage-contract";
 import { removeMobileGarageModification } from "@/lib/mobile-garage-detail";
 import {
   mobileGarageDetailErrorResponse,
@@ -17,7 +17,7 @@ export async function DELETE(
   context: MobileGarageRouteContext,
 ) {
   try {
-    const { memberUser } = await authenticateMobileMember(request);
+    const { memberUser } = await authenticateMobileGarageMember(request);
     const vehicleId = await readMobileGarageRouteId(context, "vehicleId");
     const modificationId = await readMobileGarageRouteId(
       context,

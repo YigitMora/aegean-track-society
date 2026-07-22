@@ -21,6 +21,8 @@ import {
   parseMobileGarageVehicleEditBody,
 } from "../src/lib/mobile-garage-detail-contract";
 import {
+  mobileGarageLifecycleContractHeader,
+  mobileGarageLifecycleContractVersion,
   MobileGarageError,
   type MobileGarageErrorCode,
 } from "../src/lib/mobile-garage-contract";
@@ -684,6 +686,7 @@ async function validateErrorsAndHeaders() {
     const body = await response.json();
     equal(response.status, status);
     equal(response.headers.get("Cache-Control"), "no-store");
+    equal(response.headers.get(mobileGarageLifecycleContractHeader), mobileGarageLifecycleContractVersion);
     equal(response.headers.get(mobileGarageDetailContractHeader), mobileGarageDetailContractVersion);
     equal(body.error.code, code);
     equal(Object.keys(body.error), ["code", "message"]);
@@ -695,6 +698,8 @@ async function validateErrorsAndHeaders() {
   equal(unauthorized.status, 401);
   equal(unauthorized.headers.get("WWW-Authenticate"), "Bearer");
   equal(unauthorized.headers.get("Cache-Control"), "no-store");
+  equal(unauthorized.headers.get(mobileGarageLifecycleContractHeader), mobileGarageLifecycleContractVersion);
+  equal(unauthorized.headers.get(mobileGarageDetailContractHeader), mobileGarageDetailContractVersion);
 }
 
 function validateRouteAndDomainGuards() {
@@ -715,11 +720,11 @@ function validateRouteAndDomainGuards() {
     const route = source(path);
     match(route, /runtime = "nodejs"/);
     match(route, /dynamic = "force-dynamic"/);
-    match(route, /authenticateMobileMember\(request\)/);
+    match(route, /authenticateMobileGarageMember\(request\)/);
     match(route, /mobileGarageDetailErrorResponse/);
     match(route, /mobileGarageDetailJsonResponse/);
     ok(
-      route.indexOf("authenticateMobileMember(request)") <
+      route.indexOf("authenticateMobileGarageMember(request)") <
         route.indexOf("await readMobileGarageRouteId"),
     );
     ok(!/prisma\.|service_role|SUPABASE_SERVICE_ROLE/i.test(route));
@@ -732,7 +737,7 @@ function validateRouteAndDomainGuards() {
   ]) {
     const route = source(path);
     ok(
-      route.indexOf("authenticateMobileMember(request)") <
+      route.indexOf("authenticateMobileGarageMember(request)") <
         route.indexOf("readMobileGarageJsonBody(request)"),
     );
   }

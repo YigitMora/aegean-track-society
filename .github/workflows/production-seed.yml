@@ -1,10 +1,18 @@
-name: Production Database Migration
+name: Production Database Seed
 
 on:
   workflow_dispatch:
     inputs:
       confirmation:
-        description: "Type MIGRATE PRODUCTION followed by the exact 40-character main SHA"
+        description: "Type SEED PRODUCTION followed by the exact 40-character main SHA"
+        required: true
+        type: string
+      seed_package_sep20_price:
+        description: "SEP20 package price used by prisma db seed"
+        required: true
+        type: string
+      seed_package_sep20_capacity:
+        description: "SEP20 package capacity used by prisma db seed"
         required: true
         type: string
 
@@ -32,21 +40,21 @@ jobs:
         run: |
           test "$GITHUB_REF" = "refs/heads/main"
           [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
-          test "$CONFIRMATION" = "MIGRATE PRODUCTION $GITHUB_SHA"
+          test "$CONFIRMATION" = "SEED PRODUCTION $GITHUB_SHA"
           echo "approved_sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Record authorized operation
         shell: bash
         run: |
           {
-            echo "### Authorized production database migration"
+            echo "### Authorized production database seed"
             echo "- Actor: $GITHUB_ACTOR"
             echo "- Commit: $GITHUB_SHA"
             echo "- Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           } >> "$GITHUB_STEP_SUMMARY"
 
-  migrate:
-    name: Apply Prisma migrations
+  seed:
+    name: Seed production reference data
     needs: authorize
     runs-on: ubuntu-latest
     environment: Production
@@ -73,9 +81,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Apply Prisma migrations
+      - name: Verify seed inputs
+        env:
+          SEED_PACKAGE_SEP20_PRICE: ${{ inputs.seed_package_sep20_price }}
+          SEED_PACKAGE_SEP20_CAPACITY: ${{ inputs.seed_package_sep20_capacity }}
+        run: |
+          test -n "$SEED_PACKAGE_SEP20_PRICE"
+          test -n "$SEED_PACKAGE_SEP20_CAPACITY"
+
+      - name: Seed production data
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SEED_PACKAGE_SEP20_PRICE: ${{ inputs.seed_package_sep20_price }}
+          SEED_PACKAGE_SEP20_CAPACITY: ${{ inputs.seed_package_sep20_capacity }}
         run: |
           test -n "$DATABASE_URL"
-          pnpm prisma:deploy
+          pnpm prisma:seed

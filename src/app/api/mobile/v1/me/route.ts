@@ -1,7 +1,7 @@
 import {
   authenticateMobileMember,
   mobileAuthErrorResponse,
-  mobileJsonResponse,
+  mobileAuthJsonResponse,
 } from "@/lib/mobile-auth";
 import { buildMobileMeResponseBody } from "@/lib/mobile-me";
 
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   try {
     const { memberUser } = await authenticateMobileMember(request);
 
-    return mobileJsonResponse(buildMobileMeResponseBody(memberUser));
+    return mobileAuthJsonResponse(buildMobileMeResponseBody(memberUser));
   } catch (error) {
     return mobileAuthErrorResponse(error);
   }

@@ -5,6 +5,7 @@ import type {
   VehicleRatingStatus,
 } from "@prisma/client";
 import {
+  authenticateMobileMember,
   mobileAuthErrorResponse,
   mobileJsonResponse,
   MobileAuthError,
@@ -64,6 +65,7 @@ export type MobileVehicleDefinition = {
 };
 
 export type MobileGarageErrorCode =
+  | "MOBILE_GARAGE_CONTRACT_UNSUPPORTED"
   | "MOBILE_GARAGE_INVALID_BODY"
   | "MOBILE_GARAGE_DUPLICATE_PLATE"
   | "MOBILE_GARAGE_CAPACITY_REACHED"
@@ -104,6 +106,10 @@ export const mobileGarageLifecycleContractHeader = "X-ATS-Garage-Contract";
 export const mobileGarageLifecycleContractVersion = "lifecycle-v1";
 
 const mobileGarageErrors = {
+  MOBILE_GARAGE_CONTRACT_UNSUPPORTED: {
+    status: 426,
+    message: "Uygulama sürümü garaj işlemleri için güncellenmelidir.",
+  },
   MOBILE_GARAGE_INVALID_BODY: {
     status: 422,
     message: "Araç bilgileri geçerli değil. Lütfen alanları kontrol edin.",
@@ -365,13 +371,45 @@ export function hasMobileGaragePermanentDeleteConfirmation(value: unknown) {
   );
 }
 
+export async function authenticateMobileGarageMember(request: Request) {
+  const authenticated = await authenticateMobileMember(request);
+  if (
+    request.headers.get(mobileGarageLifecycleContractHeader) !==
+    mobileGarageLifecycleContractVersion
+  ) {
+    throw new MobileGarageError("MOBILE_GARAGE_CONTRACT_UNSUPPORTED");
+  }
+  return authenticated;
+}
+
+export function mobileGarageJsonResponse<TBody>(
+  body: TBody,
+  init: ResponseInit = {},
+) {
+  const headers = new Headers(init.headers);
+  headers.set(
+    mobileGarageLifecycleContractHeader,
+    mobileGarageLifecycleContractVersion,
+  );
+
+  return mobileJsonResponse(body, {
+    ...init,
+    headers,
+  });
+}
+
 export function mobileGarageErrorResponse(error: unknown) {
   if (error instanceof MobileAuthError) {
-    return mobileAuthErrorResponse(error);
+    const response = mobileAuthErrorResponse(error);
+    response.headers.set(
+      mobileGarageLifecycleContractHeader,
+      mobileGarageLifecycleContractVersion,
+    );
+    return response;
   }
 
   if (error instanceof MobileGarageError) {
-    return mobileJsonResponse(
+    return mobileGarageJsonResponse(
       {
         error: {
           code: error.code,

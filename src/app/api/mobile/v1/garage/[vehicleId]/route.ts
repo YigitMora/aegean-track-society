@@ -1,4 +1,4 @@
-import { authenticateMobileMember } from "@/lib/mobile-auth";
+import { authenticateMobileGarageMember } from "@/lib/mobile-garage-contract";
 import {
   mobileGarageDetailErrorResponse,
   mobileGarageDetailJsonResponse,
@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request, context: MobileGarageRouteContext) {
   try {
-    const { accessToken, memberUser } = await authenticateMobileMember(request);
+    const { accessToken, memberUser } = await authenticateMobileGarageMember(request);
     const vehicleId = await readMobileGarageRouteId(context, "vehicleId");
     const body = await getMobileGarageVehicleDetailResponseBody({
       memberUserId: memberUser.id,
@@ -33,7 +33,7 @@ export async function GET(request: Request, context: MobileGarageRouteContext) {
 
 export async function PATCH(request: Request, context: MobileGarageRouteContext) {
   try {
-    const { memberUser } = await authenticateMobileMember(request);
+    const { memberUser } = await authenticateMobileGarageMember(request);
     const vehicleId = await readMobileGarageRouteId(context, "vehicleId");
     const requestBody = await readMobileGarageJsonBody(request);
     const body = await updateMobileGarageVehicle({

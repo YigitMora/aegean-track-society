@@ -282,6 +282,7 @@ function validateSafeResponseContracts() {
 
 async function validateStableErrorsAndHeaders() {
   for (const [code, status] of [
+    ["MOBILE_GARAGE_CONTRACT_UNSUPPORTED", 426],
     ["MOBILE_GARAGE_INVALID_BODY", 422],
     ["MOBILE_GARAGE_DUPLICATE_PLATE", 409],
     ["MOBILE_GARAGE_CAPACITY_REACHED", 409],
@@ -301,6 +302,10 @@ async function validateStableErrorsAndHeaders() {
 
     assert.equal(response.status, status);
     assert.equal(response.headers.get("Cache-Control"), "no-store");
+    assert.equal(
+      response.headers.get(mobileGarageLifecycleContractHeader),
+      mobileGarageLifecycleContractVersion,
+    );
     assert.deepEqual(Object.keys(body), ["error"]);
     assert.deepEqual(Object.keys(body.error), ["code", "message"]);
     assert.equal(body.error.code, code);
@@ -335,10 +340,12 @@ function validateSourceGuards() {
   for (const route of [garageRoute, definitionsRoute]) {
     assert.match(route, /runtime = "nodejs"/);
     assert.match(route, /dynamic = "force-dynamic"/);
-    assert.match(route, /authenticateMobileMember\(request\)/);
-    assert.match(route, /mobileJsonResponse/);
+    assert.match(route, /authenticateMobileGarageMember\(request\)/);
     assert.doesNotMatch(route, /service_role|SUPABASE_SERVICE_ROLE|prisma\./i);
   }
+  assert.match(garageRoute, /mobileGarageJsonResponse/);
+  assert.match(garageRoute, /mobileGarageLifecycleContractHeader/);
+  assert.match(definitionsRoute, /mobileGarageJsonResponse/);
 
   for (const [route, domainCall] of [
     [archiveRoute, "archiveMobileGarageVehicle"],
@@ -347,13 +354,13 @@ function validateSourceGuards() {
   ] as const) {
     assert.match(route, /runtime = "nodejs"/);
     assert.match(route, /dynamic = "force-dynamic"/);
-    assert.match(route, /authenticateMobileMember\(request\)/);
+    assert.match(route, /authenticateMobileGarageMember\(request\)/);
     assert.match(route, new RegExp(`${domainCall}\\(\\{`));
     assert.match(route, /memberUserId: memberUser\.id/);
-    assert.match(route, /mobileJsonResponse/);
+    assert.match(route, /mobileGarageJsonResponse/);
     assert.doesNotMatch(route, /body\.userId|body\.email|prisma\./);
     assert.ok(
-      route.indexOf("authenticateMobileMember(request)") <
+      route.indexOf("authenticateMobileGarageMember(request)") <
         route.indexOf(`${domainCall}({`),
     );
   }
@@ -363,7 +370,7 @@ function validateSourceGuards() {
   assert.match(deleteRoute, /MOBILE_GARAGE_DELETE_CONFIRMATION_REQUIRED/);
 
   assert.ok(
-    garageRoute.indexOf("authenticateMobileMember(request)") <
+    garageRoute.indexOf("authenticateMobileGarageMember(request)") <
       garageRoute.indexOf("getMobileGarageResponseBody("),
   );
   assert.match(plateInput, /defaultValue=\{defaultValue \?\? ""\}/);
@@ -380,11 +387,11 @@ function validateSourceGuards() {
     /getMobileGarageResponseBody\(memberUser\.id, accessToken, \{/,
   );
   assert.ok(
-    garagePostRoute.indexOf("authenticateMobileMember(request)") <
+    garagePostRoute.indexOf("authenticateMobileGarageMember(request)") <
       garagePostRoute.indexOf("createMobileGarageVehicle({"),
   );
   assert.ok(
-    definitionsRoute.indexOf("authenticateMobileMember(request)") <
+    definitionsRoute.indexOf("authenticateMobileGarageMember(request)") <
       definitionsRoute.indexOf("getMobileVehicleDefinitionsResponseBody()"),
   );
 

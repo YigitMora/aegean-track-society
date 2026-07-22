@@ -1,0 +1,99 @@
+name: Verify Production Release
+
+on:
+  deployment_status:
+  workflow_call:
+    inputs:
+      expected_sha:
+        description: "Exact backend commit SHA expected in Production"
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: "Exact backend commit SHA expected in Production"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  deployments: read
+
+jobs:
+  authorize:
+    name: Authorize exact main commit
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'workflow_call' ||
+      (github.event_name == 'deployment_status' &&
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Production' &&
+      github.event.deployment.creator.login == 'vercel[bot]' &&
+      github.event.deployment.creator.type == 'Bot' &&
+      github.event.deployment_status.creator.login == 'vercel[bot]' &&
+      github.event.deployment_status.creator.type == 'Bot')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      approved_sha: ${{ steps.authorize.outputs.approved_sha }}
+    env:
+      EXPECTED_SHA: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') && inputs.expected_sha || github.event.deployment.sha }}
+
+    steps:
+      - name: Check out main policy source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: YigitMora/aegean-track-society
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify exact commit belongs to main
+        id: authorize
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          git merge-base --is-ancestor "$EXPECTED_SHA" origin/main
+          echo "approved_sha=$EXPECTED_SHA" >> "$GITHUB_OUTPUT"
+          echo "Authorized repository=$GITHUB_REPOSITORY actor=$GITHUB_ACTOR sha=$EXPECTED_SHA run=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+  verify:
+    name: Verify deployment provenance and API contract
+    needs: authorize
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: Production
+
+    steps:
+      - name: Check out approved commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: YigitMora/aegean-track-society
+          ref: ${{ needs.authorize.outputs.approved_sha }}
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 11.7.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify exact Vercel Production deployment
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERCEL_ACCESS_TOKEN: ${{ secrets.VERCEL_ACCESS_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+        run: >-
+          pnpm verify:production-release
+          --repository "YigitMora/aegean-track-society"
+          --sha "${{ needs.authorize.outputs.approved_sha }}"

@@ -1,10 +1,8 @@
-import {
-  authenticateMobileMember,
-  mobileJsonResponse,
-} from "@/lib/mobile-auth";
 import { permanentlyDeleteMobileGarageVehicle } from "@/lib/mobile-garage";
 import {
+  authenticateMobileGarageMember,
   mobileGarageErrorResponse,
+  mobileGarageJsonResponse,
   MobileGarageError,
 } from "@/lib/mobile-garage-contract";
 
@@ -17,7 +15,7 @@ type RouteContext = {
 
 export async function DELETE(request: Request, context: RouteContext) {
   try {
-    const { accessToken, memberUser } = await authenticateMobileMember(request);
+    const { accessToken, memberUser } = await authenticateMobileGarageMember(request);
     const vehicleId = await readVehicleId(context);
     const requestBody = await readRequestBody(request);
     const body = await permanentlyDeleteMobileGarageVehicle({
@@ -27,7 +25,7 @@ export async function DELETE(request: Request, context: RouteContext) {
       body: requestBody,
     });
 
-    return mobileJsonResponse(body);
+    return mobileGarageJsonResponse(body);
   } catch (error) {
     return mobileGarageErrorResponse(error);
   }

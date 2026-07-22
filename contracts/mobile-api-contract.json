@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "releaseContract": "release-v1",
+  "contracts": {
+    "auth": {
+      "header": "X-ATS-Auth-Contract",
+      "supportedVersions": ["auth-v1"]
+    },
+    "garageLifecycle": {
+      "header": "X-ATS-Garage-Contract",
+      "supportedVersions": ["lifecycle-v1"],
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/api/mobile/v1/vehicle-definitions",
+          "contracts": ["garageLifecycle"],
+          "liveProbe": true
+        },
+        {
+          "method": "GET",
+          "path": "/api/mobile/v1/garage",
+          "contracts": ["garageLifecycle"],
+          "liveProbe": true
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile/v1/garage",
+          "contracts": ["garageLifecycle"],
+          "liveProbe": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/mobile/v1/garage/{vehicleId}",
+          "contracts": ["garageLifecycle", "garageDetail"],
+          "liveProbe": true
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/mobile/v1/garage/{vehicleId}",
+          "contracts": ["garageLifecycle", "garageDetail"],
+          "liveProbe": false
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile/v1/garage/{vehicleId}/archive",
+          "contracts": ["garageLifecycle"],
+          "liveProbe": false
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile/v1/garage/{vehicleId}/restore",
+          "contracts": ["garageLifecycle"],
+          "liveProbe": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/mobile/v1/garage/{vehicleId}/permanent-delete",
+          "contracts": ["garageLifecycle"],
+          "liveProbe": false
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile/v1/garage/{vehicleId}/primary",
+          "contracts": ["garageLifecycle", "garageDetail"],
+          "liveProbe": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/mobile/v1/garage/{vehicleId}/image",
+          "contracts": ["garageLifecycle", "garageDetail"],
+          "liveProbe": false
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile/v1/garage/{vehicleId}/image/upload-intent",
+          "contracts": ["garageLifecycle", "garageDetail"],
+          "liveProbe": false
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile/v1/garage/{vehicleId}/image/finalize",
+          "contracts": ["garageLifecycle", "garageDetail"],
+          "liveProbe": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/mobile/v1/garage/{vehicleId}/build",
+          "contracts": ["garageLifecycle", "garageDetail"],
+          "liveProbe": true
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile/v1/garage/{vehicleId}/build/preview",
+          "contracts": ["garageLifecycle", "garageDetail"],
+          "liveProbe": false
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile/v1/garage/{vehicleId}/modifications",
+          "contracts": ["garageLifecycle", "garageDetail"],
+          "liveProbe": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/mobile/v1/garage/{vehicleId}/modifications/{modificationId}",
+          "contracts": ["garageLifecycle", "garageDetail"],
+          "liveProbe": false
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile/v1/garage/{vehicleId}/catalog-match-request",
+          "contracts": ["garageLifecycle", "garageDetail"],
+          "liveProbe": false
+        }
+      ]
+    },
+    "garageDetail": {
+      "header": "X-ATS-Garage-Detail-Contract",
+      "supportedVersions": ["build-v1"]
+    },
+    "applications": {
+      "header": "X-ATS-Applications-Contract",
+      "supportedVersions": ["applications-v1"]
+    }
+  }
+}
