@@ -46,8 +46,10 @@ their value is `null`. Until an App ID is independently established, unexpected
 non-null App metadata fails closed instead of being trusted. Pagination follows
 only sequential HTTPS GitHub API links for the same deployment endpoint, SHA and
 maximum page size; malformed, cyclic, cross-origin, truncated, excessive or
-incomplete enumeration fails closed. The verifier also fails on untrusted or
-ambiguous GitHub deployment metadata, project/team/repository/target/SHA
+incomplete enumeration fails closed. Fetching the defensive 100th page fails
+closed even when it appears to end naturally; only completion before that
+boundary can proceed to candidate evaluation. The verifier also fails on
+untrusted or ambiguous GitHub deployment metadata, project/team/repository/target/SHA
 mismatch, a stale canonical alias, redirects, HTML, malformed JSON, or missing
 no-store/Bearer/contract headers. The canonical origin is fixed in code and is
 not an operator input. The verifier never sends an application Bearer token and

@@ -661,6 +661,12 @@ async function readAllGitHubDeployments({
         "GitHub returned an invalid deployments response.",
       );
     }
+    if (fetchedPages >= maximumGitHubDeploymentPages) {
+      throw new ReleaseVerificationError(
+        "DEPLOYMENT_PAGINATION_INCOMPLETE",
+        "GitHub deployment pagination reached the defensive page limit.",
+      );
+    }
     deployments.push(...page);
 
     const nextPageUrl = parseNextGitHubDeploymentPage({

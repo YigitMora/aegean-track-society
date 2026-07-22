@@ -215,6 +215,14 @@ const nonMatchingFirstPage = createMockFetch({
 });
 await verifyProductionRelease(verificationOptions(nonMatchingFirstPage.fetch));
 assert.deepEqual(nonMatchingFirstPage.githubDeploymentPages, [1, 2]);
+const belowPaginationLimit = createMockFetch({
+  completeOnPageNinetyNine: true,
+});
+await verifyProductionRelease(verificationOptions(belowPaginationLimit.fetch));
+assert.deepEqual(
+  belowPaginationLimit.githubDeploymentPages,
+  Array.from({ length: 99 }, (_, index) => index + 1),
+);
 await expectVerificationFailure(
   { duplicateDeploymentAcrossPages: true },
   "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
@@ -255,9 +263,35 @@ await expectVerificationFailure(
   { truncatedDeploymentPage: true },
   "DEPLOYMENT_PAGINATION_INCOMPLETE",
 );
-await expectVerificationFailure(
-  { excessiveDeploymentPages: true },
-  "DEPLOYMENT_PAGINATION_INCOMPLETE",
+const exactBoundaryNaturalEof = createMockFetch({
+  exactBoundaryNaturalEof: true,
+});
+adversarialVerificationFixtureCount += 1;
+await assert.rejects(
+  () =>
+    verifyProductionRelease(
+      verificationOptions(exactBoundaryNaturalEof.fetch),
+    ),
+  (error: unknown) => hasCode(error, "DEPLOYMENT_PAGINATION_INCOMPLETE"),
+);
+assert.deepEqual(
+  exactBoundaryNaturalEof.githubDeploymentPages,
+  Array.from({ length: 100 }, (_, index) => index + 1),
+);
+const excessiveDeploymentPages = createMockFetch({
+  excessiveDeploymentPages: true,
+});
+adversarialVerificationFixtureCount += 1;
+await assert.rejects(
+  () =>
+    verifyProductionRelease(
+      verificationOptions(excessiveDeploymentPages.fetch),
+    ),
+  (error: unknown) => hasCode(error, "DEPLOYMENT_PAGINATION_INCOMPLETE"),
+);
+assert.deepEqual(
+  excessiveDeploymentPages.githubDeploymentPages,
+  Array.from({ length: 100 }, (_, index) => index + 1),
 );
 await expectVerificationFailure(
   { wrongDeploymentSha: true },
@@ -355,7 +389,7 @@ assert.doesNotMatch(
 );
 
 console.log(
-  `validate-release-foundations passed (3 positive provenance fixtures, ${adversarialVerificationFixtureCount} adversarial provenance fixtures)`,
+  `validate-release-foundations passed (4 positive provenance fixtures, ${adversarialVerificationFixtureCount} adversarial provenance fixtures)`,
 );
 }
 
@@ -411,6 +445,8 @@ type MockFetchOptions = {
   laterPageApiFailure?: boolean;
   laterPageRateLimit?: boolean;
   truncatedDeploymentPage?: boolean;
+  completeOnPageNinetyNine?: boolean;
+  exactBoundaryNaturalEof?: boolean;
   excessiveDeploymentPages?: boolean;
   wrongDeploymentSha?: boolean;
   staleCanonicalAlias?: boolean;
@@ -615,6 +651,22 @@ function createMockFetch(options?: MockFetchOptions) {
             id: 5000 + index,
           })),
         ]);
+      }
+      if (options?.completeOnPageNinetyNine) {
+        return page < 99
+          ? deploymentPage(
+              page === 1 ? [githubDeployment] : [nonMatchingDeployment],
+              page + 1,
+            )
+          : deploymentPage([nonMatchingDeployment]);
+      }
+      if (options?.exactBoundaryNaturalEof) {
+        return page < 100
+          ? deploymentPage(
+              page === 1 ? [githubDeployment] : [nonMatchingDeployment],
+              page + 1,
+            )
+          : deploymentPage([nonMatchingDeployment]);
       }
       if (options?.excessiveDeploymentPages) {
         return deploymentPage(
