@@ -1,10 +1,18 @@
-name: Production Database Migration
+name: Production Database Seed
 
 on:
   workflow_dispatch:
     inputs:
       confirmation:
-        description: "Type MIGRATE PRODUCTION to apply pending migrations"
+        description: "Type SEED PRODUCTION to run the production seed"
+        required: true
+        type: string
+      seed_package_sep20_price:
+        description: "SEP20 package price used by prisma db seed"
+        required: true
+        type: string
+      seed_package_sep20_capacity:
+        description: "SEP20 package capacity used by prisma db seed"
         required: true
         type: string
 
@@ -16,8 +24,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  migrate:
-    name: Apply Prisma migrations
+  seed:
+    name: Seed production reference data
     runs-on: ubuntu-latest
     environment: Production
     timeout-minutes: 20
@@ -46,19 +54,27 @@ jobs:
         shell: bash
         run: |
           {
-            echo "### Production database migration"
+            echo "### Production database seed"
             echo "- Workflow: $GITHUB_WORKFLOW"
             echo "- Actor: $GITHUB_ACTOR"
             echo "- Commit: $GITHUB_SHA"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Verify typed confirmation
+      - name: Verify typed confirmation and inputs
         env:
           CONFIRMATION: ${{ inputs.confirmation }}
-        run: test "$CONFIRMATION" = "MIGRATE PRODUCTION"
+          SEED_PACKAGE_SEP20_PRICE: ${{ inputs.seed_package_sep20_price }}
+          SEED_PACKAGE_SEP20_CAPACITY: ${{ inputs.seed_package_sep20_capacity }}
+        run: |
+          test "$CONFIRMATION" = "SEED PRODUCTION"
+          test -n "$SEED_PACKAGE_SEP20_PRICE"
+          test -n "$SEED_PACKAGE_SEP20_CAPACITY"
 
       - name: Verify database secret
         run: test -n "$DATABASE_URL"
 
-      - name: Apply Prisma migrations
-        run: pnpm prisma:deploy
+      - name: Seed production data
+        env:
+          SEED_PACKAGE_SEP20_PRICE: ${{ inputs.seed_package_sep20_price }}
+          SEED_PACKAGE_SEP20_CAPACITY: ${{ inputs.seed_package_sep20_capacity }}
+        run: pnpm prisma:seed

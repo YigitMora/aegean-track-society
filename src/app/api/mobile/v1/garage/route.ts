@@ -1,9 +1,7 @@
-import {
-  authenticateMobileMember,
-  mobileJsonResponse,
-} from "@/lib/mobile-auth";
+import { authenticateMobileMember } from "@/lib/mobile-auth";
 import {
   mobileGarageErrorResponse,
+  mobileGarageJsonResponse,
   mobileGarageLifecycleContractHeader,
   mobileGarageLifecycleContractVersion,
   MobileGarageError,
@@ -25,7 +23,7 @@ export async function GET(request: Request) {
         mobileGarageLifecycleContractVersion,
     });
 
-    return mobileJsonResponse(body);
+    return mobileGarageJsonResponse(body);
   } catch (error) {
     return mobileGarageErrorResponse(error);
   }
@@ -40,7 +38,7 @@ export async function POST(request: Request) {
       body: requestBody,
     });
 
-    return mobileJsonResponse(responseBody, { status: 201 });
+    return mobileGarageJsonResponse(responseBody, { status: 201 });
   } catch (error) {
     return mobileGarageErrorResponse(error);
   }

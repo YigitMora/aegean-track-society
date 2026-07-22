@@ -9,6 +9,8 @@ import type { AtsMemberUser } from "@/lib/member-auth";
 import {
   getBearerTokenFromAuthorizationHeader,
   isAccessTokenExpired,
+  mobileAuthContractHeader,
+  mobileAuthContractVersion,
   mobileAuthErrorEnvelope,
   MobileAuthError,
 } from "@/lib/mobile-auth-contract";
@@ -122,6 +124,19 @@ export function mobileJsonResponse<TBody>(body: TBody, init: ResponseInit = {}) 
   });
 }
 
+export function mobileAuthJsonResponse<TBody>(
+  body: TBody,
+  init: ResponseInit = {},
+) {
+  const headers = new Headers(init.headers);
+  headers.set(mobileAuthContractHeader, mobileAuthContractVersion);
+
+  return mobileJsonResponse(body, {
+    ...init,
+    headers,
+  });
+}
+
 export function mobileAuthErrorResponse(error: unknown) {
   if (error instanceof MobileAuthError) {
     const headers = error.status === 401
@@ -130,7 +145,7 @@ export function mobileAuthErrorResponse(error: unknown) {
         }
       : undefined;
 
-    return mobileJsonResponse(mobileAuthErrorEnvelope(error), {
+    return mobileAuthJsonResponse(mobileAuthErrorEnvelope(error), {
       status: error.status,
       headers,
     });
@@ -140,7 +155,7 @@ export function mobileAuthErrorResponse(error: unknown) {
 
   const fallback = new MobileAuthError("MOBILE_AUTH_INTERNAL_ERROR");
 
-  return mobileJsonResponse(mobileAuthErrorEnvelope(fallback), {
+  return mobileAuthJsonResponse(mobileAuthErrorEnvelope(fallback), {
     status: fallback.status,
   });
 }

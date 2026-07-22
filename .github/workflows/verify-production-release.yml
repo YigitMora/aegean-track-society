@@ -1,0 +1,63 @@
+name: Verify Production Release
+
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: "Exact backend commit SHA expected in Production"
+        required: true
+        type: string
+      canonical_url:
+        description: "Canonical production origin"
+        required: true
+        default: "https://www.aegeantracksociety.com"
+        type: string
+
+permissions:
+  contents: read
+  deployments: read
+
+jobs:
+  verify:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+      (github.event.deployment.environment == 'Production' ||
+      github.event.deployment.environment == 'production'))
+    name: Verify deployment provenance and API contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EXPECTED_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_sha || github.event.deployment.sha }}
+      CANONICAL_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.canonical_url || 'https://www.aegeantracksociety.com' }}
+
+    steps:
+      - name: Check out expected commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify exact Production deployment
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          pnpm verify:production-release --
+          --repository "$GITHUB_REPOSITORY"
+          --sha "$EXPECTED_SHA"
+          --canonical-url "$CANONICAL_URL"

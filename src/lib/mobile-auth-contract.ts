@@ -2,6 +2,9 @@ import { Buffer } from "node:buffer";
 
 const bearerTokenMaxLength = 8192;
 
+export const mobileAuthContractHeader = "X-ATS-Auth-Contract";
+export const mobileAuthContractVersion = "auth-v1";
+
 export type MobileAuthErrorCode =
   | "MOBILE_AUTH_MISSING_TOKEN"
   | "MOBILE_AUTH_INVALID_FORMAT"

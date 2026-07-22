@@ -336,9 +336,11 @@ function validateSourceGuards() {
     assert.match(route, /runtime = "nodejs"/);
     assert.match(route, /dynamic = "force-dynamic"/);
     assert.match(route, /authenticateMobileMember\(request\)/);
-    assert.match(route, /mobileJsonResponse/);
     assert.doesNotMatch(route, /service_role|SUPABASE_SERVICE_ROLE|prisma\./i);
   }
+  assert.match(garageRoute, /mobileGarageJsonResponse/);
+  assert.match(garageRoute, /mobileGarageLifecycleContractHeader/);
+  assert.match(definitionsRoute, /mobileJsonResponse/);
 
   for (const [route, domainCall] of [
     [archiveRoute, "archiveMobileGarageVehicle"],

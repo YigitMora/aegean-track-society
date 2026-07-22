@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "releaseContract": "release-v1",
+  "contracts": {
+    "auth": {
+      "header": "X-ATS-Auth-Contract",
+      "supportedVersions": ["auth-v1"]
+    },
+    "garageLifecycle": {
+      "header": "X-ATS-Garage-Contract",
+      "supportedVersions": ["lifecycle-v1"]
+    },
+    "garageDetail": {
+      "header": "X-ATS-Garage-Detail-Contract",
+      "supportedVersions": ["build-v1"]
+    },
+    "applications": {
+      "header": "X-ATS-Applications-Contract",
+      "supportedVersions": ["applications-v1"]
+    }
+  }
+}

@@ -365,13 +365,34 @@ export function hasMobileGaragePermanentDeleteConfirmation(value: unknown) {
   );
 }
 
+export function mobileGarageJsonResponse<TBody>(
+  body: TBody,
+  init: ResponseInit = {},
+) {
+  const headers = new Headers(init.headers);
+  headers.set(
+    mobileGarageLifecycleContractHeader,
+    mobileGarageLifecycleContractVersion,
+  );
+
+  return mobileJsonResponse(body, {
+    ...init,
+    headers,
+  });
+}
+
 export function mobileGarageErrorResponse(error: unknown) {
   if (error instanceof MobileAuthError) {
-    return mobileAuthErrorResponse(error);
+    const response = mobileAuthErrorResponse(error);
+    response.headers.set(
+      mobileGarageLifecycleContractHeader,
+      mobileGarageLifecycleContractVersion,
+    );
+    return response;
   }
 
   if (error instanceof MobileGarageError) {
-    return mobileJsonResponse(
+    return mobileGarageJsonResponse(
       {
         error: {
           code: error.code,

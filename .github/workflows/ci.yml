@@ -1,0 +1,77 @@
+name: Backend CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    name: Validate backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Determine comparison base
+        shell: bash
+        env:
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          base_sha="$EVENT_BASE_SHA"
+          if [[ -z "$base_sha" || "$base_sha" =~ ^0+$ ]]; then
+            base_sha="$(git rev-parse HEAD^)"
+          fi
+          echo "BASE_SHA=$base_sha" >> "$GITHUB_ENV"
+
+      - name: Generate Prisma client
+        run: pnpm prisma:generate
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Validate mobile authentication API
+        run: pnpm validate:mobile-api-auth
+
+      - name: Validate mobile garage API
+        run: pnpm validate:mobile-garage
+
+      - name: Validate mobile garage detail API
+        run: pnpm validate:mobile-garage-detail
+
+      - name: Validate mobile applications API
+        run: pnpm validate:mobile-applications
+
+      - name: Validate release foundations
+        run: pnpm validate:release-foundations
+
+      - name: Scan tracked files for secret patterns
+        run: pnpm scan:secrets
+
+      - name: Validate repository and database safety
+        run: pnpm validate:repository-safety -- --base "$BASE_SHA"
+
+      - name: Check patch whitespace
+        run: git diff --check "$BASE_SHA"...HEAD
