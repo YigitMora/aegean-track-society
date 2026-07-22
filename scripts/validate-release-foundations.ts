@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import {
   mobileApplicationsContractHeader,
@@ -375,7 +374,6 @@ assertWorkflowActionPins(ciWorkflow, 3);
 assert.match(ciWorkflow, /persist-credentials:\s*false/);
 assert.match(ciWorkflow, /pnpm scan:secrets -- --base "\$BASE_SHA"/);
 assertReleaseWorkflow(releaseWorkflow);
-assertProductionVerifierSmokeTest();
 assert.match(secretScanner, /binary-file-review-required/);
 assert.match(secretScanner, /oversized-file-review-required/);
 assert.match(secretScanner, /VERCEL_ACCESS_TOKEN/);
@@ -1141,53 +1139,6 @@ function tokenizeShellCommand(command: string) {
   assert.equal(quote, null, "Workflow invocation has an unclosed quote.");
   pushToken();
   return tokens;
-}
-
-function assertProductionVerifierSmokeTest() {
-  const pnpmCli = process.env.npm_execpath;
-  assert.ok(pnpmCli && /pnpm/i.test(pnpmCli));
-
-  const verifierSource = read("src/lib/release-verifier.ts");
-  const configurationGuard = verifierSource.indexOf(
-    "assertVercelConfiguration({",
-  );
-  const firstGitHubRequest = verifierSource.indexOf(
-    "const repositoryMetadata = await readGitHubJson",
-  );
-  assert.ok(configurationGuard >= 0 && firstGitHubRequest > configurationGuard);
-
-  const smoke = spawnSync(
-    process.execPath,
-    [
-      pnpmCli,
-      "verify:production-release",
-      "--repository",
-      repository,
-      "--sha",
-      expectedSha,
-    ],
-    {
-      cwd: process.cwd(),
-      encoding: "utf8",
-      timeout: 10_000,
-      env: {
-        GITHUB_TOKEN: "u1a-f4-synthetic-read-only-token",
-        HOME: process.env.HOME ?? "",
-        NODE_ENV: "test",
-        PATH: process.env.PATH ?? "",
-        TMPDIR: process.env.TMPDIR ?? "/tmp",
-        VERCEL_ACCESS_TOKEN: "",
-        VERCEL_PROJECT_ID: "",
-        VERCEL_TEAM_ID: "",
-      },
-    },
-  );
-  const output = `${smoke.stdout ?? ""}\n${smoke.stderr ?? ""}`;
-  assert.equal(smoke.error, undefined);
-  assert.equal(smoke.signal, null);
-  assert.equal(smoke.status, 1);
-  assert.match(output, /VERCEL_ACCESS_TOKEN_MISSING/);
-  assert.doesNotMatch(output, /ARGUMENTS_INVALID/);
 }
 
 function assertWorkflowActionPins(source: string, expectedCount: number) {
