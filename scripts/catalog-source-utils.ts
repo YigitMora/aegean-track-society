@@ -36,6 +36,11 @@ export const finalVehicleArrayNames = [
   "sprint4UDailyPerformanceVehicleDefinitions",
   "sprint4UEliteVehicleDefinitions",
   "productionCatalogExpansionVehicleDefinitions",
+  "sprintVagGolfPoloVehicleDefinitions",
+  "sprintFiatEgea124VehicleDefinitions",
+  "sprintAudiCatalogVehicleDefinitions",
+  "sprintMercedesBenzCatalogVehicleDefinitions",
+  "sprintBmwCatalogVehicleDefinitions",
 ] as const;
 
 export function readRepoFile(path: string) {

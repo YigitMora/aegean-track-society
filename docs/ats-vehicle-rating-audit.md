@@ -8,12 +8,12 @@ Reviewed on 2026-07-14.
 
 | Metric | Value |
 | --- | --- |
-| Active vehicle definitions audited | 340 |
-| Calibrated definitions | 51 |
-| Provisional definitions | 289 |
+| Active vehicle definitions audited | 687 |
+| Calibrated definitions | 82 |
+| Provisional definitions | 605 |
 | Stock Overall >= 90 | 16 |
 | Stock Overall >= 95 | 3 |
-| Reviewed adjusted definitions | 31 |
+| Reviewed adjusted definitions | 60 |
 | Review-required signals | 0 |
 | Rating formula weights changed | No |
 | Weights | power 0.18, handling 0.24, braking 0.18, reliability 0.12, thermal 0.12, trackReadiness 0.16 |
@@ -67,11 +67,11 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `porsche_911_st_992` | Porsche 911 S/T 992 4.0 | CALIBRATED | 89 | 90 | 91 | 89 | 80 | 87 | 90 | 1380 | 280 | 0 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `alpine_a110_gt` | Alpine A110 GT A110 300 PS | CALIBRATED | 76 | 68 | 83 | 75 | 73 | 73 | 77 | 1119 | 197 | 0 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `alpine_a110_r_ultime` | Alpine A110 R Ultime A110 345 PS | PROVISIONAL | 83 | 81 | 90 | 82 | 73 | 78 | 84 | 1120 | 227 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
-| `audi_rs5_b9` | Audi Sport RS 5 B9 2.9 TFSI quattro | PROVISIONAL | 73 | 76 | 71 | 74 | 72 | 75 | 70 | 1715 | 193 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_rs5_b9` | Audi RS 5 B9 2.9 TFSI quattro | PROVISIONAL | 73 | 76 | 71 | 74 | 72 | 75 | 70 | 1715 | 193 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `toyota_gr_corolla` | Toyota GR Corolla E210 G16E-GTS | CALIBRATED | 71 | 56 | 78 | 73 | 74 | 73 | 74 | 1475 | 152 | 0 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `lexus_rc_f` | Lexus RC F USC10 5.0 V8 | PROVISIONAL | 68 | 67 | 64 | 71 | 77 | 73 | 63 | 1775 | 198 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `lexus_lc_500` | Lexus LC 500 Z100 5.0 V8 | PROVISIONAL | 66 | 62 | 61 | 69 | 77 | 72 | 60 | 1935 | 181 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
-| `mercedes_amg_gt_c190` | Mercedes-AMG GT C190 4.0 V8 Biturbo | CALIBRATED | 79 | 78 | 80 | 80 | 74 | 79 | 79 | 1615 | 211 | 0 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `mercedes_amg_gt_c190` | Mercedes-Benz AMG GT C190 4.0 V8 Biturbo | CALIBRATED | 79 | 78 | 80 | 80 | 74 | 79 | 79 | 1615 | 211 | 0 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `vw_golf_10_tsi_mk8` | Volkswagen Golf Mk8 1.0 TSI | PROVISIONAL | 43 | 15 | 47 | 48 | 65 | 51 | 39 | 1260 | 64 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `vw_golf_15_tsi_mk8` | Volkswagen Golf Mk8 1.5 TSI | PROVISIONAL | 46 | 24 | 48 | 50 | 66 | 53 | 41 | 1310 | 84 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `vw_golf_20_tdi_mk8` | Volkswagen Golf Mk8 2.0 TDI | PROVISIONAL | 45 | 28 | 45 | 48 | 65 | 53 | 39 | 1395 | 79 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
@@ -110,8 +110,8 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
 | `porsche_911_gt2_rs_9912` | Porsche 911 GT2 RS 991.2 3.8 Twin-Turbo | CALIBRATED | 94 | 96 | 92 | 92 | 79 | 90 | 93 | 1470 | 350 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
-| `mercedes_amg_gt_black_series_c190` | Mercedes-AMG GT Black Series C190 4.0 V8 Biturbo | CALIBRATED | 95 | 95 | 92 | 93 | 78 | 92 | 95 | 1540 | 349 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
-| `bmw_m4_csl_g82` | BMW M M4 CSL G82 S58 | CALIBRATED | 90 | 87 | 90 | 90 | 78 | 89 | 92 | 1625 | 249 | 2 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
+| `mercedes_amg_gt_black_series_c190` | Mercedes-Benz AMG GT Black Series C190 4.0 V8 Biturbo | CALIBRATED | 95 | 95 | 92 | 93 | 78 | 92 | 95 | 1540 | 349 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
+| `bmw_m4_csl_g82` | BMW M4 CSL G82 S58 | CALIBRATED | 90 | 87 | 90 | 90 | 78 | 89 | 92 | 1625 | 249 | 2 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 | `chevrolet_corvette_z06_c8` | Chevrolet Corvette Z06 C8 5.5 LT6 | CALIBRATED | 89 | 96 | 86 | 90 | 80 | 90 | 88 | 1560 | 321 | 0 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 | `mclaren_765lt` | McLaren 765LT Super Series 4.0 V8 | CALIBRATED | 94 | 96 | 92 | 92 | 78 | 90 | 93 | 1339 | 420 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 | `lamborghini_huracan_sto` | Lamborghini Huracan STO LP 640-2 5.2 V10 | CALIBRATED | 94 | 95 | 92 | 92 | 78 | 89 | 92 | 1339 | 351 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
@@ -167,7 +167,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `fiat_500e_hatch` | Fiat 500e 332 Electric | PROVISIONAL | 36 | 17 | 38 | 41 | 58 | 41 | 28 | 1365 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_corolla_15_6mt` | Toyota Corolla E210 1.5 6MT | PROVISIONAL | 41 | 10 | 43 | 46 | 71 | 50 | 36 | 1280 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_corolla_15_cvt` | Toyota Corolla E210 1.5 CVT | PROVISIONAL | 40 | 9 | 41 | 45 | 71 | 50 | 35 | 1310 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
-| `toyota_corolla_hybrid_e210` | Toyota Corolla E210 Hybrid | PROVISIONAL | 41 | 15 | 42 | 45 | 71 | 49 | 34 | 1370 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_corolla_hybrid_e210` | Toyota Corolla E210 Hybrid e-CVT | PROVISIONAL | 41 | 15 | 42 | 45 | 71 | 49 | 34 | 1370 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_yaris_15_hybrid` | Toyota Yaris XP210 1.5 Hybrid | PROVISIONAL | 41 | 14 | 45 | 46 | 70 | 48 | 35 | 1085 | 78 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_yaris_cross_hybrid` | Toyota Yaris Cross XP210 1.5 Hybrid | PROVISIONAL | 38 | 8 | 40 | 44 | 70 | 46 | 31 | 1245 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_chr_hybrid_current` | Toyota C-HR AX20 Hybrid | PROVISIONAL | 38 | 12 | 37 | 44 | 69 | 46 | 31 | 1495 | 69 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
@@ -178,8 +178,8 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `hyundai_i20_10_tgdi_7dct` | Hyundai i20 BC3 1.0 T-GDi 7DCT | PROVISIONAL | 39 | 12 | 43 | 44 | 64 | 48 | 34 | 1165 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `hyundai_bayon_10_tgdi` | Hyundai Bayon BC3 CUV 1.0 T-GDi | PROVISIONAL | 37 | 10 | 40 | 43 | 64 | 46 | 32 | 1215 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `hyundai_i30_15_tgdi_48v` | Hyundai i30 PD 1.5 T-GDi 48V | PROVISIONAL | 44 | 23 | 46 | 48 | 66 | 52 | 39 | 1355 | 87 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
-| `hyundai_kona_hybrid_sx2` | Hyundai Kona SX2 Hybrid | PROVISIONAL | 38 | 15 | 38 | 44 | 64 | 46 | 31 | 1450 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
-| `hyundai_kona_electric_sx2` | Hyundai Kona Electric SX2 Long Range | PROVISIONAL | 37 | 21 | 35 | 42 | 60 | 45 | 27 | 1775 | 90 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_kona_hybrid_sx2` | Hyundai Kona SX2 Hybrid DCT | PROVISIONAL | 38 | 15 | 38 | 44 | 64 | 46 | 31 | 1450 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_kona_electric_sx2` | Hyundai Kona Electric SX2 Long Range 65.4 kWh | PROVISIONAL | 37 | 21 | 35 | 42 | 60 | 45 | 27 | 1775 | 90 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `hyundai_tucson_hybrid` | Hyundai Tucson NX4 1.6 T-GDi Hybrid | PROVISIONAL | 39 | 29 | 35 | 43 | 64 | 47 | 28 | 1685 | 100 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `peugeot_208_12_puretech` | Peugeot 208 P21 1.2 PureTech | PROVISIONAL | 39 | 15 | 43 | 44 | 60 | 46 | 34 | 1165 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `peugeot_208_hybrid_100` | Peugeot 208 P21 Hybrid 100 e-DCS6 | PROVISIONAL | 39 | 14 | 42 | 44 | 60 | 46 | 34 | 1210 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
@@ -242,7 +242,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `bmw_i4_m50_g26` | BMW i4 M50 G26 Dual Motor | PROVISIONAL | 61 | 73 | 54 | 59 | 67 | 63 | 52 | 2215 | 181 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
 | `kia_ev6_gt` | Kia EV6 GT CV Dual Motor | PROVISIONAL | 64 | 75 | 57 | 62 | 68 | 67 | 56 | 2185 | 197 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
 | `porsche_taycan_turbo_s_j1` | Porsche Taycan Turbo S J1 Performance Battery Plus | PROVISIONAL | 71 | 89 | 62 | 69 | 70 | 73 | 63 | 2295 | 244 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
-| `audi_rs_e_tron_gt_j1` | Audi Sport RS e-tron GT J1 Dual Motor | PROVISIONAL | 67 | 79 | 60 | 67 | 70 | 71 | 61 | 2345 | 203 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
+| `audi_rs_e_tron_gt_j1` | Audi RS e-tron GT J1 Dual Motor | PROVISIONAL | 67 | 79 | 60 | 67 | 70 | 71 | 61 | 2345 | 203 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
 
 ## Sprint 4U Elite Templates
 
@@ -255,7 +255,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `lamborghini_revuelto` | Lamborghini Revuelto LB744 6.5 V12 Plug-In Hybrid | PROVISIONAL | 85 | 99 | 81 | 84 | 78 | 86 | 82 | 1772 | 422 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `mclaren_600lt` | McLaren 600LT Sports Series 3.8 V8 | CALIBRATED | 92 | 95 | 91 | 91 | 79 | 89 | 92 | 1247 | 354 | 2 | REVIEWED_ADJUSTED | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `mclaren_720s` | McLaren 720S Super Series 4.0 V8 | PROVISIONAL | 86 | 95 | 85 | 86 | 78 | 86 | 85 | 1419 | 374 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
-| `audi_r8_v10_performance_4s` | Audi Sport R8 V10 Performance 4S 5.2 FSI quattro | CALIBRATED | 83 | 98 | 78 | 82 | 78 | 83 | 79 | 1595 | 286 | 0 | REVIEWED_ADJUSTED | Sprint 4U elite stock reference; centralized rating remains authoritative. |
+| `audi_r8_v10_performance_4s` | Audi R8 V10 Performance 4S 5.2 FSI quattro | CALIBRATED | 83 | 98 | 78 | 82 | 78 | 83 | 79 | 1595 | 286 | 0 | REVIEWED_ADJUSTED | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `dodge_viper_acr_vx` | Dodge Viper ACR VX 8.4 V10 | CALIBRATED | 94 | 94 | 93 | 92 | 80 | 91 | 94 | 1536 | 313 | 3 | REVIEWED_ADJUSTED | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `acura_nsx_type_s_nc1` | Acura NSX Type S NC1 Hybrid AWD | PROVISIONAL | 79 | 91 | 75 | 78 | 77 | 79 | 74 | 1780 | 252 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `lexus_lfa` | Lexus LFA LFA10 4.8 V10 | PROVISIONAL | 80 | 83 | 78 | 80 | 79 | 81 | 77 | 1580 | 261 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
@@ -264,6 +264,383 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `chevrolet_camaro_zl1_1le` | Chevrolet Camaro ZL1 1LE Alpha 6.2 LT4 | PROVISIONAL | 85 | 93 | 83 | 85 | 78 | 87 | 83 | 1732 | 280 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `cadillac_ct4_v_blackwing` | Cadillac CT4-V Blackwing Alpha 3.6 Twin Turbo | PROVISIONAL | 76 | 74 | 75 | 78 | 75 | 79 | 74 | 1760 | 200 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `cadillac_ct5_v_blackwing` | Cadillac CT5-V Blackwing Alpha 6.2 LT4 | PROVISIONAL | 78 | 89 | 73 | 78 | 76 | 81 | 73 | 1880 | 265 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
+
+## Production Catalog Expansion Templates
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `ferrari_360_modena` | Ferrari 360 Modena F131 3.6 V8 | PROVISIONAL | 74 | 68 | 78 | 75 | 70 | 75 | 74 | 1390 | 212 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_f430` | Ferrari F430 F131 4.3 V8 | PROVISIONAL | 79 | 81 | 80 | 79 | 72 | 79 | 78 | 1450 | 248 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_430_scuderia` | Ferrari 430 Scuderia F131 4.3 V8 | PROVISIONAL | 86 | 91 | 88 | 86 | 77 | 85 | 86 | 1350 | 278 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_458_italia` | Ferrari 458 Italia F142 4.5 V8 | PROVISIONAL | 85 | 93 | 84 | 84 | 78 | 84 | 84 | 1485 | 282 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_488_gtb` | Ferrari 488 GTB F142M 3.9 V8 Twin-Turbo | PROVISIONAL | 85 | 95 | 84 | 85 | 77 | 85 | 84 | 1475 | 334 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_f8_tributo` | Ferrari F8 Tributo F142M 3.9 V8 Twin-Turbo | PROVISIONAL | 86 | 95 | 85 | 86 | 78 | 86 | 85 | 1435 | 369 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_296_gtb` | Ferrari 296 GTB F171 3.0 V6 Plug-In Hybrid | PROVISIONAL | 85 | 95 | 84 | 85 | 76 | 85 | 84 | 1470 | 415 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_812_superfast` | Ferrari 812 Superfast F152M 6.5 V12 | PROVISIONAL | 84 | 95 | 78 | 85 | 78 | 86 | 81 | 1630 | 361 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_812_competizione` | Ferrari 812 Competizione F152M 6.5 V12 | PROVISIONAL | 88 | 95 | 87 | 89 | 80 | 89 | 88 | 1487 | 410 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_roma` | Ferrari Roma F169 3.9 V8 Twin-Turbo | PROVISIONAL | 78 | 93 | 72 | 77 | 74 | 78 | 72 | 1570 | 290 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_portofino` | Ferrari Portofino F164 3.9 V8 Twin-Turbo | PROVISIONAL | 74 | 89 | 67 | 73 | 73 | 76 | 66 | 1664 | 265 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_california_t` | Ferrari California T F149M 3.9 V8 Twin-Turbo | PROVISIONAL | 70 | 83 | 63 | 71 | 71 | 74 | 63 | 1730 | 238 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_laferrari` | Ferrari LaFerrari F150 6.3 V12 Hybrid | PROVISIONAL | 86 | 96 | 83 | 86 | 76 | 86 | 84 | 1585 | 447 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_ghibli_s_m157` | Maserati Ghibli S M157 3.0 V6 Twin-Turbo | PROVISIONAL | 59 | 60 | 56 | 61 | 62 | 65 | 52 | 1810 | 166 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_ghibli_trofeo_m157` | Maserati Ghibli Trofeo M157 3.8 V8 Twin-Turbo | PROVISIONAL | 66 | 78 | 59 | 67 | 65 | 71 | 58 | 1969 | 217 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_quattroporte_trofeo_m156` | Maserati Quattroporte Trofeo M156 3.8 V8 Twin-Turbo | PROVISIONAL | 64 | 77 | 56 | 66 | 65 | 71 | 56 | 2000 | 214 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_granturismo_trofeo_m189` | Maserati GranTurismo Trofeo M189 3.0 Nettuno V6 | PROVISIONAL | 71 | 84 | 66 | 72 | 67 | 73 | 65 | 1795 | 228 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_mc20_m240` | Maserati MC20 M240 3.0 Nettuno V6 | PROVISIONAL | 84 | 95 | 84 | 84 | 71 | 83 | 82 | 1475 | 314 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_levante_trofeo_m161` | Maserati Levante Trofeo M161 3.8 V8 Twin-Turbo | PROVISIONAL | 61 | 74 | 51 | 65 | 63 | 68 | 52 | 2170 | 197 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `abarth_595_312` | Abarth 595 312 1.4 T-Jet 145 | PROVISIONAL | 51 | 30 | 59 | 54 | 61 | 53 | 51 | 1035 | 103 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `abarth_595_competizione_312` | Abarth 595 Competizione 312 1.4 T-Jet 180 | PROVISIONAL | 58 | 40 | 65 | 61 | 62 | 59 | 59 | 1060 | 125 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `abarth_695_biposto_312` | Abarth 695 Biposto 312 1.4 T-Jet 190 | PROVISIONAL | 64 | 46 | 73 | 68 | 62 | 64 | 68 | 997 | 140 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mini_cooper_s_f56` | MINI Cooper S F56 2.0 TwinPower Turbo | PROVISIONAL | 58 | 36 | 65 | 61 | 66 | 61 | 59 | 1250 | 113 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mini_jcw_f56` | MINI John Cooper Works F56 2.0 TwinPower Turbo | PROVISIONAL | 63 | 44 | 70 | 67 | 66 | 65 | 65 | 1280 | 133 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mini_jcw_gp_f56` | MINI John Cooper Works GP F56 2.0 TwinPower Turbo | PROVISIONAL | 74 | 67 | 80 | 76 | 67 | 71 | 76 | 1255 | 179 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `seat_ibiza_cupra_6j` | SEAT Ibiza Cupra 6J 1.8 TSI | PROVISIONAL | 57 | 41 | 63 | 59 | 63 | 59 | 57 | 1225 | 115 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `skoda_fabia_vrs_mk2` | Skoda Fabia vRS Mk2 1.4 TSI Twincharger | PROVISIONAL | 52 | 31 | 59 | 55 | 58 | 55 | 53 | 1265 | 104 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `volvo_s60_t8_phev_spa` | Volvo S60 T8 SPA Recharge Polestar Engineered | PROVISIONAL | 59 | 65 | 52 | 61 | 65 | 63 | 51 | 2050 | 163 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `volvo_v60_polestar_p3` | Volvo V60 Polestar P3 3.0 T6 AWD | PROVISIONAL | 61 | 55 | 60 | 64 | 67 | 67 | 58 | 1835 | 140 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `polestar_2_performance` | Polestar 2 Performance CMA Dual Motor | PROVISIONAL | 59 | 68 | 52 | 60 | 65 | 61 | 50 | 2123 | 165 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `jaguar_f_type_r_x152` | Jaguar F-Type R X152 5.0 Supercharged V8 | PROVISIONAL | 74 | 87 | 69 | 75 | 69 | 76 | 68 | 1760 | 240 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `jaguar_f_type_svr_x152` | Jaguar F-Type SVR X152 5.0 Supercharged V8 | PROVISIONAL | 76 | 88 | 72 | 77 | 70 | 78 | 72 | 1705 | 248 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `jaguar_xe_sv_project_8_x760` | Jaguar XE SV Project 8 X760 5.0 Supercharged V8 | PROVISIONAL | 82 | 90 | 81 | 82 | 71 | 83 | 80 | 1745 | 253 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `land_rover_range_rover_sport_svr_l494` | Land Rover Range Rover Sport SVR L494 5.0 Supercharged V8 | PROVISIONAL | 57 | 67 | 44 | 63 | 63 | 67 | 48 | 2335 | 181 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `aston_martin_v8_vantage_am6` | Aston Martin Vantage AM6 4.0 V8 Twin-Turbo | PROVISIONAL | 76 | 85 | 74 | 77 | 69 | 77 | 73 | 1530 | 245 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `aston_martin_v12_vantage_am6` | Aston Martin V12 Vantage AM6 5.2 V12 Twin-Turbo | PROVISIONAL | 78 | 93 | 74 | 79 | 69 | 80 | 74 | 1795 | 287 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `aston_martin_dbs_superleggera` | Aston Martin DBS Superleggera AM7 5.2 V12 Twin-Turbo | PROVISIONAL | 75 | 93 | 67 | 75 | 69 | 78 | 67 | 1845 | 289 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `aston_martin_db12` | Aston Martin DB12 AM8 4.0 V8 Twin-Turbo | PROVISIONAL | 76 | 92 | 70 | 76 | 70 | 78 | 70 | 1788 | 280 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `lotus_elise_s3` | Lotus Elise S3 1.8 Supercharged | PROVISIONAL | 76 | 59 | 89 | 78 | 71 | 73 | 80 | 932 | 174 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `lotus_exige_s_v6` | Lotus Exige S S3 3.5 Supercharged V6 | PROVISIONAL | 82 | 77 | 90 | 83 | 73 | 79 | 85 | 1176 | 219 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `lotus_evora_gt430` | Lotus Evora GT430 Evora 3.5 Supercharged V6 | PROVISIONAL | 84 | 83 | 89 | 84 | 74 | 81 | 86 | 1299 | 247 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `lotus_emira_v6` | Lotus Emira Emira 3.5 Supercharged V6 | PROVISIONAL | 76 | 68 | 82 | 78 | 71 | 77 | 78 | 1458 | 204 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `opel_corsa_opc_e` | Opel Corsa OPC E 1.6 Turbo | PROVISIONAL | 57 | 37 | 64 | 61 | 62 | 59 | 58 | 1275 | 119 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `opel_astra_opc_j` | Opel Astra OPC J 2.0 Turbo | PROVISIONAL | 62 | 46 | 66 | 66 | 64 | 65 | 63 | 1550 | 133 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `subaru_wrx_sti_va` | Subaru WRX STI VA EJ257 | PROVISIONAL | 67 | 55 | 71 | 71 | 66 | 69 | 68 | 1535 | 148 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `subaru_wrx_sti_s209_va` | Subaru WRX STI S209 VA EJ257 | PROVISIONAL | 71 | 61 | 76 | 75 | 67 | 73 | 74 | 1580 | 161 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `subaru_wrx_vb` | Subaru WRX VB FA24 Turbo | PROVISIONAL | 60 | 47 | 64 | 62 | 67 | 63 | 59 | 1545 | 131 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mitsubishi_lancer_evo_viii` | Mitsubishi Lancer Evolution VIII CT9A 4G63T | PROVISIONAL | 68 | 57 | 74 | 70 | 67 | 69 | 69 | 1410 | 146 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mitsubishi_lancer_evo_x` | Mitsubishi Lancer Evolution X CZ4A 4B11T | PROVISIONAL | 66 | 50 | 71 | 71 | 67 | 69 | 68 | 1560 | 139 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mazda_rx7_fd` | Mazda RX-7 FD3S 13B-REW | PROVISIONAL | 64 | 52 | 76 | 66 | 57 | 62 | 66 | 1280 | 161 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mazda_rx8_se3p` | Mazda RX-8 SE3P 13B-MSP | PROVISIONAL | 55 | 33 | 68 | 60 | 53 | 57 | 57 | 1375 | 124 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mazda3_turbo_bp` | Mazda Mazda3 Turbo BP 2.5 Turbo AWD | PROVISIONAL | 56 | 49 | 57 | 56 | 67 | 59 | 52 | 1585 | 117 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `suzuki_swift_sport_zc33s` | Suzuki Swift Sport ZC33S 1.4 Boosterjet | PROVISIONAL | 53 | 33 | 63 | 54 | 65 | 53 | 52 | 975 | 106 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `infiniti_q50_red_sport_v37` | Infiniti Q50 Red Sport V37 3.0 Twin-Turbo | PROVISIONAL | 59 | 58 | 57 | 61 | 66 | 64 | 54 | 1748 | 170 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `genesis_g70_33t` | Genesis G70 IK 3.3T | PROVISIONAL | 62 | 60 | 60 | 63 | 69 | 65 | 57 | 1755 | 155 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `genesis_gv60_performance` | Genesis GV60 Performance JW Dual Motor | PROVISIONAL | 57 | 68 | 49 | 58 | 66 | 60 | 47 | 2100 | 171 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `dodge_challenger_hellcat_lx` | Dodge Challenger SRT Hellcat LA 6.2 Supercharged V8 | PROVISIONAL | 66 | 88 | 53 | 66 | 69 | 71 | 54 | 2018 | 261 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `dodge_challenger_demon_lx` | Dodge Challenger SRT Demon LA 6.2 Supercharged V8 | PROVISIONAL | 66 | 95 | 50 | 64 | 69 | 71 | 51 | 1941 | 323 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `dodge_viper_gts_vx` | Dodge Viper GTS VX 8.4 V10 | PROVISIONAL | 83 | 94 | 80 | 82 | 76 | 83 | 79 | 1521 | 314 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `chevrolet_camaro_ss_alpha` | Chevrolet Camaro SS Alpha 6.2 LT1 | PROVISIONAL | 71 | 75 | 70 | 71 | 73 | 73 | 66 | 1675 | 202 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `chevrolet_corvette_stingray_c7` | Chevrolet Corvette Stingray C7 6.2 LT1 | PROVISIONAL | 76 | 80 | 75 | 76 | 74 | 77 | 73 | 1539 | 220 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+
+## VAG Golf/Polo Catalog Expansion Templates
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `volkswagen_golf_mk5_14_tsi_122` | Volkswagen Golf Mk5 1.4 TSI 122 PS | PROVISIONAL | 42 | 16 | 47 | 47 | 60 | 50 | 38 | 1280 | 70 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk5_14_tsi_140` | Volkswagen Golf Mk5 1.4 TSI 140 PS | PROVISIONAL | 42 | 19 | 47 | 48 | 57 | 49 | 39 | 1305 | 79 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk5_14_tsi_160_twincharger` | Volkswagen Golf Mk5 1.4 TSI 160 PS Twincharger | PROVISIONAL | 44 | 25 | 48 | 49 | 56 | 49 | 41 | 1315 | 90 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_r32_mk5` | Volkswagen Golf R32 Mk5 3.2 VR6 4Motion | PROVISIONAL | 58 | 40 | 62 | 61 | 65 | 63 | 58 | 1590 | 116 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk6_12_tsi_105` | Volkswagen Golf Mk6 1.2 TSI 105 PS | PROVISIONAL | 41 | 13 | 47 | 48 | 60 | 49 | 38 | 1225 | 63 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk6_14_tsi_122` | Volkswagen Golf Mk6 1.4 TSI 122 PS | PROVISIONAL | 42 | 16 | 47 | 48 | 60 | 50 | 39 | 1270 | 71 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk6_14_tsi_160` | Volkswagen Golf Mk6 1.4 TSI 160 PS | PROVISIONAL | 44 | 25 | 49 | 49 | 56 | 50 | 41 | 1290 | 91 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_12_tsi_105` | Volkswagen Golf Mk7 1.2 TSI 105 PS | PROVISIONAL | 43 | 14 | 48 | 49 | 63 | 51 | 39 | 1205 | 64 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_14_tsi_122` | Volkswagen Golf Mk7 1.4 TSI 122 PS | PROVISIONAL | 44 | 18 | 48 | 49 | 64 | 52 | 40 | 1240 | 73 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_14_tsi_125` | Volkswagen Golf Mk7 1.4 TSI 125 PS | PROVISIONAL | 44 | 18 | 48 | 49 | 64 | 52 | 40 | 1250 | 74 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_14_tsi_140_act` | Volkswagen Golf Mk7 1.4 TSI 140 PS ACT | PROVISIONAL | 46 | 24 | 49 | 50 | 64 | 53 | 41 | 1270 | 81 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_14_tsi_150_act` | Volkswagen Golf Mk7.5 1.4 TSI 150 PS ACT | PROVISIONAL | 46 | 25 | 49 | 50 | 64 | 53 | 42 | 1280 | 86 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk75_15_tsi_150` | Volkswagen Golf Mk7.5 1.5 TSI 150 PS | PROVISIONAL | 46 | 25 | 49 | 50 | 66 | 54 | 42 | 1295 | 85 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_gti_clubsport_s_mk7` | Volkswagen Golf GTI Clubsport S Mk7 310 PS | CALIBRATED | 75 | 60 | 82 | 77 | 71 | 75 | 79 | 1285 | 177 | 0 | OK | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk85_10_etsi` | Volkswagen Golf Mk8.5 1.0 eTSI | PROVISIONAL | 42 | 15 | 46 | 47 | 63 | 50 | 38 | 1285 | 66 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk85_15_tsi` | Volkswagen Golf Mk8.5 1.5 TSI | PROVISIONAL | 46 | 24 | 49 | 50 | 66 | 54 | 42 | 1310 | 84 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk85_15_etsi` | Volkswagen Golf Mk8.5 1.5 eTSI | PROVISIONAL | 45 | 23 | 49 | 49 | 65 | 53 | 40 | 1340 | 82 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_6r_12_tsi_90` | Volkswagen Polo 6R/6C 1.2 TSI 90 PS | PROVISIONAL | 40 | 12 | 46 | 46 | 61 | 48 | 36 | 1105 | 60 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_6r_12_tsi_105` | Volkswagen Polo 6R/6C 1.2 TSI 105 PS | PROVISIONAL | 42 | 16 | 47 | 47 | 60 | 49 | 37 | 1115 | 69 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_6r_14_tsi` | Volkswagen Polo 6R/6C 1.4 TSI | PROVISIONAL | 44 | 27 | 49 | 48 | 57 | 49 | 39 | 1155 | 89 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_gti_6c_18_tsi` | Volkswagen Polo GTI 6C 1.8 TSI | PROVISIONAL | 56 | 41 | 61 | 58 | 64 | 59 | 55 | 1212 | 116 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_aw_10_tsi_95` | Volkswagen Polo AW 1.0 TSI 95 PS | PROVISIONAL | 41 | 13 | 46 | 47 | 63 | 49 | 37 | 1145 | 61 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_aw_10_tsi_110` | Volkswagen Polo AW 1.0 TSI 110 PS | PROVISIONAL | 42 | 16 | 47 | 47 | 63 | 49 | 37 | 1160 | 70 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_aw_10_tsi_115` | Volkswagen Polo AW 1.0 TSI 115 PS | PROVISIONAL | 43 | 17 | 47 | 48 | 63 | 50 | 38 | 1165 | 73 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+
+## Fiat/Abarth Egea and 124 Catalog Expansion Templates
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `fiat_egea_sedan_14_tjet` | Fiat Egea Sedan 356 1.4 T-Jet 120 HP | PROVISIONAL | 40 | 17 | 44 | 45 | 59 | 48 | 35 | 1275 | 69 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_10_firefly` | Fiat Egea Sedan 356 facelift 1.0 FireFly Turbo 100 HP | PROVISIONAL | 38 | 9 | 43 | 45 | 59 | 47 | 34 | 1275 | 58 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_13_multijet` | Fiat Egea Sedan 356 1.3 Multijet 95 HP | PROVISIONAL | 39 | 11 | 42 | 45 | 61 | 49 | 34 | 1270 | 55 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_16_multijet_130` | Fiat Egea Sedan 356 facelift 1.6 Multijet 130 HP | PROVISIONAL | 41 | 23 | 43 | 46 | 61 | 49 | 34 | 1345 | 71 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_15_hybrid` | Fiat Egea Sedan 356 facelift 1.5 T4 Hybrid 130 HP | PROVISIONAL | 39 | 19 | 42 | 45 | 59 | 47 | 32 | 1375 | 70 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_14_fire` | Fiat Egea Hatchback 356 1.4 Fire 95 HP | PROVISIONAL | 39 | 7 | 44 | 45 | 62 | 48 | 35 | 1270 | 55 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_14_tjet` | Fiat Egea Hatchback 356 1.4 T-Jet 120 HP | PROVISIONAL | 41 | 17 | 45 | 46 | 59 | 49 | 36 | 1295 | 68 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_10_firefly` | Fiat Egea Hatchback 356 facelift 1.0 FireFly Turbo 100 HP | PROVISIONAL | 39 | 10 | 44 | 45 | 59 | 47 | 35 | 1295 | 57 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_13_multijet` | Fiat Egea Hatchback 356 1.3 Multijet 95 HP | PROVISIONAL | 39 | 10 | 43 | 45 | 61 | 49 | 34 | 1300 | 54 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_16_multijet` | Fiat Egea Hatchback 356 1.6 Multijet 120 HP | PROVISIONAL | 42 | 23 | 44 | 46 | 61 | 49 | 35 | 1340 | 66 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_15_hybrid` | Fiat Egea Hatchback 356 facelift 1.5 T4 Hybrid 130 HP | PROVISIONAL | 40 | 19 | 42 | 45 | 59 | 47 | 33 | 1385 | 69 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_cross_14_fire` | Fiat Egea Cross 356 facelift 1.4 Fire 95 HP | PROVISIONAL | 36 | 6 | 40 | 43 | 61 | 47 | 31 | 1305 | 54 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_cross_14_tjet` | Fiat Egea Cross 356 1.4 T-Jet 120 HP | PROVISIONAL | 38 | 14 | 41 | 44 | 58 | 48 | 32 | 1340 | 66 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_cross_13_multijet` | Fiat Egea Cross 356 facelift 1.3 Multijet 95 HP | PROVISIONAL | 37 | 9 | 40 | 43 | 60 | 47 | 31 | 1330 | 53 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_cross_16_multijet_130` | Fiat Egea Cross 356 facelift 1.6 Multijet 130 HP | PROVISIONAL | 39 | 22 | 39 | 45 | 61 | 48 | 31 | 1390 | 69 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sw_14_tjet` | Fiat Egea Station Wagon 356 1.4 T-Jet 120 HP | PROVISIONAL | 39 | 15 | 42 | 45 | 58 | 48 | 33 | 1330 | 66 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sw_13_multijet` | Fiat Egea Station Wagon 356 1.3 Multijet 95 HP | PROVISIONAL | 37 | 9 | 41 | 44 | 60 | 47 | 32 | 1325 | 53 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sw_16_multijet` | Fiat Egea Station Wagon 356 1.6 Multijet 120 HP | PROVISIONAL | 41 | 22 | 42 | 45 | 61 | 49 | 33 | 1365 | 64 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_124_spider_multiair` | Fiat 124 Spider NF 1.4 MultiAir Turbo | PROVISIONAL | 57 | 31 | 73 | 58 | 61 | 56 | 60 | 1105 | 93 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `abarth_124_spider` | Abarth 124 Spider NF 1.4 MultiAir Turbo | PROVISIONAL | 62 | 39 | 77 | 64 | 60 | 59 | 65 | 1060 | 118 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `abarth_124_gt` | Abarth 124 GT NF 1.4 MultiAir Turbo | PROVISIONAL | 62 | 39 | 78 | 64 | 60 | 59 | 66 | 1075 | 116 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+
+## Audi Catalog Expansion Templates
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `audi_a1_8x_14_tfsi` | Audi A1 8X 1.4 TFSI | PROVISIONAL | 45 | 21 | 50 | 49 | 62 | 51 | 41 | 1125 | 80 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s1_8x` | Audi S1 8X 2.0 TFSI quattro | PROVISIONAL | 62 | 52 | 66 | 64 | 68 | 65 | 61 | 1315 | 129 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a1_gb_10_tfsi` | Audi A1 GB 1.0 TFSI | PROVISIONAL | 42 | 16 | 47 | 47 | 64 | 49 | 37 | 1145 | 71 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a1_gb_15_tfsi` | Audi A1 GB 1.5 TFSI | PROVISIONAL | 46 | 29 | 49 | 48 | 65 | 52 | 40 | 1190 | 92 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a1_gb_20_tfsi` | Audi A1 GB 2.0 TFSI | PROVISIONAL | 55 | 42 | 58 | 56 | 66 | 59 | 52 | 1245 | 118 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8p_16_tdi` | Audi A3 8P 1.6 TDI | PROVISIONAL | 40 | 15 | 44 | 46 | 61 | 49 | 35 | 1320 | 58 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8p_18_tfsi` | Audi A3 8P 1.8 TFSI | PROVISIONAL | 49 | 26 | 53 | 53 | 64 | 56 | 48 | 1335 | 88 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8v_14_tfsi` | Audi A3 8V 1.4 TFSI | PROVISIONAL | 44 | 17 | 48 | 48 | 65 | 52 | 39 | 1255 | 73 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8v_16_tdi` | Audi A3 8V 1.6 TDI | PROVISIONAL | 41 | 17 | 44 | 46 | 63 | 49 | 36 | 1315 | 62 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8v_20_tdi` | Audi A3 8V 2.0 TDI | PROVISIONAL | 44 | 28 | 45 | 47 | 64 | 50 | 36 | 1370 | 80 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8y_20_tdi` | Audi A3 8Y 2.0 TDI | PROVISIONAL | 44 | 28 | 45 | 47 | 64 | 50 | 36 | 1420 | 77 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b7_20_tfsi` | Audi A4 B7 2.0 TFSI | PROVISIONAL | 49 | 30 | 52 | 54 | 62 | 55 | 46 | 1450 | 101 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b7_20_tdi` | Audi A4 B7 2.0 TDI | PROVISIONAL | 41 | 22 | 44 | 46 | 60 | 48 | 34 | 1490 | 69 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s4_b7` | Audi S4 B7 4.2 V8 quattro | PROVISIONAL | 59 | 52 | 60 | 61 | 63 | 62 | 56 | 1715 | 148 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs4_b7` | Audi RS 4 B7 4.2 FSI quattro | PROVISIONAL | 68 | 63 | 72 | 70 | 66 | 70 | 68 | 1650 | 187 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b8_18_tfsi` | Audi A4 B8 1.8 TFSI | PROVISIONAL | 45 | 20 | 49 | 50 | 63 | 53 | 42 | 1505 | 78 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b8_20_tfsi` | Audi A4 B8/B8.5 2.0 TFSI | PROVISIONAL | 50 | 34 | 51 | 54 | 64 | 57 | 45 | 1540 | 101 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b8_20_tdi` | Audi A4 B8/B8.5 2.0 TDI | PROVISIONAL | 41 | 21 | 42 | 46 | 62 | 49 | 34 | 1535 | 68 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s4_b8` | Audi S4 B8/B8.5 3.0 TFSI quattro | PROVISIONAL | 63 | 55 | 63 | 65 | 69 | 67 | 61 | 1695 | 145 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b9_14_tfsi` | Audi A4 B9 1.4 TFSI | PROVISIONAL | 44 | 20 | 47 | 49 | 65 | 52 | 39 | 1430 | 77 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b9_20_tfsi` | Audi A4 B9/B9.5 2.0 TFSI | PROVISIONAL | 53 | 41 | 53 | 56 | 67 | 59 | 48 | 1515 | 122 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b9_20_tdi` | Audi A4 B9/B9.5 2.0 TDI | PROVISIONAL | 42 | 23 | 44 | 47 | 64 | 50 | 35 | 1510 | 73 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b9_30_tdi` | Audi A4 B9/B9.5 3.0 TDI quattro | PROVISIONAL | 51 | 57 | 47 | 51 | 64 | 54 | 40 | 1665 | 120 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_8t_18_tfsi` | Audi A5 8T 1.8 TFSI | PROVISIONAL | 46 | 26 | 50 | 50 | 63 | 53 | 42 | 1505 | 83 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_8t_20_tfsi` | Audi A5 8T 2.0 TFSI | PROVISIONAL | 50 | 34 | 51 | 54 | 64 | 57 | 46 | 1535 | 101 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_8t_30_tdi` | Audi A5 8T 3.0 TDI quattro | PROVISIONAL | 49 | 49 | 46 | 50 | 62 | 52 | 39 | 1640 | 110 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s5_8t` | Audi S5 8T 3.0 TFSI quattro | PROVISIONAL | 63 | 55 | 63 | 65 | 69 | 67 | 61 | 1695 | 145 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_f5_20_tfsi` | Audi A5 F5 2.0 TFSI | PROVISIONAL | 53 | 41 | 53 | 56 | 67 | 59 | 48 | 1525 | 121 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_f5_20_tdi` | Audi A5 F5 2.0 TDI | PROVISIONAL | 44 | 32 | 44 | 48 | 64 | 50 | 36 | 1570 | 89 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_f5_30_tdi` | Audi A5 F5 3.0 TDI quattro | PROVISIONAL | 52 | 59 | 47 | 51 | 64 | 54 | 40 | 1690 | 124 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c6_20_tfsi` | Audi A6 C6 2.0 TFSI | PROVISIONAL | 43 | 23 | 44 | 48 | 61 | 52 | 37 | 1540 | 81 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c6_30_tdi` | Audi A6 C6 3.0 TDI quattro | PROVISIONAL | 45 | 40 | 42 | 48 | 60 | 50 | 34 | 1725 | 99 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s6_c6` | Audi S6 C6 5.2 V10 quattro | PROVISIONAL | 59 | 61 | 55 | 62 | 62 | 63 | 53 | 1910 | 168 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c7_18_tfsi` | Audi A6 C7 1.8 TFSI | PROVISIONAL | 45 | 28 | 45 | 49 | 64 | 53 | 39 | 1540 | 91 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c7_20_tdi` | Audi A6 C7 2.0 TDI | PROVISIONAL | 43 | 30 | 42 | 47 | 63 | 50 | 34 | 1610 | 87 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c7_30_tdi` | Audi A6 C7 3.0 TDI quattro | PROVISIONAL | 49 | 53 | 44 | 50 | 64 | 54 | 37 | 1765 | 113 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c7_30_tfsi` | Audi A6 C7 3.0 TFSI quattro | PROVISIONAL | 56 | 53 | 53 | 58 | 67 | 63 | 50 | 1735 | 141 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s6_c7` | Audi S6 C7 4.0 TFSI quattro | PROVISIONAL | 63 | 65 | 59 | 65 | 68 | 69 | 57 | 1895 | 175 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs6_c7` | Audi RS 6 C7 4.0 TFSI quattro | PROVISIONAL | 70 | 81 | 65 | 71 | 68 | 73 | 64 | 1935 | 213 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c8_20_tdi` | Audi A6 C8 40 TDI | PROVISIONAL | 43 | 30 | 42 | 47 | 63 | 50 | 33 | 1680 | 89 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c8_30_tdi` | Audi A6 C8 50 TDI quattro | PROVISIONAL | 49 | 54 | 43 | 50 | 64 | 54 | 37 | 1825 | 115 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs6_c8` | Audi RS 6 C8 4.0 TFSI quattro | PROVISIONAL | 70 | 81 | 63 | 72 | 69 | 75 | 64 | 2075 | 213 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a7_c7_30_tfsi` | Audi A7 C7 3.0 TFSI quattro | PROVISIONAL | 56 | 51 | 52 | 58 | 67 | 63 | 49 | 1770 | 138 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a7_c7_30_tdi` | Audi A7 C7 3.0 TDI quattro | PROVISIONAL | 48 | 51 | 43 | 49 | 64 | 53 | 36 | 1810 | 110 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s7_c7` | Audi S7 C7 4.0 TFSI quattro | PROVISIONAL | 63 | 63 | 59 | 65 | 68 | 69 | 57 | 1945 | 170 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs7_c7` | Audi RS 7 C7 4.0 TFSI quattro | PROVISIONAL | 69 | 79 | 63 | 71 | 68 | 73 | 63 | 1995 | 207 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a7_c8_20_tfsi` | Audi A7 C8 45 TFSI | PROVISIONAL | 47 | 34 | 46 | 51 | 65 | 57 | 40 | 1760 | 102 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a8_d4_30_tdi` | Audi A8 D4 3.0 TDI quattro | PROVISIONAL | 44 | 47 | 37 | 47 | 62 | 52 | 31 | 1880 | 101 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a8_d4_40_tfsi` | Audi A8 D4 4.0 TFSI quattro | PROVISIONAL | 53 | 65 | 42 | 55 | 65 | 62 | 39 | 1910 | 168 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s8_d4` | Audi S8 D4 4.0 TFSI quattro | PROVISIONAL | 60 | 73 | 50 | 62 | 66 | 67 | 49 | 1975 | 193 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_tt_8j_18_tfsi` | Audi TT 8J 1.8 TFSI | PROVISIONAL | 53 | 30 | 62 | 56 | 64 | 57 | 53 | 1240 | 95 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_tt_8s_20_tfsi` | Audi TT 8S 2.0 TFSI | PROVISIONAL | 60 | 47 | 64 | 61 | 68 | 63 | 59 | 1320 | 128 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q2_ga_10_tfsi` | Audi Q2 GA 1.0 TFSI | PROVISIONAL | 39 | 15 | 40 | 45 | 63 | 48 | 32 | 1280 | 66 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q2_ga_14_tfsi` | Audi Q2 GA 1.4 TFSI | PROVISIONAL | 41 | 23 | 41 | 46 | 64 | 49 | 33 | 1340 | 82 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q3_f3_15_tfsi` | Audi Q3 F3 1.5 TFSI | PROVISIONAL | 39 | 17 | 38 | 45 | 65 | 50 | 32 | 1570 | 70 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q3_f3_20_tfsi` | Audi Q3 F3 2.0 TFSI quattro | PROVISIONAL | 43 | 30 | 41 | 47 | 65 | 52 | 34 | 1665 | 84 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs_q3_f3` | Audi RS Q3 F3 2.5 TFSI quattro | PROVISIONAL | 66 | 64 | 63 | 69 | 69 | 71 | 61 | 1715 | 171 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q5_fy_20_tfsi` | Audi Q5 FY 2.0 TFSI quattro | PROVISIONAL | 44 | 38 | 38 | 47 | 65 | 53 | 32 | 1795 | 103 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q5_fy_20_tdi` | Audi Q5 FY 2.0 TDI quattro | PROVISIONAL | 41 | 30 | 36 | 46 | 64 | 50 | 30 | 1810 | 77 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_sq5_fy` | Audi SQ5 FY 3.0 TFSI/TDI quattro | PROVISIONAL | 53 | 51 | 47 | 56 | 67 | 61 | 44 | 1935 | 134 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q7_4m_30_tdi` | Audi Q7 4M 3.0 TDI quattro | PROVISIONAL | 41 | 43 | 31 | 45 | 63 | 50 | 26 | 2070 | 97 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q7_4m_30_tfsi` | Audi Q7 4M 3.0 TFSI quattro | PROVISIONAL | 43 | 43 | 32 | 47 | 65 | 54 | 29 | 2050 | 120 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_sq7_4m` | Audi SQ7 4M 4.0 TDI/TFSI quattro | PROVISIONAL | 51 | 63 | 38 | 55 | 64 | 60 | 39 | 2330 | 137 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q8_4m_30_tdi` | Audi Q8 4M 3.0 TDI quattro | PROVISIONAL | 41 | 43 | 31 | 45 | 63 | 50 | 27 | 2145 | 98 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_sq8_4m` | Audi SQ8 4M 4.0 TDI/TFSI quattro | PROVISIONAL | 54 | 67 | 40 | 57 | 65 | 62 | 41 | 2270 | 164 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs_q8_4m` | Audi RS Q8 4M 4.0 TFSI quattro | PROVISIONAL | 64 | 75 | 53 | 68 | 66 | 71 | 56 | 2315 | 190 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q4_e_tron` | Audi Q4 e-tron MEB Electric | PROVISIONAL | 34 | 18 | 30 | 39 | 59 | 44 | 23 | 2050 | 73 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_e_tron_gt_j1` | Audi e-tron GT J1 Dual Motor | PROVISIONAL | 61 | 63 | 56 | 63 | 68 | 67 | 55 | 2295 | 170 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q8_e_tron` | Audi Q8 e-tron GE Electric | PROVISIONAL | 39 | 46 | 28 | 40 | 60 | 46 | 23 | 2585 | 116 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_sq8_e_tron` | Audi SQ8 e-tron GE Electric | PROVISIONAL | 44 | 63 | 31 | 44 | 60 | 48 | 26 | 2650 | 140 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+
+## Mercedes-Benz Catalog Expansion Templates
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `mercedes_a180_w176` | Mercedes-Benz A 180 W176 1.6 Turbo | PROVISIONAL | 42 | 16 | 45 | 47 | 63 | 50 | 37 | 1370 | 66 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_a200_w176` | Mercedes-Benz A 200 W176 1.6 Turbo | PROVISIONAL | 44 | 23 | 47 | 49 | 63 | 52 | 39 | 1395 | 82 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_a250_w176` | Mercedes-Benz A 250 W176 2.0 Turbo | PROVISIONAL | 52 | 38 | 55 | 54 | 64 | 57 | 49 | 1435 | 108 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_a45_amg_w176` | Mercedes-Benz A 45 AMG W176 4MATIC | PROVISIONAL | 69 | 66 | 71 | 71 | 68 | 71 | 69 | 1555 | 170 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_a250_w177` | Mercedes-Benz A 250 W177 2.0 Turbo | PROVISIONAL | 52 | 39 | 54 | 54 | 67 | 57 | 49 | 1455 | 113 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_b180_w246` | Mercedes-Benz B 180 W246 1.6 Turbo | PROVISIONAL | 39 | 15 | 40 | 46 | 62 | 49 | 32 | 1425 | 63 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_b200_w246` | Mercedes-Benz B 200 W246 1.6 Turbo | PROVISIONAL | 40 | 20 | 40 | 46 | 63 | 49 | 33 | 1450 | 79 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla200_c117` | Mercedes-Benz CLA 200 C117 1.6 Turbo | PROVISIONAL | 44 | 21 | 47 | 49 | 63 | 52 | 39 | 1430 | 80 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla250_c117` | Mercedes-Benz CLA 250 C117 2.0 Turbo | PROVISIONAL | 52 | 37 | 54 | 54 | 64 | 57 | 49 | 1465 | 106 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla45_amg_c117` | Mercedes-Benz CLA 45 AMG C117 4MATIC | PROVISIONAL | 68 | 65 | 69 | 70 | 68 | 71 | 68 | 1585 | 167 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla180_c118` | Mercedes-Benz CLA 180 C118 1.3 Turbo | PROVISIONAL | 42 | 16 | 46 | 47 | 64 | 50 | 37 | 1435 | 70 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla200_c118` | Mercedes-Benz CLA 200 C118 1.3 Turbo | PROVISIONAL | 44 | 22 | 47 | 48 | 65 | 52 | 39 | 1450 | 83 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla250_c118` | Mercedes-Benz CLA 250 C118 2.0 Turbo | PROVISIONAL | 52 | 38 | 53 | 54 | 67 | 57 | 48 | 1505 | 110 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c180_kompressor_w204` | Mercedes-Benz C 180 Kompressor W204 1.6/1.8 | PROVISIONAL | 43 | 17 | 48 | 49 | 62 | 51 | 40 | 1490 | 77 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c180_cgi_w204` | Mercedes-Benz C 180 CGI W204 1.6 Turbo | PROVISIONAL | 45 | 20 | 49 | 50 | 62 | 52 | 41 | 1510 | 76 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c200_cgi_w204` | Mercedes-Benz C 200 CGI W204 1.8 Turbo | PROVISIONAL | 47 | 26 | 51 | 51 | 63 | 53 | 43 | 1525 | 89 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c250_cgi_w204` | Mercedes-Benz C 250 CGI W204 1.8 Turbo | PROVISIONAL | 49 | 32 | 52 | 53 | 63 | 55 | 45 | 1540 | 97 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c350_w204` | Mercedes-Benz C 350 W204 3.5 V6 | PROVISIONAL | 54 | 46 | 55 | 56 | 65 | 59 | 49 | 1610 | 140 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c63_amg_w204` | Mercedes-Benz C 63 AMG W204 6.2 V8 | PROVISIONAL | 69 | 71 | 69 | 69 | 67 | 70 | 67 | 1730 | 194 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c180_w205` | Mercedes-Benz C 180 W205 1.6 Turbo | PROVISIONAL | 45 | 21 | 50 | 50 | 63 | 52 | 42 | 1485 | 77 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c200_w205` | Mercedes-Benz C 200 W205 2.0 Turbo | PROVISIONAL | 48 | 29 | 52 | 52 | 64 | 54 | 45 | 1505 | 90 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c250_w205` | Mercedes-Benz C 250 W205 2.0 Turbo | PROVISIONAL | 51 | 36 | 53 | 54 | 65 | 56 | 46 | 1535 | 101 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c300_w205` | Mercedes-Benz C 300 W205 2.0 Turbo | PROVISIONAL | 53 | 41 | 54 | 55 | 66 | 58 | 48 | 1560 | 115 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c43_amg_w205` | Mercedes-Benz C 43 AMG W205 4MATIC | PROVISIONAL | 66 | 64 | 65 | 67 | 68 | 69 | 64 | 1660 | 163 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c63_amg_w205` | Mercedes-Benz C 63 AMG W205 4.0 V8 | PROVISIONAL | 70 | 75 | 69 | 70 | 68 | 71 | 67 | 1715 | 204 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c180_w206` | Mercedes-Benz C 180 W206 1.5 mild hybrid | PROVISIONAL | 45 | 20 | 49 | 51 | 65 | 53 | 42 | 1600 | 78 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c300_w206` | Mercedes-Benz C 300 W206 2.0 mild hybrid | PROVISIONAL | 52 | 41 | 54 | 54 | 67 | 57 | 47 | 1665 | 114 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e200_kompressor_w211` | Mercedes-Benz E 200 Kompressor W211 1.8 | PROVISIONAL | 40 | 20 | 41 | 47 | 59 | 49 | 34 | 1570 | 86 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e280_w211` | Mercedes-Benz E 280 W211 3.0 V6 | PROVISIONAL | 44 | 31 | 43 | 48 | 60 | 52 | 35 | 1635 | 104 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e350_w211` | Mercedes-Benz E 350 W211 3.5 V6 | PROVISIONAL | 46 | 38 | 44 | 50 | 61 | 53 | 37 | 1660 | 120 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e55_amg_w211` | Mercedes-Benz E 55 AMG W211 5.4 Supercharged V8 | PROVISIONAL | 63 | 71 | 59 | 64 | 63 | 66 | 56 | 1835 | 191 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e63_amg_w211` | Mercedes-Benz E 63 AMG W211 6.2 V8 | PROVISIONAL | 65 | 73 | 61 | 66 | 64 | 67 | 58 | 1840 | 205 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e180_w212` | Mercedes-Benz E 180 W212 1.6 Turbo | PROVISIONAL | 40 | 17 | 41 | 46 | 62 | 50 | 33 | 1605 | 72 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e200_cgi_w212` | Mercedes-Benz E 200 CGI W212 1.8 Turbo | PROVISIONAL | 41 | 22 | 42 | 47 | 62 | 51 | 34 | 1640 | 82 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e250_cgi_w212` | Mercedes-Benz E 250 CGI W212 1.8 Turbo | PROVISIONAL | 44 | 28 | 43 | 48 | 63 | 53 | 36 | 1660 | 90 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e400_w212` | Mercedes-Benz E 400 W212 3.0 V6 biturbo | PROVISIONAL | 52 | 52 | 48 | 54 | 65 | 59 | 42 | 1715 | 143 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e63_s_amg_w212` | Mercedes-Benz E 63 S AMG W212 5.5 V8 biturbo | PROVISIONAL | 70 | 83 | 65 | 71 | 67 | 73 | 64 | 1940 | 222 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e180_w213` | Mercedes-Benz E 180 W213 1.6 Turbo | PROVISIONAL | 41 | 17 | 42 | 47 | 63 | 50 | 34 | 1615 | 71 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e200_w213` | Mercedes-Benz E 200 W213 2.0 Turbo | PROVISIONAL | 43 | 25 | 44 | 48 | 64 | 53 | 36 | 1640 | 82 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e300_w213` | Mercedes-Benz E 300 W213 2.0 Turbo | PROVISIONAL | 47 | 37 | 45 | 50 | 65 | 55 | 38 | 1680 | 107 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e43_amg_w213` | Mercedes-Benz E 43 AMG W213 4MATIC | PROVISIONAL | 62 | 61 | 59 | 64 | 67 | 67 | 57 | 1840 | 160 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e53_amg_w213` | Mercedes-Benz E 53 AMG W213 3.0 mild hybrid | PROVISIONAL | 61 | 62 | 58 | 63 | 67 | 67 | 56 | 1900 | 168 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e63_s_amg_w213` | Mercedes-Benz E 63 S AMG W213 4MATIC+ | PROVISIONAL | 72 | 85 | 66 | 73 | 68 | 75 | 66 | 1955 | 230 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e200_w214` | Mercedes-Benz E 200 W214 2.0 mild hybrid | PROVISIONAL | 42 | 26 | 41 | 48 | 64 | 52 | 33 | 1765 | 85 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e300e_w214` | Mercedes-Benz E 300e W214 Plug-in Hybrid | PROVISIONAL | 41 | 42 | 35 | 44 | 60 | 48 | 27 | 2050 | 112 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e450_w214` | Mercedes-Benz E 450 W214 3.0 mild hybrid | PROVISIONAL | 51 | 56 | 44 | 52 | 66 | 59 | 38 | 1900 | 147 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e53_hybrid_amg_w214` | Mercedes-Benz E 53 Hybrid AMG W214 Plug-in Hybrid | PROVISIONAL | 62 | 75 | 54 | 64 | 63 | 66 | 54 | 2190 | 196 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s350_w221` | Mercedes-Benz S 350 W221 3.5 V6 | PROVISIONAL | 41 | 32 | 35 | 47 | 60 | 52 | 29 | 1880 | 106 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s500_w221` | Mercedes-Benz S 500 W221 5.5 V8 | PROVISIONAL | 46 | 52 | 37 | 50 | 62 | 55 | 32 | 1945 | 147 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s63_amg_w221` | Mercedes-Benz S 63 AMG W221 5.5 V8 biturbo | PROVISIONAL | 57 | 72 | 46 | 60 | 63 | 65 | 44 | 2070 | 193 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s400_w222` | Mercedes-Benz S 400 W222 3.0 V6 | PROVISIONAL | 44 | 44 | 36 | 48 | 63 | 54 | 30 | 1925 | 127 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s560_w222` | Mercedes-Benz S 560 W222 4.0 V8 | PROVISIONAL | 51 | 67 | 37 | 53 | 64 | 59 | 34 | 2070 | 167 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s63_amg_w222` | Mercedes-Benz S 63 AMG W222 4MATIC+ | PROVISIONAL | 62 | 82 | 50 | 64 | 65 | 68 | 49 | 2070 | 217 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s580_w223` | Mercedes-Benz S 580 W223 4.0 mild hybrid | PROVISIONAL | 50 | 68 | 36 | 52 | 65 | 58 | 33 | 2150 | 172 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s63_e_performance_w223` | Mercedes-Benz S 63 E Performance AMG W223 Plug-in Hybrid | PROVISIONAL | 61 | 86 | 46 | 63 | 62 | 65 | 47 | 2520 | 234 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gla180_h247` | Mercedes-Benz GLA 180 H247 1.3 | PROVISIONAL | 38 | 13 | 38 | 45 | 63 | 49 | 31 | 1505 | 66 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gla250_h247` | Mercedes-Benz GLA 250 H247 2.0 4MATIC | PROVISIONAL | 45 | 37 | 43 | 49 | 64 | 53 | 35 | 1610 | 102 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gla35_amg_h247` | Mercedes-Benz GLA 35 AMG H247 4MATIC | PROVISIONAL | 57 | 49 | 55 | 61 | 67 | 63 | 51 | 1710 | 132 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gla45_amg_h247` | Mercedes-Benz GLA 45 AMG H247 4MATIC+ | PROVISIONAL | 64 | 62 | 61 | 67 | 68 | 69 | 59 | 1765 | 161 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glb200_x247` | Mercedes-Benz GLB 200 X247 1.3 | PROVISIONAL | 38 | 18 | 36 | 44 | 63 | 49 | 29 | 1555 | 77 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glb250_x247` | Mercedes-Benz GLB 250 X247 2.0 4MATIC | PROVISIONAL | 43 | 35 | 37 | 48 | 64 | 53 | 32 | 1705 | 97 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glb35_amg_x247` | Mercedes-Benz GLB 35 AMG X247 4MATIC | PROVISIONAL | 53 | 47 | 49 | 58 | 67 | 61 | 46 | 1775 | 127 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glc200_x253` | Mercedes-Benz GLC 200 X253 2.0 | PROVISIONAL | 39 | 22 | 36 | 46 | 63 | 50 | 29 | 1735 | 78 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glc300d_x253` | Mercedes-Benz GLC 300d X253 2.0 diesel 4MATIC | PROVISIONAL | 42 | 41 | 35 | 45 | 63 | 50 | 28 | 1860 | 97 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glc43_amg_x253` | Mercedes-Benz GLC 43 AMG X253 4MATIC | PROVISIONAL | 56 | 57 | 50 | 59 | 66 | 63 | 47 | 1845 | 146 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glc63_s_amg_x253` | Mercedes-Benz GLC 63 S AMG X253 4.0 V8 4MATIC+ | PROVISIONAL | 65 | 77 | 56 | 67 | 66 | 69 | 56 | 1935 | 194 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gle300d_v167` | Mercedes-Benz GLE 300d V167 2.0 diesel 4MATIC | PROVISIONAL | 38 | 34 | 28 | 43 | 62 | 48 | 24 | 2170 | 83 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gle450_v167` | Mercedes-Benz GLE 450 V167 3.0 mild hybrid | PROVISIONAL | 42 | 45 | 30 | 46 | 64 | 52 | 27 | 2220 | 122 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gle53_amg_v167` | Mercedes-Benz GLE 53 AMG V167 3.0 mild hybrid | PROVISIONAL | 49 | 49 | 39 | 53 | 65 | 59 | 38 | 2305 | 139 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gle63_s_amg_v167` | Mercedes-Benz GLE 63 S AMG V167 4.0 V8 mild hybrid | PROVISIONAL | 60 | 74 | 48 | 64 | 64 | 67 | 50 | 2450 | 184 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gls350d_x167` | Mercedes-Benz GLS 350d X167 3.0 diesel 4MATIC | PROVISIONAL | 36 | 36 | 24 | 42 | 61 | 48 | 22 | 2460 | 85 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gls450_x167` | Mercedes-Benz GLS 450 X167 3.0 mild hybrid | PROVISIONAL | 38 | 39 | 26 | 44 | 62 | 50 | 24 | 2460 | 110 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gls580_x167` | Mercedes-Benz GLS 580 X167 4.0 mild hybrid | PROVISIONAL | 43 | 55 | 28 | 47 | 62 | 53 | 26 | 2535 | 142 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gls63_amg_x167` | Mercedes-Benz GLS 63 AMG X167 4.0 V8 mild hybrid | PROVISIONAL | 54 | 68 | 39 | 60 | 63 | 63 | 41 | 2630 | 171 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_g350d_w463` | Mercedes-Benz G 350d W463 3.0 diesel | PROVISIONAL | 35 | 35 | 22 | 41 | 61 | 47 | 20 | 2450 | 86 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_g400d_w463` | Mercedes-Benz G 400d W463 3.0 diesel | PROVISIONAL | 37 | 43 | 22 | 41 | 61 | 47 | 20 | 2480 | 98 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_g500_w463` | Mercedes-Benz G 500 W463 4.0 V8 | PROVISIONAL | 40 | 48 | 24 | 45 | 62 | 52 | 23 | 2429 | 128 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_g63_amg_w463` | Mercedes-Benz G 63 AMG W463 4.0 V8 | PROVISIONAL | 50 | 67 | 33 | 56 | 62 | 60 | 35 | 2560 | 168 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_slk200_r172` | Mercedes-Benz SLK 200 R172 1.8 Turbo | PROVISIONAL | 52 | 30 | 60 | 55 | 63 | 56 | 51 | 1435 | 94 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_slk350_r172` | Mercedes-Benz SLK 350 R172 3.5 V6 | PROVISIONAL | 58 | 49 | 62 | 60 | 65 | 60 | 55 | 1540 | 146 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_slk55_amg_r172` | Mercedes-Benz SLK 55 AMG R172 5.5 V8 | PROVISIONAL | 66 | 69 | 66 | 66 | 64 | 66 | 61 | 1610 | 193 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_slc43_amg_r172` | Mercedes-Benz SLC 43 AMG R172 3.0 V6 biturbo | PROVISIONAL | 64 | 63 | 64 | 65 | 67 | 65 | 60 | 1595 | 169 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_sl350_r230` | Mercedes-Benz SL 350 R230 3.5 V6 | PROVISIONAL | 51 | 39 | 52 | 56 | 63 | 58 | 46 | 1815 | 128 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_sl55_amg_r230` | Mercedes-Benz SL 55 AMG R230 5.4 Supercharged V8 | PROVISIONAL | 63 | 70 | 59 | 65 | 64 | 67 | 56 | 1955 | 188 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_sl500_r231` | Mercedes-Benz SL 500 R231 4.7 V8 | PROVISIONAL | 60 | 71 | 54 | 60 | 64 | 63 | 50 | 1785 | 188 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_sl63_amg_r231` | Mercedes-Benz SL 63 AMG R231 5.5 V8 biturbo | PROVISIONAL | 68 | 81 | 63 | 69 | 64 | 69 | 60 | 1845 | 233 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_amg_gt_s_c190` | Mercedes-Benz AMG GT S C190 4.0 V8 Biturbo | CALIBRATED | 80 | 81 | 81 | 82 | 74 | 81 | 81 | 1645 | 228 | 0 | REVIEWED_ADJUSTED | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_amg_gt_r_c190` | Mercedes-Benz AMG GT R C190 4.0 V8 Biturbo | CALIBRATED | 86 | 89 | 86 | 87 | 75 | 88 | 88 | 1630 | 264 | 0 | REVIEWED_ADJUSTED | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqa_250` | Mercedes-Benz EQA H243 250 | PROVISIONAL | 32 | 19 | 28 | 38 | 57 | 42 | 21 | 2040 | 69 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqb_350` | Mercedes-Benz EQB X243 350 4MATIC | PROVISIONAL | 36 | 39 | 27 | 39 | 57 | 42 | 21 | 2175 | 99 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqc_400` | Mercedes-Benz EQC N293 400 4MATIC | PROVISIONAL | 38 | 52 | 26 | 39 | 56 | 42 | 21 | 2495 | 120 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqe_350` | Mercedes-Benz EQE V295 350+ | PROVISIONAL | 36 | 34 | 28 | 40 | 58 | 44 | 23 | 2355 | 91 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqe53_amg` | Mercedes-Benz EQE 53 AMG V295 4MATIC+ | PROVISIONAL | 52 | 73 | 42 | 51 | 58 | 53 | 37 | 2525 | 182 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqs_580` | Mercedes-Benz EQS V297 580 4MATIC | PROVISIONAL | 41 | 62 | 27 | 41 | 58 | 44 | 22 | 2585 | 149 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqs53_amg` | Mercedes-Benz EQS 53 AMG V297 4MATIC+ | PROVISIONAL | 53 | 80 | 41 | 53 | 58 | 53 | 38 | 2655 | 211 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+
+## BMW Catalog Expansion Templates
+
+| Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `bmw_116i_e87` | BMW 116i E87 1.6 | PROVISIONAL | 42 | 11 | 50 | 47 | 60 | 49 | 40 | 1280 | 66 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_118i_e87` | BMW 118i E87 2.0 | PROVISIONAL | 44 | 16 | 51 | 48 | 60 | 50 | 41 | 1295 | 73 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_120i_e87` | BMW 120i E87 2.0 | PROVISIONAL | 45 | 20 | 52 | 49 | 61 | 51 | 42 | 1315 | 84 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_130i_e87` | BMW 130i E87 3.0 | PROVISIONAL | 59 | 43 | 66 | 61 | 66 | 62 | 59 | 1450 | 134 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_116i_f20` | BMW 116i F20 1.6 Turbo | PROVISIONAL | 45 | 20 | 50 | 49 | 62 | 51 | 42 | 1375 | 73 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_118i_f20` | BMW 118i F20 1.6 Turbo | PROVISIONAL | 48 | 27 | 53 | 51 | 63 | 53 | 45 | 1385 | 90 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_120i_f20_lci` | BMW 120i F20 LCI 2.0 B48 | PROVISIONAL | 50 | 31 | 54 | 52 | 66 | 55 | 47 | 1395 | 97 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_125i_f20` | BMW 125i F20 2.0 Turbo | PROVISIONAL | 53 | 38 | 58 | 55 | 65 | 57 | 50 | 1430 | 112 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_128ti_f40` | BMW 128ti F40 2.0 | PROVISIONAL | 61 | 45 | 65 | 64 | 69 | 65 | 61 | 1520 | 128 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_218i_f22` | BMW 218i F22 1.5 | PROVISIONAL | 47 | 19 | 54 | 50 | 64 | 52 | 45 | 1375 | 73 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_220i_f22` | BMW 220i F22 2.0 | PROVISIONAL | 51 | 31 | 57 | 53 | 65 | 55 | 48 | 1420 | 95 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_230i_g42` | BMW 230i G42 2.0 B48 | PROVISIONAL | 59 | 44 | 63 | 61 | 69 | 62 | 57 | 1545 | 117 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_318i_e46` | BMW 318i E46 2.0 | PROVISIONAL | 44 | 17 | 51 | 49 | 59 | 51 | 42 | 1395 | 75 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_320i_e46` | BMW 320i E46 2.2 inline-six | PROVISIONAL | 46 | 21 | 53 | 51 | 61 | 53 | 44 | 1460 | 86 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_325i_e46` | BMW 325i E46 2.5 inline-six | PROVISIONAL | 49 | 27 | 55 | 53 | 62 | 55 | 47 | 1490 | 95 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_330i_e46` | BMW 330i E46 3.0 inline-six | PROVISIONAL | 55 | 36 | 61 | 57 | 63 | 58 | 54 | 1505 | 113 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_316i_e90` | BMW 316i E90 1.6 | PROVISIONAL | 41 | 10 | 49 | 47 | 58 | 49 | 39 | 1435 | 63 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_320i_e90` | BMW 320i E90 2.0 | PROVISIONAL | 44 | 18 | 51 | 49 | 59 | 51 | 42 | 1460 | 75 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_325i_e90` | BMW 325i E90 3.0 | PROVISIONAL | 50 | 30 | 55 | 53 | 62 | 55 | 47 | 1505 | 106 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_330i_e90` | BMW 330i E90 3.0 | PROVISIONAL | 54 | 39 | 59 | 56 | 63 | 58 | 53 | 1525 | 125 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_335i_e90` | BMW 335i E90 N54 | PROVISIONAL | 58 | 49 | 61 | 60 | 63 | 61 | 56 | 1605 | 140 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_316i_f30` | BMW 316i F30 1.6 Turbo | PROVISIONAL | 44 | 17 | 51 | 49 | 62 | 51 | 42 | 1495 | 67 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_320i_f30` | BMW 320i F30 N20 2.0 | PROVISIONAL | 50 | 28 | 55 | 53 | 65 | 55 | 47 | 1500 | 90 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_328i_f30` | BMW 328i F30 N20 2.0 | PROVISIONAL | 57 | 41 | 62 | 58 | 66 | 60 | 56 | 1525 | 118 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_318i_g20` | BMW 318i G20 1.5 | PROVISIONAL | 46 | 21 | 51 | 51 | 66 | 53 | 43 | 1515 | 76 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_520i_e60` | BMW 520i E60 2.0 | PROVISIONAL | 42 | 18 | 46 | 49 | 59 | 51 | 38 | 1565 | 80 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_525i_e60` | BMW 525i E60 3.0 | PROVISIONAL | 46 | 27 | 48 | 51 | 61 | 53 | 41 | 1580 | 101 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_530i_e60` | BMW 530i E60 3.0 | PROVISIONAL | 50 | 36 | 52 | 54 | 63 | 57 | 46 | 1605 | 118 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_550i_e60` | BMW 550i E60 4.8 V8 | PROVISIONAL | 55 | 54 | 52 | 58 | 60 | 61 | 48 | 1735 | 156 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_520i_f10` | BMW 520i F10 2.0 Turbo | PROVISIONAL | 44 | 22 | 47 | 49 | 64 | 53 | 40 | 1690 | 80 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_528i_f10` | BMW 528i F10 2.0 Turbo | PROVISIONAL | 51 | 36 | 52 | 54 | 65 | 57 | 47 | 1700 | 106 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_550i_f10` | BMW 550i F10 4.4 V8 | PROVISIONAL | 55 | 60 | 51 | 58 | 60 | 61 | 46 | 1880 | 160 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_520i_g30` | BMW 520i G30 B48 1.6 | PROVISIONAL | 46 | 24 | 49 | 50 | 67 | 55 | 42 | 1615 | 77 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_530i_g30` | BMW 530i G30 B48 2.0 | PROVISIONAL | 54 | 39 | 56 | 56 | 69 | 60 | 50 | 1615 | 115 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_550e_g60` | BMW 550e G60 Plug-in Hybrid | PROVISIONAL | 58 | 72 | 51 | 57 | 66 | 59 | 46 | 1970 | 183 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_730i_e65` | BMW 730i E65 3.0 | PROVISIONAL | 42 | 28 | 40 | 49 | 60 | 52 | 33 | 1810 | 105 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_740i_e65` | BMW 740i E65 4.0 V8 | PROVISIONAL | 44 | 37 | 39 | 49 | 58 | 54 | 33 | 1900 | 118 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_750i_f01` | BMW 750i F01 4.4 V8 | PROVISIONAL | 50 | 57 | 42 | 54 | 58 | 58 | 37 | 1945 | 154 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_750li_g12` | BMW 750Li G12 4.4 V8 | PROVISIONAL | 51 | 64 | 40 | 55 | 60 | 60 | 37 | 2040 | 162 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x1_20i_f48` | BMW X1 20i F48 xDrive | PROVISIONAL | 43 | 30 | 41 | 47 | 64 | 50 | 34 | 1560 | 90 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x2_m35i_f39` | BMW X2 M35i F39 xDrive | PROVISIONAL | 59 | 56 | 56 | 61 | 69 | 64 | 52 | 1610 | 140 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x3_30i_g01` | BMW X3 30i G01 xDrive | PROVISIONAL | 49 | 37 | 47 | 52 | 68 | 57 | 41 | 1785 | 104 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x4_30i_g02` | BMW X4 30i G02 xDrive | PROVISIONAL | 49 | 37 | 48 | 52 | 68 | 57 | 43 | 1815 | 102 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x5_40i_g05` | BMW X5 40i G05 xDrive | PROVISIONAL | 47 | 45 | 38 | 52 | 67 | 58 | 35 | 2060 | 121 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x5_50e_g05` | BMW X5 50e G05 LCI Plug-in Hybrid | PROVISIONAL | 46 | 56 | 34 | 50 | 63 | 54 | 32 | 2490 | 145 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x6_40i_g06` | BMW X6 40i G06 xDrive | PROVISIONAL | 47 | 43 | 38 | 51 | 67 | 58 | 35 | 2130 | 117 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x7_40i_g07` | BMW X7 40i G07 xDrive | PROVISIONAL | 41 | 37 | 29 | 47 | 66 | 54 | 28 | 2420 | 103 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_e30` | BMW M3 E30 2.3 S14 | CALIBRATED | 67 | 38 | 85 | 67 | 66 | 65 | 75 | 1200 | 123 | 0 | OK | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_e36_32` | BMW M3 E36 3.2 S50 | CALIBRATED | 68 | 52 | 77 | 70 | 66 | 69 | 72 | 1460 | 162 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_e46` | BMW M3 E46 3.2 S54 | CALIBRATED | 72 | 55 | 81 | 74 | 68 | 72 | 76 | 1495 | 169 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_e92` | BMW M3 E92 4.0 S65 | CALIBRATED | 72 | 59 | 78 | 75 | 68 | 76 | 75 | 1655 | 187 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_1m_e82` | BMW 1M Coupe E82 N54 | CALIBRATED | 72 | 64 | 79 | 73 | 66 | 71 | 75 | 1495 | 167 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m2_f87_n55` | BMW M2 F87 N55 | CALIBRATED | 73 | 63 | 78 | 75 | 71 | 74 | 75 | 1570 | 173 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m2_cs_f87` | BMW M2 CS F87 S55 | CALIBRATED | 80 | 78 | 84 | 81 | 73 | 80 | 82 | 1550 | 214 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_f80_cs` | BMW M3 CS F80 S55 | CALIBRATED | 79 | 78 | 82 | 80 | 73 | 80 | 81 | 1585 | 213 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_g80_competition_xdrive` | BMW M3 Competition G80 xDrive | CALIBRATED | 78 | 81 | 78 | 78 | 73 | 80 | 77 | 1805 | 208 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_cs_g80` | BMW M3 CS G80 xDrive | CALIBRATED | 82 | 86 | 83 | 81 | 72 | 82 | 82 | 1765 | 229 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_touring_g81` | BMW M3 Touring G81 Competition xDrive | CALIBRATED | 76 | 78 | 76 | 77 | 73 | 80 | 74 | 1865 | 201 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m4_g82_competition_xdrive` | BMW M4 Competition G82 xDrive | CALIBRATED | 78 | 81 | 78 | 78 | 73 | 80 | 77 | 1800 | 208 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m4_cs_g82` | BMW M4 CS G82 xDrive | CALIBRATED | 82 | 86 | 83 | 81 | 72 | 82 | 82 | 1760 | 230 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_e34` | BMW M5 E34 3.8 S38 | CALIBRATED | 64 | 49 | 68 | 67 | 65 | 68 | 65 | 1670 | 150 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_e39` | BMW M5 E39 4.9 S62 | CALIBRATED | 67 | 57 | 69 | 70 | 66 | 72 | 66 | 1795 | 164 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_e60` | BMW M5 E60 5.0 S85 | CALIBRATED | 69 | 67 | 69 | 73 | 61 | 73 | 67 | 1830 | 204 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_f10` | BMW M5 F10 4.4 S63 | CALIBRATED | 69 | 75 | 67 | 72 | 64 | 73 | 65 | 1945 | 212 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_f90` | BMW M5 F90 Competition xDrive | CALIBRATED | 75 | 87 | 70 | 75 | 68 | 77 | 70 | 1930 | 238 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_cs_f90` | BMW M5 CS F90 xDrive | CALIBRATED | 79 | 92 | 76 | 79 | 69 | 80 | 76 | 1825 | 256 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_g90` | BMW M5 G90 Plug-in Hybrid xDrive | CALIBRATED | 68 | 82 | 61 | 71 | 64 | 71 | 62 | 2445 | 219 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m6_e63` | BMW M6 E63 5.0 S85 | CALIBRATED | 70 | 69 | 71 | 73 | 61 | 73 | 69 | 1785 | 209 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m6_f13` | BMW M6 F13 4.4 S63 | CALIBRATED | 71 | 77 | 68 | 73 | 65 | 75 | 67 | 1925 | 214 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m8_competition_g15` | BMW M8 Competition G15 xDrive | CALIBRATED | 75 | 89 | 71 | 75 | 68 | 77 | 70 | 1885 | 244 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x3_m_competition_f97` | BMW X3 M Competition F97 S58 xDrive | CALIBRATED | 67 | 71 | 61 | 69 | 70 | 73 | 61 | 2045 | 183 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x4_m_competition_f98` | BMW X4 M Competition F98 S58 xDrive | CALIBRATED | 67 | 71 | 61 | 69 | 70 | 73 | 61 | 2045 | 183 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x5_m_f85` | BMW X5 M F85 4.4 S63 xDrive | CALIBRATED | 60 | 69 | 50 | 66 | 63 | 69 | 52 | 2350 | 180 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x5_m_competition_f95` | BMW X5 M Competition F95 4.4 S63 xDrive | CALIBRATED | 63 | 72 | 53 | 68 | 64 | 71 | 55 | 2395 | 192 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x6_m_competition_f96` | BMW X6 M Competition F96 4.4 S63 xDrive | CALIBRATED | 63 | 73 | 53 | 68 | 64 | 71 | 55 | 2370 | 194 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_xm_g09` | BMW XM G09 Plug-in Hybrid xDrive | PROVISIONAL | 56 | 66 | 44 | 62 | 60 | 64 | 45 | 2710 | 177 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
 
 ## Sprint 4O Hierarchy Checks
 
@@ -345,15 +722,15 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 
 | Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| `mercedes_amg_gt_c190` | Mercedes-AMG GT C190 4.0 V8 Biturbo | CALIBRATED | 79 | 78 | 80 | 80 | 74 | 79 | 79 | 1615 | 211 | 0 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
-| `mercedes_amg_gt_black_series_c190` | Mercedes-AMG GT Black Series C190 4.0 V8 Biturbo | CALIBRATED | 95 | 95 | 92 | 93 | 78 | 92 | 95 | 1540 | 349 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
+| `mercedes_amg_gt_c190` | Mercedes-Benz AMG GT C190 4.0 V8 Biturbo | CALIBRATED | 79 | 78 | 80 | 80 | 74 | 79 | 79 | 1615 | 211 | 0 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `mercedes_amg_gt_black_series_c190` | Mercedes-Benz AMG GT Black Series C190 4.0 V8 Biturbo | CALIBRATED | 95 | 95 | 92 | 93 | 78 | 92 | 95 | 1540 | 349 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 
 ### BMW G8x hierarchy
 
 | Code | Vehicle | Status | Overall | Power | Handling | Braking | Reliability | Thermal | Readiness | kg | kW/t | Elite adj. | Audit result | Notes |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| `bmw_m4_g82` | BMW M M4 G82 Competition | PROVISIONAL | 78 | 79 | 80 | 79 | 73 | 80 | 78 | 1725 | 217 | 0 | PROVISIONAL | - |
-| `bmw_m4_csl_g82` | BMW M M4 CSL G82 S58 | CALIBRATED | 90 | 87 | 90 | 90 | 78 | 89 | 92 | 1625 | 249 | 2 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
+| `bmw_m4_g82` | BMW M4 G82 Competition | PROVISIONAL | 78 | 79 | 80 | 79 | 73 | 80 | 78 | 1725 | 217 | 0 | PROVISIONAL | - |
+| `bmw_m4_csl_g82` | BMW M4 CSL G82 S58 | CALIBRATED | 90 | 87 | 90 | 90 | 78 | 89 | 92 | 1625 | 249 | 2 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 
 ### T10F RWD vs AWD
 
@@ -381,7 +758,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `audi_a3_30tfsi_8y` | Audi A3 8Y 30 TFSI | PROVISIONAL | 42 | 13 | 46 | 48 | 65 | 50 | 39 | 1295 | 63 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `audi_s3_8y` | Audi S3 8Y 2.0 TFSI quattro | PROVISIONAL | 66 | 55 | 69 | 67 | 71 | 69 | 67 | 1575 | 145 | 0 | PROVISIONAL | - |
 | `mercedes_a180_w177` | Mercedes-Benz A 180 W177 1.3 | PROVISIONAL | 42 | 16 | 45 | 48 | 65 | 50 | 38 | 1365 | 73 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
-| `mercedes_amg_a45_s_w177` | Mercedes-AMG A 45 S W177 4MATIC+ | CALIBRATED | 73 | 71 | 75 | 74 | 71 | 74 | 74 | 1635 | 190 | 0 | REVIEWED_ADJUSTED | - |
+| `mercedes_amg_a45_s_w177` | Mercedes-Benz A 45 S AMG W177 4MATIC+ | CALIBRATED | 73 | 71 | 75 | 74 | 71 | 74 | 74 | 1635 | 190 | 0 | REVIEWED_ADJUSTED | - |
 
 ## Top 25 Overall
 
@@ -389,7 +766,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
 | `ford_mustang_gtd_s650` | Ford Mustang GTD S650 5.2 Supercharged V8 | CALIBRATED | 97 | 96 | 91 | 94 | 83 | 95 | 95 | 1970 | 309 | 4 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `porsche_911_gt3_rs_992` | Porsche 911 GT3 RS 992 4.0 | CALIBRATED | 96 | 87 | 95 | 95 | 84 | 93 | 97 | 1450 | 266 | 4 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
-| `mercedes_amg_gt_black_series_c190` | Mercedes-AMG GT Black Series C190 4.0 V8 Biturbo | CALIBRATED | 95 | 95 | 92 | 93 | 78 | 92 | 95 | 1540 | 349 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
+| `mercedes_amg_gt_black_series_c190` | Mercedes-Benz AMG GT Black Series C190 4.0 V8 Biturbo | CALIBRATED | 95 | 95 | 92 | 93 | 78 | 92 | 95 | 1540 | 349 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 | `mclaren_765lt` | McLaren 765LT Super Series 4.0 V8 | CALIBRATED | 94 | 96 | 92 | 92 | 78 | 90 | 93 | 1339 | 420 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 | `ferrari_488_pista` | Ferrari 488 Pista F142M 3.9 V8 Twin-Turbo | CALIBRATED | 94 | 95 | 92 | 92 | 81 | 91 | 93 | 1385 | 383 | 3 | REVIEWED_ADJUSTED | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `lamborghini_huracan_sto` | Lamborghini Huracan STO LP 640-2 5.2 V10 | CALIBRATED | 94 | 95 | 92 | 92 | 78 | 89 | 92 | 1339 | 351 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
@@ -402,16 +779,16 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `porsche_911_gt3_992` | Porsche 911 GT3 992 4.0 | CALIBRATED | 93 | 87 | 93 | 92 | 83 | 91 | 94 | 1435 | 261 | 3 | REVIEWED_ADJUSTED | - |
 | `mclaren_600lt` | McLaren 600LT Sports Series 3.8 V8 | CALIBRATED | 92 | 95 | 91 | 91 | 79 | 89 | 92 | 1247 | 354 | 2 | REVIEWED_ADJUSTED | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `porsche_718_spyder_rs` | Porsche 718 Spyder RS 982 4.0 | CALIBRATED | 90 | 85 | 91 | 90 | 80 | 88 | 92 | 1410 | 261 | 2 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
-| `bmw_m4_csl_g82` | BMW M M4 CSL G82 S58 | CALIBRATED | 90 | 87 | 90 | 90 | 78 | 89 | 92 | 1625 | 249 | 2 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
+| `bmw_m4_csl_g82` | BMW M4 CSL G82 S58 | CALIBRATED | 90 | 87 | 90 | 90 | 78 | 89 | 92 | 1625 | 249 | 2 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 | `chevrolet_corvette_z06_c8` | Chevrolet Corvette Z06 C8 5.5 LT6 | CALIBRATED | 89 | 96 | 86 | 90 | 80 | 90 | 88 | 1560 | 321 | 0 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 | `porsche_911_st_992` | Porsche 911 S/T 992 4.0 | CALIBRATED | 89 | 90 | 91 | 89 | 80 | 87 | 90 | 1380 | 280 | 0 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `ferrari_sf90_stradale` | Ferrari SF90 Stradale F173 Plug-In Hybrid AWD | PROVISIONAL | 88 | 99 | 85 | 88 | 80 | 90 | 87 | 1600 | 459 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
+| `ferrari_812_competizione` | Ferrari 812 Competizione F152M 6.5 V12 | PROVISIONAL | 88 | 95 | 87 | 89 | 80 | 89 | 88 | 1487 | 410 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
 | `chevrolet_corvette_zr1_c7` | Chevrolet Corvette ZR1 C7 6.2 LT5 | CALIBRATED | 88 | 95 | 87 | 89 | 80 | 90 | 88 | 1615 | 349 | 0 | REVIEWED_ADJUSTED | Sprint 4U elite stock reference; centralized rating remains authoritative. |
+| `ferrari_laferrari` | Ferrari LaFerrari F150 6.3 V12 Hybrid | PROVISIONAL | 86 | 96 | 83 | 86 | 76 | 86 | 84 | 1585 | 447 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
 | `mclaren_720s` | McLaren 720S Super Series 4.0 V8 | PROVISIONAL | 86 | 95 | 85 | 86 | 78 | 86 | 85 | 1419 | 374 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
-| `porsche_718_cayman_gt4` | Porsche 718 Cayman GT4 982 4.0 | CALIBRATED | 86 | 73 | 92 | 90 | 81 | 87 | 92 | 1420 | 218 | 0 | REVIEWED_ADJUSTED | - |
-| `lamborghini_revuelto` | Lamborghini Revuelto LB744 6.5 V12 Plug-In Hybrid | PROVISIONAL | 85 | 99 | 81 | 84 | 78 | 86 | 82 | 1772 | 422 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
-| `chevrolet_camaro_zl1_1le` | Chevrolet Camaro ZL1 1LE Alpha 6.2 LT4 | PROVISIONAL | 85 | 93 | 83 | 85 | 78 | 87 | 83 | 1732 | 280 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
-| `porsche_911_turbo_s_992` | Porsche 911 Turbo S 992 3.7 | CALIBRATED | 84 | 98 | 80 | 83 | 78 | 85 | 81 | 1640 | 291 | 0 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `ferrari_f8_tributo` | Ferrari F8 Tributo F142M 3.9 V8 Twin-Turbo | PROVISIONAL | 86 | 95 | 85 | 86 | 78 | 86 | 85 | 1435 | 369 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_430_scuderia` | Ferrari 430 Scuderia F131 4.3 V8 | PROVISIONAL | 86 | 91 | 88 | 86 | 77 | 85 | 86 | 1350 | 278 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
 
 ## Top 25 Power
 
@@ -421,27 +798,27 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | 2 | `lamborghini_revuelto` | Lamborghini Revuelto LB744 6.5 V12 Plug-In Hybrid | 99 | 85 | PROVISIONAL |
 | 3 | `lamborghini_huracan_performante` | Lamborghini Huracan Performante LP 640-4 5.2 V10 | 98 | 93 | CALIBRATED |
 | 4 | `porsche_911_turbo_s_992` | Porsche 911 Turbo S 992 3.7 | 98 | 84 | CALIBRATED |
-| 5 | `audi_r8_v10_performance_4s` | Audi Sport R8 V10 Performance 4S 5.2 FSI quattro | 98 | 83 | CALIBRATED |
+| 5 | `audi_r8_v10_performance_4s` | Audi R8 V10 Performance 4S 5.2 FSI quattro | 98 | 83 | CALIBRATED |
 | 6 | `tesla_model_s_plaid` | Tesla Model S Plaid Palladium Tri Motor | 98 | 67 | PROVISIONAL |
 | 7 | `ford_mustang_gtd_s650` | Ford Mustang GTD S650 5.2 Supercharged V8 | 96 | 97 | CALIBRATED |
 | 8 | `porsche_911_gt2_rs_9912` | Porsche 911 GT2 RS 991.2 3.8 Twin-Turbo | 96 | 94 | CALIBRATED |
 | 9 | `mclaren_765lt` | McLaren 765LT Super Series 4.0 V8 | 96 | 94 | CALIBRATED |
 | 10 | `chevrolet_corvette_z06_c8` | Chevrolet Corvette Z06 C8 5.5 LT6 | 96 | 89 | CALIBRATED |
-| 11 | `mercedes_amg_gt_black_series_c190` | Mercedes-AMG GT Black Series C190 4.0 V8 Biturbo | 95 | 95 | CALIBRATED |
-| 12 | `lamborghini_huracan_sto` | Lamborghini Huracan STO LP 640-2 5.2 V10 | 95 | 94 | CALIBRATED |
-| 13 | `ferrari_488_pista` | Ferrari 488 Pista F142M 3.9 V8 Twin-Turbo | 95 | 94 | CALIBRATED |
-| 14 | `ferrari_458_speciale` | Ferrari 458 Speciale F142 4.5 V8 | 95 | 93 | CALIBRATED |
-| 15 | `mclaren_600lt` | McLaren 600LT Sports Series 3.8 V8 | 95 | 92 | CALIBRATED |
-| 16 | `chevrolet_corvette_zr1_c7` | Chevrolet Corvette ZR1 C7 6.2 LT5 | 95 | 88 | CALIBRATED |
-| 17 | `mclaren_720s` | McLaren 720S Super Series 4.0 V8 | 95 | 86 | PROVISIONAL |
-| 18 | `dodge_viper_acr_vx` | Dodge Viper ACR VX 8.4 V10 | 94 | 94 | CALIBRATED |
-| 19 | `chevrolet_camaro_zl1_1le` | Chevrolet Camaro ZL1 1LE Alpha 6.2 LT4 | 93 | 85 | PROVISIONAL |
-| 20 | `porsche_911_turbo_992` | Porsche 911 Turbo 992 3.7 | 93 | 82 | CALIBRATED |
-| 21 | `acura_nsx_type_s_nc1` | Acura NSX Type S NC1 Hybrid AWD | 91 | 79 | PROVISIONAL |
-| 22 | `porsche_911_st_992` | Porsche 911 S/T 992 4.0 | 90 | 89 | CALIBRATED |
-| 23 | `cadillac_ct5_v_blackwing` | Cadillac CT5-V Blackwing Alpha 6.2 LT4 | 89 | 78 | PROVISIONAL |
-| 24 | `porsche_taycan_turbo_s_j1` | Porsche Taycan Turbo S J1 Performance Battery Plus | 89 | 71 | PROVISIONAL |
-| 25 | `porsche_911_gt3_rs_9912` | Porsche 911 GT3 RS 991.2 4.0 | 88 | 94 | CALIBRATED |
+| 11 | `ferrari_laferrari` | Ferrari LaFerrari F150 6.3 V12 Hybrid | 96 | 86 | PROVISIONAL |
+| 12 | `mercedes_amg_gt_black_series_c190` | Mercedes-Benz AMG GT Black Series C190 4.0 V8 Biturbo | 95 | 95 | CALIBRATED |
+| 13 | `lamborghini_huracan_sto` | Lamborghini Huracan STO LP 640-2 5.2 V10 | 95 | 94 | CALIBRATED |
+| 14 | `ferrari_488_pista` | Ferrari 488 Pista F142M 3.9 V8 Twin-Turbo | 95 | 94 | CALIBRATED |
+| 15 | `ferrari_458_speciale` | Ferrari 458 Speciale F142 4.5 V8 | 95 | 93 | CALIBRATED |
+| 16 | `mclaren_600lt` | McLaren 600LT Sports Series 3.8 V8 | 95 | 92 | CALIBRATED |
+| 17 | `chevrolet_corvette_zr1_c7` | Chevrolet Corvette ZR1 C7 6.2 LT5 | 95 | 88 | CALIBRATED |
+| 18 | `ferrari_812_competizione` | Ferrari 812 Competizione F152M 6.5 V12 | 95 | 88 | PROVISIONAL |
+| 19 | `mclaren_720s` | McLaren 720S Super Series 4.0 V8 | 95 | 86 | PROVISIONAL |
+| 20 | `ferrari_f8_tributo` | Ferrari F8 Tributo F142M 3.9 V8 Twin-Turbo | 95 | 86 | PROVISIONAL |
+| 21 | `ferrari_488_gtb` | Ferrari 488 GTB F142M 3.9 V8 Twin-Turbo | 95 | 85 | PROVISIONAL |
+| 22 | `ferrari_296_gtb` | Ferrari 296 GTB F171 3.0 V6 Plug-In Hybrid | 95 | 85 | PROVISIONAL |
+| 23 | `ferrari_812_superfast` | Ferrari 812 Superfast F152M 6.5 V12 | 95 | 84 | PROVISIONAL |
+| 24 | `maserati_mc20_m240` | Maserati MC20 M240 3.0 Nettuno V6 | 95 | 84 | PROVISIONAL |
+| 25 | `dodge_challenger_demon_lx` | Dodge Challenger SRT Demon LA 6.2 Supercharged V8 | 95 | 66 | PROVISIONAL |
 
 ## Top 25 Handling
 
@@ -452,7 +829,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | 3 | `porsche_718_cayman_gt4_rs` | Porsche 718 Cayman GT4 RS 982 4.0 | 94 | 94 | CALIBRATED |
 | 4 | `dodge_viper_acr_vx` | Dodge Viper ACR VX 8.4 V10 | 93 | 94 | CALIBRATED |
 | 5 | `porsche_911_gt3_992` | Porsche 911 GT3 992 4.0 | 93 | 93 | CALIBRATED |
-| 6 | `mercedes_amg_gt_black_series_c190` | Mercedes-AMG GT Black Series C190 4.0 V8 Biturbo | 92 | 95 | CALIBRATED |
+| 6 | `mercedes_amg_gt_black_series_c190` | Mercedes-Benz AMG GT Black Series C190 4.0 V8 Biturbo | 92 | 95 | CALIBRATED |
 | 7 | `porsche_911_gt2_rs_9912` | Porsche 911 GT2 RS 991.2 3.8 Twin-Turbo | 92 | 94 | CALIBRATED |
 | 8 | `mclaren_765lt` | McLaren 765LT Super Series 4.0 V8 | 92 | 94 | CALIBRATED |
 | 9 | `lamborghini_huracan_sto` | Lamborghini Huracan STO LP 640-2 5.2 V10 | 92 | 94 | CALIBRATED |
@@ -464,14 +841,14 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | 15 | `porsche_718_spyder_rs` | Porsche 718 Spyder RS 982 4.0 | 91 | 90 | CALIBRATED |
 | 16 | `porsche_911_st_992` | Porsche 911 S/T 992 4.0 | 91 | 89 | CALIBRATED |
 | 17 | `lamborghini_huracan_performante` | Lamborghini Huracan Performante LP 640-4 5.2 V10 | 90 | 93 | CALIBRATED |
-| 18 | `bmw_m4_csl_g82` | BMW M M4 CSL G82 S58 | 90 | 90 | CALIBRATED |
+| 18 | `bmw_m4_csl_g82` | BMW M4 CSL G82 S58 | 90 | 90 | CALIBRATED |
 | 19 | `alpine_a110_r_ultime` | Alpine A110 R Ultime A110 345 PS | 90 | 83 | PROVISIONAL |
-| 20 | `alpine_a110_r` | Alpine A110 R A110 300 PS | 90 | 81 | CALIBRATED |
-| 21 | `renault_megane_rs_trophy_r` | Renault Sport Megane RS Trophy-R Mk4 300 | 89 | 80 | CALIBRATED |
-| 22 | `chevrolet_corvette_zr1_c7` | Chevrolet Corvette ZR1 C7 6.2 LT5 | 87 | 88 | CALIBRATED |
-| 23 | `chevrolet_corvette_z06_c8` | Chevrolet Corvette Z06 C8 5.5 LT6 | 86 | 89 | CALIBRATED |
-| 24 | `alpine_a110_s` | Alpine A110 S A110 300 PS | 86 | 77 | CALIBRATED |
-| 25 | `alfa_romeo_4c_960` | Alfa Romeo 4C 960 1.75 TBi Coupe | 86 | 74 | CALIBRATED |
+| 20 | `lotus_exige_s_v6` | Lotus Exige S S3 3.5 Supercharged V6 | 90 | 82 | PROVISIONAL |
+| 21 | `alpine_a110_r` | Alpine A110 R A110 300 PS | 90 | 81 | CALIBRATED |
+| 22 | `lotus_evora_gt430` | Lotus Evora GT430 Evora 3.5 Supercharged V6 | 89 | 84 | PROVISIONAL |
+| 23 | `renault_megane_rs_trophy_r` | Renault Sport Megane RS Trophy-R Mk4 300 | 89 | 80 | CALIBRATED |
+| 24 | `lotus_elise_s3` | Lotus Elise S3 1.8 Supercharged | 89 | 76 | PROVISIONAL |
+| 25 | `ferrari_430_scuderia` | Ferrari 430 Scuderia F131 4.3 V8 | 88 | 86 | PROVISIONAL |
 
 ## Top 25 Braking
 
@@ -479,7 +856,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | ---: | --- | --- | ---: | ---: | --- |
 | 1 | `porsche_911_gt3_rs_992` | Porsche 911 GT3 RS 992 4.0 | 95 | 96 | CALIBRATED |
 | 2 | `ford_mustang_gtd_s650` | Ford Mustang GTD S650 5.2 Supercharged V8 | 94 | 97 | CALIBRATED |
-| 3 | `mercedes_amg_gt_black_series_c190` | Mercedes-AMG GT Black Series C190 4.0 V8 Biturbo | 93 | 95 | CALIBRATED |
+| 3 | `mercedes_amg_gt_black_series_c190` | Mercedes-Benz AMG GT Black Series C190 4.0 V8 Biturbo | 93 | 95 | CALIBRATED |
 | 4 | `porsche_911_gt3_rs_9912` | Porsche 911 GT3 RS 991.2 4.0 | 93 | 94 | CALIBRATED |
 | 5 | `porsche_718_cayman_gt4_rs` | Porsche 718 Cayman GT4 RS 982 4.0 | 93 | 94 | CALIBRATED |
 | 6 | `porsche_911_gt2_rs_9912` | Porsche 911 GT2 RS 991.2 3.8 Twin-Turbo | 92 | 94 | CALIBRATED |
@@ -492,16 +869,16 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | 13 | `lamborghini_huracan_performante` | Lamborghini Huracan Performante LP 640-4 5.2 V10 | 91 | 93 | CALIBRATED |
 | 14 | `mclaren_600lt` | McLaren 600LT Sports Series 3.8 V8 | 91 | 92 | CALIBRATED |
 | 15 | `porsche_718_spyder_rs` | Porsche 718 Spyder RS 982 4.0 | 90 | 90 | CALIBRATED |
-| 16 | `bmw_m4_csl_g82` | BMW M M4 CSL G82 S58 | 90 | 90 | CALIBRATED |
+| 16 | `bmw_m4_csl_g82` | BMW M4 CSL G82 S58 | 90 | 90 | CALIBRATED |
 | 17 | `chevrolet_corvette_z06_c8` | Chevrolet Corvette Z06 C8 5.5 LT6 | 90 | 89 | CALIBRATED |
 | 18 | `porsche_718_cayman_gt4` | Porsche 718 Cayman GT4 982 4.0 | 90 | 86 | CALIBRATED |
 | 19 | `porsche_911_st_992` | Porsche 911 S/T 992 4.0 | 89 | 89 | CALIBRATED |
 | 20 | `chevrolet_corvette_zr1_c7` | Chevrolet Corvette ZR1 C7 6.2 LT5 | 89 | 88 | CALIBRATED |
-| 21 | `ferrari_sf90_stradale` | Ferrari SF90 Stradale F173 Plug-In Hybrid AWD | 88 | 88 | PROVISIONAL |
-| 22 | `mclaren_720s` | McLaren 720S Super Series 4.0 V8 | 86 | 86 | PROVISIONAL |
-| 23 | `chevrolet_camaro_zl1_1le` | Chevrolet Camaro ZL1 1LE Alpha 6.2 LT4 | 85 | 85 | PROVISIONAL |
-| 24 | `renault_megane_rs_trophy_r` | Renault Sport Megane RS Trophy-R Mk4 300 | 85 | 80 | CALIBRATED |
-| 25 | `lamborghini_revuelto` | Lamborghini Revuelto LB744 6.5 V12 Plug-In Hybrid | 84 | 85 | PROVISIONAL |
+| 21 | `ferrari_812_competizione` | Ferrari 812 Competizione F152M 6.5 V12 | 89 | 88 | PROVISIONAL |
+| 22 | `ferrari_sf90_stradale` | Ferrari SF90 Stradale F173 Plug-In Hybrid AWD | 88 | 88 | PROVISIONAL |
+| 23 | `mercedes_amg_gt_r_c190` | Mercedes-Benz AMG GT R C190 4.0 V8 Biturbo | 87 | 86 | CALIBRATED |
+| 24 | `mclaren_720s` | McLaren 720S Super Series 4.0 V8 | 86 | 86 | PROVISIONAL |
+| 25 | `ferrari_430_scuderia` | Ferrari 430 Scuderia F131 4.3 V8 | 86 | 86 | PROVISIONAL |
 
 ## Top 25 Thermal
 
@@ -509,7 +886,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | ---: | --- | --- | ---: | ---: | --- |
 | 1 | `ford_mustang_gtd_s650` | Ford Mustang GTD S650 5.2 Supercharged V8 | 95 | 97 | CALIBRATED |
 | 2 | `porsche_911_gt3_rs_992` | Porsche 911 GT3 RS 992 4.0 | 93 | 96 | CALIBRATED |
-| 3 | `mercedes_amg_gt_black_series_c190` | Mercedes-AMG GT Black Series C190 4.0 V8 Biturbo | 92 | 95 | CALIBRATED |
+| 3 | `mercedes_amg_gt_black_series_c190` | Mercedes-Benz AMG GT Black Series C190 4.0 V8 Biturbo | 92 | 95 | CALIBRATED |
 | 4 | `porsche_911_gt3_rs_9912` | Porsche 911 GT3 RS 991.2 4.0 | 91 | 94 | CALIBRATED |
 | 5 | `porsche_718_cayman_gt4_rs` | Porsche 718 Cayman GT4 RS 982 4.0 | 91 | 94 | CALIBRATED |
 | 6 | `ferrari_488_pista` | Ferrari 488 Pista F142M 3.9 V8 Twin-Turbo | 91 | 94 | CALIBRATED |
@@ -524,14 +901,14 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | 15 | `lamborghini_huracan_sto` | Lamborghini Huracan STO LP 640-2 5.2 V10 | 89 | 94 | CALIBRATED |
 | 16 | `lamborghini_huracan_performante` | Lamborghini Huracan Performante LP 640-4 5.2 V10 | 89 | 93 | CALIBRATED |
 | 17 | `mclaren_600lt` | McLaren 600LT Sports Series 3.8 V8 | 89 | 92 | CALIBRATED |
-| 18 | `bmw_m4_csl_g82` | BMW M M4 CSL G82 S58 | 89 | 90 | CALIBRATED |
-| 19 | `porsche_718_spyder_rs` | Porsche 718 Spyder RS 982 4.0 | 88 | 90 | CALIBRATED |
-| 20 | `porsche_911_st_992` | Porsche 911 S/T 992 4.0 | 87 | 89 | CALIBRATED |
-| 21 | `porsche_718_cayman_gt4` | Porsche 718 Cayman GT4 982 4.0 | 87 | 86 | CALIBRATED |
-| 22 | `chevrolet_camaro_zl1_1le` | Chevrolet Camaro ZL1 1LE Alpha 6.2 LT4 | 87 | 85 | PROVISIONAL |
-| 23 | `mclaren_720s` | McLaren 720S Super Series 4.0 V8 | 86 | 86 | PROVISIONAL |
-| 24 | `lamborghini_revuelto` | Lamborghini Revuelto LB744 6.5 V12 Plug-In Hybrid | 86 | 85 | PROVISIONAL |
-| 25 | `porsche_911_turbo_s_992` | Porsche 911 Turbo S 992 3.7 | 85 | 84 | CALIBRATED |
+| 18 | `bmw_m4_csl_g82` | BMW M4 CSL G82 S58 | 89 | 90 | CALIBRATED |
+| 19 | `ferrari_812_competizione` | Ferrari 812 Competizione F152M 6.5 V12 | 89 | 88 | PROVISIONAL |
+| 20 | `porsche_718_spyder_rs` | Porsche 718 Spyder RS 982 4.0 | 88 | 90 | CALIBRATED |
+| 21 | `mercedes_amg_gt_r_c190` | Mercedes-Benz AMG GT R C190 4.0 V8 Biturbo | 88 | 86 | CALIBRATED |
+| 22 | `porsche_911_st_992` | Porsche 911 S/T 992 4.0 | 87 | 89 | CALIBRATED |
+| 23 | `porsche_718_cayman_gt4` | Porsche 718 Cayman GT4 982 4.0 | 87 | 86 | CALIBRATED |
+| 24 | `chevrolet_camaro_zl1_1le` | Chevrolet Camaro ZL1 1LE Alpha 6.2 LT4 | 87 | 85 | PROVISIONAL |
+| 25 | `mclaren_720s` | McLaren 720S Super Series 4.0 V8 | 86 | 86 | PROVISIONAL |
 
 ## Top 25 Track Readiness
 
@@ -539,7 +916,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | ---: | --- | --- | ---: | ---: | --- |
 | 1 | `porsche_911_gt3_rs_992` | Porsche 911 GT3 RS 992 4.0 | 97 | 96 | CALIBRATED |
 | 2 | `ford_mustang_gtd_s650` | Ford Mustang GTD S650 5.2 Supercharged V8 | 95 | 97 | CALIBRATED |
-| 3 | `mercedes_amg_gt_black_series_c190` | Mercedes-AMG GT Black Series C190 4.0 V8 Biturbo | 95 | 95 | CALIBRATED |
+| 3 | `mercedes_amg_gt_black_series_c190` | Mercedes-Benz AMG GT Black Series C190 4.0 V8 Biturbo | 95 | 95 | CALIBRATED |
 | 4 | `porsche_911_gt3_rs_9912` | Porsche 911 GT3 RS 991.2 4.0 | 95 | 94 | CALIBRATED |
 | 5 | `porsche_718_cayman_gt4_rs` | Porsche 718 Cayman GT4 RS 982 4.0 | 95 | 94 | CALIBRATED |
 | 6 | `dodge_viper_acr_vx` | Dodge Viper ACR VX 8.4 V10 | 94 | 94 | CALIBRATED |
@@ -552,16 +929,16 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | 13 | `lamborghini_huracan_performante` | Lamborghini Huracan Performante LP 640-4 5.2 V10 | 92 | 93 | CALIBRATED |
 | 14 | `mclaren_600lt` | McLaren 600LT Sports Series 3.8 V8 | 92 | 92 | CALIBRATED |
 | 15 | `porsche_718_spyder_rs` | Porsche 718 Spyder RS 982 4.0 | 92 | 90 | CALIBRATED |
-| 16 | `bmw_m4_csl_g82` | BMW M M4 CSL G82 S58 | 92 | 90 | CALIBRATED |
+| 16 | `bmw_m4_csl_g82` | BMW M4 CSL G82 S58 | 92 | 90 | CALIBRATED |
 | 17 | `porsche_718_cayman_gt4` | Porsche 718 Cayman GT4 982 4.0 | 92 | 86 | CALIBRATED |
 | 18 | `porsche_911_st_992` | Porsche 911 S/T 992 4.0 | 90 | 89 | CALIBRATED |
 | 19 | `chevrolet_corvette_z06_c8` | Chevrolet Corvette Z06 C8 5.5 LT6 | 88 | 89 | CALIBRATED |
 | 20 | `chevrolet_corvette_zr1_c7` | Chevrolet Corvette ZR1 C7 6.2 LT5 | 88 | 88 | CALIBRATED |
-| 21 | `renault_megane_rs_trophy_r` | Renault Sport Megane RS Trophy-R Mk4 300 | 88 | 80 | CALIBRATED |
-| 22 | `ferrari_sf90_stradale` | Ferrari SF90 Stradale F173 Plug-In Hybrid AWD | 87 | 88 | PROVISIONAL |
-| 23 | `mclaren_720s` | McLaren 720S Super Series 4.0 V8 | 85 | 86 | PROVISIONAL |
-| 24 | `alpine_a110_r` | Alpine A110 R A110 300 PS | 85 | 81 | CALIBRATED |
-| 25 | `alpine_a110_r_ultime` | Alpine A110 R Ultime A110 345 PS | 84 | 83 | PROVISIONAL |
+| 21 | `ferrari_812_competizione` | Ferrari 812 Competizione F152M 6.5 V12 | 88 | 88 | PROVISIONAL |
+| 22 | `mercedes_amg_gt_r_c190` | Mercedes-Benz AMG GT R C190 4.0 V8 Biturbo | 88 | 86 | CALIBRATED |
+| 23 | `renault_megane_rs_trophy_r` | Renault Sport Megane RS Trophy-R Mk4 300 | 88 | 80 | CALIBRATED |
+| 24 | `ferrari_sf90_stradale` | Ferrari SF90 Stradale F173 Plug-In Hybrid AWD | 87 | 88 | PROVISIONAL |
+| 25 | `ferrari_430_scuderia` | Ferrari 430 Scuderia F131 4.3 V8 | 86 | 86 | PROVISIONAL |
 
 ## Elite Candidate Table
 
@@ -573,8 +950,8 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `porsche_911_gt3_rs_992` | Porsche 911 GT3 RS 992 4.0 | P 87, H 86, B 92, R 84, T 94, TR 97 | P 87, H 95, B 95, R 84, T 93, TR 97 | 90 -> 96 | Elite track evidence adjustment applied after component recalibration. | HIGH | 4 |
 | `porsche_718_cayman_gt4_rs` | Porsche 718 Cayman GT4 RS 982 4.0 | P 85, H 87, B 90, R 83, T 91, TR 95 | P 85, H 94, B 93, R 83, T 91, TR 95 | 88 -> 94 | Elite track evidence adjustment applied after component recalibration. | HIGH | 3 |
 | `porsche_911_gt2_rs_9912` | Porsche 911 GT2 RS 991.2 3.8 Twin-Turbo | P 96, H 84, B 89, R 79, T 90, TR 93 | P 96, H 92, B 92, R 79, T 90, TR 93 | 89 -> 94 | Sprint 4O reference addition with official-source evidence. | HIGH | 3 |
-| `mercedes_amg_gt_black_series_c190` | Mercedes-AMG GT Black Series C190 4.0 V8 Biturbo | P 95, H 80, B 88, R 78, T 92, TR 92 | P 95, H 92, B 93, R 78, T 92, TR 95 | 87 -> 95 | Sprint 4O reference addition with official-source evidence. | HIGH | 3 |
-| `bmw_m4_csl_g82` | BMW M M4 CSL G82 S58 | P 87, H 77, B 84, R 78, T 89, TR 89 | P 87, H 90, B 90, R 78, T 89, TR 92 | 84 -> 90 | Sprint 4O reference addition with official-source evidence. | HIGH | 2 |
+| `mercedes_amg_gt_black_series_c190` | Mercedes-Benz AMG GT Black Series C190 4.0 V8 Biturbo | P 95, H 80, B 88, R 78, T 92, TR 92 | P 95, H 92, B 93, R 78, T 92, TR 95 | 87 -> 95 | Sprint 4O reference addition with official-source evidence. | HIGH | 3 |
+| `bmw_m4_csl_g82` | BMW M4 CSL G82 S58 | P 87, H 77, B 84, R 78, T 89, TR 89 | P 87, H 90, B 90, R 78, T 89, TR 92 | 84 -> 90 | Sprint 4O reference addition with official-source evidence. | HIGH | 2 |
 | `mclaren_765lt` | McLaren 765LT Super Series 4.0 V8 | P 96, H 87, B 91, R 78, T 90, TR 93 | P 96, H 92, B 92, R 78, T 90, TR 93 | 90 -> 94 | Sprint 4O reference addition with official-source evidence. | HIGH | 3 |
 | `lamborghini_huracan_sto` | Lamborghini Huracan STO LP 640-2 5.2 V10 | P 95, H 87, B 90, R 78, T 89, TR 92 | P 95, H 92, B 92, R 78, T 89, TR 92 | 89 -> 94 | Sprint 4O reference addition with official-source evidence. | HIGH | 3 |
 | `ferrari_458_speciale` | Ferrari 458 Speciale F142 4.5 V8 | P 95, H 84, B 87, R 81, T 89, TR 90 | P 95, H 91, B 91, R 81, T 90, TR 92 | 88 -> 93 | Elite track evidence adjustment applied after component recalibration. | HIGH | 2 |
@@ -635,21 +1012,21 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `ford_mustang_gt_s550` | Ford Mustang GT S550 5.0 V8 | P 68, H 61, B 64, R 72, T 69, TR 64 | P 68, H 65, B 67, R 72, T 69, TR 64 | 66 -> 67 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `ford_mustang_dark_horse_s650` | Ford Mustang Dark Horse S650 5.0 V8 | P 72, H 64, B 70, R 74, T 75, TR 72 | P 72, H 73, B 74, R 74, T 76, TR 72 | 70 -> 73 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
 | `mercedes_a200_w177` | Mercedes-Benz A 200 W177 1.3 Turbo | P 25, H 63, B 58, R 67, T 57, TR 49 | P 25, H 54, B 54, R 67, T 57, TR 49 | 53 -> 50 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `mercedes_amg_a35_w177` | Mercedes-AMG A 35 W177 4MATIC | P 55, H 68, B 68, R 71, T 69, TR 68 | P 55, H 70, B 69, R 71, T 70, TR 68 | 66 -> 67 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `mercedes_amg_a45_s_w177` | Mercedes-AMG A 45 S W177 4MATIC+ | P 71, H 68, B 72, R 71, T 74, TR 73 | P 71, H 75, B 74, R 71, T 74, TR 74 | 71 -> 73 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
-| `mercedes_amg_cla35_c118` | Mercedes-AMG CLA 35 C118 4MATIC | P 54, H 66, B 66, R 71, T 69, TR 66 | P 54, H 69, B 67, R 71, T 69, TR 67 | 65 -> 66 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `mercedes_amg_cla45_s_c118` | Mercedes-AMG CLA 45 S C118 4MATIC+ | P 69, H 66, B 71, R 71, T 74, TR 72 | P 69, H 73, B 74, R 71, T 74, TR 72 | 70 -> 72 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_amg_a35_w177` | Mercedes-Benz A 35 AMG W177 4MATIC | P 55, H 68, B 68, R 71, T 69, TR 68 | P 55, H 70, B 69, R 71, T 70, TR 68 | 66 -> 67 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_amg_a45_s_w177` | Mercedes-Benz A 45 S AMG W177 4MATIC+ | P 71, H 68, B 72, R 71, T 74, TR 73 | P 71, H 75, B 74, R 71, T 74, TR 74 | 71 -> 73 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `mercedes_amg_cla35_c118` | Mercedes-Benz CLA 35 AMG C118 4MATIC | P 54, H 66, B 66, R 71, T 69, TR 66 | P 54, H 69, B 67, R 71, T 69, TR 67 | 65 -> 66 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_amg_cla45_s_c118` | Mercedes-Benz CLA 45 S AMG C118 4MATIC+ | P 69, H 66, B 71, R 71, T 74, TR 72 | P 69, H 73, B 74, R 71, T 74, TR 72 | 70 -> 72 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `mercedes_c200_w206` | Mercedes-Benz C 200 W206 1.5 mild hybrid | P 29, H 57, B 55, R 67, T 59, TR 49 | P 29, H 54, B 54, R 67, T 59, TR 49 | 52 -> 51 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `mercedes_amg_c43_w206` | Mercedes-AMG C 43 W206 4MATIC | P 63, H 61, B 65, R 69, T 71, TR 66 | P 63, H 68, B 69, R 69, T 71, TR 66 | 65 -> 67 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `mercedes_amg_c63_s_w205` | Mercedes-AMG C 63 S W205 4.0 V8 | P 78, H 64, B 69, R 69, T 72, TR 69 | P 78, H 70, B 71, R 69, T 72, TR 69 | 70 -> 72 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `mercedes_amg_c63_s_e_performance_w206` | Mercedes-AMG C 63 S E Performance W206 PHEV | P 87, H 50, B 65, R 67, T 77, TR 68 | P 87, H 66, B 73, R 67, T 77, TR 67 | 68 -> 73 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_amg_c43_w206` | Mercedes-Benz C 43 AMG W206 4MATIC | P 63, H 61, B 65, R 69, T 71, TR 66 | P 63, H 68, B 69, R 69, T 71, TR 66 | 65 -> 67 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_amg_c63_s_w205` | Mercedes-Benz C 63 S AMG W205 4.0 V8 | P 78, H 64, B 69, R 69, T 72, TR 69 | P 78, H 70, B 71, R 69, T 72, TR 69 | 70 -> 72 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_amg_c63_s_e_performance_w206` | Mercedes-Benz C 63 S E Performance AMG W206 PHEV | P 87, H 50, B 65, R 67, T 77, TR 68 | P 87, H 66, B 73, R 67, T 77, TR 67 | 68 -> 73 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `audi_a3_35_tfsi_8y` | Audi A3 35 TFSI 8Y 1.5 TFSI | P 22, H 62, B 58, R 68, T 57, TR 49 | P 22, H 54, B 54, R 68, T 57, TR 49 | 52 -> 49 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `audi_s3_8y` | Audi S3 8Y 2.0 TFSI quattro | P 55, H 67, B 66, R 71, T 69, TR 67 | P 55, H 69, B 67, R 71, T 69, TR 67 | 65 -> 66 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `audi_rs3_8v` | Audi Sport RS 3 8V 2.5 TFSI quattro | P 65, H 67, B 70, R 70, T 71, TR 70 | P 65, H 71, B 72, R 70, T 72, TR 70 | 69 -> 70 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `audi_rs3_8y` | Audi Sport RS 3 8Y 2.5 TFSI quattro | P 69, H 68, B 71, R 71, T 74, TR 73 | P 69, H 75, B 74, R 71, T 74, TR 73 | 71 -> 73 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_rs3_8v` | Audi RS 3 8V 2.5 TFSI quattro | P 65, H 67, B 70, R 70, T 71, TR 70 | P 65, H 71, B 72, R 70, T 72, TR 70 | 69 -> 70 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_rs3_8y` | Audi RS 3 8Y 2.5 TFSI quattro | P 69, H 68, B 71, R 71, T 74, TR 73 | P 69, H 75, B 74, R 71, T 74, TR 73 | 71 -> 73 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `audi_s4_b9` | Audi S4 B9 3.0 TFSI quattro | P 60, H 61, B 65, R 71, T 69, TR 64 | P 60, H 65, B 67, R 71, T 69, TR 64 | 64 -> 65 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `audi_rs4_b9` | Audi Sport RS 4 B9 2.9 TFSI quattro | P 72, H 61, B 68, R 70, T 72, TR 68 | P 72, H 70, B 71, R 70, T 72, TR 68 | 68 -> 70 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `audi_tt_rs_8s` | Audi Sport TT RS 8S 2.5 TFSI quattro | P 74, H 72, B 73, R 71, T 73, TR 73 | P 74, H 75, B 74, R 71, T 74, TR 73 | 73 -> 74 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_rs4_b9` | Audi RS 4 B9 2.9 TFSI quattro | P 72, H 61, B 68, R 70, T 72, TR 68 | P 72, H 70, B 71, R 70, T 72, TR 68 | 68 -> 70 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_tt_rs_8s` | Audi TT RS 8S 2.5 TFSI quattro | P 74, H 72, B 73, R 71, T 73, TR 73 | P 74, H 75, B 74, R 71, T 74, TR 73 | 73 -> 74 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `toyota_gr86_zn8` | Toyota GR86 ZN8 2.4 | P 41, H 82, B 69, R 75, T 67, TR 71 | P 41, H 79, B 67, R 75, T 68, TR 71 | 68 -> 67 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `toyota_supra_a90_20` | Toyota GR Supra A90 2.0 | P 51, H 74, B 70, R 73, T 69, TR 70 | P 51, H 73, B 69, R 73, T 70, TR 70 | 68 -> 67 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `toyota_supra_a90_30` | Toyota GR Supra A90 3.0 | P 64, H 72, B 71, R 75, T 73, TR 73 | P 64, H 76, B 73, R 75, T 74, TR 73 | 71 -> 72 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
@@ -666,12 +1043,12 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `porsche_911_carrera_s_992` | Porsche 911 Carrera S 992 3.0 Turbo | P 79, H 75, B 79, R 80, T 81, TR 80 | P 79, H 80, B 81, R 80, T 81, TR 80 | 79 -> 80 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `porsche_911_gt3_992` | Porsche 911 GT3 992 4.0 | P 87, H 85, B 89, R 83, T 91, TR 94 | P 87, H 93, B 92, R 83, T 91, TR 94 | 88 -> 93 | Elite track evidence adjustment applied after component recalibration. | HIGH | 3 |
 | `bmw_m240i_g42` | BMW M240i G42 B58TU2 xDrive | P 64, H 64, B 67, R 73, T 72, TR 68 | P 64, H 70, B 69, R 73, T 72, TR 68 | 67 -> 69 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `bmw_m2_f87` | BMW M M2 F87 Competition | P 70, H 72, B 75, R 73, T 77, TR 79 | P 70, H 80, B 78, R 73, T 78, TR 79 | 74 -> 77 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
-| `bmw_m2_g87` | BMW M M2 G87 S58 | P 71, H 69, B 74, R 74, T 79, TR 77 | P 71, H 80, B 79, R 74, T 80, TR 78 | 73 -> 77 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
-| `bmw_m3_f80` | BMW M M3 F80 Competition | P 76, H 72, B 76, R 72, T 77, TR 77 | P 76, H 79, B 78, R 72, T 78, TR 78 | 75 -> 77 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `bmw_m3_g80` | BMW M M3 G80 Competition | P 79, H 69, B 74, R 73, T 79, TR 77 | P 79, H 80, B 79, R 73, T 80, TR 78 | 75 -> 78 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `bmw_m4_f82` | BMW M M4 F82 Competition | P 75, H 72, B 76, R 72, T 77, TR 77 | P 75, H 79, B 78, R 72, T 78, TR 78 | 75 -> 77 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `bmw_m4_g82` | BMW M M4 G82 Competition | P 79, H 69, B 74, R 73, T 79, TR 77 | P 79, H 80, B 79, R 73, T 80, TR 78 | 75 -> 78 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_m2_f87` | BMW M2 F87 Competition | P 70, H 72, B 75, R 73, T 77, TR 79 | P 70, H 80, B 78, R 73, T 78, TR 79 | 74 -> 77 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m2_g87` | BMW M2 G87 S58 | P 71, H 69, B 74, R 74, T 79, TR 77 | P 71, H 80, B 79, R 74, T 80, TR 78 | 73 -> 77 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m3_f80` | BMW M3 F80 Competition | P 76, H 72, B 76, R 72, T 77, TR 77 | P 76, H 79, B 78, R 72, T 78, TR 78 | 75 -> 77 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_m3_g80` | BMW M3 G80 Competition | P 79, H 69, B 74, R 73, T 79, TR 77 | P 79, H 80, B 79, R 73, T 80, TR 78 | 75 -> 78 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_m4_f82` | BMW M4 F82 Competition | P 75, H 72, B 76, R 72, T 77, TR 77 | P 75, H 79, B 78, R 72, T 78, TR 78 | 75 -> 77 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_m4_g82` | BMW M4 G82 Competition | P 79, H 69, B 74, R 73, T 79, TR 77 | P 79, H 80, B 79, R 73, T 80, TR 78 | 75 -> 78 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `hyundai_elantra_n` | Hyundai Elantra N CN7 2.0 T-GDi | P 50, H 75, B 76, R 75, T 75, TR 78 | P 50, H 79, B 77, R 75, T 75, TR 78 | 71 -> 72 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
 | `hyundai_kona_n` | Hyundai Kona N OS 2.0 T-GDi | P 48, H 69, B 70, R 72, T 71, TR 69 | P 48, H 71, B 71, R 72, T 71, TR 69 | 66 -> 67 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `honda_s2000_ap1` | Honda S2000 AP1 2.0 VTEC | P 40, H 83, B 71, R 76, T 69, TR 72 | P 40, H 80, B 69, R 76, T 70, TR 73 | 69 -> 68 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
@@ -739,13 +1116,13 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `porsche_718_spyder_rs` | Porsche 718 Spyder RS 982 4.0 | P 85, H 85, B 87, R 80, T 87, TR 92 | P 85, H 91, B 90, R 80, T 88, TR 92 | 86 -> 90 | Elite track evidence adjustment applied after component recalibration. | MEDIUM | 2 |
 | `porsche_911_st_992` | Porsche 911 S/T 992 4.0 | P 90, H 86, B 87, R 80, T 87, TR 90 | P 90, H 91, B 89, R 80, T 87, TR 90 | 87 -> 89 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
 | `alpine_a110_gt` | Alpine A110 GT A110 300 PS | P 68, H 88, B 79, R 73, T 73, TR 77 | P 68, H 83, B 75, R 73, T 73, TR 77 | 77 -> 76 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
-| `audi_rs5_b9` | Audi Sport RS 5 B9 2.9 TFSI quattro | P 76, H 64, B 71, R 72, T 75, TR 70 | P 76, H 71, B 74, R 72, T 75, TR 70 | 71 -> 73 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_rs5_b9` | Audi RS 5 B9 2.9 TFSI quattro | P 76, H 64, B 71, R 72, T 75, TR 70 | P 76, H 71, B 74, R 72, T 75, TR 70 | 71 -> 73 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `lexus_rc_f` | Lexus RC F USC10 5.0 V8 | P 67, H 58, B 68, R 77, T 73, TR 64 | P 67, H 64, B 71, R 77, T 73, TR 63 | 66 -> 68 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `lexus_lc_500` | Lexus LC 500 Z100 5.0 V8 | P 62, H 52, B 64, R 77, T 73, TR 61 | P 62, H 61, B 69, R 77, T 72, TR 60 | 63 -> 66 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `mercedes_amg_gt_c190` | Mercedes-AMG GT C190 4.0 V8 Biturbo | P 78, H 72, B 77, R 74, T 79, TR 79 | P 78, H 80, B 80, R 74, T 79, TR 79 | 76 -> 79 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `mercedes_amg_gt_c190` | Mercedes-Benz AMG GT C190 4.0 V8 Biturbo | P 78, H 72, B 77, R 74, T 79, TR 79 | P 78, H 80, B 80, R 74, T 79, TR 79 | 76 -> 79 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
 | `porsche_911_gt2_rs_9912` | Porsche 911 GT2 RS 991.2 3.8 Twin-Turbo | P 96, H 84, B 89, R 79, T 90, TR 93 | P 96, H 92, B 92, R 79, T 90, TR 93 | 89 -> 94 | Sprint 4O reference addition with official-source evidence. | HIGH | 3 |
-| `mercedes_amg_gt_black_series_c190` | Mercedes-AMG GT Black Series C190 4.0 V8 Biturbo | P 95, H 80, B 88, R 78, T 92, TR 92 | P 95, H 92, B 93, R 78, T 92, TR 95 | 87 -> 95 | Sprint 4O reference addition with official-source evidence. | HIGH | 3 |
-| `bmw_m4_csl_g82` | BMW M M4 CSL G82 S58 | P 87, H 77, B 84, R 78, T 89, TR 89 | P 87, H 90, B 90, R 78, T 89, TR 92 | 84 -> 90 | Sprint 4O reference addition with official-source evidence. | HIGH | 2 |
+| `mercedes_amg_gt_black_series_c190` | Mercedes-Benz AMG GT Black Series C190 4.0 V8 Biturbo | P 95, H 80, B 88, R 78, T 92, TR 92 | P 95, H 92, B 93, R 78, T 92, TR 95 | 87 -> 95 | Sprint 4O reference addition with official-source evidence. | HIGH | 3 |
+| `bmw_m4_csl_g82` | BMW M4 CSL G82 S58 | P 87, H 77, B 84, R 78, T 89, TR 89 | P 87, H 90, B 90, R 78, T 89, TR 92 | 84 -> 90 | Sprint 4O reference addition with official-source evidence. | HIGH | 2 |
 | `chevrolet_corvette_z06_c8` | Chevrolet Corvette Z06 C8 5.5 LT6 | P 96, H 78, B 86, R 80, T 90, TR 88 | P 96, H 86, B 90, R 80, T 90, TR 88 | 86 -> 89 | Sprint 4O reference addition with official-source evidence. | HIGH | 0 |
 | `mclaren_765lt` | McLaren 765LT Super Series 4.0 V8 | P 96, H 87, B 91, R 78, T 90, TR 93 | P 96, H 92, B 92, R 78, T 90, TR 93 | 90 -> 94 | Sprint 4O reference addition with official-source evidence. | HIGH | 3 |
 | `lamborghini_huracan_sto` | Lamborghini Huracan STO LP 640-2 5.2 V10 | P 95, H 87, B 90, R 78, T 89, TR 92 | P 95, H 92, B 92, R 78, T 89, TR 92 | 89 -> 94 | Sprint 4O reference addition with official-source evidence. | HIGH | 3 |
@@ -827,7 +1204,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `fiat_500e_hatch` | Fiat 500e 332 Electric | P 17, H 53, B 49, R 58, T 43, TR 29 | P 17, H 38, B 41, R 58, T 41, TR 28 | 41 -> 36 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `toyota_corolla_15_6mt` | Toyota Corolla E210 1.5 6MT | P 10, H 59, B 54, R 71, T 51, TR 37 | P 10, H 43, B 46, R 71, T 50, TR 36 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `toyota_corolla_15_cvt` | Toyota Corolla E210 1.5 CVT | P 9, H 57, B 53, R 71, T 51, TR 35 | P 9, H 41, B 45, R 71, T 50, TR 35 | 45 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `toyota_corolla_hybrid_e210` | Toyota Corolla E210 Hybrid | P 15, H 56, B 53, R 71, T 50, TR 35 | P 15, H 42, B 45, R 71, T 49, TR 34 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `toyota_corolla_hybrid_e210` | Toyota Corolla E210 Hybrid e-CVT | P 15, H 56, B 53, R 71, T 50, TR 35 | P 15, H 42, B 45, R 71, T 49, TR 34 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `toyota_yaris_15_hybrid` | Toyota Yaris XP210 1.5 Hybrid | P 14, H 65, B 56, R 70, T 49, TR 36 | P 14, H 45, B 46, R 70, T 48, TR 35 | 48 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `toyota_yaris_cross_hybrid` | Toyota Yaris Cross XP210 1.5 Hybrid | P 8, H 58, B 53, R 70, T 47, TR 32 | P 8, H 40, B 44, R 70, T 46, TR 31 | 44 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `toyota_chr_hybrid_current` | Toyota C-HR AX20 Hybrid | P 12, H 49, B 50, R 69, T 48, TR 32 | P 12, H 37, B 44, R 69, T 46, TR 31 | 42 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
@@ -838,8 +1215,8 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `hyundai_i20_10_tgdi_7dct` | Hyundai i20 BC3 1.0 T-GDi 7DCT | P 12, H 62, B 54, R 64, T 48, TR 35 | P 12, H 43, B 44, R 64, T 48, TR 34 | 46 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `hyundai_bayon_10_tgdi` | Hyundai Bayon BC3 CUV 1.0 T-GDi | P 10, H 58, B 52, R 64, T 47, TR 33 | P 10, H 40, B 43, R 64, T 46, TR 32 | 44 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `hyundai_i30_15_tgdi_48v` | Hyundai i30 PD 1.5 T-GDi 48V | P 23, H 59, B 54, R 66, T 52, TR 40 | P 23, H 46, B 48, R 66, T 52, TR 39 | 49 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `hyundai_kona_hybrid_sx2` | Hyundai Kona SX2 Hybrid | P 15, H 51, B 51, R 64, T 48, TR 32 | P 15, H 38, B 44, R 64, T 46, TR 31 | 43 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `hyundai_kona_electric_sx2` | Hyundai Kona Electric SX2 Long Range | P 21, H 41, B 45, R 60, T 46, TR 28 | P 21, H 35, B 42, R 60, T 45, TR 27 | 39 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `hyundai_kona_hybrid_sx2` | Hyundai Kona SX2 Hybrid DCT | P 15, H 51, B 51, R 64, T 48, TR 32 | P 15, H 38, B 44, R 64, T 46, TR 31 | 43 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `hyundai_kona_electric_sx2` | Hyundai Kona Electric SX2 Long Range 65.4 kWh | P 21, H 41, B 45, R 60, T 46, TR 28 | P 21, H 35, B 42, R 60, T 45, TR 27 | 39 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `hyundai_tucson_hybrid` | Hyundai Tucson NX4 1.6 T-GDi Hybrid | P 29, H 43, B 47, R 64, T 49, TR 29 | P 29, H 35, B 43, R 64, T 47, TR 28 | 42 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `peugeot_208_12_puretech` | Peugeot 208 P21 1.2 PureTech | P 15, H 61, B 54, R 60, T 47, TR 35 | P 15, H 43, B 44, R 60, T 46, TR 34 | 46 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `peugeot_208_hybrid_100` | Peugeot 208 P21 Hybrid 100 e-DCS6 | P 14, H 60, B 53, R 60, T 47, TR 35 | P 14, H 42, B 44, R 60, T 46, TR 34 | 45 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
@@ -886,7 +1263,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `bmw_i4_m50_g26` | BMW i4 M50 G26 Dual Motor | P 73, H 40, B 53, R 67, T 63, TR 52 | P 73, H 54, B 59, R 67, T 63, TR 52 | 56 -> 61 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `kia_ev6_gt` | Kia EV6 GT CV Dual Motor | P 75, H 44, B 55, R 68, T 67, TR 56 | P 75, H 57, B 62, R 68, T 67, TR 56 | 59 -> 64 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `porsche_taycan_turbo_s_j1` | Porsche Taycan Turbo S J1 Performance Battery Plus | P 89, H 44, B 60, R 70, T 73, TR 63 | P 89, H 62, B 69, R 70, T 73, TR 63 | 65 -> 71 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `audi_rs_e_tron_gt_j1` | Audi Sport RS e-tron GT J1 Dual Motor | P 79, H 43, B 58, R 70, T 71, TR 61 | P 79, H 60, B 67, R 70, T 71, TR 61 | 62 -> 67 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_rs_e_tron_gt_j1` | Audi RS e-tron GT J1 Dual Motor | P 79, H 43, B 58, R 70, T 71, TR 61 | P 79, H 60, B 67, R 70, T 71, TR 61 | 62 -> 67 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `ferrari_458_speciale` | Ferrari 458 Speciale F142 4.5 V8 | P 95, H 84, B 87, R 81, T 89, TR 90 | P 95, H 91, B 91, R 81, T 90, TR 92 | 88 -> 93 | Elite track evidence adjustment applied after component recalibration. | HIGH | 2 |
 | `ferrari_488_pista` | Ferrari 488 Pista F142M 3.9 V8 Twin-Turbo | P 95, H 85, B 88, R 81, T 91, TR 91 | P 95, H 92, B 92, R 81, T 91, TR 93 | 89 -> 94 | Elite track evidence adjustment applied after component recalibration. | HIGH | 3 |
 | `ferrari_sf90_stradale` | Ferrari SF90 Stradale F173 Plug-In Hybrid AWD | P 99, H 75, B 84, R 80, T 90, TR 87 | P 99, H 85, B 88, R 80, T 90, TR 87 | 85 -> 88 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
@@ -894,7 +1271,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `lamborghini_revuelto` | Lamborghini Revuelto LB744 6.5 V12 Plug-In Hybrid | P 99, H 68, B 78, R 78, T 86, TR 82 | P 99, H 81, B 84, R 78, T 86, TR 82 | 81 -> 85 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `mclaren_600lt` | McLaren 600LT Sports Series 3.8 V8 | P 95, H 89, B 90, R 79, T 88, TR 91 | P 95, H 91, B 91, R 79, T 89, TR 92 | 89 -> 92 | Elite track evidence adjustment applied after component recalibration. | HIGH | 2 |
 | `mclaren_720s` | McLaren 720S Super Series 4.0 V8 | P 95, H 80, B 85, R 78, T 86, TR 85 | P 95, H 85, B 86, R 78, T 86, TR 85 | 85 -> 86 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
-| `audi_r8_v10_performance_4s` | Audi Sport R8 V10 Performance 4S 5.2 FSI quattro | P 98, H 71, B 79, R 78, T 83, TR 79 | P 98, H 78, B 82, R 78, T 83, TR 79 | 81 -> 83 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `audi_r8_v10_performance_4s` | Audi R8 V10 Performance 4S 5.2 FSI quattro | P 98, H 71, B 79, R 78, T 83, TR 79 | P 98, H 78, B 82, R 78, T 83, TR 79 | 81 -> 83 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
 | `dodge_viper_acr_vx` | Dodge Viper ACR VX 8.4 V10 | P 94, H 81, B 87, R 80, T 90, TR 91 | P 94, H 93, B 92, R 80, T 91, TR 94 | 87 -> 94 | Elite track evidence adjustment applied after component recalibration. | HIGH | 3 |
 | `acura_nsx_type_s_nc1` | Acura NSX Type S NC1 Hybrid AWD | P 91, H 65, B 73, R 77, T 79, TR 74 | P 91, H 75, B 78, R 77, T 79, TR 74 | 76 -> 79 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `lexus_lfa` | Lexus LFA LFA10 4.8 V10 | P 83, H 72, B 77, R 79, T 81, TR 77 | P 83, H 78, B 80, R 79, T 81, TR 77 | 78 -> 80 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
@@ -903,6 +1280,319 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `chevrolet_camaro_zl1_1le` | Chevrolet Camaro ZL1 1LE Alpha 6.2 LT4 | P 93, H 71, B 79, R 78, T 87, TR 83 | P 93, H 83, B 85, R 78, T 87, TR 83 | 81 -> 85 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `cadillac_ct4_v_blackwing` | Cadillac CT4-V Blackwing Alpha 3.6 Twin Turbo | P 74, H 66, B 74, R 75, T 79, TR 74 | P 74, H 75, B 78, R 75, T 79, TR 74 | 73 -> 76 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 | `cadillac_ct5_v_blackwing` | Cadillac CT5-V Blackwing Alpha 6.2 LT4 | P 89, H 61, B 72, R 76, T 81, TR 73 | P 89, H 73, B 78, R 76, T 81, TR 73 | 74 -> 78 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ferrari_f430` | Ferrari F430 F131 4.3 V8 | P 81, H 77, B 78, R 72, T 79, TR 78 | P 81, H 80, B 79, R 72, T 79, TR 78 | 78 -> 79 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ferrari_430_scuderia` | Ferrari 430 Scuderia F131 4.3 V8 | P 91, H 84, B 85, R 77, T 85, TR 86 | P 91, H 88, B 86, R 77, T 85, TR 86 | 85 -> 86 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ferrari_458_italia` | Ferrari 458 Italia F142 4.5 V8 | P 93, H 78, B 82, R 78, T 84, TR 84 | P 93, H 84, B 84, R 78, T 84, TR 84 | 83 -> 85 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ferrari_488_gtb` | Ferrari 488 GTB F142M 3.9 V8 Twin-Turbo | P 95, H 79, B 83, R 77, T 85, TR 84 | P 95, H 84, B 85, R 77, T 85, TR 84 | 84 -> 85 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ferrari_f8_tributo` | Ferrari F8 Tributo F142M 3.9 V8 Twin-Turbo | P 95, H 80, B 84, R 78, T 86, TR 85 | P 95, H 85, B 86, R 78, T 86, TR 85 | 85 -> 86 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ferrari_296_gtb` | Ferrari 296 GTB F171 3.0 V6 Plug-In Hybrid | P 95, H 79, B 83, R 76, T 85, TR 84 | P 95, H 84, B 85, R 76, T 85, TR 84 | 84 -> 85 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ferrari_812_superfast` | Ferrari 812 Superfast F152M 6.5 V12 | P 95, H 70, B 81, R 78, T 86, TR 81 | P 95, H 78, B 85, R 78, T 86, TR 81 | 81 -> 84 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ferrari_812_competizione` | Ferrari 812 Competizione F152M 6.5 V12 | P 95, H 80, B 86, R 80, T 89, TR 88 | P 95, H 87, B 89, R 80, T 89, TR 88 | 86 -> 88 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ferrari_roma` | Ferrari Roma F169 3.9 V8 Twin-Turbo | P 93, H 68, B 76, R 74, T 79, TR 72 | P 93, H 72, B 77, R 74, T 78, TR 72 | 77 -> 78 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ferrari_portofino` | Ferrari Portofino F164 3.9 V8 Twin-Turbo | P 89, H 63, B 71, R 73, T 76, TR 66 | P 89, H 67, B 73, R 73, T 76, TR 66 | 72 -> 74 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ferrari_california_t` | Ferrari California T F149M 3.9 V8 Twin-Turbo | P 83, H 59, B 69, R 71, T 74, TR 63 | P 83, H 63, B 71, R 71, T 74, TR 63 | 69 -> 70 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `ferrari_laferrari` | Ferrari LaFerrari F150 6.3 V12 Hybrid | P 96, H 75, B 83, R 76, T 86, TR 84 | P 96, H 83, B 86, R 76, T 86, TR 84 | 83 -> 86 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `maserati_ghibli_s_m157` | Maserati Ghibli S M157 3.0 V6 Twin-Turbo | P 60, H 53, B 60, R 62, T 66, TR 53 | P 60, H 56, B 61, R 62, T 65, TR 52 | 58 -> 59 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `maserati_ghibli_trofeo_m157` | Maserati Ghibli Trofeo M157 3.8 V8 Twin-Turbo | P 78, H 51, B 63, R 65, T 71, TR 59 | P 78, H 59, B 67, R 65, T 71, TR 58 | 63 -> 66 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `maserati_quattroporte_trofeo_m156` | Maserati Quattroporte Trofeo M156 3.8 V8 Twin-Turbo | P 77, H 48, B 62, R 65, T 71, TR 57 | P 77, H 56, B 66, R 65, T 71, TR 56 | 62 -> 64 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `maserati_granturismo_trofeo_m189` | Maserati GranTurismo Trofeo M189 3.0 Nettuno V6 | P 84, H 59, B 69, R 67, T 73, TR 65 | P 84, H 66, B 72, R 67, T 73, TR 65 | 69 -> 71 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `maserati_mc20_m240` | Maserati MC20 M240 3.0 Nettuno V6 | P 95, H 79, B 82, R 71, T 83, TR 82 | P 95, H 84, B 84, R 71, T 83, TR 82 | 82 -> 84 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `maserati_levante_trofeo_m161` | Maserati Levante Trofeo M161 3.8 V8 Twin-Turbo | P 74, H 40, B 60, R 63, T 69, TR 53 | P 74, H 51, B 65, R 63, T 68, TR 52 | 58 -> 61 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `abarth_595_312` | Abarth 595 312 1.4 T-Jet 145 | P 30, H 72, B 61, R 61, T 53, TR 51 | P 30, H 59, B 54, R 61, T 53, TR 51 | 56 -> 51 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `abarth_595_competizione_312` | Abarth 595 Competizione 312 1.4 T-Jet 180 | P 40, H 76, B 67, R 62, T 59, TR 59 | P 40, H 65, B 61, R 62, T 59, TR 59 | 61 -> 58 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `abarth_695_biposto_312` | Abarth 695 Biposto 312 1.4 T-Jet 190 | P 46, H 80, B 72, R 62, T 63, TR 68 | P 46, H 73, B 68, R 62, T 64, TR 68 | 66 -> 64 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mini_cooper_s_f56` | MINI Cooper S F56 2.0 TwinPower Turbo | P 36, H 72, B 65, R 66, T 61, TR 59 | P 36, H 65, B 61, R 66, T 61, TR 59 | 60 -> 58 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mini_jcw_f56` | MINI John Cooper Works F56 2.0 TwinPower Turbo | P 44, H 75, B 70, R 66, T 65, TR 65 | P 44, H 70, B 67, R 66, T 65, TR 65 | 65 -> 63 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `seat_ibiza_cupra_6j` | SEAT Ibiza Cupra 6J 1.8 TSI | P 41, H 72, B 64, R 63, T 59, TR 57 | P 41, H 63, B 59, R 63, T 59, TR 57 | 60 -> 57 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `skoda_fabia_vrs_mk2` | Skoda Fabia vRS Mk2 1.4 TSI Twincharger | P 31, H 69, B 60, R 58, T 55, TR 53 | P 31, H 59, B 55, R 58, T 55, TR 53 | 55 -> 52 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volvo_s60_t8_phev_spa` | Volvo S60 T8 SPA Recharge Polestar Engineered | P 65, H 43, B 57, R 65, T 63, TR 51 | P 65, H 52, B 61, R 65, T 63, TR 51 | 56 -> 59 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volvo_v60_polestar_p3` | Volvo V60 Polestar P3 3.0 T6 AWD | P 55, H 54, B 61, R 67, T 67, TR 58 | P 55, H 60, B 64, R 67, T 67, TR 58 | 59 -> 61 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `polestar_2_performance` | Polestar 2 Performance CMA Dual Motor | P 68, H 42, B 55, R 65, T 61, TR 50 | P 68, H 52, B 60, R 65, T 61, TR 50 | 55 -> 59 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `jaguar_f_type_r_x152` | Jaguar F-Type R X152 5.0 Supercharged V8 | P 87, H 61, B 71, R 69, T 77, TR 69 | P 87, H 69, B 75, R 69, T 76, TR 68 | 72 -> 74 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `jaguar_f_type_svr_x152` | Jaguar F-Type SVR X152 5.0 Supercharged V8 | P 88, H 65, B 74, R 70, T 79, TR 72 | P 88, H 72, B 77, R 70, T 78, TR 72 | 74 -> 76 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `jaguar_xe_sv_project_8_x760` | Jaguar XE SV Project 8 X760 5.0 Supercharged V8 | P 90, H 69, B 77, R 71, T 83, TR 80 | P 90, H 81, B 82, R 71, T 83, TR 80 | 78 -> 82 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `land_rover_range_rover_sport_svr_l494` | Land Rover Range Rover Sport SVR L494 5.0 Supercharged V8 | P 67, H 32, B 57, R 63, T 68, TR 48 | P 67, H 44, B 63, R 63, T 67, TR 48 | 53 -> 57 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `aston_martin_v8_vantage_am6` | Aston Martin Vantage AM6 4.0 V8 Twin-Turbo | P 85, H 70, B 76, R 69, T 77, TR 73 | P 85, H 74, B 77, R 69, T 77, TR 73 | 75 -> 76 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `aston_martin_v12_vantage_am6` | Aston Martin V12 Vantage AM6 5.2 V12 Twin-Turbo | P 93, H 64, B 74, R 69, T 80, TR 75 | P 93, H 74, B 79, R 69, T 80, TR 74 | 75 -> 78 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `aston_martin_dbs_superleggera` | Aston Martin DBS Superleggera AM7 5.2 V12 Twin-Turbo | P 93, H 58, B 71, R 69, T 79, TR 67 | P 93, H 67, B 75, R 69, T 78, TR 67 | 72 -> 75 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `aston_martin_db12` | Aston Martin DB12 AM8 4.0 V8 Twin-Turbo | P 92, H 62, B 73, R 70, T 79, TR 71 | P 92, H 70, B 76, R 70, T 78, TR 70 | 74 -> 76 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `lotus_elise_s3` | Lotus Elise S3 1.8 Supercharged | P 59, H 93, B 81, R 71, T 72, TR 80 | P 59, H 89, B 78, R 71, T 73, TR 80 | 77 -> 76 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `lotus_evora_gt430` | Lotus Evora GT430 Evora 3.5 Supercharged V6 | P 83, H 86, B 84, R 74, T 80, TR 86 | P 83, H 89, B 84, R 74, T 81, TR 86 | 83 -> 84 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `lotus_emira_v6` | Lotus Emira Emira 3.5 Supercharged V6 | P 68, H 79, B 77, R 71, T 77, TR 78 | P 68, H 82, B 78, R 71, T 77, TR 78 | 75 -> 76 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `opel_corsa_opc_e` | Opel Corsa OPC E 1.6 Turbo | P 37, H 71, B 65, R 62, T 59, TR 59 | P 37, H 64, B 61, R 62, T 59, TR 58 | 59 -> 57 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `opel_astra_opc_j` | Opel Astra OPC J 2.0 Turbo | P 46, H 65, B 66, R 64, T 65, TR 63 | P 46, H 66, B 66, R 64, T 65, TR 63 | 61 -> 62 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `subaru_wrx_sti_va` | Subaru WRX STI VA EJ257 | P 55, H 68, B 71, R 66, T 69, TR 68 | P 55, H 71, B 71, R 66, T 69, TR 68 | 66 -> 67 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `subaru_wrx_sti_s209_va` | Subaru WRX STI S209 VA EJ257 | P 61, H 71, B 73, R 67, T 73, TR 74 | P 61, H 76, B 75, R 67, T 73, TR 74 | 70 -> 71 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `subaru_wrx_vb` | Subaru WRX VB FA24 Turbo | P 47, H 65, B 63, R 67, T 63, TR 60 | P 47, H 64, B 62, R 67, T 63, TR 59 | 61 -> 60 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mitsubishi_lancer_evo_x` | Mitsubishi Lancer Evolution X CZ4A 4B11T | P 50, H 68, B 70, R 67, T 69, TR 68 | P 50, H 71, B 71, R 67, T 69, TR 68 | 65 -> 66 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mazda_rx7_fd` | Mazda RX-7 FD3S 13B-REW | P 52, H 81, B 69, R 57, T 61, TR 66 | P 52, H 76, B 66, R 57, T 62, TR 66 | 66 -> 64 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mazda_rx8_se3p` | Mazda RX-8 SE3P 13B-MSP | P 33, H 73, B 63, R 53, T 57, TR 57 | P 33, H 68, B 60, R 53, T 57, TR 57 | 57 -> 55 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mazda3_turbo_bp` | Mazda Mazda3 Turbo BP 2.5 Turbo AWD | P 49, H 59, B 58, R 67, T 59, TR 52 | P 49, H 57, B 56, R 67, T 59, TR 52 | 57 -> 56 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `suzuki_swift_sport_zc33s` | Suzuki Swift Sport ZC33S 1.4 Boosterjet | P 33, H 76, B 61, R 65, T 53, TR 52 | P 33, H 63, B 54, R 65, T 53, TR 52 | 58 -> 53 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `genesis_g70_33t` | Genesis G70 IK 3.3T | P 60, H 56, B 61, R 69, T 66, TR 57 | P 60, H 60, B 63, R 69, T 65, TR 57 | 61 -> 62 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `genesis_gv60_performance` | Genesis GV60 Performance JW Dual Motor | P 68, H 40, B 54, R 66, T 61, TR 47 | P 68, H 49, B 58, R 66, T 60, TR 47 | 54 -> 57 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `dodge_challenger_hellcat_lx` | Dodge Challenger SRT Hellcat LA 6.2 Supercharged V8 | P 88, H 45, B 62, R 69, T 71, TR 55 | P 88, H 53, B 66, R 69, T 71, TR 54 | 63 -> 66 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `dodge_challenger_demon_lx` | Dodge Challenger SRT Demon LA 6.2 Supercharged V8 | P 95, H 45, B 61, R 69, T 71, TR 52 | P 95, H 50, B 64, R 69, T 71, TR 51 | 64 -> 66 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `dodge_viper_gts_vx` | Dodge Viper GTS VX 8.4 V10 | P 94, H 75, B 80, R 76, T 83, TR 79 | P 94, H 80, B 82, R 76, T 83, TR 79 | 81 -> 83 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `chevrolet_camaro_ss_alpha` | Chevrolet Camaro SS Alpha 6.2 LT1 | P 75, H 65, B 69, R 73, T 73, TR 66 | P 75, H 70, B 71, R 73, T 73, TR 66 | 70 -> 71 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `chevrolet_corvette_stingray_c7` | Chevrolet Corvette Stingray C7 6.2 LT1 | P 80, H 71, B 75, R 74, T 77, TR 73 | P 80, H 75, B 76, R 74, T 77, TR 73 | 75 -> 76 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk5_14_tsi_122` | Volkswagen Golf Mk5 1.4 TSI 122 PS | P 16, H 61, B 55, R 60, T 51, TR 39 | P 16, H 47, B 47, R 60, T 50, TR 38 | 47 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk5_14_tsi_140` | Volkswagen Golf Mk5 1.4 TSI 140 PS | P 19, H 60, B 55, R 57, T 50, TR 40 | P 19, H 47, B 48, R 57, T 49, TR 39 | 47 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk5_14_tsi_160_twincharger` | Volkswagen Golf Mk5 1.4 TSI 160 PS Twincharger | P 25, H 61, B 56, R 56, T 50, TR 41 | P 25, H 48, B 49, R 56, T 49, TR 41 | 49 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_r32_mk5` | Volkswagen Golf R32 Mk5 3.2 VR6 4Motion | P 40, H 61, B 61, R 65, T 63, TR 58 | P 40, H 62, B 61, R 65, T 63, TR 58 | 57 -> 58 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk6_12_tsi_105` | Volkswagen Golf Mk6 1.2 TSI 105 PS | P 13, H 63, B 56, R 60, T 50, TR 39 | P 13, H 47, B 48, R 60, T 49, TR 38 | 47 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk6_14_tsi_122` | Volkswagen Golf Mk6 1.4 TSI 122 PS | P 16, H 61, B 55, R 60, T 51, TR 39 | P 16, H 47, B 48, R 60, T 50, TR 39 | 47 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk6_14_tsi_160` | Volkswagen Golf Mk6 1.4 TSI 160 PS | P 25, H 62, B 56, R 56, T 50, TR 42 | P 25, H 49, B 49, R 56, T 50, TR 41 | 49 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk7_12_tsi_105` | Volkswagen Golf Mk7 1.2 TSI 105 PS | P 14, H 64, B 57, R 63, T 51, TR 40 | P 14, H 48, B 49, R 63, T 51, TR 39 | 48 -> 43 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk7_14_tsi_122` | Volkswagen Golf Mk7 1.4 TSI 122 PS | P 18, H 62, B 56, R 64, T 53, TR 40 | P 18, H 48, B 49, R 64, T 52, TR 40 | 49 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk7_14_tsi_125` | Volkswagen Golf Mk7 1.4 TSI 125 PS | P 18, H 62, B 56, R 64, T 53, TR 40 | P 18, H 48, B 49, R 64, T 52, TR 40 | 49 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk7_14_tsi_140_act` | Volkswagen Golf Mk7 1.4 TSI 140 PS ACT | P 24, H 62, B 57, R 64, T 53, TR 42 | P 24, H 49, B 50, R 64, T 53, TR 41 | 50 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk7_14_tsi_150_act` | Volkswagen Golf Mk7.5 1.4 TSI 150 PS ACT | P 25, H 63, B 57, R 64, T 54, TR 42 | P 25, H 49, B 50, R 64, T 53, TR 42 | 51 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk75_15_tsi_150` | Volkswagen Golf Mk7.5 1.5 TSI 150 PS | P 25, H 62, B 57, R 66, T 54, TR 43 | P 25, H 49, B 50, R 66, T 54, TR 42 | 51 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk85_10_etsi` | Volkswagen Golf Mk8.5 1.0 eTSI | P 15, H 61, B 55, R 63, T 51, TR 39 | P 15, H 46, B 47, R 63, T 50, TR 38 | 47 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk85_15_tsi` | Volkswagen Golf Mk8.5 1.5 TSI | P 24, H 62, B 56, R 66, T 54, TR 43 | P 24, H 49, B 50, R 66, T 54, TR 42 | 51 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_golf_mk85_15_etsi` | Volkswagen Golf Mk8.5 1.5 eTSI | P 23, H 61, B 56, R 65, T 53, TR 41 | P 23, H 49, B 49, R 65, T 53, TR 40 | 50 -> 45 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_polo_6r_12_tsi_90` | Volkswagen Polo 6R/6C 1.2 TSI 90 PS | P 12, H 66, B 56, R 61, T 49, TR 37 | P 12, H 46, B 46, R 61, T 48, TR 36 | 47 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_polo_6r_12_tsi_105` | Volkswagen Polo 6R/6C 1.2 TSI 105 PS | P 16, H 66, B 57, R 60, T 49, TR 38 | P 16, H 47, B 47, R 60, T 49, TR 37 | 48 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_polo_6r_14_tsi` | Volkswagen Polo 6R/6C 1.4 TSI | P 27, H 65, B 57, R 57, T 50, TR 40 | P 27, H 49, B 48, R 57, T 49, TR 39 | 50 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_polo_gti_6c_18_tsi` | Volkswagen Polo GTI 6C 1.8 TSI | P 41, H 70, B 63, R 64, T 59, TR 56 | P 41, H 61, B 58, R 64, T 59, TR 55 | 59 -> 56 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_polo_aw_10_tsi_95` | Volkswagen Polo AW 1.0 TSI 95 PS | P 13, H 64, B 56, R 63, T 50, TR 38 | P 13, H 46, B 47, R 63, T 49, TR 37 | 47 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_polo_aw_10_tsi_110` | Volkswagen Polo AW 1.0 TSI 110 PS | P 16, H 65, B 56, R 63, T 50, TR 38 | P 16, H 47, B 47, R 63, T 49, TR 37 | 48 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `volkswagen_polo_aw_10_tsi_115` | Volkswagen Polo AW 1.0 TSI 115 PS | P 17, H 65, B 57, R 63, T 51, TR 39 | P 17, H 47, B 48, R 63, T 50, TR 38 | 49 -> 43 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_sedan_14_tjet` | Fiat Egea Sedan 356 1.4 T-Jet 120 HP | P 17, H 59, B 53, R 59, T 49, TR 36 | P 17, H 44, B 45, R 59, T 48, TR 35 | 45 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_sedan_10_firefly` | Fiat Egea Sedan 356 facelift 1.0 FireFly Turbo 100 HP | P 9, H 59, B 53, R 59, T 48, TR 35 | P 9, H 43, B 45, R 59, T 47, TR 34 | 44 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_sedan_13_multijet` | Fiat Egea Sedan 356 1.3 Multijet 95 HP | P 11, H 59, B 53, R 61, T 50, TR 35 | P 11, H 42, B 45, R 61, T 49, TR 34 | 45 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_sedan_16_multijet_130` | Fiat Egea Sedan 356 facelift 1.6 Multijet 130 HP | P 23, H 57, B 53, R 61, T 50, TR 35 | P 23, H 43, B 46, R 61, T 49, TR 34 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_sedan_15_hybrid` | Fiat Egea Sedan 356 facelift 1.5 T4 Hybrid 130 HP | P 19, H 55, B 52, R 59, T 48, TR 33 | P 19, H 42, B 45, R 59, T 47, TR 32 | 44 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_hatchback_14_fire` | Fiat Egea Hatchback 356 1.4 Fire 95 HP | P 7, H 60, B 53, R 62, T 49, TR 35 | P 7, H 44, B 45, R 62, T 48, TR 35 | 44 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_hatchback_14_tjet` | Fiat Egea Hatchback 356 1.4 T-Jet 120 HP | P 17, H 60, B 54, R 59, T 50, TR 37 | P 17, H 45, B 46, R 59, T 49, TR 36 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_hatchback_10_firefly` | Fiat Egea Hatchback 356 facelift 1.0 FireFly Turbo 100 HP | P 10, H 59, B 53, R 59, T 48, TR 36 | P 10, H 44, B 45, R 59, T 47, TR 35 | 44 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_hatchback_13_multijet` | Fiat Egea Hatchback 356 1.3 Multijet 95 HP | P 10, H 58, B 53, R 61, T 50, TR 35 | P 10, H 43, B 45, R 61, T 49, TR 34 | 44 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_hatchback_16_multijet` | Fiat Egea Hatchback 356 1.6 Multijet 120 HP | P 23, H 58, B 53, R 61, T 50, TR 36 | P 23, H 44, B 46, R 61, T 49, TR 35 | 47 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_hatchback_15_hybrid` | Fiat Egea Hatchback 356 facelift 1.5 T4 Hybrid 130 HP | P 19, H 55, B 52, R 59, T 48, TR 34 | P 19, H 42, B 45, R 59, T 47, TR 33 | 44 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_cross_14_fire` | Fiat Egea Cross 356 facelift 1.4 Fire 95 HP | P 6, H 56, B 52, R 61, T 48, TR 32 | P 6, H 40, B 43, R 61, T 47, TR 31 | 42 -> 36 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_cross_14_tjet` | Fiat Egea Cross 356 1.4 T-Jet 120 HP | P 14, H 56, B 52, R 58, T 49, TR 33 | P 14, H 41, B 44, R 58, T 48, TR 32 | 43 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_cross_13_multijet` | Fiat Egea Cross 356 facelift 1.3 Multijet 95 HP | P 9, H 56, B 52, R 60, T 48, TR 32 | P 9, H 40, B 43, R 60, T 47, TR 31 | 42 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_cross_16_multijet_130` | Fiat Egea Cross 356 facelift 1.6 Multijet 130 HP | P 22, H 53, B 52, R 61, T 50, TR 32 | P 22, H 39, B 45, R 61, T 48, TR 31 | 44 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_sw_14_tjet` | Fiat Egea Station Wagon 356 1.4 T-Jet 120 HP | P 15, H 57, B 53, R 58, T 49, TR 34 | P 15, H 42, B 45, R 58, T 48, TR 33 | 44 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_sw_13_multijet` | Fiat Egea Station Wagon 356 1.3 Multijet 95 HP | P 9, H 57, B 52, R 60, T 48, TR 33 | P 9, H 41, B 44, R 60, T 47, TR 32 | 43 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_egea_sw_16_multijet` | Fiat Egea Station Wagon 356 1.6 Multijet 120 HP | P 22, H 56, B 52, R 61, T 50, TR 34 | P 22, H 42, B 45, R 61, T 49, TR 33 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `fiat_124_spider_multiair` | Fiat 124 Spider NF 1.4 MultiAir Turbo | P 31, H 83, B 65, R 61, T 56, TR 60 | P 31, H 73, B 58, R 61, T 56, TR 60 | 61 -> 57 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `abarth_124_spider` | Abarth 124 Spider NF 1.4 MultiAir Turbo | P 39, H 86, B 69, R 60, T 58, TR 65 | P 39, H 77, B 64, R 60, T 59, TR 65 | 65 -> 62 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `abarth_124_gt` | Abarth 124 GT NF 1.4 MultiAir Turbo | P 39, H 86, B 69, R 60, T 58, TR 66 | P 39, H 78, B 64, R 60, T 59, TR 66 | 65 -> 62 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a1_8x_14_tfsi` | Audi A1 8X 1.4 TFSI | P 21, H 67, B 58, R 62, T 51, TR 41 | P 21, H 50, B 49, R 62, T 51, TR 41 | 50 -> 45 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_s1_8x` | Audi S1 8X 2.0 TFSI quattro | P 52, H 71, B 67, R 68, T 65, TR 61 | P 52, H 66, B 64, R 68, T 65, TR 61 | 64 -> 62 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a1_gb_10_tfsi` | Audi A1 GB 1.0 TFSI | P 16, H 65, B 56, R 64, T 50, TR 38 | P 16, H 47, B 47, R 64, T 49, TR 37 | 48 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a1_gb_15_tfsi` | Audi A1 GB 1.5 TFSI | P 29, H 65, B 57, R 65, T 52, TR 41 | P 29, H 49, B 48, R 65, T 52, TR 40 | 52 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a1_gb_20_tfsi` | Audi A1 GB 2.0 TFSI | P 42, H 68, B 61, R 66, T 59, TR 52 | P 42, H 58, B 56, R 66, T 59, TR 52 | 58 -> 55 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a3_8p_16_tdi` | Audi A3 8P 1.6 TDI | P 15, H 58, B 53, R 61, T 50, TR 36 | P 15, H 44, B 46, R 61, T 49, TR 35 | 45 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a3_8p_18_tfsi` | Audi A3 8P 1.8 TFSI | P 26, H 63, B 58, R 64, T 56, TR 48 | P 26, H 53, B 53, R 64, T 56, TR 48 | 52 -> 49 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a3_8v_14_tfsi` | Audi A3 8V 1.4 TFSI | P 17, H 62, B 55, R 65, T 52, TR 40 | P 17, H 48, B 48, R 65, T 52, TR 39 | 48 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a3_8v_16_tdi` | Audi A3 8V 1.6 TDI | P 17, H 59, B 53, R 63, T 50, TR 36 | P 17, H 44, B 46, R 63, T 49, TR 36 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a3_8v_20_tdi` | Audi A3 8V 2.0 TDI | P 28, H 58, B 54, R 64, T 51, TR 37 | P 28, H 45, B 47, R 64, T 50, TR 36 | 48 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a3_8y_20_tdi` | Audi A3 8Y 2.0 TDI | P 28, H 57, B 53, R 64, T 51, TR 37 | P 28, H 45, B 47, R 64, T 50, TR 36 | 48 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a4_b7_20_tfsi` | Audi A4 B7 2.0 TFSI | P 30, H 60, B 58, R 62, T 56, TR 47 | P 30, H 52, B 54, R 62, T 55, TR 46 | 52 -> 49 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a4_b7_20_tdi` | Audi A4 B7 2.0 TDI | P 22, H 55, B 52, R 60, T 49, TR 35 | P 22, H 44, B 46, R 60, T 48, TR 34 | 45 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_s4_b7` | Audi S4 B7 4.2 V8 quattro | P 52, H 58, B 61, R 63, T 62, TR 56 | P 52, H 60, B 61, R 63, T 62, TR 56 | 58 -> 59 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_rs4_b7` | Audi RS 4 B7 4.2 FSI quattro | P 63, H 66, B 68, R 66, T 69, TR 68 | P 63, H 72, B 70, R 66, T 70, TR 68 | 67 -> 68 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a4_b8_18_tfsi` | Audi A4 B8 1.8 TFSI | P 20, H 57, B 54, R 63, T 53, TR 42 | P 20, H 49, B 50, R 63, T 53, TR 42 | 48 -> 45 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a4_b8_20_tfsi` | Audi A4 B8/B8.5 2.0 TFSI | P 34, H 56, B 57, R 64, T 57, TR 46 | P 34, H 51, B 54, R 64, T 57, TR 45 | 52 -> 50 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a4_b8_20_tdi` | Audi A4 B8/B8.5 2.0 TDI | P 21, H 52, B 51, R 62, T 50, TR 35 | P 21, H 42, B 46, R 62, T 49, TR 34 | 44 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_s4_b8` | Audi S4 B8/B8.5 3.0 TFSI quattro | P 55, H 59, B 63, R 69, T 67, TR 61 | P 55, H 63, B 65, R 69, T 67, TR 61 | 61 -> 63 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a4_b9_14_tfsi` | Audi A4 B9 1.4 TFSI | P 20, H 58, B 54, R 65, T 53, TR 40 | P 20, H 47, B 49, R 65, T 52, TR 39 | 48 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a4_b9_20_tfsi` | Audi A4 B9/B9.5 2.0 TFSI | P 41, H 58, B 59, R 67, T 59, TR 49 | P 41, H 53, B 56, R 67, T 59, TR 48 | 55 -> 53 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a4_b9_20_tdi` | Audi A4 B9/B9.5 2.0 TDI | P 23, H 54, B 53, R 64, T 51, TR 36 | P 23, H 44, B 47, R 64, T 50, TR 35 | 46 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a4_b9_30_tdi` | Audi A4 B9/B9.5 3.0 TDI quattro | P 57, H 52, B 53, R 64, T 55, TR 41 | P 57, H 47, B 51, R 64, T 54, TR 40 | 53 -> 51 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a5_8t_18_tfsi` | Audi A5 8T 1.8 TFSI | P 26, H 57, B 54, R 63, T 53, TR 43 | P 26, H 50, B 50, R 63, T 53, TR 42 | 49 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a5_8t_20_tfsi` | Audi A5 8T 2.0 TFSI | P 34, H 57, B 57, R 64, T 57, TR 46 | P 34, H 51, B 54, R 64, T 57, TR 46 | 52 -> 50 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a5_8t_30_tdi` | Audi A5 8T 3.0 TDI quattro | P 49, H 52, B 53, R 62, T 54, TR 39 | P 49, H 46, B 50, R 62, T 52, TR 39 | 51 -> 49 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_s5_8t` | Audi S5 8T 3.0 TFSI quattro | P 55, H 59, B 63, R 69, T 67, TR 61 | P 55, H 63, B 65, R 69, T 67, TR 61 | 61 -> 63 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a5_f5_20_tfsi` | Audi A5 F5 2.0 TFSI | P 41, H 58, B 59, R 67, T 59, TR 49 | P 41, H 53, B 56, R 67, T 59, TR 48 | 55 -> 53 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a5_f5_20_tdi` | Audi A5 F5 2.0 TDI | P 32, H 52, B 53, R 64, T 51, TR 37 | P 32, H 44, B 48, R 64, T 50, TR 36 | 48 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a5_f5_30_tdi` | Audi A5 F5 3.0 TDI quattro | P 59, H 51, B 54, R 64, T 55, TR 41 | P 59, H 47, B 51, R 64, T 54, TR 40 | 53 -> 52 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a6_c6_20_tfsi` | Audi A6 C6 2.0 TFSI | P 23, H 52, B 53, R 61, T 53, TR 38 | P 23, H 44, B 48, R 61, T 52, TR 37 | 46 -> 43 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a6_c6_30_tdi` | Audi A6 C6 3.0 TDI quattro | P 40, H 48, B 51, R 60, T 52, TR 35 | P 40, H 42, B 48, R 60, T 50, TR 34 | 47 -> 45 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_s6_c6` | Audi S6 C6 5.2 V10 quattro | P 61, H 49, B 60, R 62, T 64, TR 53 | P 61, H 55, B 62, R 62, T 63, TR 53 | 57 -> 59 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a6_c7_18_tfsi` | Audi A6 C7 1.8 TFSI | P 28, H 53, B 53, R 64, T 53, TR 39 | P 28, H 45, B 49, R 64, T 53, TR 39 | 48 -> 45 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a6_c7_20_tdi` | Audi A6 C7 2.0 TDI | P 30, H 50, B 51, R 63, T 51, TR 35 | P 30, H 42, B 47, R 63, T 50, TR 34 | 46 -> 43 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a6_c7_30_tdi` | Audi A6 C7 3.0 TDI quattro | P 53, H 48, B 52, R 64, T 55, TR 38 | P 53, H 44, B 50, R 64, T 54, TR 37 | 51 -> 49 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_s6_c7` | Audi S6 C7 4.0 TFSI quattro | P 65, H 52, B 62, R 68, T 69, TR 58 | P 65, H 59, B 65, R 68, T 69, TR 57 | 61 -> 63 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_rs6_c7` | Audi RS 6 C7 4.0 TFSI quattro | P 81, H 54, B 66, R 68, T 73, TR 64 | P 81, H 65, B 71, R 68, T 73, TR 64 | 67 -> 70 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a6_c8_20_tdi` | Audi A6 C8 40 TDI | P 30, H 48, B 51, R 63, T 52, TR 34 | P 30, H 42, B 47, R 63, T 50, TR 33 | 45 -> 43 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a6_c8_30_tdi` | Audi A6 C8 50 TDI quattro | P 54, H 45, B 52, R 64, T 55, TR 38 | P 54, H 43, B 50, R 64, T 54, TR 37 | 50 -> 49 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_rs6_c8` | Audi RS 6 C8 4.0 TFSI quattro | P 81, H 49, B 66, R 69, T 75, TR 64 | P 81, H 63, B 72, R 69, T 75, TR 64 | 66 -> 70 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a7_c7_30_tfsi` | Audi A7 C7 3.0 TFSI quattro | P 51, H 51, B 57, R 67, T 63, TR 49 | P 51, H 52, B 58, R 67, T 63, TR 49 | 55 -> 56 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a7_c7_30_tdi` | Audi A7 C7 3.0 TDI quattro | P 51, H 45, B 51, R 64, T 55, TR 37 | P 51, H 43, B 49, R 64, T 53, TR 36 | 49 -> 48 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_s7_c7` | Audi S7 C7 4.0 TFSI quattro | P 63, H 51, B 61, R 68, T 69, TR 58 | P 63, H 59, B 65, R 68, T 69, TR 57 | 60 -> 63 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_rs7_c7` | Audi RS 7 C7 4.0 TFSI quattro | P 79, H 51, B 65, R 68, T 73, TR 63 | P 79, H 63, B 71, R 68, T 73, TR 63 | 65 -> 69 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a7_c8_20_tfsi` | Audi A7 C8 45 TFSI | P 34, H 48, B 52, R 65, T 57, TR 41 | P 34, H 46, B 51, R 65, T 57, TR 40 | 48 -> 47 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a8_d4_30_tdi` | Audi A8 D4 3.0 TDI quattro | P 47, H 40, B 49, R 62, T 54, TR 32 | P 47, H 37, B 47, R 62, T 52, TR 31 | 46 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_a8_d4_40_tfsi` | Audi A8 D4 4.0 TFSI quattro | P 65, H 42, B 55, R 65, T 63, TR 41 | P 65, H 42, B 55, R 65, T 62, TR 39 | 54 -> 53 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_s8_d4` | Audi S8 D4 4.0 TFSI quattro | P 73, H 44, B 59, R 66, T 68, TR 50 | P 73, H 50, B 62, R 66, T 67, TR 49 | 58 -> 60 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_tt_8j_18_tfsi` | Audi TT 8J 1.8 TFSI | P 30, H 71, B 61, R 64, T 57, TR 54 | P 30, H 62, B 56, R 64, T 57, TR 53 | 57 -> 53 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_tt_8s_20_tfsi` | Audi TT 8S 2.0 TFSI | P 47, H 70, B 65, R 68, T 63, TR 59 | P 47, H 64, B 61, R 68, T 63, TR 59 | 62 -> 60 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_q2_ga_10_tfsi` | Audi Q2 GA 1.0 TFSI | P 15, H 57, B 54, R 63, T 49, TR 33 | P 15, H 40, B 45, R 63, T 48, TR 32 | 45 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_q2_ga_14_tfsi` | Audi Q2 GA 1.4 TFSI | P 23, H 56, B 54, R 64, T 50, TR 34 | P 23, H 41, B 46, R 64, T 49, TR 33 | 46 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_q3_f3_15_tfsi` | Audi Q3 F3 1.5 TFSI | P 17, H 48, B 50, R 65, T 51, TR 33 | P 17, H 38, B 45, R 65, T 50, TR 32 | 43 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_q3_f3_20_tfsi` | Audi Q3 F3 2.0 TFSI quattro | P 30, H 47, B 51, R 65, T 53, TR 35 | P 30, H 41, B 47, R 65, T 52, TR 34 | 46 -> 43 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_rs_q3_f3` | Audi RS Q3 F3 2.5 TFSI quattro | P 64, H 58, B 67, R 69, T 71, TR 62 | P 64, H 63, B 69, R 69, T 71, TR 61 | 64 -> 66 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_q5_fy_20_tfsi` | Audi Q5 FY 2.0 TFSI quattro | P 38, H 42, B 49, R 65, T 54, TR 33 | P 38, H 38, B 47, R 65, T 53, TR 32 | 45 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_q5_fy_20_tdi` | Audi Q5 FY 2.0 TDI quattro | P 30, H 41, B 48, R 64, T 51, TR 31 | P 30, H 36, B 46, R 64, T 50, TR 30 | 43 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_sq5_fy` | Audi SQ5 FY 3.0 TFSI/TDI quattro | P 51, H 44, B 54, R 67, T 62, TR 45 | P 51, H 47, B 56, R 67, T 61, TR 44 | 52 -> 53 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_sq7_4m` | Audi SQ7 4M 4.0 TDI/TFSI quattro | P 63, H 29, B 50, R 64, T 62, TR 40 | P 63, H 38, B 55, R 64, T 60, TR 39 | 49 -> 51 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_sq8_4m` | Audi SQ8 4M 4.0 TDI/TFSI quattro | P 67, H 31, B 52, R 65, T 64, TR 42 | P 67, H 40, B 57, R 65, T 62, TR 41 | 51 -> 54 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_rs_q8_4m` | Audi RS Q8 4M 4.0 TFSI quattro | P 75, H 37, B 60, R 66, T 72, TR 57 | P 75, H 53, B 68, R 66, T 71, TR 56 | 59 -> 64 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_e_tron_gt_j1` | Audi e-tron GT J1 Dual Motor | P 63, H 40, B 55, R 68, T 67, TR 55 | P 63, H 56, B 63, R 68, T 67, TR 55 | 56 -> 61 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_q8_e_tron` | Audi Q8 e-tron GE Electric | P 46, H 23, B 38, R 60, T 47, TR 24 | P 46, H 28, B 40, R 60, T 46, TR 23 | 37 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `audi_sq8_e_tron` | Audi SQ8 e-tron GE Electric | P 63, H 25, B 41, R 60, T 50, TR 27 | P 63, H 31, B 44, R 60, T 48, TR 26 | 42 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_a180_w176` | Mercedes-Benz A 180 W176 1.6 Turbo | P 16, H 58, B 54, R 63, T 51, TR 38 | P 16, H 45, B 47, R 63, T 50, TR 37 | 46 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_a200_w176` | Mercedes-Benz A 200 W176 1.6 Turbo | P 23, H 59, B 55, R 63, T 52, TR 40 | P 23, H 47, B 49, R 63, T 52, TR 39 | 48 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_a250_w176` | Mercedes-Benz A 250 W176 2.0 Turbo | P 38, H 61, B 58, R 64, T 57, TR 49 | P 38, H 55, B 54, R 64, T 57, TR 49 | 54 -> 52 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_a45_amg_w176` | Mercedes-Benz A 45 AMG W176 4MATIC | P 66, H 68, B 69, R 68, T 71, TR 69 | P 66, H 71, B 71, R 68, T 71, TR 69 | 68 -> 69 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_a250_w177` | Mercedes-Benz A 250 W177 2.0 Turbo | P 39, H 61, B 58, R 67, T 57, TR 49 | P 39, H 54, B 54, R 67, T 57, TR 49 | 55 -> 52 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_b180_w246` | Mercedes-Benz B 180 W246 1.6 Turbo | P 15, H 53, B 53, R 62, T 50, TR 33 | P 15, H 40, B 46, R 62, T 49, TR 32 | 44 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_b200_w246` | Mercedes-Benz B 200 W246 1.6 Turbo | P 20, H 53, B 53, R 63, T 50, TR 34 | P 20, H 40, B 46, R 63, T 49, TR 33 | 45 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_cla200_c117` | Mercedes-Benz CLA 200 C117 1.6 Turbo | P 21, H 58, B 54, R 63, T 52, TR 40 | P 21, H 47, B 49, R 63, T 52, TR 39 | 48 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_cla250_c117` | Mercedes-Benz CLA 250 C117 2.0 Turbo | P 37, H 61, B 58, R 64, T 57, TR 49 | P 37, H 54, B 54, R 64, T 57, TR 49 | 54 -> 52 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_cla180_c118` | Mercedes-Benz CLA 180 C118 1.3 Turbo | P 16, H 57, B 53, R 64, T 51, TR 38 | P 16, H 46, B 47, R 64, T 50, TR 37 | 46 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_cla200_c118` | Mercedes-Benz CLA 200 C118 1.3 Turbo | P 22, H 57, B 54, R 65, T 52, TR 40 | P 22, H 47, B 48, R 65, T 52, TR 39 | 48 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_cla250_c118` | Mercedes-Benz CLA 250 C118 2.0 Turbo | P 38, H 58, B 57, R 67, T 57, TR 48 | P 38, H 53, B 54, R 67, T 57, TR 48 | 54 -> 52 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c180_kompressor_w204` | Mercedes-Benz C 180 Kompressor W204 1.6/1.8 | P 17, H 58, B 54, R 62, T 52, TR 40 | P 17, H 48, B 49, R 62, T 51, TR 40 | 47 -> 43 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c180_cgi_w204` | Mercedes-Benz C 180 CGI W204 1.6 Turbo | P 20, H 58, B 55, R 62, T 53, TR 42 | P 20, H 49, B 50, R 62, T 52, TR 41 | 48 -> 45 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c200_cgi_w204` | Mercedes-Benz C 200 CGI W204 1.8 Turbo | P 26, H 59, B 55, R 63, T 54, TR 44 | P 26, H 51, B 51, R 63, T 53, TR 43 | 50 -> 47 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c250_cgi_w204` | Mercedes-Benz C 250 CGI W204 1.8 Turbo | P 32, H 58, B 57, R 63, T 56, TR 46 | P 32, H 52, B 53, R 63, T 55, TR 45 | 52 -> 49 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c350_w204` | Mercedes-Benz C 350 W204 3.5 V6 | P 46, H 58, B 58, R 65, T 60, TR 49 | P 46, H 55, B 56, R 65, T 59, TR 49 | 55 -> 54 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c63_amg_w204` | Mercedes-Benz C 63 AMG W204 6.2 V8 | P 71, H 63, B 67, R 67, T 70, TR 67 | P 71, H 69, B 69, R 67, T 70, TR 67 | 67 -> 69 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c180_w205` | Mercedes-Benz C 180 W205 1.6 Turbo | P 21, H 59, B 55, R 63, T 53, TR 42 | P 21, H 50, B 50, R 63, T 52, TR 42 | 48 -> 45 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c200_w205` | Mercedes-Benz C 200 W205 2.0 Turbo | P 29, H 60, B 56, R 64, T 55, TR 46 | P 29, H 52, B 52, R 64, T 54, TR 45 | 51 -> 48 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c250_w205` | Mercedes-Benz C 250 W205 2.0 Turbo | P 36, H 59, B 57, R 65, T 57, TR 47 | P 36, H 53, B 54, R 65, T 56, TR 46 | 53 -> 51 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c300_w205` | Mercedes-Benz C 300 W205 2.0 Turbo | P 41, H 59, B 58, R 66, T 58, TR 49 | P 41, H 54, B 55, R 66, T 58, TR 48 | 55 -> 53 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c43_amg_w205` | Mercedes-Benz C 43 AMG W205 4MATIC | P 64, H 62, B 65, R 68, T 69, TR 64 | P 64, H 65, B 67, R 68, T 69, TR 64 | 65 -> 66 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c63_amg_w205` | Mercedes-Benz C 63 AMG W205 4.0 V8 | P 75, H 63, B 67, R 68, T 71, TR 67 | P 75, H 69, B 70, R 68, T 71, TR 67 | 68 -> 70 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c180_w206` | Mercedes-Benz C 180 W206 1.5 mild hybrid | P 20, H 55, B 54, R 65, T 54, TR 42 | P 20, H 49, B 51, R 65, T 53, TR 42 | 48 -> 45 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_c300_w206` | Mercedes-Benz C 300 W206 2.0 mild hybrid | P 41, H 56, B 55, R 67, T 58, TR 48 | P 41, H 54, B 54, R 67, T 57, TR 47 | 53 -> 52 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e200_kompressor_w211` | Mercedes-Benz E 200 Kompressor W211 1.8 | P 20, H 51, B 53, R 59, T 51, TR 35 | P 20, H 41, B 47, R 59, T 49, TR 34 | 44 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e280_w211` | Mercedes-Benz E 280 W211 3.0 V6 | P 31, H 51, B 52, R 60, T 53, TR 36 | P 31, H 43, B 48, R 60, T 52, TR 35 | 46 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e350_w211` | Mercedes-Benz E 350 W211 3.5 V6 | P 38, H 51, B 53, R 61, T 55, TR 38 | P 38, H 44, B 50, R 61, T 53, TR 37 | 49 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e55_amg_w211` | Mercedes-Benz E 55 AMG W211 5.4 Supercharged V8 | P 71, H 54, B 62, R 63, T 66, TR 57 | P 71, H 59, B 64, R 63, T 66, TR 56 | 62 -> 63 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e63_amg_w211` | Mercedes-Benz E 63 AMG W211 6.2 V8 | P 73, H 55, B 63, R 64, T 68, TR 59 | P 73, H 61, B 66, R 64, T 67, TR 58 | 63 -> 65 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e180_w212` | Mercedes-Benz E 180 W212 1.6 Turbo | P 17, H 50, B 51, R 62, T 51, TR 34 | P 17, H 41, B 46, R 62, T 50, TR 33 | 43 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e200_cgi_w212` | Mercedes-Benz E 200 CGI W212 1.8 Turbo | P 22, H 50, B 51, R 62, T 53, TR 35 | P 22, H 42, B 47, R 62, T 51, TR 34 | 45 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e250_cgi_w212` | Mercedes-Benz E 250 CGI W212 1.8 Turbo | P 28, H 50, B 52, R 63, T 54, TR 37 | P 28, H 43, B 48, R 63, T 53, TR 36 | 46 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e400_w212` | Mercedes-Benz E 400 W212 3.0 V6 biturbo | P 52, H 51, B 56, R 65, T 60, TR 43 | P 52, H 48, B 54, R 65, T 59, TR 42 | 54 -> 52 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e63_s_amg_w212` | Mercedes-Benz E 63 S AMG W212 5.5 V8 biturbo | P 83, H 54, B 66, R 67, T 73, TR 64 | P 83, H 65, B 71, R 67, T 73, TR 64 | 67 -> 70 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e180_w213` | Mercedes-Benz E 180 W213 1.6 Turbo | P 17, H 51, B 52, R 63, T 52, TR 35 | P 17, H 42, B 47, R 63, T 50, TR 34 | 44 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e200_w213` | Mercedes-Benz E 200 W213 2.0 Turbo | P 25, H 51, B 52, R 64, T 54, TR 37 | P 25, H 44, B 48, R 64, T 53, TR 36 | 46 -> 43 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e300_w213` | Mercedes-Benz E 300 W213 2.0 Turbo | P 37, H 51, B 53, R 65, T 56, TR 39 | P 37, H 45, B 50, R 65, T 55, TR 38 | 49 -> 47 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e43_amg_w213` | Mercedes-Benz E 43 AMG W213 4MATIC | P 61, H 53, B 62, R 67, T 67, TR 57 | P 61, H 59, B 64, R 67, T 67, TR 57 | 60 -> 62 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e53_amg_w213` | Mercedes-Benz E 53 AMG W213 3.0 mild hybrid | P 62, H 51, B 60, R 67, T 67, TR 56 | P 62, H 58, B 63, R 67, T 67, TR 56 | 59 -> 61 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e63_s_amg_w213` | Mercedes-Benz E 63 S AMG W213 4MATIC+ | P 85, H 55, B 67, R 68, T 75, TR 66 | P 85, H 66, B 73, R 68, T 75, TR 66 | 68 -> 72 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e200_w214` | Mercedes-Benz E 200 W214 2.0 mild hybrid | P 26, H 46, B 50, R 64, T 54, TR 34 | P 26, H 41, B 48, R 64, T 52, TR 33 | 44 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e300e_w214` | Mercedes-Benz E 300e W214 Plug-in Hybrid | P 42, H 35, B 44, R 60, T 50, TR 29 | P 42, H 35, B 44, R 60, T 48, TR 27 | 42 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_e53_hybrid_amg_w214` | Mercedes-Benz E 53 Hybrid AMG W214 Plug-in Hybrid | P 75, H 41, B 58, R 63, T 67, TR 55 | P 75, H 54, B 64, R 63, T 66, TR 54 | 58 -> 62 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_s350_w221` | Mercedes-Benz S 350 W221 3.5 V6 | P 32, H 39, B 49, R 60, T 54, TR 30 | P 32, H 35, B 47, R 60, T 52, TR 29 | 42 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_s500_w221` | Mercedes-Benz S 500 W221 5.5 V8 | P 52, H 39, B 51, R 62, T 57, TR 33 | P 52, H 37, B 50, R 62, T 55, TR 32 | 47 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_s63_amg_w221` | Mercedes-Benz S 63 AMG W221 5.5 V8 biturbo | P 72, H 40, B 57, R 63, T 66, TR 45 | P 72, H 46, B 60, R 63, T 65, TR 44 | 56 -> 57 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_s400_w222` | Mercedes-Benz S 400 W222 3.0 V6 | P 44, H 39, B 49, R 63, T 55, TR 31 | P 44, H 36, B 48, R 63, T 54, TR 30 | 45 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_s560_w222` | Mercedes-Benz S 560 W222 4.0 V8 | P 67, H 35, B 52, R 64, T 60, TR 36 | P 67, H 37, B 53, R 64, T 59, TR 34 | 50 -> 51 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_s63_amg_w222` | Mercedes-Benz S 63 AMG W222 4MATIC+ | P 82, H 42, B 60, R 65, T 70, TR 50 | P 82, H 50, B 64, R 65, T 68, TR 49 | 60 -> 62 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_s63_e_performance_w223` | Mercedes-Benz S 63 E Performance AMG W223 Plug-in Hybrid | P 86, H 34, B 58, R 62, T 66, TR 48 | P 86, H 46, B 63, R 62, T 65, TR 47 | 57 -> 61 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_gla180_h247` | Mercedes-Benz GLA 180 H247 1.3 | P 13, H 49, B 51, R 63, T 50, TR 33 | P 13, H 38, B 45, R 63, T 49, TR 31 | 42 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_gla250_h247` | Mercedes-Benz GLA 250 H247 2.0 4MATIC | P 37, H 50, B 52, R 64, T 54, TR 36 | P 37, H 43, B 49, R 64, T 53, TR 35 | 48 -> 45 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_gla45_amg_h247` | Mercedes-Benz GLA 45 AMG H247 4MATIC+ | P 62, H 56, B 65, R 68, T 69, TR 60 | P 62, H 61, B 67, R 68, T 69, TR 59 | 62 -> 64 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_glb200_x247` | Mercedes-Benz GLB 200 X247 1.3 | P 18, H 47, B 50, R 63, T 50, TR 30 | P 18, H 36, B 44, R 63, T 49, TR 29 | 42 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_glb250_x247` | Mercedes-Benz GLB 250 X247 2.0 4MATIC | P 35, H 43, B 51, R 64, T 54, TR 33 | P 35, H 37, B 48, R 64, T 53, TR 32 | 45 -> 43 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_glc200_x253` | Mercedes-Benz GLC 200 X253 2.0 | P 22, H 43, B 49, R 63, T 52, TR 30 | P 22, H 36, B 46, R 63, T 50, TR 29 | 42 -> 39 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_glc300d_x253` | Mercedes-Benz GLC 300d X253 2.0 diesel 4MATIC | P 41, H 39, B 47, R 63, T 51, TR 29 | P 41, H 35, B 45, R 63, T 50, TR 28 | 44 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_glc63_s_amg_x253` | Mercedes-Benz GLC 63 S AMG X253 4.0 V8 4MATIC+ | P 77, H 48, B 64, R 66, T 70, TR 56 | P 77, H 56, B 67, R 66, T 69, TR 56 | 62 -> 65 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_gle450_v167` | Mercedes-Benz GLE 450 V167 3.0 mild hybrid | P 45, H 26, B 45, R 64, T 54, TR 29 | P 45, H 30, B 46, R 64, T 52, TR 27 | 41 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_gle53_amg_v167` | Mercedes-Benz GLE 53 AMG V167 3.0 mild hybrid | P 49, H 30, B 48, R 65, T 60, TR 39 | P 49, H 39, B 53, R 65, T 59, TR 38 | 46 -> 49 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_gle63_s_amg_v167` | Mercedes-Benz GLE 63 S AMG V167 4.0 V8 mild hybrid | P 74, H 35, B 58, R 64, T 68, TR 50 | P 74, H 48, B 64, R 64, T 67, TR 50 | 56 -> 60 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_gls580_x167` | Mercedes-Benz GLS 580 X167 4.0 mild hybrid | P 55, H 23, B 44, R 62, T 55, TR 28 | P 55, H 28, B 47, R 62, T 53, TR 26 | 42 -> 43 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_gls63_amg_x167` | Mercedes-Benz GLS 63 AMG X167 4.0 V8 mild hybrid | P 68, H 29, B 55, R 63, T 64, TR 42 | P 68, H 39, B 60, R 63, T 63, TR 41 | 51 -> 54 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_g400d_w463` | Mercedes-Benz G 400d W463 3.0 diesel | P 43, H 20, B 40, R 61, T 49, TR 22 | P 43, H 22, B 41, R 61, T 47, TR 20 | 36 -> 37 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_g500_w463` | Mercedes-Benz G 500 W463 4.0 V8 | P 48, H 21, B 43, R 62, T 54, TR 25 | P 48, H 24, B 45, R 62, T 52, TR 23 | 39 -> 40 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_g63_amg_w463` | Mercedes-Benz G 63 AMG W463 4.0 V8 | P 67, H 26, B 52, R 62, T 62, TR 37 | P 67, H 33, B 56, R 62, T 60, TR 35 | 48 -> 50 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_slk200_r172` | Mercedes-Benz SLK 200 R172 1.8 Turbo | P 30, H 67, B 58, R 63, T 56, TR 51 | P 30, H 60, B 55, R 63, T 56, TR 51 | 54 -> 52 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_slk350_r172` | Mercedes-Benz SLK 350 R172 3.5 V6 | P 49, H 64, B 61, R 65, T 60, TR 56 | P 49, H 62, B 60, R 65, T 60, TR 55 | 59 -> 58 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_slk55_amg_r172` | Mercedes-Benz SLK 55 AMG R172 5.5 V8 | P 69, H 64, B 65, R 64, T 66, TR 61 | P 69, H 66, B 66, R 64, T 66, TR 61 | 65 -> 66 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_sl55_amg_r230` | Mercedes-Benz SL 55 AMG R230 5.4 Supercharged V8 | P 70, H 51, B 62, R 64, T 68, TR 57 | P 70, H 59, B 65, R 64, T 67, TR 56 | 61 -> 63 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_sl500_r231` | Mercedes-Benz SL 500 R231 4.7 V8 | P 71, H 53, B 59, R 64, T 64, TR 50 | P 71, H 54, B 60, R 64, T 63, TR 50 | 59 -> 60 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_sl63_amg_r231` | Mercedes-Benz SL 63 AMG R231 5.5 V8 biturbo | P 81, H 56, B 66, R 64, T 70, TR 61 | P 81, H 63, B 69, R 64, T 69, TR 60 | 66 -> 68 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_amg_gt_s_c190` | Mercedes-Benz AMG GT S C190 4.0 V8 Biturbo | P 81, H 73, B 78, R 74, T 81, TR 81 | P 81, H 81, B 82, R 74, T 81, TR 81 | 78 -> 80 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `mercedes_amg_gt_r_c190` | Mercedes-Benz AMG GT R C190 4.0 V8 Biturbo | P 89, H 76, B 82, R 75, T 88, TR 87 | P 89, H 86, B 87, R 75, T 88, TR 88 | 83 -> 86 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `mercedes_eqa_250` | Mercedes-Benz EQA H243 250 | P 19, H 30, B 39, R 57, T 43, TR 22 | P 19, H 28, B 38, R 57, T 42, TR 21 | 33 -> 32 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_eqc_400` | Mercedes-Benz EQC N293 400 4MATIC | P 52, H 23, B 37, R 56, T 44, TR 22 | P 52, H 26, B 39, R 56, T 42, TR 21 | 37 -> 38 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_eqe_350` | Mercedes-Benz EQE V295 350+ | P 34, H 25, B 38, R 58, T 45, TR 24 | P 34, H 28, B 40, R 58, T 44, TR 23 | 35 -> 36 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_eqe53_amg` | Mercedes-Benz EQE 53 AMG V295 4MATIC+ | P 73, H 32, B 47, R 58, T 54, TR 38 | P 73, H 42, B 51, R 58, T 53, TR 37 | 49 -> 52 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_eqs_580` | Mercedes-Benz EQS V297 580 4MATIC | P 62, H 23, B 39, R 58, T 46, TR 23 | P 62, H 27, B 41, R 58, T 44, TR 22 | 40 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `mercedes_eqs53_amg` | Mercedes-Benz EQS 53 AMG V297 4MATIC+ | P 80, H 32, B 49, R 58, T 54, TR 39 | P 80, H 41, B 53, R 58, T 53, TR 38 | 51 -> 53 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_116i_e87` | BMW 116i E87 1.6 | P 11, H 64, B 54, R 60, T 49, TR 40 | P 11, H 50, B 47, R 60, T 49, TR 40 | 47 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_118i_e87` | BMW 118i E87 2.0 | P 16, H 64, B 55, R 60, T 51, TR 42 | P 16, H 51, B 48, R 60, T 50, TR 41 | 48 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_120i_e87` | BMW 120i E87 2.0 | P 20, H 64, B 55, R 61, T 52, TR 43 | P 20, H 52, B 49, R 61, T 51, TR 42 | 49 -> 45 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_130i_e87` | BMW 130i E87 3.0 | P 43, H 69, B 63, R 66, T 62, TR 59 | P 43, H 66, B 61, R 66, T 62, TR 59 | 60 -> 59 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_116i_f20` | BMW 116i F20 1.6 Turbo | P 20, H 62, B 54, R 62, T 51, TR 43 | P 20, H 50, B 49, R 62, T 51, TR 42 | 49 -> 45 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_118i_f20` | BMW 118i F20 1.6 Turbo | P 27, H 63, B 56, R 63, T 54, TR 46 | P 27, H 53, B 51, R 63, T 53, TR 45 | 51 -> 48 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_120i_f20_lci` | BMW 120i F20 LCI 2.0 B48 | P 31, H 63, B 57, R 66, T 55, TR 47 | P 31, H 54, B 52, R 66, T 55, TR 47 | 53 -> 50 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_125i_f20` | BMW 125i F20 2.0 Turbo | P 38, H 65, B 58, R 65, T 57, TR 50 | P 38, H 58, B 55, R 65, T 57, TR 50 | 56 -> 53 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_218i_f22` | BMW 218i F22 1.5 | P 19, H 64, B 55, R 64, T 53, TR 46 | P 19, H 54, B 50, R 64, T 52, TR 45 | 50 -> 47 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_220i_f22` | BMW 220i F22 2.0 | P 31, H 65, B 57, R 65, T 56, TR 49 | P 31, H 57, B 53, R 65, T 55, TR 48 | 54 -> 51 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_318i_e46` | BMW 318i E46 2.0 | P 17, H 62, B 54, R 59, T 51, TR 43 | P 17, H 51, B 49, R 59, T 51, TR 42 | 48 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_320i_e46` | BMW 320i E46 2.2 inline-six | P 21, H 61, B 55, R 61, T 54, TR 45 | P 21, H 53, B 51, R 61, T 53, TR 44 | 49 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_325i_e46` | BMW 325i E46 2.5 inline-six | P 27, H 62, B 56, R 62, T 56, TR 48 | P 27, H 55, B 53, R 62, T 55, TR 47 | 52 -> 49 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_330i_e46` | BMW 330i E46 3.0 inline-six | P 36, H 65, B 59, R 63, T 58, TR 54 | P 36, H 61, B 57, R 63, T 58, TR 54 | 56 -> 55 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_316i_e90` | BMW 316i E90 1.6 | P 10, H 60, B 53, R 58, T 50, TR 39 | P 10, H 49, B 47, R 58, T 49, TR 39 | 45 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_320i_e90` | BMW 320i E90 2.0 | P 18, H 60, B 54, R 59, T 52, TR 42 | P 18, H 51, B 49, R 59, T 51, TR 42 | 47 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_325i_e90` | BMW 325i E90 3.0 | P 30, H 61, B 56, R 62, T 56, TR 48 | P 30, H 55, B 53, R 62, T 55, TR 47 | 52 -> 50 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_330i_e90` | BMW 330i E90 3.0 | P 39, H 63, B 59, R 63, T 58, TR 53 | P 39, H 59, B 56, R 63, T 58, TR 53 | 56 -> 54 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_316i_f30` | BMW 316i F30 1.6 Turbo | P 17, H 59, B 54, R 62, T 52, TR 42 | P 17, H 51, B 49, R 62, T 51, TR 42 | 47 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_320i_f30` | BMW 320i F30 N20 2.0 | P 28, H 62, B 56, R 65, T 56, TR 48 | P 28, H 55, B 53, R 65, T 55, TR 47 | 52 -> 50 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_328i_f30` | BMW 328i F30 N20 2.0 | P 41, H 65, B 60, R 66, T 60, TR 56 | P 41, H 62, B 58, R 66, T 60, TR 56 | 58 -> 57 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_318i_g20` | BMW 318i G20 1.5 | P 21, H 59, B 55, R 66, T 54, TR 43 | P 21, H 51, B 51, R 66, T 53, TR 43 | 49 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_520i_e60` | BMW 520i E60 2.0 | P 18, H 54, B 53, R 59, T 52, TR 39 | P 18, H 46, B 49, R 59, T 51, TR 38 | 45 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_525i_e60` | BMW 525i E60 3.0 | P 27, H 55, B 54, R 61, T 54, TR 42 | P 27, H 48, B 51, R 61, T 53, TR 41 | 48 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_530i_e60` | BMW 530i E60 3.0 | P 36, H 57, B 56, R 63, T 58, TR 47 | P 36, H 52, B 54, R 63, T 57, TR 46 | 52 -> 50 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_520i_f10` | BMW 520i F10 2.0 Turbo | P 22, H 52, B 52, R 64, T 54, TR 41 | P 22, H 47, B 49, R 64, T 53, TR 40 | 47 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_528i_f10` | BMW 528i F10 2.0 Turbo | P 36, H 54, B 55, R 65, T 58, TR 47 | P 36, H 52, B 54, R 65, T 57, TR 47 | 52 -> 51 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_520i_g30` | BMW 520i G30 B48 1.6 | P 24, H 55, B 53, R 67, T 55, TR 42 | P 24, H 49, B 50, R 67, T 55, TR 42 | 48 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_530i_g30` | BMW 530i G30 B48 2.0 | P 39, H 59, B 58, R 69, T 60, TR 51 | P 39, H 56, B 56, R 69, T 60, TR 50 | 55 -> 54 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_550e_g60` | BMW 550e G60 Plug-in Hybrid | P 72, H 46, B 55, R 66, T 60, TR 47 | P 72, H 51, B 57, R 66, T 59, TR 46 | 57 -> 58 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_730i_e65` | BMW 730i E65 3.0 | P 28, H 44, B 51, R 60, T 54, TR 34 | P 28, H 40, B 49, R 60, T 52, TR 33 | 44 -> 42 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_740i_e65` | BMW 740i E65 4.0 V8 | P 37, H 41, B 50, R 58, T 56, TR 34 | P 37, H 39, B 49, R 58, T 54, TR 33 | 45 -> 44 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_x1_20i_f48` | BMW X1 20i F48 xDrive | P 30, H 50, B 52, R 64, T 52, TR 35 | P 30, H 41, B 47, R 64, T 50, TR 34 | 46 -> 43 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_x5_40i_g05` | BMW X5 40i G05 xDrive | P 45, H 35, B 50, R 67, T 59, TR 36 | P 45, H 38, B 52, R 67, T 58, TR 35 | 46 -> 47 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_x5_50e_g05` | BMW X5 50e G05 LCI Plug-in Hybrid | P 56, H 27, B 47, R 63, T 56, TR 33 | P 56, H 34, B 50, R 63, T 54, TR 32 | 45 -> 46 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_x6_40i_g06` | BMW X6 40i G06 xDrive | P 43, H 33, B 49, R 67, T 59, TR 36 | P 43, H 38, B 51, R 67, T 58, TR 35 | 45 -> 47 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_x7_40i_g07` | BMW X7 40i G07 xDrive | P 37, H 24, B 44, R 66, T 56, TR 29 | P 37, H 29, B 47, R 66, T 54, TR 28 | 40 -> 41 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
+| `bmw_m3_e30` | BMW M3 E30 2.3 S14 | P 38, H 87, B 69, R 66, T 64, TR 74 | P 38, H 85, B 67, R 66, T 65, TR 75 | 68 -> 67 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m3_e36_32` | BMW M3 E36 3.2 S50 | P 52, H 75, B 69, R 66, T 68, TR 71 | P 52, H 77, B 70, R 66, T 69, TR 72 | 67 -> 68 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m3_e46` | BMW M3 E46 3.2 S54 | P 55, H 77, B 72, R 68, T 72, TR 76 | P 55, H 81, B 74, R 68, T 72, TR 76 | 70 -> 72 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m3_e92` | BMW M3 E92 4.0 S65 | P 59, H 70, B 72, R 68, T 75, TR 75 | P 59, H 78, B 75, R 68, T 76, TR 75 | 70 -> 72 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_1m_e82` | BMW 1M Coupe E82 N54 | P 64, H 76, B 72, R 66, T 70, TR 75 | P 64, H 79, B 73, R 66, T 71, TR 75 | 71 -> 72 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m2_f87_n55` | BMW M2 F87 N55 | P 63, H 73, B 73, R 71, T 74, TR 75 | P 63, H 78, B 75, R 71, T 74, TR 75 | 71 -> 73 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m2_cs_f87` | BMW M2 CS F87 S55 | P 78, H 77, B 78, R 73, T 79, TR 82 | P 78, H 84, B 81, R 73, T 80, TR 82 | 78 -> 80 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m3_f80_cs` | BMW M3 CS F80 S55 | P 78, H 75, B 77, R 73, T 79, TR 81 | P 78, H 82, B 80, R 73, T 80, TR 81 | 77 -> 79 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m3_g80_competition_xdrive` | BMW M3 Competition G80 xDrive | P 81, H 65, B 73, R 73, T 79, TR 76 | P 81, H 78, B 78, R 73, T 80, TR 77 | 74 -> 78 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m3_cs_g80` | BMW M3 CS G80 xDrive | P 86, H 70, B 75, R 72, T 81, TR 81 | P 86, H 83, B 81, R 72, T 82, TR 82 | 77 -> 82 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m3_touring_g81` | BMW M3 Touring G81 Competition xDrive | P 78, H 63, B 71, R 73, T 79, TR 74 | P 78, H 76, B 77, R 73, T 80, TR 74 | 72 -> 76 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m4_g82_competition_xdrive` | BMW M4 Competition G82 xDrive | P 81, H 66, B 73, R 73, T 79, TR 76 | P 81, H 78, B 78, R 73, T 80, TR 77 | 74 -> 78 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m4_cs_g82` | BMW M4 CS G82 xDrive | P 86, H 70, B 75, R 72, T 81, TR 81 | P 86, H 83, B 81, R 72, T 82, TR 82 | 77 -> 82 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m5_e34` | BMW M5 E34 3.8 S38 | P 49, H 64, B 65, R 65, T 68, TR 65 | P 49, H 68, B 67, R 65, T 68, TR 65 | 62 -> 64 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m5_e39` | BMW M5 E39 4.9 S62 | P 57, H 61, B 67, R 66, T 72, TR 66 | P 57, H 69, B 70, R 66, T 72, TR 66 | 64 -> 67 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m5_e60` | BMW M5 E60 5.0 S85 | P 67, H 60, B 69, R 61, T 73, TR 67 | P 67, H 69, B 73, R 61, T 73, TR 67 | 66 -> 69 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m5_f10` | BMW M5 F10 4.4 S63 | P 75, H 56, B 67, R 64, T 73, TR 65 | P 75, H 67, B 72, R 64, T 73, TR 65 | 66 -> 69 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m5_f90` | BMW M5 F90 Competition xDrive | P 87, H 58, B 69, R 68, T 77, TR 70 | P 87, H 70, B 75, R 68, T 77, TR 70 | 71 -> 75 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m5_cs_f90` | BMW M5 CS F90 xDrive | P 92, H 64, B 74, R 69, T 79, TR 75 | P 92, H 76, B 79, R 69, T 80, TR 76 | 75 -> 79 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m5_g90` | BMW M5 G90 Plug-in Hybrid xDrive | P 82, H 43, B 62, R 64, T 72, TR 62 | P 82, H 61, B 71, R 64, T 71, TR 62 | 62 -> 68 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m6_e63` | BMW M6 E63 5.0 S85 | P 69, H 62, B 69, R 61, T 73, TR 69 | P 69, H 71, B 73, R 61, T 73, TR 69 | 67 -> 70 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m6_f13` | BMW M6 F13 4.4 S63 | P 77, H 57, B 68, R 65, T 75, TR 67 | P 77, H 68, B 73, R 65, T 75, TR 67 | 67 -> 71 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_m8_competition_g15` | BMW M8 Competition G15 xDrive | P 89, H 59, B 70, R 68, T 77, TR 70 | P 89, H 71, B 75, R 68, T 77, TR 70 | 71 -> 75 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_x3_m_competition_f97` | BMW X3 M Competition F97 S58 xDrive | P 71, H 49, B 64, R 70, T 73, TR 61 | P 71, H 61, B 69, R 70, T 73, TR 61 | 63 -> 67 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_x4_m_competition_f98` | BMW X4 M Competition F98 S58 xDrive | P 71, H 49, B 64, R 70, T 73, TR 61 | P 71, H 61, B 69, R 70, T 73, TR 61 | 63 -> 67 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_x5_m_f85` | BMW X5 M F85 4.4 S63 xDrive | P 69, H 36, B 59, R 63, T 70, TR 52 | P 69, H 50, B 66, R 63, T 69, TR 52 | 56 -> 60 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_x5_m_competition_f95` | BMW X5 M Competition F95 4.4 S63 xDrive | P 72, H 38, B 61, R 64, T 72, TR 56 | P 72, H 53, B 68, R 64, T 71, TR 55 | 58 -> 63 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_x6_m_competition_f96` | BMW X6 M Competition F96 4.4 S63 xDrive | P 73, H 38, B 61, R 64, T 72, TR 56 | P 73, H 53, B 68, R 64, T 71, TR 55 | 59 -> 63 | Component normalization recalibrated upper-scale headroom. | MEDIUM | 0 |
+| `bmw_xm_g09` | BMW XM G09 Plug-in Hybrid xDrive | P 66, H 32, B 57, R 60, T 65, TR 46 | P 66, H 44, B 62, R 60, T 64, TR 45 | 52 -> 56 | Component normalization recalibrated upper-scale headroom. | PROVISIONAL | 0 |
 
 ## Remaining Provisional Vehicles
 
@@ -934,22 +1624,22 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `ford_mustang_ecoboost_s550` | Ford Mustang S550 EcoBoost | PROVISIONAL | 61 | 52 | 61 | 62 | 69 | 65 | 58 | 1655 | 141 | 0 | PROVISIONAL | - |
 | `ford_mustang_gt_s550` | Ford Mustang GT S550 5.0 V8 | PROVISIONAL | 67 | 68 | 65 | 67 | 72 | 69 | 64 | 1720 | 192 | 0 | PROVISIONAL | - |
 | `mercedes_a200_w177` | Mercedes-Benz A 200 W177 1.3 Turbo | PROVISIONAL | 50 | 25 | 54 | 54 | 67 | 57 | 49 | 1375 | 87 | 0 | PROVISIONAL | - |
-| `mercedes_amg_a35_w177` | Mercedes-AMG A 35 W177 4MATIC | PROVISIONAL | 67 | 55 | 70 | 69 | 71 | 70 | 68 | 1555 | 145 | 0 | PROVISIONAL | - |
-| `mercedes_amg_cla35_c118` | Mercedes-AMG CLA 35 C118 4MATIC | PROVISIONAL | 66 | 54 | 69 | 67 | 71 | 69 | 67 | 1585 | 142 | 0 | PROVISIONAL | - |
-| `mercedes_amg_cla45_s_c118` | Mercedes-AMG CLA 45 S C118 4MATIC+ | PROVISIONAL | 72 | 69 | 73 | 74 | 71 | 74 | 72 | 1675 | 185 | 0 | PROVISIONAL | - |
+| `mercedes_amg_a35_w177` | Mercedes-Benz A 35 AMG W177 4MATIC | PROVISIONAL | 67 | 55 | 70 | 69 | 71 | 70 | 68 | 1555 | 145 | 0 | PROVISIONAL | - |
+| `mercedes_amg_cla35_c118` | Mercedes-Benz CLA 35 AMG C118 4MATIC | PROVISIONAL | 66 | 54 | 69 | 67 | 71 | 69 | 67 | 1585 | 142 | 0 | PROVISIONAL | - |
+| `mercedes_amg_cla45_s_c118` | Mercedes-Benz CLA 45 S AMG C118 4MATIC+ | PROVISIONAL | 72 | 69 | 73 | 74 | 71 | 74 | 72 | 1675 | 185 | 0 | PROVISIONAL | - |
 | `mercedes_c200_w206` | Mercedes-Benz C 200 W206 1.5 mild hybrid | PROVISIONAL | 51 | 29 | 54 | 54 | 67 | 59 | 49 | 1640 | 91 | 0 | PROVISIONAL | - |
-| `mercedes_amg_c43_w206` | Mercedes-AMG C 43 W206 4MATIC | PROVISIONAL | 67 | 63 | 68 | 69 | 69 | 71 | 66 | 1765 | 170 | 0 | PROVISIONAL | - |
-| `mercedes_amg_c63_s_w205` | Mercedes-AMG C 63 S W205 4.0 V8 | PROVISIONAL | 72 | 78 | 70 | 71 | 69 | 72 | 69 | 1730 | 217 | 0 | PROVISIONAL | - |
-| `mercedes_amg_c63_s_e_performance_w206` | Mercedes-AMG C 63 S E Performance W206 PHEV | PROVISIONAL | 73 | 87 | 66 | 73 | 67 | 77 | 67 | 2111 | 237 | 0 | PROVISIONAL | - |
+| `mercedes_amg_c43_w206` | Mercedes-Benz C 43 AMG W206 4MATIC | PROVISIONAL | 67 | 63 | 68 | 69 | 69 | 71 | 66 | 1765 | 170 | 0 | PROVISIONAL | - |
+| `mercedes_amg_c63_s_w205` | Mercedes-Benz C 63 S AMG W205 4.0 V8 | PROVISIONAL | 72 | 78 | 70 | 71 | 69 | 72 | 69 | 1730 | 217 | 0 | PROVISIONAL | - |
+| `mercedes_amg_c63_s_e_performance_w206` | Mercedes-Benz C 63 S E Performance AMG W206 PHEV | PROVISIONAL | 73 | 87 | 66 | 73 | 67 | 77 | 67 | 2111 | 237 | 0 | PROVISIONAL | - |
 | `audi_a3_35_tfsi_8y` | Audi A3 35 TFSI 8Y 1.5 TFSI | PROVISIONAL | 49 | 22 | 54 | 54 | 68 | 57 | 49 | 1395 | 79 | 0 | PROVISIONAL | - |
 | `audi_s3_8v` | Audi S3 8V 2.0 TFSI quattro | PROVISIONAL | 66 | 56 | 69 | 67 | 71 | 69 | 66 | 1505 | 147 | 0 | PROVISIONAL | - |
 | `audi_s3_8y` | Audi S3 8Y 2.0 TFSI quattro | PROVISIONAL | 66 | 55 | 69 | 67 | 71 | 69 | 67 | 1575 | 145 | 0 | PROVISIONAL | - |
-| `audi_rs3_8v` | Audi Sport RS 3 8V 2.5 TFSI quattro | PROVISIONAL | 70 | 65 | 71 | 72 | 70 | 72 | 70 | 1595 | 169 | 0 | PROVISIONAL | - |
-| `audi_rs3_8y` | Audi Sport RS 3 8Y 2.5 TFSI quattro | PROVISIONAL | 73 | 69 | 75 | 74 | 71 | 74 | 73 | 1645 | 179 | 0 | PROVISIONAL | - |
+| `audi_rs3_8v` | Audi RS 3 8V 2.5 TFSI quattro | PROVISIONAL | 70 | 65 | 71 | 72 | 70 | 72 | 70 | 1595 | 169 | 0 | PROVISIONAL | - |
+| `audi_rs3_8y` | Audi RS 3 8Y 2.5 TFSI quattro | PROVISIONAL | 73 | 69 | 75 | 74 | 71 | 74 | 73 | 1645 | 179 | 0 | PROVISIONAL | - |
 | `audi_s4_b9` | Audi S4 B9 3.0 TFSI quattro | PROVISIONAL | 65 | 60 | 65 | 67 | 71 | 69 | 64 | 1705 | 152 | 0 | PROVISIONAL | - |
-| `audi_rs4_b9` | Audi Sport RS 4 B9 2.9 TFSI quattro | PROVISIONAL | 70 | 72 | 70 | 71 | 70 | 72 | 68 | 1790 | 185 | 0 | PROVISIONAL | - |
+| `audi_rs4_b9` | Audi RS 4 B9 2.9 TFSI quattro | PROVISIONAL | 70 | 72 | 70 | 71 | 70 | 72 | 68 | 1790 | 185 | 0 | PROVISIONAL | - |
 | `audi_tts_8s` | Audi TTS 8S 2.0 TFSI quattro | PROVISIONAL | 69 | 60 | 72 | 69 | 71 | 70 | 70 | 1410 | 162 | 0 | PROVISIONAL | - |
-| `audi_tt_rs_8s` | Audi Sport TT RS 8S 2.5 TFSI quattro | PROVISIONAL | 74 | 74 | 75 | 74 | 71 | 74 | 73 | 1500 | 196 | 0 | PROVISIONAL | - |
+| `audi_tt_rs_8s` | Audi TT RS 8S 2.5 TFSI quattro | PROVISIONAL | 74 | 74 | 75 | 74 | 71 | 74 | 73 | 1500 | 196 | 0 | PROVISIONAL | - |
 | `toyota_gr86_zn8` | Toyota GR86 ZN8 2.4 | PROVISIONAL | 67 | 41 | 79 | 67 | 75 | 68 | 71 | 1275 | 136 | 0 | PROVISIONAL | - |
 | `toyota_supra_a90_20` | Toyota GR Supra A90 2.0 | PROVISIONAL | 67 | 51 | 73 | 69 | 73 | 70 | 70 | 1450 | 131 | 0 | PROVISIONAL | - |
 | `toyota_supra_a90_30` | Toyota GR Supra A90 3.0 | PROVISIONAL | 72 | 64 | 76 | 73 | 75 | 74 | 73 | 1540 | 162 | 0 | PROVISIONAL | - |
@@ -961,10 +1651,10 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `bmw_m135i_f40` | BMW M135i F40 xDrive | PROVISIONAL | 67 | 60 | 69 | 67 | 71 | 69 | 66 | 1525 | 148 | 0 | PROVISIONAL | - |
 | `bmw_m140i_f20` | BMW M140i F20 B58 | PROVISIONAL | 69 | 65 | 72 | 68 | 72 | 70 | 70 | 1475 | 169 | 0 | PROVISIONAL | - |
 | `bmw_m240i_g42` | BMW M240i G42 B58TU2 xDrive | PROVISIONAL | 69 | 64 | 70 | 69 | 73 | 72 | 68 | 1690 | 163 | 0 | PROVISIONAL | - |
-| `bmw_m3_f80` | BMW M M3 F80 Competition | PROVISIONAL | 77 | 76 | 79 | 78 | 72 | 78 | 78 | 1585 | 209 | 0 | PROVISIONAL | - |
-| `bmw_m3_g80` | BMW M M3 G80 Competition | PROVISIONAL | 78 | 79 | 80 | 79 | 73 | 80 | 78 | 1730 | 217 | 0 | PROVISIONAL | - |
-| `bmw_m4_f82` | BMW M M4 F82 Competition | PROVISIONAL | 77 | 75 | 79 | 78 | 72 | 78 | 78 | 1590 | 208 | 0 | PROVISIONAL | - |
-| `bmw_m4_g82` | BMW M M4 G82 Competition | PROVISIONAL | 78 | 79 | 80 | 79 | 73 | 80 | 78 | 1725 | 217 | 0 | PROVISIONAL | - |
+| `bmw_m3_f80` | BMW M3 F80 Competition | PROVISIONAL | 77 | 76 | 79 | 78 | 72 | 78 | 78 | 1585 | 209 | 0 | PROVISIONAL | - |
+| `bmw_m3_g80` | BMW M3 G80 Competition | PROVISIONAL | 78 | 79 | 80 | 79 | 73 | 80 | 78 | 1730 | 217 | 0 | PROVISIONAL | - |
+| `bmw_m4_f82` | BMW M4 F82 Competition | PROVISIONAL | 77 | 75 | 79 | 78 | 72 | 78 | 78 | 1590 | 208 | 0 | PROVISIONAL | - |
+| `bmw_m4_g82` | BMW M4 G82 Competition | PROVISIONAL | 78 | 79 | 80 | 79 | 73 | 80 | 78 | 1725 | 217 | 0 | PROVISIONAL | - |
 | `hyundai_kona_n` | Hyundai Kona N OS 2.0 T-GDi | PROVISIONAL | 67 | 48 | 71 | 71 | 72 | 71 | 69 | 1510 | 136 | 0 | PROVISIONAL | - |
 | `honda_s2000_ap1` | Honda S2000 AP1 2.0 VTEC | PROVISIONAL | 68 | 40 | 80 | 69 | 76 | 70 | 73 | 1260 | 140 | 0 | PROVISIONAL | - |
 | `honda_integra_type_r_dc2` | Honda Integra Type R DC2 1.8 VTEC | PROVISIONAL | 68 | 34 | 84 | 68 | 76 | 68 | 74 | 1120 | 125 | 0 | PROVISIONAL | - |
@@ -1044,7 +1734,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `ford_focus_st_edition_mk4` | Ford Focus ST Edition Mk4 2.3 EcoBoost | PROVISIONAL | 68 | 50 | 75 | 68 | 72 | 70 | 71 | 1508 | 137 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `ford_focus_rs500_mk2` | Ford Focus RS500 Mk2 2.5 Turbo | PROVISIONAL | 71 | 61 | 78 | 72 | 69 | 70 | 75 | 1468 | 175 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `alpine_a110_r_ultime` | Alpine A110 R Ultime A110 345 PS | PROVISIONAL | 83 | 81 | 90 | 82 | 73 | 78 | 84 | 1120 | 227 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
-| `audi_rs5_b9` | Audi Sport RS 5 B9 2.9 TFSI quattro | PROVISIONAL | 73 | 76 | 71 | 74 | 72 | 75 | 70 | 1715 | 193 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_rs5_b9` | Audi RS 5 B9 2.9 TFSI quattro | PROVISIONAL | 73 | 76 | 71 | 74 | 72 | 75 | 70 | 1715 | 193 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `lexus_rc_f` | Lexus RC F USC10 5.0 V8 | PROVISIONAL | 68 | 67 | 64 | 71 | 77 | 73 | 63 | 1775 | 198 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `lexus_lc_500` | Lexus LC 500 Z100 5.0 V8 | PROVISIONAL | 66 | 62 | 61 | 69 | 77 | 72 | 60 | 1935 | 181 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `vw_golf_10_tsi_mk8` | Volkswagen Golf Mk8 1.0 TSI | PROVISIONAL | 43 | 15 | 47 | 48 | 65 | 51 | 39 | 1260 | 64 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
@@ -1126,7 +1816,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `fiat_500e_hatch` | Fiat 500e 332 Electric | PROVISIONAL | 36 | 17 | 38 | 41 | 58 | 41 | 28 | 1365 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_corolla_15_6mt` | Toyota Corolla E210 1.5 6MT | PROVISIONAL | 41 | 10 | 43 | 46 | 71 | 50 | 36 | 1280 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_corolla_15_cvt` | Toyota Corolla E210 1.5 CVT | PROVISIONAL | 40 | 9 | 41 | 45 | 71 | 50 | 35 | 1310 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
-| `toyota_corolla_hybrid_e210` | Toyota Corolla E210 Hybrid | PROVISIONAL | 41 | 15 | 42 | 45 | 71 | 49 | 34 | 1370 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_corolla_hybrid_e210` | Toyota Corolla E210 Hybrid e-CVT | PROVISIONAL | 41 | 15 | 42 | 45 | 71 | 49 | 34 | 1370 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_yaris_15_hybrid` | Toyota Yaris XP210 1.5 Hybrid | PROVISIONAL | 41 | 14 | 45 | 46 | 70 | 48 | 35 | 1085 | 78 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_yaris_cross_hybrid` | Toyota Yaris Cross XP210 1.5 Hybrid | PROVISIONAL | 38 | 8 | 40 | 44 | 70 | 46 | 31 | 1245 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_chr_hybrid_current` | Toyota C-HR AX20 Hybrid | PROVISIONAL | 38 | 12 | 37 | 44 | 69 | 46 | 31 | 1495 | 69 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
@@ -1137,8 +1827,8 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `hyundai_i20_10_tgdi_7dct` | Hyundai i20 BC3 1.0 T-GDi 7DCT | PROVISIONAL | 39 | 12 | 43 | 44 | 64 | 48 | 34 | 1165 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `hyundai_bayon_10_tgdi` | Hyundai Bayon BC3 CUV 1.0 T-GDi | PROVISIONAL | 37 | 10 | 40 | 43 | 64 | 46 | 32 | 1215 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `hyundai_i30_15_tgdi_48v` | Hyundai i30 PD 1.5 T-GDi 48V | PROVISIONAL | 44 | 23 | 46 | 48 | 66 | 52 | 39 | 1355 | 87 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
-| `hyundai_kona_hybrid_sx2` | Hyundai Kona SX2 Hybrid | PROVISIONAL | 38 | 15 | 38 | 44 | 64 | 46 | 31 | 1450 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
-| `hyundai_kona_electric_sx2` | Hyundai Kona Electric SX2 Long Range | PROVISIONAL | 37 | 21 | 35 | 42 | 60 | 45 | 27 | 1775 | 90 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_kona_hybrid_sx2` | Hyundai Kona SX2 Hybrid DCT | PROVISIONAL | 38 | 15 | 38 | 44 | 64 | 46 | 31 | 1450 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_kona_electric_sx2` | Hyundai Kona Electric SX2 Long Range 65.4 kWh | PROVISIONAL | 37 | 21 | 35 | 42 | 60 | 45 | 27 | 1775 | 90 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `hyundai_tucson_hybrid` | Hyundai Tucson NX4 1.6 T-GDi Hybrid | PROVISIONAL | 39 | 29 | 35 | 43 | 64 | 47 | 28 | 1685 | 100 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `peugeot_208_12_puretech` | Peugeot 208 P21 1.2 PureTech | PROVISIONAL | 39 | 15 | 43 | 44 | 60 | 46 | 34 | 1165 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `peugeot_208_hybrid_100` | Peugeot 208 P21 Hybrid 100 e-DCS6 | PROVISIONAL | 39 | 14 | 42 | 44 | 60 | 46 | 34 | 1210 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
@@ -1187,7 +1877,7 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `bmw_i4_m50_g26` | BMW i4 M50 G26 Dual Motor | PROVISIONAL | 61 | 73 | 54 | 59 | 67 | 63 | 52 | 2215 | 181 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
 | `kia_ev6_gt` | Kia EV6 GT CV Dual Motor | PROVISIONAL | 64 | 75 | 57 | 62 | 68 | 67 | 56 | 2185 | 197 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
 | `porsche_taycan_turbo_s_j1` | Porsche Taycan Turbo S J1 Performance Battery Plus | PROVISIONAL | 71 | 89 | 62 | 69 | 70 | 73 | 63 | 2295 | 244 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
-| `audi_rs_e_tron_gt_j1` | Audi Sport RS e-tron GT J1 Dual Motor | PROVISIONAL | 67 | 79 | 60 | 67 | 70 | 71 | 61 | 2345 | 203 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
+| `audi_rs_e_tron_gt_j1` | Audi RS e-tron GT J1 Dual Motor | PROVISIONAL | 67 | 79 | 60 | 67 | 70 | 71 | 61 | 2345 | 203 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
 | `ferrari_sf90_stradale` | Ferrari SF90 Stradale F173 Plug-In Hybrid AWD | PROVISIONAL | 88 | 99 | 85 | 88 | 80 | 90 | 87 | 1600 | 459 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `lamborghini_revuelto` | Lamborghini Revuelto LB744 6.5 V12 Plug-In Hybrid | PROVISIONAL | 85 | 99 | 81 | 84 | 78 | 86 | 82 | 1772 | 422 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `mclaren_720s` | McLaren 720S Super Series 4.0 V8 | PROVISIONAL | 86 | 95 | 85 | 86 | 78 | 86 | 85 | 1419 | 374 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
@@ -1197,6 +1887,322 @@ The audit uses `calculateVehicleCalibrationScores` for current component baselin
 | `chevrolet_camaro_zl1_1le` | Chevrolet Camaro ZL1 1LE Alpha 6.2 LT4 | PROVISIONAL | 85 | 93 | 83 | 85 | 78 | 87 | 83 | 1732 | 280 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `cadillac_ct4_v_blackwing` | Cadillac CT4-V Blackwing Alpha 3.6 Twin Turbo | PROVISIONAL | 76 | 74 | 75 | 78 | 75 | 79 | 74 | 1760 | 200 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `cadillac_ct5_v_blackwing` | Cadillac CT5-V Blackwing Alpha 6.2 LT4 | PROVISIONAL | 78 | 89 | 73 | 78 | 76 | 81 | 73 | 1880 | 265 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
+| `ferrari_360_modena` | Ferrari 360 Modena F131 3.6 V8 | PROVISIONAL | 74 | 68 | 78 | 75 | 70 | 75 | 74 | 1390 | 212 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_f430` | Ferrari F430 F131 4.3 V8 | PROVISIONAL | 79 | 81 | 80 | 79 | 72 | 79 | 78 | 1450 | 248 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_430_scuderia` | Ferrari 430 Scuderia F131 4.3 V8 | PROVISIONAL | 86 | 91 | 88 | 86 | 77 | 85 | 86 | 1350 | 278 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_458_italia` | Ferrari 458 Italia F142 4.5 V8 | PROVISIONAL | 85 | 93 | 84 | 84 | 78 | 84 | 84 | 1485 | 282 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_488_gtb` | Ferrari 488 GTB F142M 3.9 V8 Twin-Turbo | PROVISIONAL | 85 | 95 | 84 | 85 | 77 | 85 | 84 | 1475 | 334 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_f8_tributo` | Ferrari F8 Tributo F142M 3.9 V8 Twin-Turbo | PROVISIONAL | 86 | 95 | 85 | 86 | 78 | 86 | 85 | 1435 | 369 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_296_gtb` | Ferrari 296 GTB F171 3.0 V6 Plug-In Hybrid | PROVISIONAL | 85 | 95 | 84 | 85 | 76 | 85 | 84 | 1470 | 415 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_812_superfast` | Ferrari 812 Superfast F152M 6.5 V12 | PROVISIONAL | 84 | 95 | 78 | 85 | 78 | 86 | 81 | 1630 | 361 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_812_competizione` | Ferrari 812 Competizione F152M 6.5 V12 | PROVISIONAL | 88 | 95 | 87 | 89 | 80 | 89 | 88 | 1487 | 410 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_roma` | Ferrari Roma F169 3.9 V8 Twin-Turbo | PROVISIONAL | 78 | 93 | 72 | 77 | 74 | 78 | 72 | 1570 | 290 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_portofino` | Ferrari Portofino F164 3.9 V8 Twin-Turbo | PROVISIONAL | 74 | 89 | 67 | 73 | 73 | 76 | 66 | 1664 | 265 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_california_t` | Ferrari California T F149M 3.9 V8 Twin-Turbo | PROVISIONAL | 70 | 83 | 63 | 71 | 71 | 74 | 63 | 1730 | 238 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_laferrari` | Ferrari LaFerrari F150 6.3 V12 Hybrid | PROVISIONAL | 86 | 96 | 83 | 86 | 76 | 86 | 84 | 1585 | 447 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_ghibli_s_m157` | Maserati Ghibli S M157 3.0 V6 Twin-Turbo | PROVISIONAL | 59 | 60 | 56 | 61 | 62 | 65 | 52 | 1810 | 166 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_ghibli_trofeo_m157` | Maserati Ghibli Trofeo M157 3.8 V8 Twin-Turbo | PROVISIONAL | 66 | 78 | 59 | 67 | 65 | 71 | 58 | 1969 | 217 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_quattroporte_trofeo_m156` | Maserati Quattroporte Trofeo M156 3.8 V8 Twin-Turbo | PROVISIONAL | 64 | 77 | 56 | 66 | 65 | 71 | 56 | 2000 | 214 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_granturismo_trofeo_m189` | Maserati GranTurismo Trofeo M189 3.0 Nettuno V6 | PROVISIONAL | 71 | 84 | 66 | 72 | 67 | 73 | 65 | 1795 | 228 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_mc20_m240` | Maserati MC20 M240 3.0 Nettuno V6 | PROVISIONAL | 84 | 95 | 84 | 84 | 71 | 83 | 82 | 1475 | 314 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_levante_trofeo_m161` | Maserati Levante Trofeo M161 3.8 V8 Twin-Turbo | PROVISIONAL | 61 | 74 | 51 | 65 | 63 | 68 | 52 | 2170 | 197 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `abarth_595_312` | Abarth 595 312 1.4 T-Jet 145 | PROVISIONAL | 51 | 30 | 59 | 54 | 61 | 53 | 51 | 1035 | 103 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `abarth_595_competizione_312` | Abarth 595 Competizione 312 1.4 T-Jet 180 | PROVISIONAL | 58 | 40 | 65 | 61 | 62 | 59 | 59 | 1060 | 125 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `abarth_695_biposto_312` | Abarth 695 Biposto 312 1.4 T-Jet 190 | PROVISIONAL | 64 | 46 | 73 | 68 | 62 | 64 | 68 | 997 | 140 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mini_cooper_s_f56` | MINI Cooper S F56 2.0 TwinPower Turbo | PROVISIONAL | 58 | 36 | 65 | 61 | 66 | 61 | 59 | 1250 | 113 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mini_jcw_f56` | MINI John Cooper Works F56 2.0 TwinPower Turbo | PROVISIONAL | 63 | 44 | 70 | 67 | 66 | 65 | 65 | 1280 | 133 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mini_jcw_gp_f56` | MINI John Cooper Works GP F56 2.0 TwinPower Turbo | PROVISIONAL | 74 | 67 | 80 | 76 | 67 | 71 | 76 | 1255 | 179 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `seat_ibiza_cupra_6j` | SEAT Ibiza Cupra 6J 1.8 TSI | PROVISIONAL | 57 | 41 | 63 | 59 | 63 | 59 | 57 | 1225 | 115 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `skoda_fabia_vrs_mk2` | Skoda Fabia vRS Mk2 1.4 TSI Twincharger | PROVISIONAL | 52 | 31 | 59 | 55 | 58 | 55 | 53 | 1265 | 104 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `volvo_s60_t8_phev_spa` | Volvo S60 T8 SPA Recharge Polestar Engineered | PROVISIONAL | 59 | 65 | 52 | 61 | 65 | 63 | 51 | 2050 | 163 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `volvo_v60_polestar_p3` | Volvo V60 Polestar P3 3.0 T6 AWD | PROVISIONAL | 61 | 55 | 60 | 64 | 67 | 67 | 58 | 1835 | 140 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `polestar_2_performance` | Polestar 2 Performance CMA Dual Motor | PROVISIONAL | 59 | 68 | 52 | 60 | 65 | 61 | 50 | 2123 | 165 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `jaguar_f_type_r_x152` | Jaguar F-Type R X152 5.0 Supercharged V8 | PROVISIONAL | 74 | 87 | 69 | 75 | 69 | 76 | 68 | 1760 | 240 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `jaguar_f_type_svr_x152` | Jaguar F-Type SVR X152 5.0 Supercharged V8 | PROVISIONAL | 76 | 88 | 72 | 77 | 70 | 78 | 72 | 1705 | 248 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `jaguar_xe_sv_project_8_x760` | Jaguar XE SV Project 8 X760 5.0 Supercharged V8 | PROVISIONAL | 82 | 90 | 81 | 82 | 71 | 83 | 80 | 1745 | 253 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `land_rover_range_rover_sport_svr_l494` | Land Rover Range Rover Sport SVR L494 5.0 Supercharged V8 | PROVISIONAL | 57 | 67 | 44 | 63 | 63 | 67 | 48 | 2335 | 181 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `aston_martin_v8_vantage_am6` | Aston Martin Vantage AM6 4.0 V8 Twin-Turbo | PROVISIONAL | 76 | 85 | 74 | 77 | 69 | 77 | 73 | 1530 | 245 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `aston_martin_v12_vantage_am6` | Aston Martin V12 Vantage AM6 5.2 V12 Twin-Turbo | PROVISIONAL | 78 | 93 | 74 | 79 | 69 | 80 | 74 | 1795 | 287 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `aston_martin_dbs_superleggera` | Aston Martin DBS Superleggera AM7 5.2 V12 Twin-Turbo | PROVISIONAL | 75 | 93 | 67 | 75 | 69 | 78 | 67 | 1845 | 289 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `aston_martin_db12` | Aston Martin DB12 AM8 4.0 V8 Twin-Turbo | PROVISIONAL | 76 | 92 | 70 | 76 | 70 | 78 | 70 | 1788 | 280 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `lotus_elise_s3` | Lotus Elise S3 1.8 Supercharged | PROVISIONAL | 76 | 59 | 89 | 78 | 71 | 73 | 80 | 932 | 174 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `lotus_exige_s_v6` | Lotus Exige S S3 3.5 Supercharged V6 | PROVISIONAL | 82 | 77 | 90 | 83 | 73 | 79 | 85 | 1176 | 219 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `lotus_evora_gt430` | Lotus Evora GT430 Evora 3.5 Supercharged V6 | PROVISIONAL | 84 | 83 | 89 | 84 | 74 | 81 | 86 | 1299 | 247 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `lotus_emira_v6` | Lotus Emira Emira 3.5 Supercharged V6 | PROVISIONAL | 76 | 68 | 82 | 78 | 71 | 77 | 78 | 1458 | 204 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `opel_corsa_opc_e` | Opel Corsa OPC E 1.6 Turbo | PROVISIONAL | 57 | 37 | 64 | 61 | 62 | 59 | 58 | 1275 | 119 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `opel_astra_opc_j` | Opel Astra OPC J 2.0 Turbo | PROVISIONAL | 62 | 46 | 66 | 66 | 64 | 65 | 63 | 1550 | 133 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `subaru_wrx_sti_va` | Subaru WRX STI VA EJ257 | PROVISIONAL | 67 | 55 | 71 | 71 | 66 | 69 | 68 | 1535 | 148 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `subaru_wrx_sti_s209_va` | Subaru WRX STI S209 VA EJ257 | PROVISIONAL | 71 | 61 | 76 | 75 | 67 | 73 | 74 | 1580 | 161 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `subaru_wrx_vb` | Subaru WRX VB FA24 Turbo | PROVISIONAL | 60 | 47 | 64 | 62 | 67 | 63 | 59 | 1545 | 131 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mitsubishi_lancer_evo_viii` | Mitsubishi Lancer Evolution VIII CT9A 4G63T | PROVISIONAL | 68 | 57 | 74 | 70 | 67 | 69 | 69 | 1410 | 146 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mitsubishi_lancer_evo_x` | Mitsubishi Lancer Evolution X CZ4A 4B11T | PROVISIONAL | 66 | 50 | 71 | 71 | 67 | 69 | 68 | 1560 | 139 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mazda_rx7_fd` | Mazda RX-7 FD3S 13B-REW | PROVISIONAL | 64 | 52 | 76 | 66 | 57 | 62 | 66 | 1280 | 161 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mazda_rx8_se3p` | Mazda RX-8 SE3P 13B-MSP | PROVISIONAL | 55 | 33 | 68 | 60 | 53 | 57 | 57 | 1375 | 124 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mazda3_turbo_bp` | Mazda Mazda3 Turbo BP 2.5 Turbo AWD | PROVISIONAL | 56 | 49 | 57 | 56 | 67 | 59 | 52 | 1585 | 117 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `suzuki_swift_sport_zc33s` | Suzuki Swift Sport ZC33S 1.4 Boosterjet | PROVISIONAL | 53 | 33 | 63 | 54 | 65 | 53 | 52 | 975 | 106 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `infiniti_q50_red_sport_v37` | Infiniti Q50 Red Sport V37 3.0 Twin-Turbo | PROVISIONAL | 59 | 58 | 57 | 61 | 66 | 64 | 54 | 1748 | 170 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `genesis_g70_33t` | Genesis G70 IK 3.3T | PROVISIONAL | 62 | 60 | 60 | 63 | 69 | 65 | 57 | 1755 | 155 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `genesis_gv60_performance` | Genesis GV60 Performance JW Dual Motor | PROVISIONAL | 57 | 68 | 49 | 58 | 66 | 60 | 47 | 2100 | 171 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `dodge_challenger_hellcat_lx` | Dodge Challenger SRT Hellcat LA 6.2 Supercharged V8 | PROVISIONAL | 66 | 88 | 53 | 66 | 69 | 71 | 54 | 2018 | 261 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `dodge_challenger_demon_lx` | Dodge Challenger SRT Demon LA 6.2 Supercharged V8 | PROVISIONAL | 66 | 95 | 50 | 64 | 69 | 71 | 51 | 1941 | 323 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `dodge_viper_gts_vx` | Dodge Viper GTS VX 8.4 V10 | PROVISIONAL | 83 | 94 | 80 | 82 | 76 | 83 | 79 | 1521 | 314 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `chevrolet_camaro_ss_alpha` | Chevrolet Camaro SS Alpha 6.2 LT1 | PROVISIONAL | 71 | 75 | 70 | 71 | 73 | 73 | 66 | 1675 | 202 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `chevrolet_corvette_stingray_c7` | Chevrolet Corvette Stingray C7 6.2 LT1 | PROVISIONAL | 76 | 80 | 75 | 76 | 74 | 77 | 73 | 1539 | 220 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk5_14_tsi_122` | Volkswagen Golf Mk5 1.4 TSI 122 PS | PROVISIONAL | 42 | 16 | 47 | 47 | 60 | 50 | 38 | 1280 | 70 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk5_14_tsi_140` | Volkswagen Golf Mk5 1.4 TSI 140 PS | PROVISIONAL | 42 | 19 | 47 | 48 | 57 | 49 | 39 | 1305 | 79 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk5_14_tsi_160_twincharger` | Volkswagen Golf Mk5 1.4 TSI 160 PS Twincharger | PROVISIONAL | 44 | 25 | 48 | 49 | 56 | 49 | 41 | 1315 | 90 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_r32_mk5` | Volkswagen Golf R32 Mk5 3.2 VR6 4Motion | PROVISIONAL | 58 | 40 | 62 | 61 | 65 | 63 | 58 | 1590 | 116 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk6_12_tsi_105` | Volkswagen Golf Mk6 1.2 TSI 105 PS | PROVISIONAL | 41 | 13 | 47 | 48 | 60 | 49 | 38 | 1225 | 63 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk6_14_tsi_122` | Volkswagen Golf Mk6 1.4 TSI 122 PS | PROVISIONAL | 42 | 16 | 47 | 48 | 60 | 50 | 39 | 1270 | 71 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk6_14_tsi_160` | Volkswagen Golf Mk6 1.4 TSI 160 PS | PROVISIONAL | 44 | 25 | 49 | 49 | 56 | 50 | 41 | 1290 | 91 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_12_tsi_105` | Volkswagen Golf Mk7 1.2 TSI 105 PS | PROVISIONAL | 43 | 14 | 48 | 49 | 63 | 51 | 39 | 1205 | 64 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_14_tsi_122` | Volkswagen Golf Mk7 1.4 TSI 122 PS | PROVISIONAL | 44 | 18 | 48 | 49 | 64 | 52 | 40 | 1240 | 73 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_14_tsi_125` | Volkswagen Golf Mk7 1.4 TSI 125 PS | PROVISIONAL | 44 | 18 | 48 | 49 | 64 | 52 | 40 | 1250 | 74 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_14_tsi_140_act` | Volkswagen Golf Mk7 1.4 TSI 140 PS ACT | PROVISIONAL | 46 | 24 | 49 | 50 | 64 | 53 | 41 | 1270 | 81 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_14_tsi_150_act` | Volkswagen Golf Mk7.5 1.4 TSI 150 PS ACT | PROVISIONAL | 46 | 25 | 49 | 50 | 64 | 53 | 42 | 1280 | 86 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk75_15_tsi_150` | Volkswagen Golf Mk7.5 1.5 TSI 150 PS | PROVISIONAL | 46 | 25 | 49 | 50 | 66 | 54 | 42 | 1295 | 85 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk85_10_etsi` | Volkswagen Golf Mk8.5 1.0 eTSI | PROVISIONAL | 42 | 15 | 46 | 47 | 63 | 50 | 38 | 1285 | 66 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk85_15_tsi` | Volkswagen Golf Mk8.5 1.5 TSI | PROVISIONAL | 46 | 24 | 49 | 50 | 66 | 54 | 42 | 1310 | 84 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk85_15_etsi` | Volkswagen Golf Mk8.5 1.5 eTSI | PROVISIONAL | 45 | 23 | 49 | 49 | 65 | 53 | 40 | 1340 | 82 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_6r_12_tsi_90` | Volkswagen Polo 6R/6C 1.2 TSI 90 PS | PROVISIONAL | 40 | 12 | 46 | 46 | 61 | 48 | 36 | 1105 | 60 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_6r_12_tsi_105` | Volkswagen Polo 6R/6C 1.2 TSI 105 PS | PROVISIONAL | 42 | 16 | 47 | 47 | 60 | 49 | 37 | 1115 | 69 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_6r_14_tsi` | Volkswagen Polo 6R/6C 1.4 TSI | PROVISIONAL | 44 | 27 | 49 | 48 | 57 | 49 | 39 | 1155 | 89 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_gti_6c_18_tsi` | Volkswagen Polo GTI 6C 1.8 TSI | PROVISIONAL | 56 | 41 | 61 | 58 | 64 | 59 | 55 | 1212 | 116 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_aw_10_tsi_95` | Volkswagen Polo AW 1.0 TSI 95 PS | PROVISIONAL | 41 | 13 | 46 | 47 | 63 | 49 | 37 | 1145 | 61 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_aw_10_tsi_110` | Volkswagen Polo AW 1.0 TSI 110 PS | PROVISIONAL | 42 | 16 | 47 | 47 | 63 | 49 | 37 | 1160 | 70 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_aw_10_tsi_115` | Volkswagen Polo AW 1.0 TSI 115 PS | PROVISIONAL | 43 | 17 | 47 | 48 | 63 | 50 | 38 | 1165 | 73 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_14_tjet` | Fiat Egea Sedan 356 1.4 T-Jet 120 HP | PROVISIONAL | 40 | 17 | 44 | 45 | 59 | 48 | 35 | 1275 | 69 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_10_firefly` | Fiat Egea Sedan 356 facelift 1.0 FireFly Turbo 100 HP | PROVISIONAL | 38 | 9 | 43 | 45 | 59 | 47 | 34 | 1275 | 58 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_13_multijet` | Fiat Egea Sedan 356 1.3 Multijet 95 HP | PROVISIONAL | 39 | 11 | 42 | 45 | 61 | 49 | 34 | 1270 | 55 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_16_multijet_130` | Fiat Egea Sedan 356 facelift 1.6 Multijet 130 HP | PROVISIONAL | 41 | 23 | 43 | 46 | 61 | 49 | 34 | 1345 | 71 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_15_hybrid` | Fiat Egea Sedan 356 facelift 1.5 T4 Hybrid 130 HP | PROVISIONAL | 39 | 19 | 42 | 45 | 59 | 47 | 32 | 1375 | 70 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_14_fire` | Fiat Egea Hatchback 356 1.4 Fire 95 HP | PROVISIONAL | 39 | 7 | 44 | 45 | 62 | 48 | 35 | 1270 | 55 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_14_tjet` | Fiat Egea Hatchback 356 1.4 T-Jet 120 HP | PROVISIONAL | 41 | 17 | 45 | 46 | 59 | 49 | 36 | 1295 | 68 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_10_firefly` | Fiat Egea Hatchback 356 facelift 1.0 FireFly Turbo 100 HP | PROVISIONAL | 39 | 10 | 44 | 45 | 59 | 47 | 35 | 1295 | 57 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_13_multijet` | Fiat Egea Hatchback 356 1.3 Multijet 95 HP | PROVISIONAL | 39 | 10 | 43 | 45 | 61 | 49 | 34 | 1300 | 54 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_16_multijet` | Fiat Egea Hatchback 356 1.6 Multijet 120 HP | PROVISIONAL | 42 | 23 | 44 | 46 | 61 | 49 | 35 | 1340 | 66 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_15_hybrid` | Fiat Egea Hatchback 356 facelift 1.5 T4 Hybrid 130 HP | PROVISIONAL | 40 | 19 | 42 | 45 | 59 | 47 | 33 | 1385 | 69 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_cross_14_fire` | Fiat Egea Cross 356 facelift 1.4 Fire 95 HP | PROVISIONAL | 36 | 6 | 40 | 43 | 61 | 47 | 31 | 1305 | 54 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_cross_14_tjet` | Fiat Egea Cross 356 1.4 T-Jet 120 HP | PROVISIONAL | 38 | 14 | 41 | 44 | 58 | 48 | 32 | 1340 | 66 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_cross_13_multijet` | Fiat Egea Cross 356 facelift 1.3 Multijet 95 HP | PROVISIONAL | 37 | 9 | 40 | 43 | 60 | 47 | 31 | 1330 | 53 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_cross_16_multijet_130` | Fiat Egea Cross 356 facelift 1.6 Multijet 130 HP | PROVISIONAL | 39 | 22 | 39 | 45 | 61 | 48 | 31 | 1390 | 69 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sw_14_tjet` | Fiat Egea Station Wagon 356 1.4 T-Jet 120 HP | PROVISIONAL | 39 | 15 | 42 | 45 | 58 | 48 | 33 | 1330 | 66 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sw_13_multijet` | Fiat Egea Station Wagon 356 1.3 Multijet 95 HP | PROVISIONAL | 37 | 9 | 41 | 44 | 60 | 47 | 32 | 1325 | 53 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sw_16_multijet` | Fiat Egea Station Wagon 356 1.6 Multijet 120 HP | PROVISIONAL | 41 | 22 | 42 | 45 | 61 | 49 | 33 | 1365 | 64 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_124_spider_multiair` | Fiat 124 Spider NF 1.4 MultiAir Turbo | PROVISIONAL | 57 | 31 | 73 | 58 | 61 | 56 | 60 | 1105 | 93 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `abarth_124_spider` | Abarth 124 Spider NF 1.4 MultiAir Turbo | PROVISIONAL | 62 | 39 | 77 | 64 | 60 | 59 | 65 | 1060 | 118 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `abarth_124_gt` | Abarth 124 GT NF 1.4 MultiAir Turbo | PROVISIONAL | 62 | 39 | 78 | 64 | 60 | 59 | 66 | 1075 | 116 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `audi_a1_8x_14_tfsi` | Audi A1 8X 1.4 TFSI | PROVISIONAL | 45 | 21 | 50 | 49 | 62 | 51 | 41 | 1125 | 80 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s1_8x` | Audi S1 8X 2.0 TFSI quattro | PROVISIONAL | 62 | 52 | 66 | 64 | 68 | 65 | 61 | 1315 | 129 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a1_gb_10_tfsi` | Audi A1 GB 1.0 TFSI | PROVISIONAL | 42 | 16 | 47 | 47 | 64 | 49 | 37 | 1145 | 71 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a1_gb_15_tfsi` | Audi A1 GB 1.5 TFSI | PROVISIONAL | 46 | 29 | 49 | 48 | 65 | 52 | 40 | 1190 | 92 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a1_gb_20_tfsi` | Audi A1 GB 2.0 TFSI | PROVISIONAL | 55 | 42 | 58 | 56 | 66 | 59 | 52 | 1245 | 118 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8p_16_tdi` | Audi A3 8P 1.6 TDI | PROVISIONAL | 40 | 15 | 44 | 46 | 61 | 49 | 35 | 1320 | 58 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8p_18_tfsi` | Audi A3 8P 1.8 TFSI | PROVISIONAL | 49 | 26 | 53 | 53 | 64 | 56 | 48 | 1335 | 88 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8v_14_tfsi` | Audi A3 8V 1.4 TFSI | PROVISIONAL | 44 | 17 | 48 | 48 | 65 | 52 | 39 | 1255 | 73 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8v_16_tdi` | Audi A3 8V 1.6 TDI | PROVISIONAL | 41 | 17 | 44 | 46 | 63 | 49 | 36 | 1315 | 62 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8v_20_tdi` | Audi A3 8V 2.0 TDI | PROVISIONAL | 44 | 28 | 45 | 47 | 64 | 50 | 36 | 1370 | 80 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8y_20_tdi` | Audi A3 8Y 2.0 TDI | PROVISIONAL | 44 | 28 | 45 | 47 | 64 | 50 | 36 | 1420 | 77 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b7_20_tfsi` | Audi A4 B7 2.0 TFSI | PROVISIONAL | 49 | 30 | 52 | 54 | 62 | 55 | 46 | 1450 | 101 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b7_20_tdi` | Audi A4 B7 2.0 TDI | PROVISIONAL | 41 | 22 | 44 | 46 | 60 | 48 | 34 | 1490 | 69 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s4_b7` | Audi S4 B7 4.2 V8 quattro | PROVISIONAL | 59 | 52 | 60 | 61 | 63 | 62 | 56 | 1715 | 148 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs4_b7` | Audi RS 4 B7 4.2 FSI quattro | PROVISIONAL | 68 | 63 | 72 | 70 | 66 | 70 | 68 | 1650 | 187 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b8_18_tfsi` | Audi A4 B8 1.8 TFSI | PROVISIONAL | 45 | 20 | 49 | 50 | 63 | 53 | 42 | 1505 | 78 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b8_20_tfsi` | Audi A4 B8/B8.5 2.0 TFSI | PROVISIONAL | 50 | 34 | 51 | 54 | 64 | 57 | 45 | 1540 | 101 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b8_20_tdi` | Audi A4 B8/B8.5 2.0 TDI | PROVISIONAL | 41 | 21 | 42 | 46 | 62 | 49 | 34 | 1535 | 68 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s4_b8` | Audi S4 B8/B8.5 3.0 TFSI quattro | PROVISIONAL | 63 | 55 | 63 | 65 | 69 | 67 | 61 | 1695 | 145 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b9_14_tfsi` | Audi A4 B9 1.4 TFSI | PROVISIONAL | 44 | 20 | 47 | 49 | 65 | 52 | 39 | 1430 | 77 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b9_20_tfsi` | Audi A4 B9/B9.5 2.0 TFSI | PROVISIONAL | 53 | 41 | 53 | 56 | 67 | 59 | 48 | 1515 | 122 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b9_20_tdi` | Audi A4 B9/B9.5 2.0 TDI | PROVISIONAL | 42 | 23 | 44 | 47 | 64 | 50 | 35 | 1510 | 73 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b9_30_tdi` | Audi A4 B9/B9.5 3.0 TDI quattro | PROVISIONAL | 51 | 57 | 47 | 51 | 64 | 54 | 40 | 1665 | 120 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_8t_18_tfsi` | Audi A5 8T 1.8 TFSI | PROVISIONAL | 46 | 26 | 50 | 50 | 63 | 53 | 42 | 1505 | 83 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_8t_20_tfsi` | Audi A5 8T 2.0 TFSI | PROVISIONAL | 50 | 34 | 51 | 54 | 64 | 57 | 46 | 1535 | 101 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_8t_30_tdi` | Audi A5 8T 3.0 TDI quattro | PROVISIONAL | 49 | 49 | 46 | 50 | 62 | 52 | 39 | 1640 | 110 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s5_8t` | Audi S5 8T 3.0 TFSI quattro | PROVISIONAL | 63 | 55 | 63 | 65 | 69 | 67 | 61 | 1695 | 145 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_f5_20_tfsi` | Audi A5 F5 2.0 TFSI | PROVISIONAL | 53 | 41 | 53 | 56 | 67 | 59 | 48 | 1525 | 121 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_f5_20_tdi` | Audi A5 F5 2.0 TDI | PROVISIONAL | 44 | 32 | 44 | 48 | 64 | 50 | 36 | 1570 | 89 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_f5_30_tdi` | Audi A5 F5 3.0 TDI quattro | PROVISIONAL | 52 | 59 | 47 | 51 | 64 | 54 | 40 | 1690 | 124 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c6_20_tfsi` | Audi A6 C6 2.0 TFSI | PROVISIONAL | 43 | 23 | 44 | 48 | 61 | 52 | 37 | 1540 | 81 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c6_30_tdi` | Audi A6 C6 3.0 TDI quattro | PROVISIONAL | 45 | 40 | 42 | 48 | 60 | 50 | 34 | 1725 | 99 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s6_c6` | Audi S6 C6 5.2 V10 quattro | PROVISIONAL | 59 | 61 | 55 | 62 | 62 | 63 | 53 | 1910 | 168 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c7_18_tfsi` | Audi A6 C7 1.8 TFSI | PROVISIONAL | 45 | 28 | 45 | 49 | 64 | 53 | 39 | 1540 | 91 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c7_20_tdi` | Audi A6 C7 2.0 TDI | PROVISIONAL | 43 | 30 | 42 | 47 | 63 | 50 | 34 | 1610 | 87 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c7_30_tdi` | Audi A6 C7 3.0 TDI quattro | PROVISIONAL | 49 | 53 | 44 | 50 | 64 | 54 | 37 | 1765 | 113 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c7_30_tfsi` | Audi A6 C7 3.0 TFSI quattro | PROVISIONAL | 56 | 53 | 53 | 58 | 67 | 63 | 50 | 1735 | 141 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s6_c7` | Audi S6 C7 4.0 TFSI quattro | PROVISIONAL | 63 | 65 | 59 | 65 | 68 | 69 | 57 | 1895 | 175 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs6_c7` | Audi RS 6 C7 4.0 TFSI quattro | PROVISIONAL | 70 | 81 | 65 | 71 | 68 | 73 | 64 | 1935 | 213 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c8_20_tdi` | Audi A6 C8 40 TDI | PROVISIONAL | 43 | 30 | 42 | 47 | 63 | 50 | 33 | 1680 | 89 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c8_30_tdi` | Audi A6 C8 50 TDI quattro | PROVISIONAL | 49 | 54 | 43 | 50 | 64 | 54 | 37 | 1825 | 115 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs6_c8` | Audi RS 6 C8 4.0 TFSI quattro | PROVISIONAL | 70 | 81 | 63 | 72 | 69 | 75 | 64 | 2075 | 213 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a7_c7_30_tfsi` | Audi A7 C7 3.0 TFSI quattro | PROVISIONAL | 56 | 51 | 52 | 58 | 67 | 63 | 49 | 1770 | 138 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a7_c7_30_tdi` | Audi A7 C7 3.0 TDI quattro | PROVISIONAL | 48 | 51 | 43 | 49 | 64 | 53 | 36 | 1810 | 110 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s7_c7` | Audi S7 C7 4.0 TFSI quattro | PROVISIONAL | 63 | 63 | 59 | 65 | 68 | 69 | 57 | 1945 | 170 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs7_c7` | Audi RS 7 C7 4.0 TFSI quattro | PROVISIONAL | 69 | 79 | 63 | 71 | 68 | 73 | 63 | 1995 | 207 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a7_c8_20_tfsi` | Audi A7 C8 45 TFSI | PROVISIONAL | 47 | 34 | 46 | 51 | 65 | 57 | 40 | 1760 | 102 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a8_d4_30_tdi` | Audi A8 D4 3.0 TDI quattro | PROVISIONAL | 44 | 47 | 37 | 47 | 62 | 52 | 31 | 1880 | 101 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a8_d4_40_tfsi` | Audi A8 D4 4.0 TFSI quattro | PROVISIONAL | 53 | 65 | 42 | 55 | 65 | 62 | 39 | 1910 | 168 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s8_d4` | Audi S8 D4 4.0 TFSI quattro | PROVISIONAL | 60 | 73 | 50 | 62 | 66 | 67 | 49 | 1975 | 193 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_tt_8j_18_tfsi` | Audi TT 8J 1.8 TFSI | PROVISIONAL | 53 | 30 | 62 | 56 | 64 | 57 | 53 | 1240 | 95 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_tt_8s_20_tfsi` | Audi TT 8S 2.0 TFSI | PROVISIONAL | 60 | 47 | 64 | 61 | 68 | 63 | 59 | 1320 | 128 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q2_ga_10_tfsi` | Audi Q2 GA 1.0 TFSI | PROVISIONAL | 39 | 15 | 40 | 45 | 63 | 48 | 32 | 1280 | 66 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q2_ga_14_tfsi` | Audi Q2 GA 1.4 TFSI | PROVISIONAL | 41 | 23 | 41 | 46 | 64 | 49 | 33 | 1340 | 82 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q3_f3_15_tfsi` | Audi Q3 F3 1.5 TFSI | PROVISIONAL | 39 | 17 | 38 | 45 | 65 | 50 | 32 | 1570 | 70 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q3_f3_20_tfsi` | Audi Q3 F3 2.0 TFSI quattro | PROVISIONAL | 43 | 30 | 41 | 47 | 65 | 52 | 34 | 1665 | 84 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs_q3_f3` | Audi RS Q3 F3 2.5 TFSI quattro | PROVISIONAL | 66 | 64 | 63 | 69 | 69 | 71 | 61 | 1715 | 171 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q5_fy_20_tfsi` | Audi Q5 FY 2.0 TFSI quattro | PROVISIONAL | 44 | 38 | 38 | 47 | 65 | 53 | 32 | 1795 | 103 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q5_fy_20_tdi` | Audi Q5 FY 2.0 TDI quattro | PROVISIONAL | 41 | 30 | 36 | 46 | 64 | 50 | 30 | 1810 | 77 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_sq5_fy` | Audi SQ5 FY 3.0 TFSI/TDI quattro | PROVISIONAL | 53 | 51 | 47 | 56 | 67 | 61 | 44 | 1935 | 134 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q7_4m_30_tdi` | Audi Q7 4M 3.0 TDI quattro | PROVISIONAL | 41 | 43 | 31 | 45 | 63 | 50 | 26 | 2070 | 97 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q7_4m_30_tfsi` | Audi Q7 4M 3.0 TFSI quattro | PROVISIONAL | 43 | 43 | 32 | 47 | 65 | 54 | 29 | 2050 | 120 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_sq7_4m` | Audi SQ7 4M 4.0 TDI/TFSI quattro | PROVISIONAL | 51 | 63 | 38 | 55 | 64 | 60 | 39 | 2330 | 137 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q8_4m_30_tdi` | Audi Q8 4M 3.0 TDI quattro | PROVISIONAL | 41 | 43 | 31 | 45 | 63 | 50 | 27 | 2145 | 98 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_sq8_4m` | Audi SQ8 4M 4.0 TDI/TFSI quattro | PROVISIONAL | 54 | 67 | 40 | 57 | 65 | 62 | 41 | 2270 | 164 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs_q8_4m` | Audi RS Q8 4M 4.0 TFSI quattro | PROVISIONAL | 64 | 75 | 53 | 68 | 66 | 71 | 56 | 2315 | 190 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q4_e_tron` | Audi Q4 e-tron MEB Electric | PROVISIONAL | 34 | 18 | 30 | 39 | 59 | 44 | 23 | 2050 | 73 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_e_tron_gt_j1` | Audi e-tron GT J1 Dual Motor | PROVISIONAL | 61 | 63 | 56 | 63 | 68 | 67 | 55 | 2295 | 170 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q8_e_tron` | Audi Q8 e-tron GE Electric | PROVISIONAL | 39 | 46 | 28 | 40 | 60 | 46 | 23 | 2585 | 116 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_sq8_e_tron` | Audi SQ8 e-tron GE Electric | PROVISIONAL | 44 | 63 | 31 | 44 | 60 | 48 | 26 | 2650 | 140 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `mercedes_a180_w176` | Mercedes-Benz A 180 W176 1.6 Turbo | PROVISIONAL | 42 | 16 | 45 | 47 | 63 | 50 | 37 | 1370 | 66 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_a200_w176` | Mercedes-Benz A 200 W176 1.6 Turbo | PROVISIONAL | 44 | 23 | 47 | 49 | 63 | 52 | 39 | 1395 | 82 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_a250_w176` | Mercedes-Benz A 250 W176 2.0 Turbo | PROVISIONAL | 52 | 38 | 55 | 54 | 64 | 57 | 49 | 1435 | 108 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_a45_amg_w176` | Mercedes-Benz A 45 AMG W176 4MATIC | PROVISIONAL | 69 | 66 | 71 | 71 | 68 | 71 | 69 | 1555 | 170 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_a250_w177` | Mercedes-Benz A 250 W177 2.0 Turbo | PROVISIONAL | 52 | 39 | 54 | 54 | 67 | 57 | 49 | 1455 | 113 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_b180_w246` | Mercedes-Benz B 180 W246 1.6 Turbo | PROVISIONAL | 39 | 15 | 40 | 46 | 62 | 49 | 32 | 1425 | 63 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_b200_w246` | Mercedes-Benz B 200 W246 1.6 Turbo | PROVISIONAL | 40 | 20 | 40 | 46 | 63 | 49 | 33 | 1450 | 79 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla200_c117` | Mercedes-Benz CLA 200 C117 1.6 Turbo | PROVISIONAL | 44 | 21 | 47 | 49 | 63 | 52 | 39 | 1430 | 80 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla250_c117` | Mercedes-Benz CLA 250 C117 2.0 Turbo | PROVISIONAL | 52 | 37 | 54 | 54 | 64 | 57 | 49 | 1465 | 106 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla45_amg_c117` | Mercedes-Benz CLA 45 AMG C117 4MATIC | PROVISIONAL | 68 | 65 | 69 | 70 | 68 | 71 | 68 | 1585 | 167 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla180_c118` | Mercedes-Benz CLA 180 C118 1.3 Turbo | PROVISIONAL | 42 | 16 | 46 | 47 | 64 | 50 | 37 | 1435 | 70 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla200_c118` | Mercedes-Benz CLA 200 C118 1.3 Turbo | PROVISIONAL | 44 | 22 | 47 | 48 | 65 | 52 | 39 | 1450 | 83 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla250_c118` | Mercedes-Benz CLA 250 C118 2.0 Turbo | PROVISIONAL | 52 | 38 | 53 | 54 | 67 | 57 | 48 | 1505 | 110 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c180_kompressor_w204` | Mercedes-Benz C 180 Kompressor W204 1.6/1.8 | PROVISIONAL | 43 | 17 | 48 | 49 | 62 | 51 | 40 | 1490 | 77 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c180_cgi_w204` | Mercedes-Benz C 180 CGI W204 1.6 Turbo | PROVISIONAL | 45 | 20 | 49 | 50 | 62 | 52 | 41 | 1510 | 76 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c200_cgi_w204` | Mercedes-Benz C 200 CGI W204 1.8 Turbo | PROVISIONAL | 47 | 26 | 51 | 51 | 63 | 53 | 43 | 1525 | 89 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c250_cgi_w204` | Mercedes-Benz C 250 CGI W204 1.8 Turbo | PROVISIONAL | 49 | 32 | 52 | 53 | 63 | 55 | 45 | 1540 | 97 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c350_w204` | Mercedes-Benz C 350 W204 3.5 V6 | PROVISIONAL | 54 | 46 | 55 | 56 | 65 | 59 | 49 | 1610 | 140 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c63_amg_w204` | Mercedes-Benz C 63 AMG W204 6.2 V8 | PROVISIONAL | 69 | 71 | 69 | 69 | 67 | 70 | 67 | 1730 | 194 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c180_w205` | Mercedes-Benz C 180 W205 1.6 Turbo | PROVISIONAL | 45 | 21 | 50 | 50 | 63 | 52 | 42 | 1485 | 77 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c200_w205` | Mercedes-Benz C 200 W205 2.0 Turbo | PROVISIONAL | 48 | 29 | 52 | 52 | 64 | 54 | 45 | 1505 | 90 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c250_w205` | Mercedes-Benz C 250 W205 2.0 Turbo | PROVISIONAL | 51 | 36 | 53 | 54 | 65 | 56 | 46 | 1535 | 101 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c300_w205` | Mercedes-Benz C 300 W205 2.0 Turbo | PROVISIONAL | 53 | 41 | 54 | 55 | 66 | 58 | 48 | 1560 | 115 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c43_amg_w205` | Mercedes-Benz C 43 AMG W205 4MATIC | PROVISIONAL | 66 | 64 | 65 | 67 | 68 | 69 | 64 | 1660 | 163 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c63_amg_w205` | Mercedes-Benz C 63 AMG W205 4.0 V8 | PROVISIONAL | 70 | 75 | 69 | 70 | 68 | 71 | 67 | 1715 | 204 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c180_w206` | Mercedes-Benz C 180 W206 1.5 mild hybrid | PROVISIONAL | 45 | 20 | 49 | 51 | 65 | 53 | 42 | 1600 | 78 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c300_w206` | Mercedes-Benz C 300 W206 2.0 mild hybrid | PROVISIONAL | 52 | 41 | 54 | 54 | 67 | 57 | 47 | 1665 | 114 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e200_kompressor_w211` | Mercedes-Benz E 200 Kompressor W211 1.8 | PROVISIONAL | 40 | 20 | 41 | 47 | 59 | 49 | 34 | 1570 | 86 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e280_w211` | Mercedes-Benz E 280 W211 3.0 V6 | PROVISIONAL | 44 | 31 | 43 | 48 | 60 | 52 | 35 | 1635 | 104 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e350_w211` | Mercedes-Benz E 350 W211 3.5 V6 | PROVISIONAL | 46 | 38 | 44 | 50 | 61 | 53 | 37 | 1660 | 120 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e55_amg_w211` | Mercedes-Benz E 55 AMG W211 5.4 Supercharged V8 | PROVISIONAL | 63 | 71 | 59 | 64 | 63 | 66 | 56 | 1835 | 191 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e63_amg_w211` | Mercedes-Benz E 63 AMG W211 6.2 V8 | PROVISIONAL | 65 | 73 | 61 | 66 | 64 | 67 | 58 | 1840 | 205 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e180_w212` | Mercedes-Benz E 180 W212 1.6 Turbo | PROVISIONAL | 40 | 17 | 41 | 46 | 62 | 50 | 33 | 1605 | 72 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e200_cgi_w212` | Mercedes-Benz E 200 CGI W212 1.8 Turbo | PROVISIONAL | 41 | 22 | 42 | 47 | 62 | 51 | 34 | 1640 | 82 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e250_cgi_w212` | Mercedes-Benz E 250 CGI W212 1.8 Turbo | PROVISIONAL | 44 | 28 | 43 | 48 | 63 | 53 | 36 | 1660 | 90 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e400_w212` | Mercedes-Benz E 400 W212 3.0 V6 biturbo | PROVISIONAL | 52 | 52 | 48 | 54 | 65 | 59 | 42 | 1715 | 143 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e63_s_amg_w212` | Mercedes-Benz E 63 S AMG W212 5.5 V8 biturbo | PROVISIONAL | 70 | 83 | 65 | 71 | 67 | 73 | 64 | 1940 | 222 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e180_w213` | Mercedes-Benz E 180 W213 1.6 Turbo | PROVISIONAL | 41 | 17 | 42 | 47 | 63 | 50 | 34 | 1615 | 71 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e200_w213` | Mercedes-Benz E 200 W213 2.0 Turbo | PROVISIONAL | 43 | 25 | 44 | 48 | 64 | 53 | 36 | 1640 | 82 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e300_w213` | Mercedes-Benz E 300 W213 2.0 Turbo | PROVISIONAL | 47 | 37 | 45 | 50 | 65 | 55 | 38 | 1680 | 107 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e43_amg_w213` | Mercedes-Benz E 43 AMG W213 4MATIC | PROVISIONAL | 62 | 61 | 59 | 64 | 67 | 67 | 57 | 1840 | 160 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e53_amg_w213` | Mercedes-Benz E 53 AMG W213 3.0 mild hybrid | PROVISIONAL | 61 | 62 | 58 | 63 | 67 | 67 | 56 | 1900 | 168 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e63_s_amg_w213` | Mercedes-Benz E 63 S AMG W213 4MATIC+ | PROVISIONAL | 72 | 85 | 66 | 73 | 68 | 75 | 66 | 1955 | 230 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e200_w214` | Mercedes-Benz E 200 W214 2.0 mild hybrid | PROVISIONAL | 42 | 26 | 41 | 48 | 64 | 52 | 33 | 1765 | 85 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e300e_w214` | Mercedes-Benz E 300e W214 Plug-in Hybrid | PROVISIONAL | 41 | 42 | 35 | 44 | 60 | 48 | 27 | 2050 | 112 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e450_w214` | Mercedes-Benz E 450 W214 3.0 mild hybrid | PROVISIONAL | 51 | 56 | 44 | 52 | 66 | 59 | 38 | 1900 | 147 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e53_hybrid_amg_w214` | Mercedes-Benz E 53 Hybrid AMG W214 Plug-in Hybrid | PROVISIONAL | 62 | 75 | 54 | 64 | 63 | 66 | 54 | 2190 | 196 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s350_w221` | Mercedes-Benz S 350 W221 3.5 V6 | PROVISIONAL | 41 | 32 | 35 | 47 | 60 | 52 | 29 | 1880 | 106 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s500_w221` | Mercedes-Benz S 500 W221 5.5 V8 | PROVISIONAL | 46 | 52 | 37 | 50 | 62 | 55 | 32 | 1945 | 147 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s63_amg_w221` | Mercedes-Benz S 63 AMG W221 5.5 V8 biturbo | PROVISIONAL | 57 | 72 | 46 | 60 | 63 | 65 | 44 | 2070 | 193 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s400_w222` | Mercedes-Benz S 400 W222 3.0 V6 | PROVISIONAL | 44 | 44 | 36 | 48 | 63 | 54 | 30 | 1925 | 127 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s560_w222` | Mercedes-Benz S 560 W222 4.0 V8 | PROVISIONAL | 51 | 67 | 37 | 53 | 64 | 59 | 34 | 2070 | 167 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s63_amg_w222` | Mercedes-Benz S 63 AMG W222 4MATIC+ | PROVISIONAL | 62 | 82 | 50 | 64 | 65 | 68 | 49 | 2070 | 217 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s580_w223` | Mercedes-Benz S 580 W223 4.0 mild hybrid | PROVISIONAL | 50 | 68 | 36 | 52 | 65 | 58 | 33 | 2150 | 172 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s63_e_performance_w223` | Mercedes-Benz S 63 E Performance AMG W223 Plug-in Hybrid | PROVISIONAL | 61 | 86 | 46 | 63 | 62 | 65 | 47 | 2520 | 234 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gla180_h247` | Mercedes-Benz GLA 180 H247 1.3 | PROVISIONAL | 38 | 13 | 38 | 45 | 63 | 49 | 31 | 1505 | 66 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gla250_h247` | Mercedes-Benz GLA 250 H247 2.0 4MATIC | PROVISIONAL | 45 | 37 | 43 | 49 | 64 | 53 | 35 | 1610 | 102 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gla35_amg_h247` | Mercedes-Benz GLA 35 AMG H247 4MATIC | PROVISIONAL | 57 | 49 | 55 | 61 | 67 | 63 | 51 | 1710 | 132 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gla45_amg_h247` | Mercedes-Benz GLA 45 AMG H247 4MATIC+ | PROVISIONAL | 64 | 62 | 61 | 67 | 68 | 69 | 59 | 1765 | 161 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glb200_x247` | Mercedes-Benz GLB 200 X247 1.3 | PROVISIONAL | 38 | 18 | 36 | 44 | 63 | 49 | 29 | 1555 | 77 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glb250_x247` | Mercedes-Benz GLB 250 X247 2.0 4MATIC | PROVISIONAL | 43 | 35 | 37 | 48 | 64 | 53 | 32 | 1705 | 97 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glb35_amg_x247` | Mercedes-Benz GLB 35 AMG X247 4MATIC | PROVISIONAL | 53 | 47 | 49 | 58 | 67 | 61 | 46 | 1775 | 127 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glc200_x253` | Mercedes-Benz GLC 200 X253 2.0 | PROVISIONAL | 39 | 22 | 36 | 46 | 63 | 50 | 29 | 1735 | 78 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glc300d_x253` | Mercedes-Benz GLC 300d X253 2.0 diesel 4MATIC | PROVISIONAL | 42 | 41 | 35 | 45 | 63 | 50 | 28 | 1860 | 97 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glc43_amg_x253` | Mercedes-Benz GLC 43 AMG X253 4MATIC | PROVISIONAL | 56 | 57 | 50 | 59 | 66 | 63 | 47 | 1845 | 146 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glc63_s_amg_x253` | Mercedes-Benz GLC 63 S AMG X253 4.0 V8 4MATIC+ | PROVISIONAL | 65 | 77 | 56 | 67 | 66 | 69 | 56 | 1935 | 194 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gle300d_v167` | Mercedes-Benz GLE 300d V167 2.0 diesel 4MATIC | PROVISIONAL | 38 | 34 | 28 | 43 | 62 | 48 | 24 | 2170 | 83 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gle450_v167` | Mercedes-Benz GLE 450 V167 3.0 mild hybrid | PROVISIONAL | 42 | 45 | 30 | 46 | 64 | 52 | 27 | 2220 | 122 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gle53_amg_v167` | Mercedes-Benz GLE 53 AMG V167 3.0 mild hybrid | PROVISIONAL | 49 | 49 | 39 | 53 | 65 | 59 | 38 | 2305 | 139 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gle63_s_amg_v167` | Mercedes-Benz GLE 63 S AMG V167 4.0 V8 mild hybrid | PROVISIONAL | 60 | 74 | 48 | 64 | 64 | 67 | 50 | 2450 | 184 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gls350d_x167` | Mercedes-Benz GLS 350d X167 3.0 diesel 4MATIC | PROVISIONAL | 36 | 36 | 24 | 42 | 61 | 48 | 22 | 2460 | 85 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gls450_x167` | Mercedes-Benz GLS 450 X167 3.0 mild hybrid | PROVISIONAL | 38 | 39 | 26 | 44 | 62 | 50 | 24 | 2460 | 110 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gls580_x167` | Mercedes-Benz GLS 580 X167 4.0 mild hybrid | PROVISIONAL | 43 | 55 | 28 | 47 | 62 | 53 | 26 | 2535 | 142 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gls63_amg_x167` | Mercedes-Benz GLS 63 AMG X167 4.0 V8 mild hybrid | PROVISIONAL | 54 | 68 | 39 | 60 | 63 | 63 | 41 | 2630 | 171 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_g350d_w463` | Mercedes-Benz G 350d W463 3.0 diesel | PROVISIONAL | 35 | 35 | 22 | 41 | 61 | 47 | 20 | 2450 | 86 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_g400d_w463` | Mercedes-Benz G 400d W463 3.0 diesel | PROVISIONAL | 37 | 43 | 22 | 41 | 61 | 47 | 20 | 2480 | 98 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_g500_w463` | Mercedes-Benz G 500 W463 4.0 V8 | PROVISIONAL | 40 | 48 | 24 | 45 | 62 | 52 | 23 | 2429 | 128 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_g63_amg_w463` | Mercedes-Benz G 63 AMG W463 4.0 V8 | PROVISIONAL | 50 | 67 | 33 | 56 | 62 | 60 | 35 | 2560 | 168 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_slk200_r172` | Mercedes-Benz SLK 200 R172 1.8 Turbo | PROVISIONAL | 52 | 30 | 60 | 55 | 63 | 56 | 51 | 1435 | 94 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_slk350_r172` | Mercedes-Benz SLK 350 R172 3.5 V6 | PROVISIONAL | 58 | 49 | 62 | 60 | 65 | 60 | 55 | 1540 | 146 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_slk55_amg_r172` | Mercedes-Benz SLK 55 AMG R172 5.5 V8 | PROVISIONAL | 66 | 69 | 66 | 66 | 64 | 66 | 61 | 1610 | 193 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_slc43_amg_r172` | Mercedes-Benz SLC 43 AMG R172 3.0 V6 biturbo | PROVISIONAL | 64 | 63 | 64 | 65 | 67 | 65 | 60 | 1595 | 169 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_sl350_r230` | Mercedes-Benz SL 350 R230 3.5 V6 | PROVISIONAL | 51 | 39 | 52 | 56 | 63 | 58 | 46 | 1815 | 128 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_sl55_amg_r230` | Mercedes-Benz SL 55 AMG R230 5.4 Supercharged V8 | PROVISIONAL | 63 | 70 | 59 | 65 | 64 | 67 | 56 | 1955 | 188 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_sl500_r231` | Mercedes-Benz SL 500 R231 4.7 V8 | PROVISIONAL | 60 | 71 | 54 | 60 | 64 | 63 | 50 | 1785 | 188 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_sl63_amg_r231` | Mercedes-Benz SL 63 AMG R231 5.5 V8 biturbo | PROVISIONAL | 68 | 81 | 63 | 69 | 64 | 69 | 60 | 1845 | 233 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqa_250` | Mercedes-Benz EQA H243 250 | PROVISIONAL | 32 | 19 | 28 | 38 | 57 | 42 | 21 | 2040 | 69 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqb_350` | Mercedes-Benz EQB X243 350 4MATIC | PROVISIONAL | 36 | 39 | 27 | 39 | 57 | 42 | 21 | 2175 | 99 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqc_400` | Mercedes-Benz EQC N293 400 4MATIC | PROVISIONAL | 38 | 52 | 26 | 39 | 56 | 42 | 21 | 2495 | 120 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqe_350` | Mercedes-Benz EQE V295 350+ | PROVISIONAL | 36 | 34 | 28 | 40 | 58 | 44 | 23 | 2355 | 91 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqe53_amg` | Mercedes-Benz EQE 53 AMG V295 4MATIC+ | PROVISIONAL | 52 | 73 | 42 | 51 | 58 | 53 | 37 | 2525 | 182 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqs_580` | Mercedes-Benz EQS V297 580 4MATIC | PROVISIONAL | 41 | 62 | 27 | 41 | 58 | 44 | 22 | 2585 | 149 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqs53_amg` | Mercedes-Benz EQS 53 AMG V297 4MATIC+ | PROVISIONAL | 53 | 80 | 41 | 53 | 58 | 53 | 38 | 2655 | 211 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `bmw_116i_e87` | BMW 116i E87 1.6 | PROVISIONAL | 42 | 11 | 50 | 47 | 60 | 49 | 40 | 1280 | 66 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_118i_e87` | BMW 118i E87 2.0 | PROVISIONAL | 44 | 16 | 51 | 48 | 60 | 50 | 41 | 1295 | 73 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_120i_e87` | BMW 120i E87 2.0 | PROVISIONAL | 45 | 20 | 52 | 49 | 61 | 51 | 42 | 1315 | 84 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_130i_e87` | BMW 130i E87 3.0 | PROVISIONAL | 59 | 43 | 66 | 61 | 66 | 62 | 59 | 1450 | 134 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_116i_f20` | BMW 116i F20 1.6 Turbo | PROVISIONAL | 45 | 20 | 50 | 49 | 62 | 51 | 42 | 1375 | 73 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_118i_f20` | BMW 118i F20 1.6 Turbo | PROVISIONAL | 48 | 27 | 53 | 51 | 63 | 53 | 45 | 1385 | 90 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_120i_f20_lci` | BMW 120i F20 LCI 2.0 B48 | PROVISIONAL | 50 | 31 | 54 | 52 | 66 | 55 | 47 | 1395 | 97 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_125i_f20` | BMW 125i F20 2.0 Turbo | PROVISIONAL | 53 | 38 | 58 | 55 | 65 | 57 | 50 | 1430 | 112 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_128ti_f40` | BMW 128ti F40 2.0 | PROVISIONAL | 61 | 45 | 65 | 64 | 69 | 65 | 61 | 1520 | 128 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_218i_f22` | BMW 218i F22 1.5 | PROVISIONAL | 47 | 19 | 54 | 50 | 64 | 52 | 45 | 1375 | 73 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_220i_f22` | BMW 220i F22 2.0 | PROVISIONAL | 51 | 31 | 57 | 53 | 65 | 55 | 48 | 1420 | 95 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_230i_g42` | BMW 230i G42 2.0 B48 | PROVISIONAL | 59 | 44 | 63 | 61 | 69 | 62 | 57 | 1545 | 117 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_318i_e46` | BMW 318i E46 2.0 | PROVISIONAL | 44 | 17 | 51 | 49 | 59 | 51 | 42 | 1395 | 75 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_320i_e46` | BMW 320i E46 2.2 inline-six | PROVISIONAL | 46 | 21 | 53 | 51 | 61 | 53 | 44 | 1460 | 86 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_325i_e46` | BMW 325i E46 2.5 inline-six | PROVISIONAL | 49 | 27 | 55 | 53 | 62 | 55 | 47 | 1490 | 95 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_330i_e46` | BMW 330i E46 3.0 inline-six | PROVISIONAL | 55 | 36 | 61 | 57 | 63 | 58 | 54 | 1505 | 113 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_316i_e90` | BMW 316i E90 1.6 | PROVISIONAL | 41 | 10 | 49 | 47 | 58 | 49 | 39 | 1435 | 63 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_320i_e90` | BMW 320i E90 2.0 | PROVISIONAL | 44 | 18 | 51 | 49 | 59 | 51 | 42 | 1460 | 75 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_325i_e90` | BMW 325i E90 3.0 | PROVISIONAL | 50 | 30 | 55 | 53 | 62 | 55 | 47 | 1505 | 106 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_330i_e90` | BMW 330i E90 3.0 | PROVISIONAL | 54 | 39 | 59 | 56 | 63 | 58 | 53 | 1525 | 125 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_335i_e90` | BMW 335i E90 N54 | PROVISIONAL | 58 | 49 | 61 | 60 | 63 | 61 | 56 | 1605 | 140 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_316i_f30` | BMW 316i F30 1.6 Turbo | PROVISIONAL | 44 | 17 | 51 | 49 | 62 | 51 | 42 | 1495 | 67 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_320i_f30` | BMW 320i F30 N20 2.0 | PROVISIONAL | 50 | 28 | 55 | 53 | 65 | 55 | 47 | 1500 | 90 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_328i_f30` | BMW 328i F30 N20 2.0 | PROVISIONAL | 57 | 41 | 62 | 58 | 66 | 60 | 56 | 1525 | 118 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_318i_g20` | BMW 318i G20 1.5 | PROVISIONAL | 46 | 21 | 51 | 51 | 66 | 53 | 43 | 1515 | 76 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_520i_e60` | BMW 520i E60 2.0 | PROVISIONAL | 42 | 18 | 46 | 49 | 59 | 51 | 38 | 1565 | 80 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_525i_e60` | BMW 525i E60 3.0 | PROVISIONAL | 46 | 27 | 48 | 51 | 61 | 53 | 41 | 1580 | 101 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_530i_e60` | BMW 530i E60 3.0 | PROVISIONAL | 50 | 36 | 52 | 54 | 63 | 57 | 46 | 1605 | 118 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_550i_e60` | BMW 550i E60 4.8 V8 | PROVISIONAL | 55 | 54 | 52 | 58 | 60 | 61 | 48 | 1735 | 156 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_520i_f10` | BMW 520i F10 2.0 Turbo | PROVISIONAL | 44 | 22 | 47 | 49 | 64 | 53 | 40 | 1690 | 80 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_528i_f10` | BMW 528i F10 2.0 Turbo | PROVISIONAL | 51 | 36 | 52 | 54 | 65 | 57 | 47 | 1700 | 106 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_550i_f10` | BMW 550i F10 4.4 V8 | PROVISIONAL | 55 | 60 | 51 | 58 | 60 | 61 | 46 | 1880 | 160 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_520i_g30` | BMW 520i G30 B48 1.6 | PROVISIONAL | 46 | 24 | 49 | 50 | 67 | 55 | 42 | 1615 | 77 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_530i_g30` | BMW 530i G30 B48 2.0 | PROVISIONAL | 54 | 39 | 56 | 56 | 69 | 60 | 50 | 1615 | 115 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_550e_g60` | BMW 550e G60 Plug-in Hybrid | PROVISIONAL | 58 | 72 | 51 | 57 | 66 | 59 | 46 | 1970 | 183 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_730i_e65` | BMW 730i E65 3.0 | PROVISIONAL | 42 | 28 | 40 | 49 | 60 | 52 | 33 | 1810 | 105 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_740i_e65` | BMW 740i E65 4.0 V8 | PROVISIONAL | 44 | 37 | 39 | 49 | 58 | 54 | 33 | 1900 | 118 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_750i_f01` | BMW 750i F01 4.4 V8 | PROVISIONAL | 50 | 57 | 42 | 54 | 58 | 58 | 37 | 1945 | 154 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_750li_g12` | BMW 750Li G12 4.4 V8 | PROVISIONAL | 51 | 64 | 40 | 55 | 60 | 60 | 37 | 2040 | 162 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x1_20i_f48` | BMW X1 20i F48 xDrive | PROVISIONAL | 43 | 30 | 41 | 47 | 64 | 50 | 34 | 1560 | 90 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x2_m35i_f39` | BMW X2 M35i F39 xDrive | PROVISIONAL | 59 | 56 | 56 | 61 | 69 | 64 | 52 | 1610 | 140 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x3_30i_g01` | BMW X3 30i G01 xDrive | PROVISIONAL | 49 | 37 | 47 | 52 | 68 | 57 | 41 | 1785 | 104 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x4_30i_g02` | BMW X4 30i G02 xDrive | PROVISIONAL | 49 | 37 | 48 | 52 | 68 | 57 | 43 | 1815 | 102 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x5_40i_g05` | BMW X5 40i G05 xDrive | PROVISIONAL | 47 | 45 | 38 | 52 | 67 | 58 | 35 | 2060 | 121 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x5_50e_g05` | BMW X5 50e G05 LCI Plug-in Hybrid | PROVISIONAL | 46 | 56 | 34 | 50 | 63 | 54 | 32 | 2490 | 145 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x6_40i_g06` | BMW X6 40i G06 xDrive | PROVISIONAL | 47 | 43 | 38 | 51 | 67 | 58 | 35 | 2130 | 117 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x7_40i_g07` | BMW X7 40i G07 xDrive | PROVISIONAL | 41 | 37 | 29 | 47 | 66 | 54 | 28 | 2420 | 103 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_xm_g09` | BMW XM G09 Plug-in Hybrid xDrive | PROVISIONAL | 56 | 66 | 44 | 62 | 60 | 64 | 45 | 2710 | 177 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
 
 ## Review Signals
 
@@ -1239,23 +2245,23 @@ No threshold-breaching review signals were detected.
 | `ford_mustang_gt_s550` | Ford Mustang GT S550 5.0 V8 | PROVISIONAL | 67 | 68 | 65 | 67 | 72 | 69 | 64 | 1720 | 192 | 0 | PROVISIONAL | - |
 | `ford_mustang_dark_horse_s650` | Ford Mustang Dark Horse S650 5.0 V8 | CALIBRATED | 73 | 72 | 73 | 74 | 74 | 76 | 72 | 1790 | 208 | 0 | REVIEWED_ADJUSTED | - |
 | `mercedes_a200_w177` | Mercedes-Benz A 200 W177 1.3 Turbo | PROVISIONAL | 50 | 25 | 54 | 54 | 67 | 57 | 49 | 1375 | 87 | 0 | PROVISIONAL | - |
-| `mercedes_amg_a35_w177` | Mercedes-AMG A 35 W177 4MATIC | PROVISIONAL | 67 | 55 | 70 | 69 | 71 | 70 | 68 | 1555 | 145 | 0 | PROVISIONAL | - |
-| `mercedes_amg_a45_s_w177` | Mercedes-AMG A 45 S W177 4MATIC+ | CALIBRATED | 73 | 71 | 75 | 74 | 71 | 74 | 74 | 1635 | 190 | 0 | REVIEWED_ADJUSTED | - |
-| `mercedes_amg_cla35_c118` | Mercedes-AMG CLA 35 C118 4MATIC | PROVISIONAL | 66 | 54 | 69 | 67 | 71 | 69 | 67 | 1585 | 142 | 0 | PROVISIONAL | - |
-| `mercedes_amg_cla45_s_c118` | Mercedes-AMG CLA 45 S C118 4MATIC+ | PROVISIONAL | 72 | 69 | 73 | 74 | 71 | 74 | 72 | 1675 | 185 | 0 | PROVISIONAL | - |
+| `mercedes_amg_a35_w177` | Mercedes-Benz A 35 AMG W177 4MATIC | PROVISIONAL | 67 | 55 | 70 | 69 | 71 | 70 | 68 | 1555 | 145 | 0 | PROVISIONAL | - |
+| `mercedes_amg_a45_s_w177` | Mercedes-Benz A 45 S AMG W177 4MATIC+ | CALIBRATED | 73 | 71 | 75 | 74 | 71 | 74 | 74 | 1635 | 190 | 0 | REVIEWED_ADJUSTED | - |
+| `mercedes_amg_cla35_c118` | Mercedes-Benz CLA 35 AMG C118 4MATIC | PROVISIONAL | 66 | 54 | 69 | 67 | 71 | 69 | 67 | 1585 | 142 | 0 | PROVISIONAL | - |
+| `mercedes_amg_cla45_s_c118` | Mercedes-Benz CLA 45 S AMG C118 4MATIC+ | PROVISIONAL | 72 | 69 | 73 | 74 | 71 | 74 | 72 | 1675 | 185 | 0 | PROVISIONAL | - |
 | `mercedes_c200_w206` | Mercedes-Benz C 200 W206 1.5 mild hybrid | PROVISIONAL | 51 | 29 | 54 | 54 | 67 | 59 | 49 | 1640 | 91 | 0 | PROVISIONAL | - |
-| `mercedes_amg_c43_w206` | Mercedes-AMG C 43 W206 4MATIC | PROVISIONAL | 67 | 63 | 68 | 69 | 69 | 71 | 66 | 1765 | 170 | 0 | PROVISIONAL | - |
-| `mercedes_amg_c63_s_w205` | Mercedes-AMG C 63 S W205 4.0 V8 | PROVISIONAL | 72 | 78 | 70 | 71 | 69 | 72 | 69 | 1730 | 217 | 0 | PROVISIONAL | - |
-| `mercedes_amg_c63_s_e_performance_w206` | Mercedes-AMG C 63 S E Performance W206 PHEV | PROVISIONAL | 73 | 87 | 66 | 73 | 67 | 77 | 67 | 2111 | 237 | 0 | PROVISIONAL | - |
+| `mercedes_amg_c43_w206` | Mercedes-Benz C 43 AMG W206 4MATIC | PROVISIONAL | 67 | 63 | 68 | 69 | 69 | 71 | 66 | 1765 | 170 | 0 | PROVISIONAL | - |
+| `mercedes_amg_c63_s_w205` | Mercedes-Benz C 63 S AMG W205 4.0 V8 | PROVISIONAL | 72 | 78 | 70 | 71 | 69 | 72 | 69 | 1730 | 217 | 0 | PROVISIONAL | - |
+| `mercedes_amg_c63_s_e_performance_w206` | Mercedes-Benz C 63 S E Performance AMG W206 PHEV | PROVISIONAL | 73 | 87 | 66 | 73 | 67 | 77 | 67 | 2111 | 237 | 0 | PROVISIONAL | - |
 | `audi_a3_35_tfsi_8y` | Audi A3 35 TFSI 8Y 1.5 TFSI | PROVISIONAL | 49 | 22 | 54 | 54 | 68 | 57 | 49 | 1395 | 79 | 0 | PROVISIONAL | - |
 | `audi_s3_8v` | Audi S3 8V 2.0 TFSI quattro | PROVISIONAL | 66 | 56 | 69 | 67 | 71 | 69 | 66 | 1505 | 147 | 0 | PROVISIONAL | - |
 | `audi_s3_8y` | Audi S3 8Y 2.0 TFSI quattro | PROVISIONAL | 66 | 55 | 69 | 67 | 71 | 69 | 67 | 1575 | 145 | 0 | PROVISIONAL | - |
-| `audi_rs3_8v` | Audi Sport RS 3 8V 2.5 TFSI quattro | PROVISIONAL | 70 | 65 | 71 | 72 | 70 | 72 | 70 | 1595 | 169 | 0 | PROVISIONAL | - |
-| `audi_rs3_8y` | Audi Sport RS 3 8Y 2.5 TFSI quattro | PROVISIONAL | 73 | 69 | 75 | 74 | 71 | 74 | 73 | 1645 | 179 | 0 | PROVISIONAL | - |
+| `audi_rs3_8v` | Audi RS 3 8V 2.5 TFSI quattro | PROVISIONAL | 70 | 65 | 71 | 72 | 70 | 72 | 70 | 1595 | 169 | 0 | PROVISIONAL | - |
+| `audi_rs3_8y` | Audi RS 3 8Y 2.5 TFSI quattro | PROVISIONAL | 73 | 69 | 75 | 74 | 71 | 74 | 73 | 1645 | 179 | 0 | PROVISIONAL | - |
 | `audi_s4_b9` | Audi S4 B9 3.0 TFSI quattro | PROVISIONAL | 65 | 60 | 65 | 67 | 71 | 69 | 64 | 1705 | 152 | 0 | PROVISIONAL | - |
-| `audi_rs4_b9` | Audi Sport RS 4 B9 2.9 TFSI quattro | PROVISIONAL | 70 | 72 | 70 | 71 | 70 | 72 | 68 | 1790 | 185 | 0 | PROVISIONAL | - |
+| `audi_rs4_b9` | Audi RS 4 B9 2.9 TFSI quattro | PROVISIONAL | 70 | 72 | 70 | 71 | 70 | 72 | 68 | 1790 | 185 | 0 | PROVISIONAL | - |
 | `audi_tts_8s` | Audi TTS 8S 2.0 TFSI quattro | PROVISIONAL | 69 | 60 | 72 | 69 | 71 | 70 | 70 | 1410 | 162 | 0 | PROVISIONAL | - |
-| `audi_tt_rs_8s` | Audi Sport TT RS 8S 2.5 TFSI quattro | PROVISIONAL | 74 | 74 | 75 | 74 | 71 | 74 | 73 | 1500 | 196 | 0 | PROVISIONAL | - |
+| `audi_tt_rs_8s` | Audi TT RS 8S 2.5 TFSI quattro | PROVISIONAL | 74 | 74 | 75 | 74 | 71 | 74 | 73 | 1500 | 196 | 0 | PROVISIONAL | - |
 | `toyota_gr_yaris_gen1` | Toyota GR Yaris Gen 1 1.6 Turbo AWD | CALIBRATED | 75 | 57 | 84 | 76 | 77 | 75 | 80 | 1280 | 150 | 0 | OK | - |
 | `toyota_gr_yaris_gen2` | Toyota GR Yaris Gen 2 1.6 Turbo AWD | CALIBRATED | 77 | 62 | 85 | 78 | 78 | 77 | 82 | 1300 | 158 | 0 | OK | - |
 | `toyota_gr86_zn8` | Toyota GR86 ZN8 2.4 | PROVISIONAL | 67 | 41 | 79 | 67 | 75 | 68 | 71 | 1275 | 136 | 0 | PROVISIONAL | - |
@@ -1278,12 +2284,12 @@ No threshold-breaching review signals were detected.
 | `bmw_m135i_f40` | BMW M135i F40 xDrive | PROVISIONAL | 67 | 60 | 69 | 67 | 71 | 69 | 66 | 1525 | 148 | 0 | PROVISIONAL | - |
 | `bmw_m140i_f20` | BMW M140i F20 B58 | PROVISIONAL | 69 | 65 | 72 | 68 | 72 | 70 | 70 | 1475 | 169 | 0 | PROVISIONAL | - |
 | `bmw_m240i_g42` | BMW M240i G42 B58TU2 xDrive | PROVISIONAL | 69 | 64 | 70 | 69 | 73 | 72 | 68 | 1690 | 163 | 0 | PROVISIONAL | - |
-| `bmw_m2_f87` | BMW M M2 F87 Competition | CALIBRATED | 77 | 70 | 80 | 78 | 73 | 78 | 79 | 1625 | 186 | 0 | REVIEWED_ADJUSTED | - |
-| `bmw_m2_g87` | BMW M M2 G87 S58 | CALIBRATED | 77 | 71 | 80 | 79 | 74 | 80 | 78 | 1725 | 196 | 0 | REVIEWED_ADJUSTED | - |
-| `bmw_m3_f80` | BMW M M3 F80 Competition | PROVISIONAL | 77 | 76 | 79 | 78 | 72 | 78 | 78 | 1585 | 209 | 0 | PROVISIONAL | - |
-| `bmw_m3_g80` | BMW M M3 G80 Competition | PROVISIONAL | 78 | 79 | 80 | 79 | 73 | 80 | 78 | 1730 | 217 | 0 | PROVISIONAL | - |
-| `bmw_m4_f82` | BMW M M4 F82 Competition | PROVISIONAL | 77 | 75 | 79 | 78 | 72 | 78 | 78 | 1590 | 208 | 0 | PROVISIONAL | - |
-| `bmw_m4_g82` | BMW M M4 G82 Competition | PROVISIONAL | 78 | 79 | 80 | 79 | 73 | 80 | 78 | 1725 | 217 | 0 | PROVISIONAL | - |
+| `bmw_m2_f87` | BMW M2 F87 Competition | CALIBRATED | 77 | 70 | 80 | 78 | 73 | 78 | 79 | 1625 | 186 | 0 | REVIEWED_ADJUSTED | - |
+| `bmw_m2_g87` | BMW M2 G87 S58 | CALIBRATED | 77 | 71 | 80 | 79 | 74 | 80 | 78 | 1725 | 196 | 0 | REVIEWED_ADJUSTED | - |
+| `bmw_m3_f80` | BMW M3 F80 Competition | PROVISIONAL | 77 | 76 | 79 | 78 | 72 | 78 | 78 | 1585 | 209 | 0 | PROVISIONAL | - |
+| `bmw_m3_g80` | BMW M3 G80 Competition | PROVISIONAL | 78 | 79 | 80 | 79 | 73 | 80 | 78 | 1730 | 217 | 0 | PROVISIONAL | - |
+| `bmw_m4_f82` | BMW M4 F82 Competition | PROVISIONAL | 77 | 75 | 79 | 78 | 72 | 78 | 78 | 1590 | 208 | 0 | PROVISIONAL | - |
+| `bmw_m4_g82` | BMW M4 G82 Competition | PROVISIONAL | 78 | 79 | 80 | 79 | 73 | 80 | 78 | 1725 | 217 | 0 | PROVISIONAL | - |
 | `hyundai_elantra_n` | Hyundai Elantra N CN7 2.0 T-GDi | CALIBRATED | 72 | 50 | 79 | 77 | 75 | 75 | 78 | 1480 | 139 | 0 | OK | - |
 | `hyundai_kona_n` | Hyundai Kona N OS 2.0 T-GDi | PROVISIONAL | 67 | 48 | 71 | 71 | 72 | 71 | 69 | 1510 | 136 | 0 | PROVISIONAL | - |
 | `honda_s2000_ap1` | Honda S2000 AP1 2.0 VTEC | PROVISIONAL | 68 | 40 | 80 | 69 | 76 | 70 | 73 | 1260 | 140 | 0 | PROVISIONAL | - |
@@ -1374,14 +2380,14 @@ No threshold-breaching review signals were detected.
 | `porsche_911_st_992` | Porsche 911 S/T 992 4.0 | CALIBRATED | 89 | 90 | 91 | 89 | 80 | 87 | 90 | 1380 | 280 | 0 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `alpine_a110_gt` | Alpine A110 GT A110 300 PS | CALIBRATED | 76 | 68 | 83 | 75 | 73 | 73 | 77 | 1119 | 197 | 0 | OK | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `alpine_a110_r_ultime` | Alpine A110 R Ultime A110 345 PS | PROVISIONAL | 83 | 81 | 90 | 82 | 73 | 78 | 84 | 1120 | 227 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
-| `audi_rs5_b9` | Audi Sport RS 5 B9 2.9 TFSI quattro | PROVISIONAL | 73 | 76 | 71 | 74 | 72 | 75 | 70 | 1715 | 193 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `audi_rs5_b9` | Audi RS 5 B9 2.9 TFSI quattro | PROVISIONAL | 73 | 76 | 71 | 74 | 72 | 75 | 70 | 1715 | 193 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `toyota_gr_corolla` | Toyota GR Corolla E210 G16E-GTS | CALIBRATED | 71 | 56 | 78 | 73 | 74 | 73 | 74 | 1475 | 152 | 0 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `lexus_rc_f` | Lexus RC F USC10 5.0 V8 | PROVISIONAL | 68 | 67 | 64 | 71 | 77 | 73 | 63 | 1775 | 198 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `lexus_lc_500` | Lexus LC 500 Z100 5.0 V8 | PROVISIONAL | 66 | 62 | 61 | 69 | 77 | 72 | 60 | 1935 | 181 | 0 | PROVISIONAL | Sprint 4N expanded template; source trail and hierarchy reviewed. |
-| `mercedes_amg_gt_c190` | Mercedes-AMG GT C190 4.0 V8 Biturbo | CALIBRATED | 79 | 78 | 80 | 80 | 74 | 79 | 79 | 1615 | 211 | 0 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
+| `mercedes_amg_gt_c190` | Mercedes-Benz AMG GT C190 4.0 V8 Biturbo | CALIBRATED | 79 | 78 | 80 | 80 | 74 | 79 | 79 | 1615 | 211 | 0 | REVIEWED_ADJUSTED | Sprint 4N expanded template; source trail and hierarchy reviewed. |
 | `porsche_911_gt2_rs_9912` | Porsche 911 GT2 RS 991.2 3.8 Twin-Turbo | CALIBRATED | 94 | 96 | 92 | 92 | 79 | 90 | 93 | 1470 | 350 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
-| `mercedes_amg_gt_black_series_c190` | Mercedes-AMG GT Black Series C190 4.0 V8 Biturbo | CALIBRATED | 95 | 95 | 92 | 93 | 78 | 92 | 95 | 1540 | 349 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
-| `bmw_m4_csl_g82` | BMW M M4 CSL G82 S58 | CALIBRATED | 90 | 87 | 90 | 90 | 78 | 89 | 92 | 1625 | 249 | 2 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
+| `mercedes_amg_gt_black_series_c190` | Mercedes-Benz AMG GT Black Series C190 4.0 V8 Biturbo | CALIBRATED | 95 | 95 | 92 | 93 | 78 | 92 | 95 | 1540 | 349 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
+| `bmw_m4_csl_g82` | BMW M4 CSL G82 S58 | CALIBRATED | 90 | 87 | 90 | 90 | 78 | 89 | 92 | 1625 | 249 | 2 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 | `chevrolet_corvette_z06_c8` | Chevrolet Corvette Z06 C8 5.5 LT6 | CALIBRATED | 89 | 96 | 86 | 90 | 80 | 90 | 88 | 1560 | 321 | 0 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 | `mclaren_765lt` | McLaren 765LT Super Series 4.0 V8 | CALIBRATED | 94 | 96 | 92 | 92 | 78 | 90 | 93 | 1339 | 420 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
 | `lamborghini_huracan_sto` | Lamborghini Huracan STO LP 640-2 5.2 V10 | CALIBRATED | 94 | 95 | 92 | 92 | 78 | 89 | 92 | 1339 | 351 | 3 | REVIEWED_ADJUSTED | Sprint 4O upper-scale reference; official-source trail reviewed. |
@@ -1464,7 +2470,7 @@ No threshold-breaching review signals were detected.
 | `fiat_500e_hatch` | Fiat 500e 332 Electric | PROVISIONAL | 36 | 17 | 38 | 41 | 58 | 41 | 28 | 1365 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_corolla_15_6mt` | Toyota Corolla E210 1.5 6MT | PROVISIONAL | 41 | 10 | 43 | 46 | 71 | 50 | 36 | 1280 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_corolla_15_cvt` | Toyota Corolla E210 1.5 CVT | PROVISIONAL | 40 | 9 | 41 | 45 | 71 | 50 | 35 | 1310 | 70 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
-| `toyota_corolla_hybrid_e210` | Toyota Corolla E210 Hybrid | PROVISIONAL | 41 | 15 | 42 | 45 | 71 | 49 | 34 | 1370 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `toyota_corolla_hybrid_e210` | Toyota Corolla E210 Hybrid e-CVT | PROVISIONAL | 41 | 15 | 42 | 45 | 71 | 49 | 34 | 1370 | 75 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_yaris_15_hybrid` | Toyota Yaris XP210 1.5 Hybrid | PROVISIONAL | 41 | 14 | 45 | 46 | 70 | 48 | 35 | 1085 | 78 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_yaris_cross_hybrid` | Toyota Yaris Cross XP210 1.5 Hybrid | PROVISIONAL | 38 | 8 | 40 | 44 | 70 | 46 | 31 | 1245 | 68 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `toyota_chr_hybrid_current` | Toyota C-HR AX20 Hybrid | PROVISIONAL | 38 | 12 | 37 | 44 | 69 | 46 | 31 | 1495 | 69 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
@@ -1475,8 +2481,8 @@ No threshold-breaching review signals were detected.
 | `hyundai_i20_10_tgdi_7dct` | Hyundai i20 BC3 1.0 T-GDi 7DCT | PROVISIONAL | 39 | 12 | 43 | 44 | 64 | 48 | 34 | 1165 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `hyundai_bayon_10_tgdi` | Hyundai Bayon BC3 CUV 1.0 T-GDi | PROVISIONAL | 37 | 10 | 40 | 43 | 64 | 46 | 32 | 1215 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `hyundai_i30_15_tgdi_48v` | Hyundai i30 PD 1.5 T-GDi 48V | PROVISIONAL | 44 | 23 | 46 | 48 | 66 | 52 | 39 | 1355 | 87 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
-| `hyundai_kona_hybrid_sx2` | Hyundai Kona SX2 Hybrid | PROVISIONAL | 38 | 15 | 38 | 44 | 64 | 46 | 31 | 1450 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
-| `hyundai_kona_electric_sx2` | Hyundai Kona Electric SX2 Long Range | PROVISIONAL | 37 | 21 | 35 | 42 | 60 | 45 | 27 | 1775 | 90 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_kona_hybrid_sx2` | Hyundai Kona SX2 Hybrid DCT | PROVISIONAL | 38 | 15 | 38 | 44 | 64 | 46 | 31 | 1450 | 72 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
+| `hyundai_kona_electric_sx2` | Hyundai Kona Electric SX2 Long Range 65.4 kWh | PROVISIONAL | 37 | 21 | 35 | 42 | 60 | 45 | 27 | 1775 | 90 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `hyundai_tucson_hybrid` | Hyundai Tucson NX4 1.6 T-GDi Hybrid | PROVISIONAL | 39 | 29 | 35 | 43 | 64 | 47 | 28 | 1685 | 100 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `peugeot_208_12_puretech` | Peugeot 208 P21 1.2 PureTech | PROVISIONAL | 39 | 15 | 43 | 44 | 60 | 46 | 34 | 1165 | 64 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
 | `peugeot_208_hybrid_100` | Peugeot 208 P21 Hybrid 100 e-DCS6 | PROVISIONAL | 39 | 14 | 42 | 44 | 60 | 46 | 34 | 1210 | 61 | 0 | PROVISIONAL | Sprint 4P daily template; official source trail documented as provisional. |
@@ -1529,7 +2535,7 @@ No threshold-breaching review signals were detected.
 | `bmw_i4_m50_g26` | BMW i4 M50 G26 Dual Motor | PROVISIONAL | 61 | 73 | 54 | 59 | 67 | 63 | 52 | 2215 | 181 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
 | `kia_ev6_gt` | Kia EV6 GT CV Dual Motor | PROVISIONAL | 64 | 75 | 57 | 62 | 68 | 67 | 56 | 2185 | 197 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
 | `porsche_taycan_turbo_s_j1` | Porsche Taycan Turbo S J1 Performance Battery Plus | PROVISIONAL | 71 | 89 | 62 | 69 | 70 | 73 | 63 | 2295 | 244 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
-| `audi_rs_e_tron_gt_j1` | Audi Sport RS e-tron GT J1 Dual Motor | PROVISIONAL | 67 | 79 | 60 | 67 | 70 | 71 | 61 | 2345 | 203 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
+| `audi_rs_e_tron_gt_j1` | Audi RS e-tron GT J1 Dual Motor | PROVISIONAL | 67 | 79 | 60 | 67 | 70 | 71 | 61 | 2345 | 203 | 0 | PROVISIONAL | Sprint 4U daily/performance expansion; not tuned to force leaderboard placement. |
 | `ferrari_458_speciale` | Ferrari 458 Speciale F142 4.5 V8 | CALIBRATED | 93 | 95 | 91 | 91 | 81 | 90 | 92 | 1395 | 319 | 2 | REVIEWED_ADJUSTED | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `ferrari_488_pista` | Ferrari 488 Pista F142M 3.9 V8 Twin-Turbo | CALIBRATED | 94 | 95 | 92 | 92 | 81 | 91 | 93 | 1385 | 383 | 3 | REVIEWED_ADJUSTED | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `ferrari_sf90_stradale` | Ferrari SF90 Stradale F173 Plug-In Hybrid AWD | PROVISIONAL | 88 | 99 | 85 | 88 | 80 | 90 | 87 | 1600 | 459 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
@@ -1537,7 +2543,7 @@ No threshold-breaching review signals were detected.
 | `lamborghini_revuelto` | Lamborghini Revuelto LB744 6.5 V12 Plug-In Hybrid | PROVISIONAL | 85 | 99 | 81 | 84 | 78 | 86 | 82 | 1772 | 422 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `mclaren_600lt` | McLaren 600LT Sports Series 3.8 V8 | CALIBRATED | 92 | 95 | 91 | 91 | 79 | 89 | 92 | 1247 | 354 | 2 | REVIEWED_ADJUSTED | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `mclaren_720s` | McLaren 720S Super Series 4.0 V8 | PROVISIONAL | 86 | 95 | 85 | 86 | 78 | 86 | 85 | 1419 | 374 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
-| `audi_r8_v10_performance_4s` | Audi Sport R8 V10 Performance 4S 5.2 FSI quattro | CALIBRATED | 83 | 98 | 78 | 82 | 78 | 83 | 79 | 1595 | 286 | 0 | REVIEWED_ADJUSTED | Sprint 4U elite stock reference; centralized rating remains authoritative. |
+| `audi_r8_v10_performance_4s` | Audi R8 V10 Performance 4S 5.2 FSI quattro | CALIBRATED | 83 | 98 | 78 | 82 | 78 | 83 | 79 | 1595 | 286 | 0 | REVIEWED_ADJUSTED | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `dodge_viper_acr_vx` | Dodge Viper ACR VX 8.4 V10 | CALIBRATED | 94 | 94 | 93 | 92 | 80 | 91 | 94 | 1536 | 313 | 3 | REVIEWED_ADJUSTED | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `acura_nsx_type_s_nc1` | Acura NSX Type S NC1 Hybrid AWD | PROVISIONAL | 79 | 91 | 75 | 78 | 77 | 79 | 74 | 1780 | 252 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `lexus_lfa` | Lexus LFA LFA10 4.8 V10 | PROVISIONAL | 80 | 83 | 78 | 80 | 79 | 81 | 77 | 1580 | 261 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
@@ -1546,3 +2552,350 @@ No threshold-breaching review signals were detected.
 | `chevrolet_camaro_zl1_1le` | Chevrolet Camaro ZL1 1LE Alpha 6.2 LT4 | PROVISIONAL | 85 | 93 | 83 | 85 | 78 | 87 | 83 | 1732 | 280 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `cadillac_ct4_v_blackwing` | Cadillac CT4-V Blackwing Alpha 3.6 Twin Turbo | PROVISIONAL | 76 | 74 | 75 | 78 | 75 | 79 | 74 | 1760 | 200 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
 | `cadillac_ct5_v_blackwing` | Cadillac CT5-V Blackwing Alpha 6.2 LT4 | PROVISIONAL | 78 | 89 | 73 | 78 | 76 | 81 | 73 | 1880 | 265 | 0 | PROVISIONAL | Sprint 4U elite stock reference; centralized rating remains authoritative. |
+| `ferrari_360_modena` | Ferrari 360 Modena F131 3.6 V8 | PROVISIONAL | 74 | 68 | 78 | 75 | 70 | 75 | 74 | 1390 | 212 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_f430` | Ferrari F430 F131 4.3 V8 | PROVISIONAL | 79 | 81 | 80 | 79 | 72 | 79 | 78 | 1450 | 248 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_430_scuderia` | Ferrari 430 Scuderia F131 4.3 V8 | PROVISIONAL | 86 | 91 | 88 | 86 | 77 | 85 | 86 | 1350 | 278 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_458_italia` | Ferrari 458 Italia F142 4.5 V8 | PROVISIONAL | 85 | 93 | 84 | 84 | 78 | 84 | 84 | 1485 | 282 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_488_gtb` | Ferrari 488 GTB F142M 3.9 V8 Twin-Turbo | PROVISIONAL | 85 | 95 | 84 | 85 | 77 | 85 | 84 | 1475 | 334 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_f8_tributo` | Ferrari F8 Tributo F142M 3.9 V8 Twin-Turbo | PROVISIONAL | 86 | 95 | 85 | 86 | 78 | 86 | 85 | 1435 | 369 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_296_gtb` | Ferrari 296 GTB F171 3.0 V6 Plug-In Hybrid | PROVISIONAL | 85 | 95 | 84 | 85 | 76 | 85 | 84 | 1470 | 415 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_812_superfast` | Ferrari 812 Superfast F152M 6.5 V12 | PROVISIONAL | 84 | 95 | 78 | 85 | 78 | 86 | 81 | 1630 | 361 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_812_competizione` | Ferrari 812 Competizione F152M 6.5 V12 | PROVISIONAL | 88 | 95 | 87 | 89 | 80 | 89 | 88 | 1487 | 410 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_roma` | Ferrari Roma F169 3.9 V8 Twin-Turbo | PROVISIONAL | 78 | 93 | 72 | 77 | 74 | 78 | 72 | 1570 | 290 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_portofino` | Ferrari Portofino F164 3.9 V8 Twin-Turbo | PROVISIONAL | 74 | 89 | 67 | 73 | 73 | 76 | 66 | 1664 | 265 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_california_t` | Ferrari California T F149M 3.9 V8 Twin-Turbo | PROVISIONAL | 70 | 83 | 63 | 71 | 71 | 74 | 63 | 1730 | 238 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `ferrari_laferrari` | Ferrari LaFerrari F150 6.3 V12 Hybrid | PROVISIONAL | 86 | 96 | 83 | 86 | 76 | 86 | 84 | 1585 | 447 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_ghibli_s_m157` | Maserati Ghibli S M157 3.0 V6 Twin-Turbo | PROVISIONAL | 59 | 60 | 56 | 61 | 62 | 65 | 52 | 1810 | 166 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_ghibli_trofeo_m157` | Maserati Ghibli Trofeo M157 3.8 V8 Twin-Turbo | PROVISIONAL | 66 | 78 | 59 | 67 | 65 | 71 | 58 | 1969 | 217 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_quattroporte_trofeo_m156` | Maserati Quattroporte Trofeo M156 3.8 V8 Twin-Turbo | PROVISIONAL | 64 | 77 | 56 | 66 | 65 | 71 | 56 | 2000 | 214 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_granturismo_trofeo_m189` | Maserati GranTurismo Trofeo M189 3.0 Nettuno V6 | PROVISIONAL | 71 | 84 | 66 | 72 | 67 | 73 | 65 | 1795 | 228 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_mc20_m240` | Maserati MC20 M240 3.0 Nettuno V6 | PROVISIONAL | 84 | 95 | 84 | 84 | 71 | 83 | 82 | 1475 | 314 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `maserati_levante_trofeo_m161` | Maserati Levante Trofeo M161 3.8 V8 Twin-Turbo | PROVISIONAL | 61 | 74 | 51 | 65 | 63 | 68 | 52 | 2170 | 197 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `abarth_595_312` | Abarth 595 312 1.4 T-Jet 145 | PROVISIONAL | 51 | 30 | 59 | 54 | 61 | 53 | 51 | 1035 | 103 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `abarth_595_competizione_312` | Abarth 595 Competizione 312 1.4 T-Jet 180 | PROVISIONAL | 58 | 40 | 65 | 61 | 62 | 59 | 59 | 1060 | 125 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `abarth_695_biposto_312` | Abarth 695 Biposto 312 1.4 T-Jet 190 | PROVISIONAL | 64 | 46 | 73 | 68 | 62 | 64 | 68 | 997 | 140 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mini_cooper_s_f56` | MINI Cooper S F56 2.0 TwinPower Turbo | PROVISIONAL | 58 | 36 | 65 | 61 | 66 | 61 | 59 | 1250 | 113 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mini_jcw_f56` | MINI John Cooper Works F56 2.0 TwinPower Turbo | PROVISIONAL | 63 | 44 | 70 | 67 | 66 | 65 | 65 | 1280 | 133 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mini_jcw_gp_f56` | MINI John Cooper Works GP F56 2.0 TwinPower Turbo | PROVISIONAL | 74 | 67 | 80 | 76 | 67 | 71 | 76 | 1255 | 179 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `seat_ibiza_cupra_6j` | SEAT Ibiza Cupra 6J 1.8 TSI | PROVISIONAL | 57 | 41 | 63 | 59 | 63 | 59 | 57 | 1225 | 115 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `skoda_fabia_vrs_mk2` | Skoda Fabia vRS Mk2 1.4 TSI Twincharger | PROVISIONAL | 52 | 31 | 59 | 55 | 58 | 55 | 53 | 1265 | 104 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `volvo_s60_t8_phev_spa` | Volvo S60 T8 SPA Recharge Polestar Engineered | PROVISIONAL | 59 | 65 | 52 | 61 | 65 | 63 | 51 | 2050 | 163 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `volvo_v60_polestar_p3` | Volvo V60 Polestar P3 3.0 T6 AWD | PROVISIONAL | 61 | 55 | 60 | 64 | 67 | 67 | 58 | 1835 | 140 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `polestar_2_performance` | Polestar 2 Performance CMA Dual Motor | PROVISIONAL | 59 | 68 | 52 | 60 | 65 | 61 | 50 | 2123 | 165 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `jaguar_f_type_r_x152` | Jaguar F-Type R X152 5.0 Supercharged V8 | PROVISIONAL | 74 | 87 | 69 | 75 | 69 | 76 | 68 | 1760 | 240 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `jaguar_f_type_svr_x152` | Jaguar F-Type SVR X152 5.0 Supercharged V8 | PROVISIONAL | 76 | 88 | 72 | 77 | 70 | 78 | 72 | 1705 | 248 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `jaguar_xe_sv_project_8_x760` | Jaguar XE SV Project 8 X760 5.0 Supercharged V8 | PROVISIONAL | 82 | 90 | 81 | 82 | 71 | 83 | 80 | 1745 | 253 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `land_rover_range_rover_sport_svr_l494` | Land Rover Range Rover Sport SVR L494 5.0 Supercharged V8 | PROVISIONAL | 57 | 67 | 44 | 63 | 63 | 67 | 48 | 2335 | 181 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `aston_martin_v8_vantage_am6` | Aston Martin Vantage AM6 4.0 V8 Twin-Turbo | PROVISIONAL | 76 | 85 | 74 | 77 | 69 | 77 | 73 | 1530 | 245 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `aston_martin_v12_vantage_am6` | Aston Martin V12 Vantage AM6 5.2 V12 Twin-Turbo | PROVISIONAL | 78 | 93 | 74 | 79 | 69 | 80 | 74 | 1795 | 287 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `aston_martin_dbs_superleggera` | Aston Martin DBS Superleggera AM7 5.2 V12 Twin-Turbo | PROVISIONAL | 75 | 93 | 67 | 75 | 69 | 78 | 67 | 1845 | 289 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `aston_martin_db12` | Aston Martin DB12 AM8 4.0 V8 Twin-Turbo | PROVISIONAL | 76 | 92 | 70 | 76 | 70 | 78 | 70 | 1788 | 280 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `lotus_elise_s3` | Lotus Elise S3 1.8 Supercharged | PROVISIONAL | 76 | 59 | 89 | 78 | 71 | 73 | 80 | 932 | 174 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `lotus_exige_s_v6` | Lotus Exige S S3 3.5 Supercharged V6 | PROVISIONAL | 82 | 77 | 90 | 83 | 73 | 79 | 85 | 1176 | 219 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `lotus_evora_gt430` | Lotus Evora GT430 Evora 3.5 Supercharged V6 | PROVISIONAL | 84 | 83 | 89 | 84 | 74 | 81 | 86 | 1299 | 247 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `lotus_emira_v6` | Lotus Emira Emira 3.5 Supercharged V6 | PROVISIONAL | 76 | 68 | 82 | 78 | 71 | 77 | 78 | 1458 | 204 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `opel_corsa_opc_e` | Opel Corsa OPC E 1.6 Turbo | PROVISIONAL | 57 | 37 | 64 | 61 | 62 | 59 | 58 | 1275 | 119 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `opel_astra_opc_j` | Opel Astra OPC J 2.0 Turbo | PROVISIONAL | 62 | 46 | 66 | 66 | 64 | 65 | 63 | 1550 | 133 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `subaru_wrx_sti_va` | Subaru WRX STI VA EJ257 | PROVISIONAL | 67 | 55 | 71 | 71 | 66 | 69 | 68 | 1535 | 148 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `subaru_wrx_sti_s209_va` | Subaru WRX STI S209 VA EJ257 | PROVISIONAL | 71 | 61 | 76 | 75 | 67 | 73 | 74 | 1580 | 161 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `subaru_wrx_vb` | Subaru WRX VB FA24 Turbo | PROVISIONAL | 60 | 47 | 64 | 62 | 67 | 63 | 59 | 1545 | 131 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mitsubishi_lancer_evo_viii` | Mitsubishi Lancer Evolution VIII CT9A 4G63T | PROVISIONAL | 68 | 57 | 74 | 70 | 67 | 69 | 69 | 1410 | 146 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mitsubishi_lancer_evo_x` | Mitsubishi Lancer Evolution X CZ4A 4B11T | PROVISIONAL | 66 | 50 | 71 | 71 | 67 | 69 | 68 | 1560 | 139 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mazda_rx7_fd` | Mazda RX-7 FD3S 13B-REW | PROVISIONAL | 64 | 52 | 76 | 66 | 57 | 62 | 66 | 1280 | 161 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mazda_rx8_se3p` | Mazda RX-8 SE3P 13B-MSP | PROVISIONAL | 55 | 33 | 68 | 60 | 53 | 57 | 57 | 1375 | 124 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `mazda3_turbo_bp` | Mazda Mazda3 Turbo BP 2.5 Turbo AWD | PROVISIONAL | 56 | 49 | 57 | 56 | 67 | 59 | 52 | 1585 | 117 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `suzuki_swift_sport_zc33s` | Suzuki Swift Sport ZC33S 1.4 Boosterjet | PROVISIONAL | 53 | 33 | 63 | 54 | 65 | 53 | 52 | 975 | 106 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `infiniti_q50_red_sport_v37` | Infiniti Q50 Red Sport V37 3.0 Twin-Turbo | PROVISIONAL | 59 | 58 | 57 | 61 | 66 | 64 | 54 | 1748 | 170 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `genesis_g70_33t` | Genesis G70 IK 3.3T | PROVISIONAL | 62 | 60 | 60 | 63 | 69 | 65 | 57 | 1755 | 155 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `genesis_gv60_performance` | Genesis GV60 Performance JW Dual Motor | PROVISIONAL | 57 | 68 | 49 | 58 | 66 | 60 | 47 | 2100 | 171 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `dodge_challenger_hellcat_lx` | Dodge Challenger SRT Hellcat LA 6.2 Supercharged V8 | PROVISIONAL | 66 | 88 | 53 | 66 | 69 | 71 | 54 | 2018 | 261 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `dodge_challenger_demon_lx` | Dodge Challenger SRT Demon LA 6.2 Supercharged V8 | PROVISIONAL | 66 | 95 | 50 | 64 | 69 | 71 | 51 | 1941 | 323 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `dodge_viper_gts_vx` | Dodge Viper GTS VX 8.4 V10 | PROVISIONAL | 83 | 94 | 80 | 82 | 76 | 83 | 79 | 1521 | 314 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `chevrolet_camaro_ss_alpha` | Chevrolet Camaro SS Alpha 6.2 LT1 | PROVISIONAL | 71 | 75 | 70 | 71 | 73 | 73 | 66 | 1675 | 202 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `chevrolet_corvette_stingray_c7` | Chevrolet Corvette Stingray C7 6.2 LT1 | PROVISIONAL | 76 | 80 | 75 | 76 | 74 | 77 | 73 | 1539 | 220 | 0 | PROVISIONAL | Production catalog breadth expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk5_14_tsi_122` | Volkswagen Golf Mk5 1.4 TSI 122 PS | PROVISIONAL | 42 | 16 | 47 | 47 | 60 | 50 | 38 | 1280 | 70 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk5_14_tsi_140` | Volkswagen Golf Mk5 1.4 TSI 140 PS | PROVISIONAL | 42 | 19 | 47 | 48 | 57 | 49 | 39 | 1305 | 79 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk5_14_tsi_160_twincharger` | Volkswagen Golf Mk5 1.4 TSI 160 PS Twincharger | PROVISIONAL | 44 | 25 | 48 | 49 | 56 | 49 | 41 | 1315 | 90 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_r32_mk5` | Volkswagen Golf R32 Mk5 3.2 VR6 4Motion | PROVISIONAL | 58 | 40 | 62 | 61 | 65 | 63 | 58 | 1590 | 116 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk6_12_tsi_105` | Volkswagen Golf Mk6 1.2 TSI 105 PS | PROVISIONAL | 41 | 13 | 47 | 48 | 60 | 49 | 38 | 1225 | 63 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk6_14_tsi_122` | Volkswagen Golf Mk6 1.4 TSI 122 PS | PROVISIONAL | 42 | 16 | 47 | 48 | 60 | 50 | 39 | 1270 | 71 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk6_14_tsi_160` | Volkswagen Golf Mk6 1.4 TSI 160 PS | PROVISIONAL | 44 | 25 | 49 | 49 | 56 | 50 | 41 | 1290 | 91 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_12_tsi_105` | Volkswagen Golf Mk7 1.2 TSI 105 PS | PROVISIONAL | 43 | 14 | 48 | 49 | 63 | 51 | 39 | 1205 | 64 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_14_tsi_122` | Volkswagen Golf Mk7 1.4 TSI 122 PS | PROVISIONAL | 44 | 18 | 48 | 49 | 64 | 52 | 40 | 1240 | 73 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_14_tsi_125` | Volkswagen Golf Mk7 1.4 TSI 125 PS | PROVISIONAL | 44 | 18 | 48 | 49 | 64 | 52 | 40 | 1250 | 74 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_14_tsi_140_act` | Volkswagen Golf Mk7 1.4 TSI 140 PS ACT | PROVISIONAL | 46 | 24 | 49 | 50 | 64 | 53 | 41 | 1270 | 81 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk7_14_tsi_150_act` | Volkswagen Golf Mk7.5 1.4 TSI 150 PS ACT | PROVISIONAL | 46 | 25 | 49 | 50 | 64 | 53 | 42 | 1280 | 86 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk75_15_tsi_150` | Volkswagen Golf Mk7.5 1.5 TSI 150 PS | PROVISIONAL | 46 | 25 | 49 | 50 | 66 | 54 | 42 | 1295 | 85 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_gti_clubsport_s_mk7` | Volkswagen Golf GTI Clubsport S Mk7 310 PS | CALIBRATED | 75 | 60 | 82 | 77 | 71 | 75 | 79 | 1285 | 177 | 0 | OK | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk85_10_etsi` | Volkswagen Golf Mk8.5 1.0 eTSI | PROVISIONAL | 42 | 15 | 46 | 47 | 63 | 50 | 38 | 1285 | 66 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk85_15_tsi` | Volkswagen Golf Mk8.5 1.5 TSI | PROVISIONAL | 46 | 24 | 49 | 50 | 66 | 54 | 42 | 1310 | 84 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_golf_mk85_15_etsi` | Volkswagen Golf Mk8.5 1.5 eTSI | PROVISIONAL | 45 | 23 | 49 | 49 | 65 | 53 | 40 | 1340 | 82 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_6r_12_tsi_90` | Volkswagen Polo 6R/6C 1.2 TSI 90 PS | PROVISIONAL | 40 | 12 | 46 | 46 | 61 | 48 | 36 | 1105 | 60 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_6r_12_tsi_105` | Volkswagen Polo 6R/6C 1.2 TSI 105 PS | PROVISIONAL | 42 | 16 | 47 | 47 | 60 | 49 | 37 | 1115 | 69 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_6r_14_tsi` | Volkswagen Polo 6R/6C 1.4 TSI | PROVISIONAL | 44 | 27 | 49 | 48 | 57 | 49 | 39 | 1155 | 89 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_gti_6c_18_tsi` | Volkswagen Polo GTI 6C 1.8 TSI | PROVISIONAL | 56 | 41 | 61 | 58 | 64 | 59 | 55 | 1212 | 116 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_aw_10_tsi_95` | Volkswagen Polo AW 1.0 TSI 95 PS | PROVISIONAL | 41 | 13 | 46 | 47 | 63 | 49 | 37 | 1145 | 61 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_aw_10_tsi_110` | Volkswagen Polo AW 1.0 TSI 110 PS | PROVISIONAL | 42 | 16 | 47 | 47 | 63 | 49 | 37 | 1160 | 70 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `volkswagen_polo_aw_10_tsi_115` | Volkswagen Polo AW 1.0 TSI 115 PS | PROVISIONAL | 43 | 17 | 47 | 48 | 63 | 50 | 38 | 1165 | 73 | 0 | PROVISIONAL | VAG Golf/Polo catalog expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_14_tjet` | Fiat Egea Sedan 356 1.4 T-Jet 120 HP | PROVISIONAL | 40 | 17 | 44 | 45 | 59 | 48 | 35 | 1275 | 69 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_10_firefly` | Fiat Egea Sedan 356 facelift 1.0 FireFly Turbo 100 HP | PROVISIONAL | 38 | 9 | 43 | 45 | 59 | 47 | 34 | 1275 | 58 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_13_multijet` | Fiat Egea Sedan 356 1.3 Multijet 95 HP | PROVISIONAL | 39 | 11 | 42 | 45 | 61 | 49 | 34 | 1270 | 55 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_16_multijet_130` | Fiat Egea Sedan 356 facelift 1.6 Multijet 130 HP | PROVISIONAL | 41 | 23 | 43 | 46 | 61 | 49 | 34 | 1345 | 71 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sedan_15_hybrid` | Fiat Egea Sedan 356 facelift 1.5 T4 Hybrid 130 HP | PROVISIONAL | 39 | 19 | 42 | 45 | 59 | 47 | 32 | 1375 | 70 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_14_fire` | Fiat Egea Hatchback 356 1.4 Fire 95 HP | PROVISIONAL | 39 | 7 | 44 | 45 | 62 | 48 | 35 | 1270 | 55 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_14_tjet` | Fiat Egea Hatchback 356 1.4 T-Jet 120 HP | PROVISIONAL | 41 | 17 | 45 | 46 | 59 | 49 | 36 | 1295 | 68 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_10_firefly` | Fiat Egea Hatchback 356 facelift 1.0 FireFly Turbo 100 HP | PROVISIONAL | 39 | 10 | 44 | 45 | 59 | 47 | 35 | 1295 | 57 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_13_multijet` | Fiat Egea Hatchback 356 1.3 Multijet 95 HP | PROVISIONAL | 39 | 10 | 43 | 45 | 61 | 49 | 34 | 1300 | 54 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_16_multijet` | Fiat Egea Hatchback 356 1.6 Multijet 120 HP | PROVISIONAL | 42 | 23 | 44 | 46 | 61 | 49 | 35 | 1340 | 66 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_hatchback_15_hybrid` | Fiat Egea Hatchback 356 facelift 1.5 T4 Hybrid 130 HP | PROVISIONAL | 40 | 19 | 42 | 45 | 59 | 47 | 33 | 1385 | 69 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_cross_14_fire` | Fiat Egea Cross 356 facelift 1.4 Fire 95 HP | PROVISIONAL | 36 | 6 | 40 | 43 | 61 | 47 | 31 | 1305 | 54 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_cross_14_tjet` | Fiat Egea Cross 356 1.4 T-Jet 120 HP | PROVISIONAL | 38 | 14 | 41 | 44 | 58 | 48 | 32 | 1340 | 66 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_cross_13_multijet` | Fiat Egea Cross 356 facelift 1.3 Multijet 95 HP | PROVISIONAL | 37 | 9 | 40 | 43 | 60 | 47 | 31 | 1330 | 53 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_cross_16_multijet_130` | Fiat Egea Cross 356 facelift 1.6 Multijet 130 HP | PROVISIONAL | 39 | 22 | 39 | 45 | 61 | 48 | 31 | 1390 | 69 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sw_14_tjet` | Fiat Egea Station Wagon 356 1.4 T-Jet 120 HP | PROVISIONAL | 39 | 15 | 42 | 45 | 58 | 48 | 33 | 1330 | 66 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sw_13_multijet` | Fiat Egea Station Wagon 356 1.3 Multijet 95 HP | PROVISIONAL | 37 | 9 | 41 | 44 | 60 | 47 | 32 | 1325 | 53 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_egea_sw_16_multijet` | Fiat Egea Station Wagon 356 1.6 Multijet 120 HP | PROVISIONAL | 41 | 22 | 42 | 45 | 61 | 49 | 33 | 1365 | 64 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `fiat_124_spider_multiair` | Fiat 124 Spider NF 1.4 MultiAir Turbo | PROVISIONAL | 57 | 31 | 73 | 58 | 61 | 56 | 60 | 1105 | 93 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `abarth_124_spider` | Abarth 124 Spider NF 1.4 MultiAir Turbo | PROVISIONAL | 62 | 39 | 77 | 64 | 60 | 59 | 65 | 1060 | 118 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `abarth_124_gt` | Abarth 124 GT NF 1.4 MultiAir Turbo | PROVISIONAL | 62 | 39 | 78 | 64 | 60 | 59 | 66 | 1075 | 116 | 0 | PROVISIONAL | Fiat/Abarth Egea and 124 expansion; conservative provisional baseline. |
+| `audi_a1_8x_14_tfsi` | Audi A1 8X 1.4 TFSI | PROVISIONAL | 45 | 21 | 50 | 49 | 62 | 51 | 41 | 1125 | 80 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s1_8x` | Audi S1 8X 2.0 TFSI quattro | PROVISIONAL | 62 | 52 | 66 | 64 | 68 | 65 | 61 | 1315 | 129 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a1_gb_10_tfsi` | Audi A1 GB 1.0 TFSI | PROVISIONAL | 42 | 16 | 47 | 47 | 64 | 49 | 37 | 1145 | 71 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a1_gb_15_tfsi` | Audi A1 GB 1.5 TFSI | PROVISIONAL | 46 | 29 | 49 | 48 | 65 | 52 | 40 | 1190 | 92 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a1_gb_20_tfsi` | Audi A1 GB 2.0 TFSI | PROVISIONAL | 55 | 42 | 58 | 56 | 66 | 59 | 52 | 1245 | 118 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8p_16_tdi` | Audi A3 8P 1.6 TDI | PROVISIONAL | 40 | 15 | 44 | 46 | 61 | 49 | 35 | 1320 | 58 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8p_18_tfsi` | Audi A3 8P 1.8 TFSI | PROVISIONAL | 49 | 26 | 53 | 53 | 64 | 56 | 48 | 1335 | 88 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8v_14_tfsi` | Audi A3 8V 1.4 TFSI | PROVISIONAL | 44 | 17 | 48 | 48 | 65 | 52 | 39 | 1255 | 73 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8v_16_tdi` | Audi A3 8V 1.6 TDI | PROVISIONAL | 41 | 17 | 44 | 46 | 63 | 49 | 36 | 1315 | 62 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8v_20_tdi` | Audi A3 8V 2.0 TDI | PROVISIONAL | 44 | 28 | 45 | 47 | 64 | 50 | 36 | 1370 | 80 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a3_8y_20_tdi` | Audi A3 8Y 2.0 TDI | PROVISIONAL | 44 | 28 | 45 | 47 | 64 | 50 | 36 | 1420 | 77 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b7_20_tfsi` | Audi A4 B7 2.0 TFSI | PROVISIONAL | 49 | 30 | 52 | 54 | 62 | 55 | 46 | 1450 | 101 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b7_20_tdi` | Audi A4 B7 2.0 TDI | PROVISIONAL | 41 | 22 | 44 | 46 | 60 | 48 | 34 | 1490 | 69 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s4_b7` | Audi S4 B7 4.2 V8 quattro | PROVISIONAL | 59 | 52 | 60 | 61 | 63 | 62 | 56 | 1715 | 148 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs4_b7` | Audi RS 4 B7 4.2 FSI quattro | PROVISIONAL | 68 | 63 | 72 | 70 | 66 | 70 | 68 | 1650 | 187 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b8_18_tfsi` | Audi A4 B8 1.8 TFSI | PROVISIONAL | 45 | 20 | 49 | 50 | 63 | 53 | 42 | 1505 | 78 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b8_20_tfsi` | Audi A4 B8/B8.5 2.0 TFSI | PROVISIONAL | 50 | 34 | 51 | 54 | 64 | 57 | 45 | 1540 | 101 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b8_20_tdi` | Audi A4 B8/B8.5 2.0 TDI | PROVISIONAL | 41 | 21 | 42 | 46 | 62 | 49 | 34 | 1535 | 68 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s4_b8` | Audi S4 B8/B8.5 3.0 TFSI quattro | PROVISIONAL | 63 | 55 | 63 | 65 | 69 | 67 | 61 | 1695 | 145 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b9_14_tfsi` | Audi A4 B9 1.4 TFSI | PROVISIONAL | 44 | 20 | 47 | 49 | 65 | 52 | 39 | 1430 | 77 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b9_20_tfsi` | Audi A4 B9/B9.5 2.0 TFSI | PROVISIONAL | 53 | 41 | 53 | 56 | 67 | 59 | 48 | 1515 | 122 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b9_20_tdi` | Audi A4 B9/B9.5 2.0 TDI | PROVISIONAL | 42 | 23 | 44 | 47 | 64 | 50 | 35 | 1510 | 73 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a4_b9_30_tdi` | Audi A4 B9/B9.5 3.0 TDI quattro | PROVISIONAL | 51 | 57 | 47 | 51 | 64 | 54 | 40 | 1665 | 120 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_8t_18_tfsi` | Audi A5 8T 1.8 TFSI | PROVISIONAL | 46 | 26 | 50 | 50 | 63 | 53 | 42 | 1505 | 83 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_8t_20_tfsi` | Audi A5 8T 2.0 TFSI | PROVISIONAL | 50 | 34 | 51 | 54 | 64 | 57 | 46 | 1535 | 101 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_8t_30_tdi` | Audi A5 8T 3.0 TDI quattro | PROVISIONAL | 49 | 49 | 46 | 50 | 62 | 52 | 39 | 1640 | 110 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s5_8t` | Audi S5 8T 3.0 TFSI quattro | PROVISIONAL | 63 | 55 | 63 | 65 | 69 | 67 | 61 | 1695 | 145 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_f5_20_tfsi` | Audi A5 F5 2.0 TFSI | PROVISIONAL | 53 | 41 | 53 | 56 | 67 | 59 | 48 | 1525 | 121 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_f5_20_tdi` | Audi A5 F5 2.0 TDI | PROVISIONAL | 44 | 32 | 44 | 48 | 64 | 50 | 36 | 1570 | 89 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a5_f5_30_tdi` | Audi A5 F5 3.0 TDI quattro | PROVISIONAL | 52 | 59 | 47 | 51 | 64 | 54 | 40 | 1690 | 124 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c6_20_tfsi` | Audi A6 C6 2.0 TFSI | PROVISIONAL | 43 | 23 | 44 | 48 | 61 | 52 | 37 | 1540 | 81 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c6_30_tdi` | Audi A6 C6 3.0 TDI quattro | PROVISIONAL | 45 | 40 | 42 | 48 | 60 | 50 | 34 | 1725 | 99 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s6_c6` | Audi S6 C6 5.2 V10 quattro | PROVISIONAL | 59 | 61 | 55 | 62 | 62 | 63 | 53 | 1910 | 168 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c7_18_tfsi` | Audi A6 C7 1.8 TFSI | PROVISIONAL | 45 | 28 | 45 | 49 | 64 | 53 | 39 | 1540 | 91 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c7_20_tdi` | Audi A6 C7 2.0 TDI | PROVISIONAL | 43 | 30 | 42 | 47 | 63 | 50 | 34 | 1610 | 87 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c7_30_tdi` | Audi A6 C7 3.0 TDI quattro | PROVISIONAL | 49 | 53 | 44 | 50 | 64 | 54 | 37 | 1765 | 113 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c7_30_tfsi` | Audi A6 C7 3.0 TFSI quattro | PROVISIONAL | 56 | 53 | 53 | 58 | 67 | 63 | 50 | 1735 | 141 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s6_c7` | Audi S6 C7 4.0 TFSI quattro | PROVISIONAL | 63 | 65 | 59 | 65 | 68 | 69 | 57 | 1895 | 175 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs6_c7` | Audi RS 6 C7 4.0 TFSI quattro | PROVISIONAL | 70 | 81 | 65 | 71 | 68 | 73 | 64 | 1935 | 213 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c8_20_tdi` | Audi A6 C8 40 TDI | PROVISIONAL | 43 | 30 | 42 | 47 | 63 | 50 | 33 | 1680 | 89 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a6_c8_30_tdi` | Audi A6 C8 50 TDI quattro | PROVISIONAL | 49 | 54 | 43 | 50 | 64 | 54 | 37 | 1825 | 115 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs6_c8` | Audi RS 6 C8 4.0 TFSI quattro | PROVISIONAL | 70 | 81 | 63 | 72 | 69 | 75 | 64 | 2075 | 213 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a7_c7_30_tfsi` | Audi A7 C7 3.0 TFSI quattro | PROVISIONAL | 56 | 51 | 52 | 58 | 67 | 63 | 49 | 1770 | 138 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a7_c7_30_tdi` | Audi A7 C7 3.0 TDI quattro | PROVISIONAL | 48 | 51 | 43 | 49 | 64 | 53 | 36 | 1810 | 110 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s7_c7` | Audi S7 C7 4.0 TFSI quattro | PROVISIONAL | 63 | 63 | 59 | 65 | 68 | 69 | 57 | 1945 | 170 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs7_c7` | Audi RS 7 C7 4.0 TFSI quattro | PROVISIONAL | 69 | 79 | 63 | 71 | 68 | 73 | 63 | 1995 | 207 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a7_c8_20_tfsi` | Audi A7 C8 45 TFSI | PROVISIONAL | 47 | 34 | 46 | 51 | 65 | 57 | 40 | 1760 | 102 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a8_d4_30_tdi` | Audi A8 D4 3.0 TDI quattro | PROVISIONAL | 44 | 47 | 37 | 47 | 62 | 52 | 31 | 1880 | 101 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_a8_d4_40_tfsi` | Audi A8 D4 4.0 TFSI quattro | PROVISIONAL | 53 | 65 | 42 | 55 | 65 | 62 | 39 | 1910 | 168 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_s8_d4` | Audi S8 D4 4.0 TFSI quattro | PROVISIONAL | 60 | 73 | 50 | 62 | 66 | 67 | 49 | 1975 | 193 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_tt_8j_18_tfsi` | Audi TT 8J 1.8 TFSI | PROVISIONAL | 53 | 30 | 62 | 56 | 64 | 57 | 53 | 1240 | 95 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_tt_8s_20_tfsi` | Audi TT 8S 2.0 TFSI | PROVISIONAL | 60 | 47 | 64 | 61 | 68 | 63 | 59 | 1320 | 128 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q2_ga_10_tfsi` | Audi Q2 GA 1.0 TFSI | PROVISIONAL | 39 | 15 | 40 | 45 | 63 | 48 | 32 | 1280 | 66 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q2_ga_14_tfsi` | Audi Q2 GA 1.4 TFSI | PROVISIONAL | 41 | 23 | 41 | 46 | 64 | 49 | 33 | 1340 | 82 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q3_f3_15_tfsi` | Audi Q3 F3 1.5 TFSI | PROVISIONAL | 39 | 17 | 38 | 45 | 65 | 50 | 32 | 1570 | 70 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q3_f3_20_tfsi` | Audi Q3 F3 2.0 TFSI quattro | PROVISIONAL | 43 | 30 | 41 | 47 | 65 | 52 | 34 | 1665 | 84 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs_q3_f3` | Audi RS Q3 F3 2.5 TFSI quattro | PROVISIONAL | 66 | 64 | 63 | 69 | 69 | 71 | 61 | 1715 | 171 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q5_fy_20_tfsi` | Audi Q5 FY 2.0 TFSI quattro | PROVISIONAL | 44 | 38 | 38 | 47 | 65 | 53 | 32 | 1795 | 103 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q5_fy_20_tdi` | Audi Q5 FY 2.0 TDI quattro | PROVISIONAL | 41 | 30 | 36 | 46 | 64 | 50 | 30 | 1810 | 77 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_sq5_fy` | Audi SQ5 FY 3.0 TFSI/TDI quattro | PROVISIONAL | 53 | 51 | 47 | 56 | 67 | 61 | 44 | 1935 | 134 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q7_4m_30_tdi` | Audi Q7 4M 3.0 TDI quattro | PROVISIONAL | 41 | 43 | 31 | 45 | 63 | 50 | 26 | 2070 | 97 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q7_4m_30_tfsi` | Audi Q7 4M 3.0 TFSI quattro | PROVISIONAL | 43 | 43 | 32 | 47 | 65 | 54 | 29 | 2050 | 120 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_sq7_4m` | Audi SQ7 4M 4.0 TDI/TFSI quattro | PROVISIONAL | 51 | 63 | 38 | 55 | 64 | 60 | 39 | 2330 | 137 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q8_4m_30_tdi` | Audi Q8 4M 3.0 TDI quattro | PROVISIONAL | 41 | 43 | 31 | 45 | 63 | 50 | 27 | 2145 | 98 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_sq8_4m` | Audi SQ8 4M 4.0 TDI/TFSI quattro | PROVISIONAL | 54 | 67 | 40 | 57 | 65 | 62 | 41 | 2270 | 164 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_rs_q8_4m` | Audi RS Q8 4M 4.0 TFSI quattro | PROVISIONAL | 64 | 75 | 53 | 68 | 66 | 71 | 56 | 2315 | 190 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q4_e_tron` | Audi Q4 e-tron MEB Electric | PROVISIONAL | 34 | 18 | 30 | 39 | 59 | 44 | 23 | 2050 | 73 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_e_tron_gt_j1` | Audi e-tron GT J1 Dual Motor | PROVISIONAL | 61 | 63 | 56 | 63 | 68 | 67 | 55 | 2295 | 170 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_q8_e_tron` | Audi Q8 e-tron GE Electric | PROVISIONAL | 39 | 46 | 28 | 40 | 60 | 46 | 23 | 2585 | 116 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `audi_sq8_e_tron` | Audi SQ8 e-tron GE Electric | PROVISIONAL | 44 | 63 | 31 | 44 | 60 | 48 | 26 | 2650 | 140 | 0 | PROVISIONAL | Audi catalog expansion; Audi Sport identity normalized into model names. |
+| `mercedes_a180_w176` | Mercedes-Benz A 180 W176 1.6 Turbo | PROVISIONAL | 42 | 16 | 45 | 47 | 63 | 50 | 37 | 1370 | 66 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_a200_w176` | Mercedes-Benz A 200 W176 1.6 Turbo | PROVISIONAL | 44 | 23 | 47 | 49 | 63 | 52 | 39 | 1395 | 82 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_a250_w176` | Mercedes-Benz A 250 W176 2.0 Turbo | PROVISIONAL | 52 | 38 | 55 | 54 | 64 | 57 | 49 | 1435 | 108 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_a45_amg_w176` | Mercedes-Benz A 45 AMG W176 4MATIC | PROVISIONAL | 69 | 66 | 71 | 71 | 68 | 71 | 69 | 1555 | 170 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_a250_w177` | Mercedes-Benz A 250 W177 2.0 Turbo | PROVISIONAL | 52 | 39 | 54 | 54 | 67 | 57 | 49 | 1455 | 113 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_b180_w246` | Mercedes-Benz B 180 W246 1.6 Turbo | PROVISIONAL | 39 | 15 | 40 | 46 | 62 | 49 | 32 | 1425 | 63 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_b200_w246` | Mercedes-Benz B 200 W246 1.6 Turbo | PROVISIONAL | 40 | 20 | 40 | 46 | 63 | 49 | 33 | 1450 | 79 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla200_c117` | Mercedes-Benz CLA 200 C117 1.6 Turbo | PROVISIONAL | 44 | 21 | 47 | 49 | 63 | 52 | 39 | 1430 | 80 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla250_c117` | Mercedes-Benz CLA 250 C117 2.0 Turbo | PROVISIONAL | 52 | 37 | 54 | 54 | 64 | 57 | 49 | 1465 | 106 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla45_amg_c117` | Mercedes-Benz CLA 45 AMG C117 4MATIC | PROVISIONAL | 68 | 65 | 69 | 70 | 68 | 71 | 68 | 1585 | 167 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla180_c118` | Mercedes-Benz CLA 180 C118 1.3 Turbo | PROVISIONAL | 42 | 16 | 46 | 47 | 64 | 50 | 37 | 1435 | 70 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla200_c118` | Mercedes-Benz CLA 200 C118 1.3 Turbo | PROVISIONAL | 44 | 22 | 47 | 48 | 65 | 52 | 39 | 1450 | 83 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_cla250_c118` | Mercedes-Benz CLA 250 C118 2.0 Turbo | PROVISIONAL | 52 | 38 | 53 | 54 | 67 | 57 | 48 | 1505 | 110 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c180_kompressor_w204` | Mercedes-Benz C 180 Kompressor W204 1.6/1.8 | PROVISIONAL | 43 | 17 | 48 | 49 | 62 | 51 | 40 | 1490 | 77 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c180_cgi_w204` | Mercedes-Benz C 180 CGI W204 1.6 Turbo | PROVISIONAL | 45 | 20 | 49 | 50 | 62 | 52 | 41 | 1510 | 76 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c200_cgi_w204` | Mercedes-Benz C 200 CGI W204 1.8 Turbo | PROVISIONAL | 47 | 26 | 51 | 51 | 63 | 53 | 43 | 1525 | 89 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c250_cgi_w204` | Mercedes-Benz C 250 CGI W204 1.8 Turbo | PROVISIONAL | 49 | 32 | 52 | 53 | 63 | 55 | 45 | 1540 | 97 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c350_w204` | Mercedes-Benz C 350 W204 3.5 V6 | PROVISIONAL | 54 | 46 | 55 | 56 | 65 | 59 | 49 | 1610 | 140 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c63_amg_w204` | Mercedes-Benz C 63 AMG W204 6.2 V8 | PROVISIONAL | 69 | 71 | 69 | 69 | 67 | 70 | 67 | 1730 | 194 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c180_w205` | Mercedes-Benz C 180 W205 1.6 Turbo | PROVISIONAL | 45 | 21 | 50 | 50 | 63 | 52 | 42 | 1485 | 77 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c200_w205` | Mercedes-Benz C 200 W205 2.0 Turbo | PROVISIONAL | 48 | 29 | 52 | 52 | 64 | 54 | 45 | 1505 | 90 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c250_w205` | Mercedes-Benz C 250 W205 2.0 Turbo | PROVISIONAL | 51 | 36 | 53 | 54 | 65 | 56 | 46 | 1535 | 101 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c300_w205` | Mercedes-Benz C 300 W205 2.0 Turbo | PROVISIONAL | 53 | 41 | 54 | 55 | 66 | 58 | 48 | 1560 | 115 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c43_amg_w205` | Mercedes-Benz C 43 AMG W205 4MATIC | PROVISIONAL | 66 | 64 | 65 | 67 | 68 | 69 | 64 | 1660 | 163 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c63_amg_w205` | Mercedes-Benz C 63 AMG W205 4.0 V8 | PROVISIONAL | 70 | 75 | 69 | 70 | 68 | 71 | 67 | 1715 | 204 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c180_w206` | Mercedes-Benz C 180 W206 1.5 mild hybrid | PROVISIONAL | 45 | 20 | 49 | 51 | 65 | 53 | 42 | 1600 | 78 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_c300_w206` | Mercedes-Benz C 300 W206 2.0 mild hybrid | PROVISIONAL | 52 | 41 | 54 | 54 | 67 | 57 | 47 | 1665 | 114 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e200_kompressor_w211` | Mercedes-Benz E 200 Kompressor W211 1.8 | PROVISIONAL | 40 | 20 | 41 | 47 | 59 | 49 | 34 | 1570 | 86 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e280_w211` | Mercedes-Benz E 280 W211 3.0 V6 | PROVISIONAL | 44 | 31 | 43 | 48 | 60 | 52 | 35 | 1635 | 104 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e350_w211` | Mercedes-Benz E 350 W211 3.5 V6 | PROVISIONAL | 46 | 38 | 44 | 50 | 61 | 53 | 37 | 1660 | 120 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e55_amg_w211` | Mercedes-Benz E 55 AMG W211 5.4 Supercharged V8 | PROVISIONAL | 63 | 71 | 59 | 64 | 63 | 66 | 56 | 1835 | 191 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e63_amg_w211` | Mercedes-Benz E 63 AMG W211 6.2 V8 | PROVISIONAL | 65 | 73 | 61 | 66 | 64 | 67 | 58 | 1840 | 205 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e180_w212` | Mercedes-Benz E 180 W212 1.6 Turbo | PROVISIONAL | 40 | 17 | 41 | 46 | 62 | 50 | 33 | 1605 | 72 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e200_cgi_w212` | Mercedes-Benz E 200 CGI W212 1.8 Turbo | PROVISIONAL | 41 | 22 | 42 | 47 | 62 | 51 | 34 | 1640 | 82 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e250_cgi_w212` | Mercedes-Benz E 250 CGI W212 1.8 Turbo | PROVISIONAL | 44 | 28 | 43 | 48 | 63 | 53 | 36 | 1660 | 90 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e400_w212` | Mercedes-Benz E 400 W212 3.0 V6 biturbo | PROVISIONAL | 52 | 52 | 48 | 54 | 65 | 59 | 42 | 1715 | 143 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e63_s_amg_w212` | Mercedes-Benz E 63 S AMG W212 5.5 V8 biturbo | PROVISIONAL | 70 | 83 | 65 | 71 | 67 | 73 | 64 | 1940 | 222 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e180_w213` | Mercedes-Benz E 180 W213 1.6 Turbo | PROVISIONAL | 41 | 17 | 42 | 47 | 63 | 50 | 34 | 1615 | 71 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e200_w213` | Mercedes-Benz E 200 W213 2.0 Turbo | PROVISIONAL | 43 | 25 | 44 | 48 | 64 | 53 | 36 | 1640 | 82 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e300_w213` | Mercedes-Benz E 300 W213 2.0 Turbo | PROVISIONAL | 47 | 37 | 45 | 50 | 65 | 55 | 38 | 1680 | 107 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e43_amg_w213` | Mercedes-Benz E 43 AMG W213 4MATIC | PROVISIONAL | 62 | 61 | 59 | 64 | 67 | 67 | 57 | 1840 | 160 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e53_amg_w213` | Mercedes-Benz E 53 AMG W213 3.0 mild hybrid | PROVISIONAL | 61 | 62 | 58 | 63 | 67 | 67 | 56 | 1900 | 168 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e63_s_amg_w213` | Mercedes-Benz E 63 S AMG W213 4MATIC+ | PROVISIONAL | 72 | 85 | 66 | 73 | 68 | 75 | 66 | 1955 | 230 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e200_w214` | Mercedes-Benz E 200 W214 2.0 mild hybrid | PROVISIONAL | 42 | 26 | 41 | 48 | 64 | 52 | 33 | 1765 | 85 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e300e_w214` | Mercedes-Benz E 300e W214 Plug-in Hybrid | PROVISIONAL | 41 | 42 | 35 | 44 | 60 | 48 | 27 | 2050 | 112 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e450_w214` | Mercedes-Benz E 450 W214 3.0 mild hybrid | PROVISIONAL | 51 | 56 | 44 | 52 | 66 | 59 | 38 | 1900 | 147 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_e53_hybrid_amg_w214` | Mercedes-Benz E 53 Hybrid AMG W214 Plug-in Hybrid | PROVISIONAL | 62 | 75 | 54 | 64 | 63 | 66 | 54 | 2190 | 196 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s350_w221` | Mercedes-Benz S 350 W221 3.5 V6 | PROVISIONAL | 41 | 32 | 35 | 47 | 60 | 52 | 29 | 1880 | 106 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s500_w221` | Mercedes-Benz S 500 W221 5.5 V8 | PROVISIONAL | 46 | 52 | 37 | 50 | 62 | 55 | 32 | 1945 | 147 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s63_amg_w221` | Mercedes-Benz S 63 AMG W221 5.5 V8 biturbo | PROVISIONAL | 57 | 72 | 46 | 60 | 63 | 65 | 44 | 2070 | 193 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s400_w222` | Mercedes-Benz S 400 W222 3.0 V6 | PROVISIONAL | 44 | 44 | 36 | 48 | 63 | 54 | 30 | 1925 | 127 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s560_w222` | Mercedes-Benz S 560 W222 4.0 V8 | PROVISIONAL | 51 | 67 | 37 | 53 | 64 | 59 | 34 | 2070 | 167 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s63_amg_w222` | Mercedes-Benz S 63 AMG W222 4MATIC+ | PROVISIONAL | 62 | 82 | 50 | 64 | 65 | 68 | 49 | 2070 | 217 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s580_w223` | Mercedes-Benz S 580 W223 4.0 mild hybrid | PROVISIONAL | 50 | 68 | 36 | 52 | 65 | 58 | 33 | 2150 | 172 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_s63_e_performance_w223` | Mercedes-Benz S 63 E Performance AMG W223 Plug-in Hybrid | PROVISIONAL | 61 | 86 | 46 | 63 | 62 | 65 | 47 | 2520 | 234 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gla180_h247` | Mercedes-Benz GLA 180 H247 1.3 | PROVISIONAL | 38 | 13 | 38 | 45 | 63 | 49 | 31 | 1505 | 66 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gla250_h247` | Mercedes-Benz GLA 250 H247 2.0 4MATIC | PROVISIONAL | 45 | 37 | 43 | 49 | 64 | 53 | 35 | 1610 | 102 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gla35_amg_h247` | Mercedes-Benz GLA 35 AMG H247 4MATIC | PROVISIONAL | 57 | 49 | 55 | 61 | 67 | 63 | 51 | 1710 | 132 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gla45_amg_h247` | Mercedes-Benz GLA 45 AMG H247 4MATIC+ | PROVISIONAL | 64 | 62 | 61 | 67 | 68 | 69 | 59 | 1765 | 161 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glb200_x247` | Mercedes-Benz GLB 200 X247 1.3 | PROVISIONAL | 38 | 18 | 36 | 44 | 63 | 49 | 29 | 1555 | 77 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glb250_x247` | Mercedes-Benz GLB 250 X247 2.0 4MATIC | PROVISIONAL | 43 | 35 | 37 | 48 | 64 | 53 | 32 | 1705 | 97 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glb35_amg_x247` | Mercedes-Benz GLB 35 AMG X247 4MATIC | PROVISIONAL | 53 | 47 | 49 | 58 | 67 | 61 | 46 | 1775 | 127 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glc200_x253` | Mercedes-Benz GLC 200 X253 2.0 | PROVISIONAL | 39 | 22 | 36 | 46 | 63 | 50 | 29 | 1735 | 78 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glc300d_x253` | Mercedes-Benz GLC 300d X253 2.0 diesel 4MATIC | PROVISIONAL | 42 | 41 | 35 | 45 | 63 | 50 | 28 | 1860 | 97 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glc43_amg_x253` | Mercedes-Benz GLC 43 AMG X253 4MATIC | PROVISIONAL | 56 | 57 | 50 | 59 | 66 | 63 | 47 | 1845 | 146 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_glc63_s_amg_x253` | Mercedes-Benz GLC 63 S AMG X253 4.0 V8 4MATIC+ | PROVISIONAL | 65 | 77 | 56 | 67 | 66 | 69 | 56 | 1935 | 194 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gle300d_v167` | Mercedes-Benz GLE 300d V167 2.0 diesel 4MATIC | PROVISIONAL | 38 | 34 | 28 | 43 | 62 | 48 | 24 | 2170 | 83 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gle450_v167` | Mercedes-Benz GLE 450 V167 3.0 mild hybrid | PROVISIONAL | 42 | 45 | 30 | 46 | 64 | 52 | 27 | 2220 | 122 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gle53_amg_v167` | Mercedes-Benz GLE 53 AMG V167 3.0 mild hybrid | PROVISIONAL | 49 | 49 | 39 | 53 | 65 | 59 | 38 | 2305 | 139 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gle63_s_amg_v167` | Mercedes-Benz GLE 63 S AMG V167 4.0 V8 mild hybrid | PROVISIONAL | 60 | 74 | 48 | 64 | 64 | 67 | 50 | 2450 | 184 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gls350d_x167` | Mercedes-Benz GLS 350d X167 3.0 diesel 4MATIC | PROVISIONAL | 36 | 36 | 24 | 42 | 61 | 48 | 22 | 2460 | 85 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gls450_x167` | Mercedes-Benz GLS 450 X167 3.0 mild hybrid | PROVISIONAL | 38 | 39 | 26 | 44 | 62 | 50 | 24 | 2460 | 110 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gls580_x167` | Mercedes-Benz GLS 580 X167 4.0 mild hybrid | PROVISIONAL | 43 | 55 | 28 | 47 | 62 | 53 | 26 | 2535 | 142 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_gls63_amg_x167` | Mercedes-Benz GLS 63 AMG X167 4.0 V8 mild hybrid | PROVISIONAL | 54 | 68 | 39 | 60 | 63 | 63 | 41 | 2630 | 171 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_g350d_w463` | Mercedes-Benz G 350d W463 3.0 diesel | PROVISIONAL | 35 | 35 | 22 | 41 | 61 | 47 | 20 | 2450 | 86 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_g400d_w463` | Mercedes-Benz G 400d W463 3.0 diesel | PROVISIONAL | 37 | 43 | 22 | 41 | 61 | 47 | 20 | 2480 | 98 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_g500_w463` | Mercedes-Benz G 500 W463 4.0 V8 | PROVISIONAL | 40 | 48 | 24 | 45 | 62 | 52 | 23 | 2429 | 128 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_g63_amg_w463` | Mercedes-Benz G 63 AMG W463 4.0 V8 | PROVISIONAL | 50 | 67 | 33 | 56 | 62 | 60 | 35 | 2560 | 168 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_slk200_r172` | Mercedes-Benz SLK 200 R172 1.8 Turbo | PROVISIONAL | 52 | 30 | 60 | 55 | 63 | 56 | 51 | 1435 | 94 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_slk350_r172` | Mercedes-Benz SLK 350 R172 3.5 V6 | PROVISIONAL | 58 | 49 | 62 | 60 | 65 | 60 | 55 | 1540 | 146 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_slk55_amg_r172` | Mercedes-Benz SLK 55 AMG R172 5.5 V8 | PROVISIONAL | 66 | 69 | 66 | 66 | 64 | 66 | 61 | 1610 | 193 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_slc43_amg_r172` | Mercedes-Benz SLC 43 AMG R172 3.0 V6 biturbo | PROVISIONAL | 64 | 63 | 64 | 65 | 67 | 65 | 60 | 1595 | 169 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_sl350_r230` | Mercedes-Benz SL 350 R230 3.5 V6 | PROVISIONAL | 51 | 39 | 52 | 56 | 63 | 58 | 46 | 1815 | 128 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_sl55_amg_r230` | Mercedes-Benz SL 55 AMG R230 5.4 Supercharged V8 | PROVISIONAL | 63 | 70 | 59 | 65 | 64 | 67 | 56 | 1955 | 188 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_sl500_r231` | Mercedes-Benz SL 500 R231 4.7 V8 | PROVISIONAL | 60 | 71 | 54 | 60 | 64 | 63 | 50 | 1785 | 188 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_sl63_amg_r231` | Mercedes-Benz SL 63 AMG R231 5.5 V8 biturbo | PROVISIONAL | 68 | 81 | 63 | 69 | 64 | 69 | 60 | 1845 | 233 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_amg_gt_s_c190` | Mercedes-Benz AMG GT S C190 4.0 V8 Biturbo | CALIBRATED | 80 | 81 | 81 | 82 | 74 | 81 | 81 | 1645 | 228 | 0 | REVIEWED_ADJUSTED | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_amg_gt_r_c190` | Mercedes-Benz AMG GT R C190 4.0 V8 Biturbo | CALIBRATED | 86 | 89 | 86 | 87 | 75 | 88 | 88 | 1630 | 264 | 0 | REVIEWED_ADJUSTED | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqa_250` | Mercedes-Benz EQA H243 250 | PROVISIONAL | 32 | 19 | 28 | 38 | 57 | 42 | 21 | 2040 | 69 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqb_350` | Mercedes-Benz EQB X243 350 4MATIC | PROVISIONAL | 36 | 39 | 27 | 39 | 57 | 42 | 21 | 2175 | 99 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqc_400` | Mercedes-Benz EQC N293 400 4MATIC | PROVISIONAL | 38 | 52 | 26 | 39 | 56 | 42 | 21 | 2495 | 120 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqe_350` | Mercedes-Benz EQE V295 350+ | PROVISIONAL | 36 | 34 | 28 | 40 | 58 | 44 | 23 | 2355 | 91 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqe53_amg` | Mercedes-Benz EQE 53 AMG V295 4MATIC+ | PROVISIONAL | 52 | 73 | 42 | 51 | 58 | 53 | 37 | 2525 | 182 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqs_580` | Mercedes-Benz EQS V297 580 4MATIC | PROVISIONAL | 41 | 62 | 27 | 41 | 58 | 44 | 22 | 2585 | 149 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `mercedes_eqs53_amg` | Mercedes-Benz EQS 53 AMG V297 4MATIC+ | PROVISIONAL | 53 | 80 | 41 | 53 | 58 | 53 | 38 | 2655 | 211 | 0 | PROVISIONAL | Mercedes-Benz catalog expansion; AMG identity remains in model/variant. |
+| `bmw_116i_e87` | BMW 116i E87 1.6 | PROVISIONAL | 42 | 11 | 50 | 47 | 60 | 49 | 40 | 1280 | 66 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_118i_e87` | BMW 118i E87 2.0 | PROVISIONAL | 44 | 16 | 51 | 48 | 60 | 50 | 41 | 1295 | 73 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_120i_e87` | BMW 120i E87 2.0 | PROVISIONAL | 45 | 20 | 52 | 49 | 61 | 51 | 42 | 1315 | 84 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_130i_e87` | BMW 130i E87 3.0 | PROVISIONAL | 59 | 43 | 66 | 61 | 66 | 62 | 59 | 1450 | 134 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_116i_f20` | BMW 116i F20 1.6 Turbo | PROVISIONAL | 45 | 20 | 50 | 49 | 62 | 51 | 42 | 1375 | 73 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_118i_f20` | BMW 118i F20 1.6 Turbo | PROVISIONAL | 48 | 27 | 53 | 51 | 63 | 53 | 45 | 1385 | 90 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_120i_f20_lci` | BMW 120i F20 LCI 2.0 B48 | PROVISIONAL | 50 | 31 | 54 | 52 | 66 | 55 | 47 | 1395 | 97 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_125i_f20` | BMW 125i F20 2.0 Turbo | PROVISIONAL | 53 | 38 | 58 | 55 | 65 | 57 | 50 | 1430 | 112 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_128ti_f40` | BMW 128ti F40 2.0 | PROVISIONAL | 61 | 45 | 65 | 64 | 69 | 65 | 61 | 1520 | 128 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_218i_f22` | BMW 218i F22 1.5 | PROVISIONAL | 47 | 19 | 54 | 50 | 64 | 52 | 45 | 1375 | 73 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_220i_f22` | BMW 220i F22 2.0 | PROVISIONAL | 51 | 31 | 57 | 53 | 65 | 55 | 48 | 1420 | 95 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_230i_g42` | BMW 230i G42 2.0 B48 | PROVISIONAL | 59 | 44 | 63 | 61 | 69 | 62 | 57 | 1545 | 117 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_318i_e46` | BMW 318i E46 2.0 | PROVISIONAL | 44 | 17 | 51 | 49 | 59 | 51 | 42 | 1395 | 75 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_320i_e46` | BMW 320i E46 2.2 inline-six | PROVISIONAL | 46 | 21 | 53 | 51 | 61 | 53 | 44 | 1460 | 86 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_325i_e46` | BMW 325i E46 2.5 inline-six | PROVISIONAL | 49 | 27 | 55 | 53 | 62 | 55 | 47 | 1490 | 95 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_330i_e46` | BMW 330i E46 3.0 inline-six | PROVISIONAL | 55 | 36 | 61 | 57 | 63 | 58 | 54 | 1505 | 113 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_316i_e90` | BMW 316i E90 1.6 | PROVISIONAL | 41 | 10 | 49 | 47 | 58 | 49 | 39 | 1435 | 63 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_320i_e90` | BMW 320i E90 2.0 | PROVISIONAL | 44 | 18 | 51 | 49 | 59 | 51 | 42 | 1460 | 75 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_325i_e90` | BMW 325i E90 3.0 | PROVISIONAL | 50 | 30 | 55 | 53 | 62 | 55 | 47 | 1505 | 106 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_330i_e90` | BMW 330i E90 3.0 | PROVISIONAL | 54 | 39 | 59 | 56 | 63 | 58 | 53 | 1525 | 125 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_335i_e90` | BMW 335i E90 N54 | PROVISIONAL | 58 | 49 | 61 | 60 | 63 | 61 | 56 | 1605 | 140 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_316i_f30` | BMW 316i F30 1.6 Turbo | PROVISIONAL | 44 | 17 | 51 | 49 | 62 | 51 | 42 | 1495 | 67 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_320i_f30` | BMW 320i F30 N20 2.0 | PROVISIONAL | 50 | 28 | 55 | 53 | 65 | 55 | 47 | 1500 | 90 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_328i_f30` | BMW 328i F30 N20 2.0 | PROVISIONAL | 57 | 41 | 62 | 58 | 66 | 60 | 56 | 1525 | 118 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_318i_g20` | BMW 318i G20 1.5 | PROVISIONAL | 46 | 21 | 51 | 51 | 66 | 53 | 43 | 1515 | 76 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_520i_e60` | BMW 520i E60 2.0 | PROVISIONAL | 42 | 18 | 46 | 49 | 59 | 51 | 38 | 1565 | 80 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_525i_e60` | BMW 525i E60 3.0 | PROVISIONAL | 46 | 27 | 48 | 51 | 61 | 53 | 41 | 1580 | 101 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_530i_e60` | BMW 530i E60 3.0 | PROVISIONAL | 50 | 36 | 52 | 54 | 63 | 57 | 46 | 1605 | 118 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_550i_e60` | BMW 550i E60 4.8 V8 | PROVISIONAL | 55 | 54 | 52 | 58 | 60 | 61 | 48 | 1735 | 156 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_520i_f10` | BMW 520i F10 2.0 Turbo | PROVISIONAL | 44 | 22 | 47 | 49 | 64 | 53 | 40 | 1690 | 80 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_528i_f10` | BMW 528i F10 2.0 Turbo | PROVISIONAL | 51 | 36 | 52 | 54 | 65 | 57 | 47 | 1700 | 106 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_550i_f10` | BMW 550i F10 4.4 V8 | PROVISIONAL | 55 | 60 | 51 | 58 | 60 | 61 | 46 | 1880 | 160 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_520i_g30` | BMW 520i G30 B48 1.6 | PROVISIONAL | 46 | 24 | 49 | 50 | 67 | 55 | 42 | 1615 | 77 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_530i_g30` | BMW 530i G30 B48 2.0 | PROVISIONAL | 54 | 39 | 56 | 56 | 69 | 60 | 50 | 1615 | 115 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_550e_g60` | BMW 550e G60 Plug-in Hybrid | PROVISIONAL | 58 | 72 | 51 | 57 | 66 | 59 | 46 | 1970 | 183 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_730i_e65` | BMW 730i E65 3.0 | PROVISIONAL | 42 | 28 | 40 | 49 | 60 | 52 | 33 | 1810 | 105 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_740i_e65` | BMW 740i E65 4.0 V8 | PROVISIONAL | 44 | 37 | 39 | 49 | 58 | 54 | 33 | 1900 | 118 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_750i_f01` | BMW 750i F01 4.4 V8 | PROVISIONAL | 50 | 57 | 42 | 54 | 58 | 58 | 37 | 1945 | 154 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_750li_g12` | BMW 750Li G12 4.4 V8 | PROVISIONAL | 51 | 64 | 40 | 55 | 60 | 60 | 37 | 2040 | 162 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x1_20i_f48` | BMW X1 20i F48 xDrive | PROVISIONAL | 43 | 30 | 41 | 47 | 64 | 50 | 34 | 1560 | 90 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x2_m35i_f39` | BMW X2 M35i F39 xDrive | PROVISIONAL | 59 | 56 | 56 | 61 | 69 | 64 | 52 | 1610 | 140 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x3_30i_g01` | BMW X3 30i G01 xDrive | PROVISIONAL | 49 | 37 | 47 | 52 | 68 | 57 | 41 | 1785 | 104 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x4_30i_g02` | BMW X4 30i G02 xDrive | PROVISIONAL | 49 | 37 | 48 | 52 | 68 | 57 | 43 | 1815 | 102 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x5_40i_g05` | BMW X5 40i G05 xDrive | PROVISIONAL | 47 | 45 | 38 | 52 | 67 | 58 | 35 | 2060 | 121 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x5_50e_g05` | BMW X5 50e G05 LCI Plug-in Hybrid | PROVISIONAL | 46 | 56 | 34 | 50 | 63 | 54 | 32 | 2490 | 145 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x6_40i_g06` | BMW X6 40i G06 xDrive | PROVISIONAL | 47 | 43 | 38 | 51 | 67 | 58 | 35 | 2130 | 117 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x7_40i_g07` | BMW X7 40i G07 xDrive | PROVISIONAL | 41 | 37 | 29 | 47 | 66 | 54 | 28 | 2420 | 103 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_e30` | BMW M3 E30 2.3 S14 | CALIBRATED | 67 | 38 | 85 | 67 | 66 | 65 | 75 | 1200 | 123 | 0 | OK | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_e36_32` | BMW M3 E36 3.2 S50 | CALIBRATED | 68 | 52 | 77 | 70 | 66 | 69 | 72 | 1460 | 162 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_e46` | BMW M3 E46 3.2 S54 | CALIBRATED | 72 | 55 | 81 | 74 | 68 | 72 | 76 | 1495 | 169 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_e92` | BMW M3 E92 4.0 S65 | CALIBRATED | 72 | 59 | 78 | 75 | 68 | 76 | 75 | 1655 | 187 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_1m_e82` | BMW 1M Coupe E82 N54 | CALIBRATED | 72 | 64 | 79 | 73 | 66 | 71 | 75 | 1495 | 167 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m2_f87_n55` | BMW M2 F87 N55 | CALIBRATED | 73 | 63 | 78 | 75 | 71 | 74 | 75 | 1570 | 173 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m2_cs_f87` | BMW M2 CS F87 S55 | CALIBRATED | 80 | 78 | 84 | 81 | 73 | 80 | 82 | 1550 | 214 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_f80_cs` | BMW M3 CS F80 S55 | CALIBRATED | 79 | 78 | 82 | 80 | 73 | 80 | 81 | 1585 | 213 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_g80_competition_xdrive` | BMW M3 Competition G80 xDrive | CALIBRATED | 78 | 81 | 78 | 78 | 73 | 80 | 77 | 1805 | 208 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_cs_g80` | BMW M3 CS G80 xDrive | CALIBRATED | 82 | 86 | 83 | 81 | 72 | 82 | 82 | 1765 | 229 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m3_touring_g81` | BMW M3 Touring G81 Competition xDrive | CALIBRATED | 76 | 78 | 76 | 77 | 73 | 80 | 74 | 1865 | 201 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m4_g82_competition_xdrive` | BMW M4 Competition G82 xDrive | CALIBRATED | 78 | 81 | 78 | 78 | 73 | 80 | 77 | 1800 | 208 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m4_cs_g82` | BMW M4 CS G82 xDrive | CALIBRATED | 82 | 86 | 83 | 81 | 72 | 82 | 82 | 1760 | 230 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_e34` | BMW M5 E34 3.8 S38 | CALIBRATED | 64 | 49 | 68 | 67 | 65 | 68 | 65 | 1670 | 150 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_e39` | BMW M5 E39 4.9 S62 | CALIBRATED | 67 | 57 | 69 | 70 | 66 | 72 | 66 | 1795 | 164 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_e60` | BMW M5 E60 5.0 S85 | CALIBRATED | 69 | 67 | 69 | 73 | 61 | 73 | 67 | 1830 | 204 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_f10` | BMW M5 F10 4.4 S63 | CALIBRATED | 69 | 75 | 67 | 72 | 64 | 73 | 65 | 1945 | 212 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_f90` | BMW M5 F90 Competition xDrive | CALIBRATED | 75 | 87 | 70 | 75 | 68 | 77 | 70 | 1930 | 238 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_cs_f90` | BMW M5 CS F90 xDrive | CALIBRATED | 79 | 92 | 76 | 79 | 69 | 80 | 76 | 1825 | 256 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m5_g90` | BMW M5 G90 Plug-in Hybrid xDrive | CALIBRATED | 68 | 82 | 61 | 71 | 64 | 71 | 62 | 2445 | 219 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m6_e63` | BMW M6 E63 5.0 S85 | CALIBRATED | 70 | 69 | 71 | 73 | 61 | 73 | 69 | 1785 | 209 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m6_f13` | BMW M6 F13 4.4 S63 | CALIBRATED | 71 | 77 | 68 | 73 | 65 | 75 | 67 | 1925 | 214 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_m8_competition_g15` | BMW M8 Competition G15 xDrive | CALIBRATED | 75 | 89 | 71 | 75 | 68 | 77 | 70 | 1885 | 244 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x3_m_competition_f97` | BMW X3 M Competition F97 S58 xDrive | CALIBRATED | 67 | 71 | 61 | 69 | 70 | 73 | 61 | 2045 | 183 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x4_m_competition_f98` | BMW X4 M Competition F98 S58 xDrive | CALIBRATED | 67 | 71 | 61 | 69 | 70 | 73 | 61 | 2045 | 183 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x5_m_f85` | BMW X5 M F85 4.4 S63 xDrive | CALIBRATED | 60 | 69 | 50 | 66 | 63 | 69 | 52 | 2350 | 180 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x5_m_competition_f95` | BMW X5 M Competition F95 4.4 S63 xDrive | CALIBRATED | 63 | 72 | 53 | 68 | 64 | 71 | 55 | 2395 | 192 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_x6_m_competition_f96` | BMW X6 M Competition F96 4.4 S63 xDrive | CALIBRATED | 63 | 73 | 53 | 68 | 64 | 71 | 55 | 2370 | 194 | 0 | REVIEWED_ADJUSTED | BMW catalog expansion; M identity remains in model/variant. |
+| `bmw_xm_g09` | BMW XM G09 Plug-in Hybrid xDrive | PROVISIONAL | 56 | 66 | 44 | 62 | 60 | 64 | 45 | 2710 | 177 | 0 | PROVISIONAL | BMW catalog expansion; M identity remains in model/variant. |

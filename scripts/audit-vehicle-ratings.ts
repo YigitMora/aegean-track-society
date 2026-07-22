@@ -229,6 +229,43 @@ const productionCatalogExpansionVehicleCodes = new Set(
 productionCatalogExpansionRows.forEach((row) => {
   row.notes.push("Production catalog breadth expansion; conservative provisional baseline.");
 });
+const sprintVagGolfPoloRows = extractVehicleRows("sprintVagGolfPoloVehicleDefinitions");
+const sprintVagGolfPoloVehicleCodes = new Set(
+  sprintVagGolfPoloRows.map((row) => row.code),
+);
+sprintVagGolfPoloRows.forEach((row) => {
+  row.notes.push("VAG Golf/Polo catalog expansion; conservative provisional baseline.");
+});
+const sprintFiatEgea124Rows = extractVehicleRows("sprintFiatEgea124VehicleDefinitions");
+const sprintFiatEgea124VehicleCodes = new Set(
+  sprintFiatEgea124Rows.map((row) => row.code),
+);
+sprintFiatEgea124Rows.forEach((row) => {
+  row.notes.push("Fiat/Abarth Egea and 124 expansion; conservative provisional baseline.");
+});
+const sprintAudiCatalogRows = extractVehicleRows("sprintAudiCatalogVehicleDefinitions");
+const sprintAudiCatalogVehicleCodes = new Set(
+  sprintAudiCatalogRows.map((row) => row.code),
+);
+sprintAudiCatalogRows.forEach((row) => {
+  row.notes.push("Audi catalog expansion; Audi Sport identity normalized into model names.");
+});
+const sprintMercedesBenzCatalogRows = extractVehicleRows(
+  "sprintMercedesBenzCatalogVehicleDefinitions",
+);
+const sprintMercedesBenzCatalogVehicleCodes = new Set(
+  sprintMercedesBenzCatalogRows.map((row) => row.code),
+);
+sprintMercedesBenzCatalogRows.forEach((row) => {
+  row.notes.push("Mercedes-Benz catalog expansion; AMG identity remains in model/variant.");
+});
+const sprintBmwCatalogRows = extractVehicleRows("sprintBmwCatalogVehicleDefinitions");
+const sprintBmwCatalogVehicleCodes = new Set(
+  sprintBmwCatalogRows.map((row) => row.code),
+);
+sprintBmwCatalogRows.forEach((row) => {
+  row.notes.push("BMW catalog expansion; M identity remains in model/variant.");
+});
 
 const vehicleRows = [
   ...extractVehicleRows("baseVehicleDefinitions"),
@@ -241,6 +278,11 @@ const vehicleRows = [
   ...sprint4UDailyPerformanceRows,
   ...sprint4UEliteRows,
   ...productionCatalogExpansionRows,
+  ...sprintVagGolfPoloRows,
+  ...sprintFiatEgea124Rows,
+  ...sprintAudiCatalogRows,
+  ...sprintMercedesBenzCatalogRows,
+  ...sprintBmwCatalogRows,
 ].sort((a, b) => a.sortOrder - b.sortOrder || a.code.localeCompare(b.code));
 
 const auditIssues = [
@@ -793,6 +835,21 @@ function renderAuditDocument(rows: VehicleAuditRow[], issues: AuditIssue[]) {
   const productionCatalogExpansionRows = rows.filter((row) =>
     productionCatalogExpansionVehicleCodes.has(row.code),
   );
+  const sprintVagGolfPoloRows = rows.filter((row) =>
+    sprintVagGolfPoloVehicleCodes.has(row.code),
+  );
+  const sprintFiatEgea124Rows = rows.filter((row) =>
+    sprintFiatEgea124VehicleCodes.has(row.code),
+  );
+  const sprintAudiCatalogRows = rows.filter((row) =>
+    sprintAudiCatalogVehicleCodes.has(row.code),
+  );
+  const sprintMercedesBenzCatalogRows = rows.filter((row) =>
+    sprintMercedesBenzCatalogVehicleCodes.has(row.code),
+  );
+  const sprintBmwCatalogRows = rows.filter((row) =>
+    sprintBmwCatalogVehicleCodes.has(row.code),
+  );
   const eliteCandidateRows = rows.filter((row) => isEliteFactoryTrackCandidate(row));
   const stock90Count = rows.filter((row) => row.overall >= 90).length;
   const stock95Count = rows.filter((row) => row.overall >= 95).length;
@@ -862,6 +919,26 @@ function renderAuditDocument(rows: VehicleAuditRow[], issues: AuditIssue[]) {
     "## Production Catalog Expansion Templates",
     "",
     renderVehicleTable(productionCatalogExpansionRows),
+    "",
+    "## VAG Golf/Polo Catalog Expansion Templates",
+    "",
+    renderVehicleTable(sprintVagGolfPoloRows),
+    "",
+    "## Fiat/Abarth Egea and 124 Catalog Expansion Templates",
+    "",
+    renderVehicleTable(sprintFiatEgea124Rows),
+    "",
+    "## Audi Catalog Expansion Templates",
+    "",
+    renderVehicleTable(sprintAudiCatalogRows),
+    "",
+    "## Mercedes-Benz Catalog Expansion Templates",
+    "",
+    renderVehicleTable(sprintMercedesBenzCatalogRows),
+    "",
+    "## BMW Catalog Expansion Templates",
+    "",
+    renderVehicleTable(sprintBmwCatalogRows),
     "",
     "## Sprint 4O Hierarchy Checks",
     "",
@@ -1467,10 +1544,6 @@ function initialNotesForCode(code: string) {
 
   if (sprint4PVehicleCodes.has(code)) {
     return ["Sprint 4P daily template; official source trail documented as provisional."];
-  }
-
-  if (productionCatalogExpansionVehicleCodes.has(code)) {
-    return ["Production catalog breadth expansion; conservative provisional baseline."];
   }
 
   return [];
