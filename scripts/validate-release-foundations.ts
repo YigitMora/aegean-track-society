@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import {
   mobileApplicationsContractHeader,
@@ -39,6 +40,7 @@ const vercelTeamId = "team_TestAccount123";
 const repositoryId = expectedBackendRepositoryId;
 const contract = getMobileApiContractManifest();
 let adversarialVerificationFixtureCount = 0;
+let adversarialInvocationFixtureCount = 0;
 
 async function main() {
 assert.equal(contract.schemaVersion, 1);
@@ -373,6 +375,7 @@ assertWorkflowActionPins(ciWorkflow, 3);
 assert.match(ciWorkflow, /persist-credentials:\s*false/);
 assert.match(ciWorkflow, /pnpm scan:secrets -- --base "\$BASE_SHA"/);
 assertReleaseWorkflow(releaseWorkflow);
+assertProductionVerifierSmokeTest();
 assert.match(secretScanner, /binary-file-review-required/);
 assert.match(secretScanner, /oversized-file-review-required/);
 assert.match(secretScanner, /VERCEL_ACCESS_TOKEN/);
@@ -389,7 +392,7 @@ assert.doesNotMatch(
 );
 
 console.log(
-  `validate-release-foundations passed (4 positive provenance fixtures, ${adversarialVerificationFixtureCount} adversarial provenance fixtures)`,
+  `validate-release-foundations passed (4 positive provenance fixtures, ${adversarialVerificationFixtureCount} adversarial provenance fixtures, ${adversarialInvocationFixtureCount} adversarial invocation fixtures)`,
 );
 }
 
@@ -1009,10 +1012,12 @@ function assertReleaseWorkflow(source: string) {
     source.match(/repository:\s*YigitMora\/aegean-track-society/g)?.length,
     2,
   );
-  assert.match(
+  const invocation = extractWorkflowRunCommand(
     source,
-    /--repository "YigitMora\/aegean-track-society"/,
+    "Verify exact Vercel Production deployment",
   );
+  assertProductionVerifierInvocation(invocation);
+  assertInvalidProductionVerifierInvocations();
   assert.doesNotMatch(source, /canonical_url|--canonical-url|CANONICAL_URL/);
   assert.equal(source.match(/secrets\.VERCEL_ACCESS_TOKEN/g)?.length, 1);
   assert.equal(source.match(/vars\.VERCEL_PROJECT_ID/g)?.length, 1);
@@ -1025,6 +1030,164 @@ function assertReleaseWorkflow(source: string) {
   assert.ok(verificationIndex > secretIndex);
 
   assertWorkflowActionPins(source, 4);
+}
+
+function extractWorkflowRunCommand(source: string, stepName: string) {
+  const lines = source.split(/\r?\n/);
+  const stepIndex = lines.findIndex(
+    (line) => line.trim() === `- name: ${stepName}`,
+  );
+  assert.ok(stepIndex >= 0, `Workflow step is missing: ${stepName}.`);
+
+  const nextStepOffset = lines
+    .slice(stepIndex + 1)
+    .findIndex((line) => /^\s*- name:\s/.test(line));
+  const stepEnd =
+    nextStepOffset === -1 ? lines.length : stepIndex + 1 + nextStepOffset;
+  const runIndex = lines.findIndex(
+    (line, index) =>
+      index > stepIndex && index < stepEnd && /^\s+run:\s*>-\s*$/.test(line),
+  );
+  assert.ok(runIndex >= 0, `Folded run command is missing: ${stepName}.`);
+
+  const runIndent = lines[runIndex]?.search(/\S/) ?? -1;
+  const commandLines: string[] = [];
+  for (const line of lines.slice(runIndex + 1, stepEnd)) {
+    if (!line.trim()) {
+      continue;
+    }
+    if (line.search(/\S/) <= runIndent) {
+      break;
+    }
+    commandLines.push(line.trim());
+  }
+  assert.ok(commandLines.length > 0, `Run command is empty: ${stepName}.`);
+  return commandLines.join(" ");
+}
+
+function assertProductionVerifierInvocation(command: string) {
+  const tokens = tokenizeShellCommand(command);
+  assert.equal(tokens.includes("--"), false);
+  assert.deepEqual(tokens, [
+    "pnpm",
+    "verify:production-release",
+    "--repository",
+    "YigitMora/aegean-track-society",
+    "--sha",
+    "${{ needs.authorize.outputs.approved_sha }}",
+  ]);
+}
+
+function assertInvalidProductionVerifierInvocations() {
+  const expectedSuffix =
+    '--repository "YigitMora/aegean-track-society" --sha "${{ needs.authorize.outputs.approved_sha }}"';
+  const invalidCommands = [
+    `pnpm verify:production-release -- ${expectedSuffix}`,
+    'pnpm verify:production-release --sha "${{ needs.authorize.outputs.approved_sha }}"',
+    `pnpm verify:production-release ${expectedSuffix} --repository "YigitMora/aegean-track-society"`,
+    `pnpm verify-production-release ${expectedSuffix}`,
+    `echo ok # pnpm verify:production-release ${expectedSuffix}`,
+    `$VERIFY_COMMAND ${expectedSuffix}`,
+    'pnpm verify:production-release --repositry "YigitMora/aegean-track-society" --sha "${{ needs.authorize.outputs.approved_sha }}"',
+  ];
+
+  for (const command of invalidCommands) {
+    adversarialInvocationFixtureCount += 1;
+    assert.throws(() => assertProductionVerifierInvocation(command));
+  }
+}
+
+function tokenizeShellCommand(command: string) {
+  const tokens: string[] = [];
+  let token = "";
+  let quote: "'" | '"' | null = null;
+  let escaped = false;
+
+  const pushToken = () => {
+    if (token) {
+      tokens.push(token);
+      token = "";
+    }
+  };
+
+  for (const character of command) {
+    if (escaped) {
+      token += character;
+      escaped = false;
+      continue;
+    }
+    if (character === "\\" && quote !== "'") {
+      escaped = true;
+      continue;
+    }
+    if (quote) {
+      if (character === quote) {
+        quote = null;
+      } else {
+        token += character;
+      }
+      continue;
+    }
+    if (character === "'" || character === '"') {
+      quote = character;
+    } else if (/\s/.test(character)) {
+      pushToken();
+    } else {
+      token += character;
+    }
+  }
+
+  assert.equal(escaped, false, "Workflow invocation has an incomplete escape.");
+  assert.equal(quote, null, "Workflow invocation has an unclosed quote.");
+  pushToken();
+  return tokens;
+}
+
+function assertProductionVerifierSmokeTest() {
+  const pnpmCli = process.env.npm_execpath;
+  assert.ok(pnpmCli && /pnpm/i.test(pnpmCli));
+
+  const verifierSource = read("src/lib/release-verifier.ts");
+  const configurationGuard = verifierSource.indexOf(
+    "assertVercelConfiguration({",
+  );
+  const firstGitHubRequest = verifierSource.indexOf(
+    "const repositoryMetadata = await readGitHubJson",
+  );
+  assert.ok(configurationGuard >= 0 && firstGitHubRequest > configurationGuard);
+
+  const smoke = spawnSync(
+    process.execPath,
+    [
+      pnpmCli,
+      "verify:production-release",
+      "--repository",
+      repository,
+      "--sha",
+      expectedSha,
+    ],
+    {
+      cwd: process.cwd(),
+      encoding: "utf8",
+      timeout: 10_000,
+      env: {
+        GITHUB_TOKEN: "u1a-f4-synthetic-read-only-token",
+        HOME: process.env.HOME ?? "",
+        NODE_ENV: "test",
+        PATH: process.env.PATH ?? "",
+        TMPDIR: process.env.TMPDIR ?? "/tmp",
+        VERCEL_ACCESS_TOKEN: "",
+        VERCEL_PROJECT_ID: "",
+        VERCEL_TEAM_ID: "",
+      },
+    },
+  );
+  const output = `${smoke.stdout ?? ""}\n${smoke.stderr ?? ""}`;
+  assert.equal(smoke.error, undefined);
+  assert.equal(smoke.signal, null);
+  assert.equal(smoke.status, 1);
+  assert.match(output, /VERCEL_ACCESS_TOKEN_MISSING/);
+  assert.doesNotMatch(output, /ARGUMENTS_INVALID/);
 }
 
 function assertWorkflowActionPins(source: string, expectedCount: number) {

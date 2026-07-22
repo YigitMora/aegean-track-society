@@ -94,6 +94,6 @@ jobs:
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
         run: >-
-          pnpm verify:production-release --
+          pnpm verify:production-release
           --repository "YigitMora/aegean-track-society"
           --sha "${{ needs.authorize.outputs.approved_sha }}"
