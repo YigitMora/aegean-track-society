@@ -22,19 +22,23 @@ import {
 } from "../src/lib/mobile-release-contract";
 import {
   canonicalBackendProductionOrigin,
+  expectedBackendRepository,
+  expectedBackendRepositoryId,
   ReleaseVerificationError,
+  trustedVercelActorId,
   verifyProductionRelease,
 } from "../src/lib/release-verifier";
 
 const expectedSha = "0123456789abcdef0123456789abcdef01234567";
-const repository = "YigitMora/aegean-track-society";
+const repository = expectedBackendRepository;
 const deploymentHost = "ats-release-012345.vercel.app";
 const deploymentId = "dpl_TestDeployment123";
 const canonicalHost = "www.aegeantracksociety.com";
 const vercelProjectId = "prj_TestProject123";
 const vercelTeamId = "team_TestAccount123";
-const repositoryId = 123456789;
+const repositoryId = expectedBackendRepositoryId;
 const contract = getMobileApiContractManifest();
+let adversarialVerificationFixtureCount = 0;
 
 async function main() {
 assert.equal(contract.schemaVersion, 1);
@@ -72,6 +76,9 @@ assert.equal(result.verifiedProbeCount, 7);
 assert.equal(result.deploymentOrigin, `https://${deploymentHost}`);
 assert.equal(result.canonicalOrigin, `https://${canonicalHost}`);
 assert.equal(canonicalBackendProductionOrigin, `https://${canonicalHost}`);
+assert.equal(expectedBackendRepositoryId, 1293619947);
+assert.equal(trustedVercelActorId, 35613825);
+assert.deepEqual(happy.githubDeploymentPages, [1]);
 assert.equal(happy.productRequests.length, 9);
 assert.ok(happy.productRequests.every((request) => request.method === "GET"));
 assert.ok(
@@ -101,6 +108,42 @@ await expectVerificationFailure(
   "VERCEL_PROJECT_PROVENANCE_MISMATCH",
 );
 await expectVerificationFailure(
+  { repositoryMetadataWrongId: true },
+  "GITHUB_REPOSITORY_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
+  { repositoryMetadataWrongName: true },
+  "GITHUB_REPOSITORY_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
+  { repositoryMetadataMissing: true },
+  "GITHUB_REPOSITORY_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
+  { repositoryMetadataMalformed: true },
+  "GITHUB_REPOSITORY_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
+  { projectRepositoryIdWrong: true },
+  "VERCEL_PROJECT_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
+  { projectRepositoryIdMalformed: true },
+  "VERCEL_PROJECT_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
+  { deploymentRepositoryIdWrong: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
+  { deploymentRepositoryIdMalformed: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
+  { bothVercelRepositoryIdsWrong: true },
+  "VERCEL_PROJECT_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
   { untrustedProjectLinkType: true },
   "VERCEL_PROJECT_PROVENANCE_MISMATCH",
 );
@@ -117,7 +160,43 @@ await expectVerificationFailure(
   "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
 );
 await expectVerificationFailure(
+  { deploymentActorWrongId: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
+  { deploymentActorTrustedLookingUser: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
+  { deploymentActorInconsistent: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
+  { deploymentActorMissingId: true },
+  "DEPLOYMENTS_RESPONSE_INVALID",
+);
+await expectVerificationFailure(
+  { deploymentActorMalformedId: true },
+  "DEPLOYMENTS_RESPONSE_INVALID",
+);
+await expectVerificationFailure(
+  { wrongGitHubAppId: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
+  { ambiguousGitHubAppMetadata: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
   { untrustedStatusCreator: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
+  { statusActorWrongId: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
+  { wrongStatusGitHubAppId: true },
   "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
 );
 await expectVerificationFailure(
@@ -127,6 +206,58 @@ await expectVerificationFailure(
 await expectVerificationFailure(
   { ambiguousDeployment: true },
   "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+const matchingSecondPage = createMockFetch({ matchingDeploymentOnPageTwo: true });
+await verifyProductionRelease(verificationOptions(matchingSecondPage.fetch));
+assert.deepEqual(matchingSecondPage.githubDeploymentPages, [1, 2]);
+const nonMatchingFirstPage = createMockFetch({
+  nonMatchingFirstPage: true,
+});
+await verifyProductionRelease(verificationOptions(nonMatchingFirstPage.fetch));
+assert.deepEqual(nonMatchingFirstPage.githubDeploymentPages, [1, 2]);
+await expectVerificationFailure(
+  { duplicateDeploymentAcrossPages: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
+  { malformedPaginationLink: true },
+  "DEPLOYMENT_PAGINATION_INVALID",
+);
+await expectVerificationFailure(
+  { paginationLoop: true },
+  "DEPLOYMENT_PAGINATION_INVALID",
+);
+await expectVerificationFailure(
+  { disallowedPaginationOrigin: true },
+  "DEPLOYMENT_PAGINATION_INVALID",
+);
+await expectVerificationFailure(
+  { disallowedPaginationPath: true },
+  "DEPLOYMENT_PAGINATION_INVALID",
+);
+await expectVerificationFailure(
+  { paginationConstraintTamper: true },
+  "DEPLOYMENT_PAGINATION_INVALID",
+);
+await expectVerificationFailure(
+  { paginationLastWithoutNext: true },
+  "DEPLOYMENT_PAGINATION_INVALID",
+);
+await expectVerificationFailure(
+  { laterPageApiFailure: true },
+  "DEPLOYMENTS_LOOKUP_FAILED",
+);
+await expectVerificationFailure(
+  { laterPageRateLimit: true },
+  "DEPLOYMENTS_LOOKUP_FAILED",
+);
+await expectVerificationFailure(
+  { truncatedDeploymentPage: true },
+  "DEPLOYMENT_PAGINATION_INCOMPLETE",
+);
+await expectVerificationFailure(
+  { excessiveDeploymentPages: true },
+  "DEPLOYMENT_PAGINATION_INCOMPLETE",
 );
 await expectVerificationFailure(
   { wrongDeploymentSha: true },
@@ -177,6 +308,7 @@ await assert.rejects(() =>
     verificationOptions(createMockFetch({ networkFailure: true }).fetch),
   ),
 );
+adversarialVerificationFixtureCount += 1;
 
 const releaseRoute = read("src/app/api/mobile/v1/release/route.ts");
 assert.doesNotMatch(releaseRoute, /prisma|authenticate|authorization/i);
@@ -222,7 +354,9 @@ assert.doesNotMatch(
   /console\.error\("Payment confirmation transaction failed",\s*error\)/,
 );
 
-console.log("validate-release-foundations passed");
+console.log(
+  `validate-release-foundations passed (3 positive provenance fixtures, ${adversarialVerificationFixtureCount} adversarial provenance fixtures)`,
+);
 }
 
 main().catch((error: unknown) => {
@@ -240,13 +374,44 @@ type MockFetchOptions = {
   deploymentSucceeded?: boolean;
   wrongProject?: boolean;
   wrongRepository?: boolean;
+  repositoryMetadataWrongId?: boolean;
+  repositoryMetadataWrongName?: boolean;
+  repositoryMetadataMissing?: boolean;
+  repositoryMetadataMalformed?: boolean;
+  projectRepositoryIdWrong?: boolean;
+  projectRepositoryIdMalformed?: boolean;
+  deploymentRepositoryIdWrong?: boolean;
+  deploymentRepositoryIdMalformed?: boolean;
+  bothVercelRepositoryIdsWrong?: boolean;
   untrustedProjectLinkType?: boolean;
   previewTarget?: boolean;
   incompleteDeploymentGitSource?: boolean;
   untrustedDeploymentCreator?: boolean;
+  deploymentActorWrongId?: boolean;
+  deploymentActorTrustedLookingUser?: boolean;
+  deploymentActorInconsistent?: boolean;
+  deploymentActorMissingId?: boolean;
+  deploymentActorMalformedId?: boolean;
+  wrongGitHubAppId?: boolean;
+  ambiguousGitHubAppMetadata?: boolean;
   untrustedStatusCreator?: boolean;
+  statusActorWrongId?: boolean;
+  wrongStatusGitHubAppId?: boolean;
   missingDeployment?: boolean;
   ambiguousDeployment?: boolean;
+  matchingDeploymentOnPageTwo?: boolean;
+  nonMatchingFirstPage?: boolean;
+  duplicateDeploymentAcrossPages?: boolean;
+  malformedPaginationLink?: boolean;
+  paginationLoop?: boolean;
+  disallowedPaginationOrigin?: boolean;
+  disallowedPaginationPath?: boolean;
+  paginationConstraintTamper?: boolean;
+  paginationLastWithoutNext?: boolean;
+  laterPageApiFailure?: boolean;
+  laterPageRateLimit?: boolean;
+  truncatedDeploymentPage?: boolean;
+  excessiveDeploymentPages?: boolean;
   wrongDeploymentSha?: boolean;
   staleCanonicalAlias?: boolean;
   htmlResponse?: boolean;
@@ -278,6 +443,7 @@ async function expectVerificationFailure(
   options: MockFetchOptions,
   expectedCode: string,
 ) {
+  adversarialVerificationFixtureCount += 1;
   await assert.rejects(
     () =>
       verifyProductionRelease(
@@ -289,10 +455,19 @@ async function expectVerificationFailure(
 
 function createMockFetch(options?: MockFetchOptions) {
   const productRequests: Array<{ method: string; headers: HeadersInit }> = [];
+  const githubDeploymentPages: number[] = [];
   const manifestSha = options?.manifestSha ?? expectedSha;
   const deploymentSucceeded = options?.deploymentSucceeded ?? true;
-  const trustedActor = { login: "vercel[bot]", type: "Bot" };
-  const untrustedActor = { login: "untrusted-bot[bot]", type: "Bot" };
+  const trustedActor = {
+    id: trustedVercelActorId,
+    login: "vercel[bot]",
+    type: "Bot",
+  };
+  const untrustedActor = {
+    id: 999999,
+    login: "untrusted-bot[bot]",
+    type: "Bot",
+  };
 
   const fetch = async (
     input: string | URL | Request,
@@ -306,24 +481,148 @@ function createMockFetch(options?: MockFetchOptions) {
       throw new Error("Simulated network failure without sensitive details");
     }
 
+    if (
+      url.hostname === "api.github.com" &&
+      url.pathname === `/repos/${repository}`
+    ) {
+      if (options?.repositoryMetadataMissing) {
+        return jsonResponse({});
+      }
+      if (options?.repositoryMetadataMalformed) {
+        return jsonResponse({
+          id: String(repositoryId),
+          name: "aegean-track-society",
+          full_name: repository,
+          owner: { login: "YigitMora" },
+        });
+      }
+      return jsonResponse({
+        id: options?.repositoryMetadataWrongId
+          ? repositoryId + 1
+          : repositoryId,
+        name: options?.repositoryMetadataWrongName
+          ? "another-repository"
+          : "aegean-track-society",
+        full_name: options?.repositoryMetadataWrongName
+          ? "YigitMora/another-repository"
+          : repository,
+        owner: { login: "YigitMora" },
+      });
+    }
+
     if (url.hostname === "api.github.com" && url.pathname.endsWith("/deployments")) {
+      const page = Number(url.searchParams.get("page") ?? "1");
+      githubDeploymentPages.push(page);
       if (options?.githubApiFailure) {
         return jsonResponse({ message: "Unavailable" }, 503);
+      }
+      if (page > 1 && options?.laterPageApiFailure) {
+        return jsonResponse({ message: "Unavailable" }, 503);
+      }
+      if (page > 1 && options?.laterPageRateLimit) {
+        return jsonResponse({ message: "Rate limited" }, 429);
       }
       if (options?.missingDeployment) {
         return jsonResponse([]);
       }
+      let deploymentCreator: Record<string, unknown> = options?.untrustedDeploymentCreator
+        ? untrustedActor
+        : trustedActor;
+      if (options?.deploymentActorWrongId) {
+        deploymentCreator = { ...trustedActor, id: trustedVercelActorId + 1 };
+      } else if (options?.deploymentActorTrustedLookingUser) {
+        deploymentCreator = { ...trustedActor, type: "User" };
+      } else if (options?.deploymentActorInconsistent) {
+        deploymentCreator = { ...trustedActor, login: "trusted-looking[bot]" };
+      } else if (options?.deploymentActorMissingId) {
+        const { id: _id, ...withoutId } = trustedActor;
+        deploymentCreator = withoutId;
+      } else if (options?.deploymentActorMalformedId) {
+        deploymentCreator = { ...trustedActor, id: String(trustedVercelActorId) };
+      }
+      const appMetadata = options?.wrongGitHubAppId
+        ? { id: 999999, slug: "unverified-app" }
+        : options?.ambiguousGitHubAppMetadata
+          ? { id: String(999999), slug: "unverified-app" }
+          : null;
       const githubDeployment = {
         id: 42,
         sha: options?.wrongDeploymentSha ? "f".repeat(40) : expectedSha,
         ref: expectedSha,
         task: "deploy",
         environment: "Production",
-        creator: options?.untrustedDeploymentCreator
-          ? untrustedActor
-          : trustedActor,
+        creator: deploymentCreator,
+        performed_via_github_app: appMetadata,
       };
-      return jsonResponse(
+      const nonMatchingDeployment = {
+        ...githubDeployment,
+        id: 4000 + page,
+        environment: "Preview",
+      };
+
+      if (options?.matchingDeploymentOnPageTwo) {
+        return page === 1
+          ? deploymentPage([], 2)
+          : deploymentPage([githubDeployment]);
+      }
+      if (options?.nonMatchingFirstPage) {
+        return page === 1
+          ? deploymentPage([nonMatchingDeployment], 2)
+          : deploymentPage([githubDeployment]);
+      }
+      if (options?.duplicateDeploymentAcrossPages) {
+        return page === 1
+          ? deploymentPage([githubDeployment], 2)
+          : deploymentPage([{ ...githubDeployment, id: 43 }]);
+      }
+      if (
+        options?.laterPageApiFailure ||
+        options?.laterPageRateLimit
+      ) {
+        return deploymentPage([githubDeployment], 2);
+      }
+      if (options?.malformedPaginationLink) {
+        return jsonResponse([githubDeployment], 200, { Link: "not-a-link" });
+      }
+      if (options?.paginationLoop) {
+        return deploymentPage([githubDeployment], 1);
+      }
+      if (options?.disallowedPaginationOrigin) {
+        return jsonResponse([githubDeployment], 200, {
+          Link: `<https://example.invalid/repos/${repository}/deployments?sha=${expectedSha}&per_page=100&page=2>; rel="next"`,
+        });
+      }
+      if (options?.disallowedPaginationPath) {
+        return jsonResponse([githubDeployment], 200, {
+          Link: `<https://api.github.com/repos/${repository}/issues?sha=${expectedSha}&per_page=100&page=2>; rel="next"`,
+        });
+      }
+      if (options?.paginationConstraintTamper) {
+        return jsonResponse([githubDeployment], 200, {
+          Link: `<https://api.github.com/repos/${repository}/deployments?sha=${"f".repeat(40)}&per_page=100&page=2>; rel="next"`,
+        });
+      }
+      if (options?.paginationLastWithoutNext) {
+        return jsonResponse([githubDeployment], 200, {
+          Link: `<https://api.github.com/repos/${repository}/deployments?sha=${expectedSha}&per_page=100&page=2>; rel="last"`,
+        });
+      }
+      if (options?.truncatedDeploymentPage) {
+        return deploymentPage([
+          githubDeployment,
+          ...Array.from({ length: 99 }, (_, index) => ({
+            ...nonMatchingDeployment,
+            id: 5000 + index,
+          })),
+        ]);
+      }
+      if (options?.excessiveDeploymentPages) {
+        return deploymentPage(
+          page === 1 ? [githubDeployment] : [nonMatchingDeployment],
+          page + 1,
+        );
+      }
+      return deploymentPage(
         options?.ambiguousDeployment
           ? [githubDeployment, { ...githubDeployment, id: 43 }]
           : [githubDeployment],
@@ -333,7 +632,12 @@ function createMockFetch(options?: MockFetchOptions) {
     if (url.hostname === "api.github.com" && url.pathname.endsWith("/statuses")) {
       const statusCreator = options?.untrustedStatusCreator
         ? untrustedActor
-        : trustedActor;
+        : options?.statusActorWrongId
+          ? { ...trustedActor, id: trustedVercelActorId + 1 }
+          : trustedActor;
+      const statusAppMetadata = options?.wrongStatusGitHubAppId
+        ? { id: 999999, slug: "unverified-app" }
+        : null;
       return jsonResponse(
         deploymentSucceeded
           ? [
@@ -341,14 +645,20 @@ function createMockFetch(options?: MockFetchOptions) {
                 state: "success",
                 environment_url: `https://${deploymentHost}`,
                 creator: statusCreator,
+                performed_via_github_app: statusAppMetadata,
               },
             ]
           : [
-              { state: "failure", creator: trustedActor },
+              {
+                state: "failure",
+                creator: trustedActor,
+                performed_via_github_app: null,
+              },
               {
                 state: "success",
                 environment_url: `https://${deploymentHost}`,
                 creator: trustedActor,
+                performed_via_github_app: null,
               },
             ],
       );
@@ -369,7 +679,13 @@ function createMockFetch(options?: MockFetchOptions) {
             repo: options?.wrongRepository
               ? "another-repository"
               : "aegean-track-society",
-            repoId: repositoryId,
+            repoId:
+              options?.projectRepositoryIdMalformed
+                ? String(repositoryId)
+                : options?.projectRepositoryIdWrong ||
+                    options?.bothVercelRepositoryIdsWrong
+                ? repositoryId + 1
+                : repositoryId,
             productionBranch: "main",
           },
         });
@@ -391,7 +707,13 @@ function createMockFetch(options?: MockFetchOptions) {
               : {
                   org: "YigitMora",
                   repo: "aegean-track-society",
-                  repoId: repositoryId,
+                  repoId:
+                    options?.deploymentRepositoryIdMalformed
+                      ? String(repositoryId)
+                      : options?.deploymentRepositoryIdWrong ||
+                          options?.bothVercelRepositoryIdsWrong
+                      ? repositoryId + 1
+                      : repositoryId,
                 }),
             ref: "main",
             sha: expectedSha,
@@ -506,7 +828,17 @@ function createMockFetch(options?: MockFetchOptions) {
     return response;
   };
 
-  return { fetch, productRequests };
+  return { fetch, productRequests, githubDeploymentPages };
+}
+
+function deploymentPage(body: unknown[], nextPage?: number) {
+  return jsonResponse(body, 200, {
+    ...(nextPage
+      ? {
+          Link: `<https://api.github.com/repos/${repository}/deployments?sha=${expectedSha}&per_page=100&page=${nextPage}>; rel="next"`,
+        }
+      : {}),
+  });
 }
 
 function assertGarageLifecycleRouteCoverage() {

@@ -1,6 +1,14 @@
 import type { MobileApiContractManifest } from "@/lib/mobile-release-contract";
 
 const releasePath = "/api/mobile/v1/release";
+const githubApiOrigin = "https://api.github.com";
+const githubDeploymentsPerPage = 100;
+const maximumGitHubDeploymentPages = 100;
+
+export const expectedBackendRepository =
+  "YigitMora/aegean-track-society";
+export const expectedBackendRepositoryId = 1293619947;
+export const trustedVercelActorId = 35613825;
 
 type FetchLike = (
   input: string | URL | Request,
@@ -14,6 +22,7 @@ type GitHubDeployment = {
   task: string;
   environment: string;
   creator: GitHubActor;
+  performed_via_github_app?: unknown;
 };
 
 type GitHubDeploymentStatus = {
@@ -21,11 +30,22 @@ type GitHubDeploymentStatus = {
   environment_url?: string | null;
   target_url?: string | null;
   creator: GitHubActor;
+  performed_via_github_app?: unknown;
 };
 
 type GitHubActor = {
+  id: number;
   login: string;
   type: string;
+};
+
+type GitHubRepository = {
+  id: number;
+  name: string;
+  full_name: string;
+  owner: {
+    login: string;
+  };
 };
 
 type VercelProject = {
@@ -168,10 +188,10 @@ async function findTrustedProductionDeployment({
   canonicalOrigin: string;
   fetchImpl: FetchLike;
 }) {
-  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) {
+  if (repository !== expectedBackendRepository) {
     throw new ReleaseVerificationError(
       "REPOSITORY_INVALID",
-      "GitHub repository must use the owner/name format.",
+      "GitHub repository does not match the fixed backend repository.",
     );
   }
 
@@ -187,36 +207,55 @@ async function findTrustedProductionDeployment({
     vercelTeamId,
   });
 
-  const deploymentsUrl = new URL(
-    `https://api.github.com/repos/${repository}/deployments`,
+  const repositoryMetadata = await readGitHubJson<unknown>(
+    await fetchImpl(
+      new URL(`/repos/${expectedBackendRepository}`, githubApiOrigin),
+      {
+        method: "GET",
+        redirect: "manual",
+        headers: githubHeaders(githubToken),
+      },
+    ),
+    "REPOSITORY_LOOKUP_FAILED",
   );
-  deploymentsUrl.searchParams.set("sha", expectedSha);
-  deploymentsUrl.searchParams.set("per_page", "30");
-
-  const deploymentsResponse = await fetchImpl(deploymentsUrl, {
-    method: "GET",
-    redirect: "manual",
-    headers: githubHeaders(githubToken),
-  });
-  const deployments = await readGitHubJson<unknown>(
-    deploymentsResponse,
-    "DEPLOYMENTS_LOOKUP_FAILED",
-  );
-
-  if (!Array.isArray(deployments)) {
+  if (!isExpectedGitHubRepository(repositoryMetadata)) {
     throw new ReleaseVerificationError(
-      "DEPLOYMENTS_RESPONSE_INVALID",
-      "GitHub returned an invalid deployments response.",
+      "GITHUB_REPOSITORY_PROVENANCE_MISMATCH",
+      "GitHub repository metadata does not match the immutable backend repository identity.",
     );
   }
 
-  const matchingDeployments = deployments.filter(isGitHubDeployment).filter(
+  const deploymentsUrl = new URL(
+    `/repos/${repository}/deployments`,
+    githubApiOrigin,
+  );
+  deploymentsUrl.searchParams.set("sha", expectedSha);
+  deploymentsUrl.searchParams.set(
+    "per_page",
+    String(githubDeploymentsPerPage),
+  );
+
+  const deployments = await readAllGitHubDeployments({
+    initialUrl: deploymentsUrl,
+    repository,
+    expectedSha,
+    githubToken,
+    fetchImpl,
+  });
+  if (!deployments.every(isGitHubDeployment)) {
+    throw new ReleaseVerificationError(
+      "DEPLOYMENTS_RESPONSE_INVALID",
+      "GitHub returned malformed deployment metadata.",
+    );
+  }
+
+  const matchingDeployments = deployments.filter(
     (deployment) =>
       deployment.sha.toLowerCase() === expectedSha &&
       deployment.ref.toLowerCase() === expectedSha &&
       deployment.task === "deploy" &&
       deployment.environment === "Production" &&
-      isTrustedVercelActor(deployment.creator),
+      hasTrustedVercelIntegrationIdentity(deployment),
   );
 
   if (matchingDeployments.length !== 1) {
@@ -245,7 +284,7 @@ async function findTrustedProductionDeployment({
       : null;
   const deploymentUrl =
     latestStatus?.state === "success" &&
-    isTrustedVercelActor(latestStatus.creator)
+    hasTrustedVercelIntegrationIdentity(latestStatus)
       ? getVercelDeploymentUrl(latestStatus)
       : null;
 
@@ -259,6 +298,7 @@ async function findTrustedProductionDeployment({
   await verifyVercelProductionMetadata({
     deploymentUrl,
     repository,
+    repositoryId: expectedBackendRepositoryId,
     expectedSha,
     canonicalOrigin,
     vercelAccessToken,
@@ -273,6 +313,7 @@ async function findTrustedProductionDeployment({
 async function verifyVercelProductionMetadata({
   deploymentUrl,
   repository,
+  repositoryId,
   expectedSha,
   canonicalOrigin,
   vercelAccessToken,
@@ -282,6 +323,7 @@ async function verifyVercelProductionMetadata({
 }: {
   deploymentUrl: string;
   repository: string;
+  repositoryId: number;
   expectedSha: string;
   canonicalOrigin: string;
   vercelAccessToken: string;
@@ -313,7 +355,7 @@ async function verifyVercelProductionMetadata({
     String(project.link.repo).toLowerCase() !==
       expectedRepository?.toLowerCase() ||
     project.link.productionBranch !== "main" ||
-    project.link.repoId === undefined
+    project.link.repoId !== repositoryId
   ) {
     throw new ReleaseVerificationError(
       "VERCEL_PROJECT_PROVENANCE_MISMATCH",
@@ -344,8 +386,7 @@ async function verifyVercelProductionMetadata({
     String(gitSource.org).toLowerCase() === expectedOwner?.toLowerCase() &&
     String(gitSource.repo).toLowerCase() ===
       expectedRepository?.toLowerCase() &&
-    gitSource.repoId !== undefined &&
-    String(gitSource.repoId) === String(project.link.repoId);
+    gitSource.repoId === repositoryId;
 
   if (
     deployment.projectId !== vercelProjectId ||
@@ -571,6 +612,216 @@ async function verifyUnauthenticatedProbe(
   }
 }
 
+async function readAllGitHubDeployments({
+  initialUrl,
+  repository,
+  expectedSha,
+  githubToken,
+  fetchImpl,
+}: {
+  initialUrl: URL;
+  repository: string;
+  expectedSha: string;
+  githubToken: string;
+  fetchImpl: FetchLike;
+}) {
+  const deployments: unknown[] = [];
+  const visitedUrls = new Set<string>();
+  let pageUrl: URL | null = initialUrl;
+  let fetchedPages = 0;
+
+  while (pageUrl) {
+    if (
+      fetchedPages >= maximumGitHubDeploymentPages ||
+      visitedUrls.has(pageUrl.href)
+    ) {
+      throw new ReleaseVerificationError(
+        "DEPLOYMENT_PAGINATION_INCOMPLETE",
+        "GitHub deployment pagination could not be completed safely.",
+      );
+    }
+    visitedUrls.add(pageUrl.href);
+    fetchedPages += 1;
+
+    const response = await fetchImpl(pageUrl, {
+      method: "GET",
+      redirect: "manual",
+      headers: githubHeaders(githubToken),
+    });
+    const page = await readGitHubJson<unknown>(
+      response,
+      "DEPLOYMENTS_LOOKUP_FAILED",
+    );
+    if (
+      !Array.isArray(page) ||
+      page.length > githubDeploymentsPerPage
+    ) {
+      throw new ReleaseVerificationError(
+        "DEPLOYMENTS_RESPONSE_INVALID",
+        "GitHub returned an invalid deployments response.",
+      );
+    }
+    deployments.push(...page);
+
+    const nextPageUrl = parseNextGitHubDeploymentPage({
+      linkHeader: response.headers.get("Link"),
+      currentUrl: pageUrl,
+      repository,
+      expectedSha,
+    });
+    if (!nextPageUrl && page.length === githubDeploymentsPerPage) {
+      throw new ReleaseVerificationError(
+        "DEPLOYMENT_PAGINATION_INCOMPLETE",
+        "GitHub deployment enumeration may be truncated.",
+      );
+    }
+    pageUrl = nextPageUrl;
+  }
+
+  return deployments;
+}
+
+function parseNextGitHubDeploymentPage({
+  linkHeader,
+  currentUrl,
+  repository,
+  expectedSha,
+}: {
+  linkHeader: string | null;
+  currentUrl: URL;
+  repository: string;
+  expectedSha: string;
+}) {
+  if (linkHeader === null) {
+    return null;
+  }
+
+  const links = parseGitHubLinkHeader(linkHeader);
+  const nextValue = links.get("next");
+  if (!nextValue) {
+    if (links.has("last")) {
+      throw invalidPagination();
+    }
+    return null;
+  }
+
+  let nextUrl: URL;
+  try {
+    nextUrl = new URL(nextValue);
+  } catch {
+    throw invalidPagination();
+  }
+
+  const expectedPath = `/repos/${repository}/deployments`;
+  if (!nextValue.startsWith(`${githubApiOrigin}${expectedPath}?`)) {
+    throw invalidPagination();
+  }
+  const allowedParameters = new Set(["sha", "per_page", "page"]);
+  if (
+    nextUrl.origin !== githubApiOrigin ||
+    nextUrl.pathname !== expectedPath ||
+    nextUrl.username ||
+    nextUrl.password ||
+    nextUrl.hash ||
+    [...nextUrl.searchParams.keys()].some(
+      (key) => !allowedParameters.has(key),
+    ) ||
+    nextUrl.searchParams.getAll("sha").length !== 1 ||
+    nextUrl.searchParams.get("sha") !== expectedSha ||
+    nextUrl.searchParams.getAll("per_page").length !== 1 ||
+    nextUrl.searchParams.get("per_page") !==
+      String(githubDeploymentsPerPage) ||
+    nextUrl.searchParams.getAll("page").length !== 1
+  ) {
+    throw invalidPagination();
+  }
+
+  const currentPage = parseGitHubPageNumber(
+    currentUrl.searchParams.get("page") ?? "1",
+  );
+  const nextPage = parseGitHubPageNumber(nextUrl.searchParams.get("page"));
+  if (nextPage !== currentPage + 1) {
+    throw invalidPagination();
+  }
+
+  return nextUrl;
+}
+
+function parseGitHubLinkHeader(value: string) {
+  const links = new Map<string, string>();
+  for (const part of splitGitHubLinkHeader(value)) {
+    const match = part.match(/^\s*<([^<>]+)>\s*;\s*rel="([a-z]+)"\s*$/);
+    if (!match) {
+      throw invalidPagination();
+    }
+    const [, url, relation] = match;
+    if (
+      !url ||
+      !relation ||
+      !["first", "last", "next", "prev"].includes(relation) ||
+      links.has(relation)
+    ) {
+      throw invalidPagination();
+    }
+    links.set(relation, url);
+  }
+  return links;
+}
+
+function splitGitHubLinkHeader(value: string) {
+  const parts: string[] = [];
+  let start = 0;
+  let insideAngle = false;
+  let insideQuote = false;
+
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index];
+    if (character === "<" && !insideQuote) {
+      if (insideAngle) {
+        throw invalidPagination();
+      }
+      insideAngle = true;
+    } else if (character === ">" && !insideQuote) {
+      if (!insideAngle) {
+        throw invalidPagination();
+      }
+      insideAngle = false;
+    } else if (character === '"' && !insideAngle) {
+      insideQuote = !insideQuote;
+    } else if (character === "," && !insideAngle && !insideQuote) {
+      parts.push(value.slice(start, index));
+      start = index + 1;
+    }
+  }
+
+  if (insideAngle || insideQuote) {
+    throw invalidPagination();
+  }
+  parts.push(value.slice(start));
+  if (parts.some((part) => !part.trim())) {
+    throw invalidPagination();
+  }
+  return parts;
+}
+
+function parseGitHubPageNumber(value: string | null) {
+  if (!value || !/^[1-9][0-9]*$/.test(value)) {
+    throw invalidPagination();
+  }
+  const page = Number(value);
+  if (!Number.isSafeInteger(page)) {
+    throw invalidPagination();
+  }
+  return page;
+}
+
+function invalidPagination() {
+  return new ReleaseVerificationError(
+    "DEPLOYMENT_PAGINATION_INVALID",
+    "GitHub deployment pagination metadata is invalid.",
+  );
+}
+
 function assertCompatibleContract(
   manifest: Partial<ReleaseManifest>,
   expected: MobileApiContractManifest,
@@ -750,6 +1001,21 @@ function isGitHubDeployment(value: unknown): value is GitHubDeployment {
   );
 }
 
+function isExpectedGitHubRepository(
+  value: unknown,
+): value is GitHubRepository {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const repository = value as Partial<GitHubRepository>;
+  return (
+    repository.id === expectedBackendRepositoryId &&
+    repository.name === "aegean-track-society" &&
+    repository.full_name === expectedBackendRepository &&
+    repository.owner?.login === "YigitMora"
+  );
+}
+
 function isGitHubDeploymentStatus(
   value: unknown,
 ): value is GitHubDeploymentStatus {
@@ -765,11 +1031,32 @@ function isGitHubActor(value: unknown): value is GitHubActor {
     return false;
   }
   const actor = value as Partial<GitHubActor>;
-  return typeof actor.login === "string" && typeof actor.type === "string";
+  return (
+    Number.isSafeInteger(actor.id) &&
+    typeof actor.login === "string" &&
+    typeof actor.type === "string"
+  );
 }
 
 function isTrustedVercelActor(actor: GitHubActor) {
-  return actor.login.toLowerCase() === "vercel[bot]" && actor.type === "Bot";
+  return (
+    actor.id === trustedVercelActorId &&
+    actor.login === "vercel[bot]" &&
+    actor.type === "Bot"
+  );
+}
+
+function hasTrustedVercelIntegrationIdentity(value: {
+  creator: GitHubActor;
+  performed_via_github_app?: unknown;
+}) {
+  // Live Vercel deployment metadata currently has no GitHub App identity.
+  // Any future non-null App metadata must be independently reviewed first.
+  return (
+    isTrustedVercelActor(value.creator) &&
+    (value.performed_via_github_app === undefined ||
+      value.performed_via_github_app === null)
+  );
 }
 
 function getVercelDeploymentUrl(status: GitHubDeploymentStatus) {
