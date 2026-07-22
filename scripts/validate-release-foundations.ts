@@ -121,14 +121,18 @@ assert.match(releaseRoute, /dynamic = "force-dynamic"/);
 const migrationWorkflow = read(".github/workflows/production-database.yml");
 const seedWorkflow = read(".github/workflows/production-seed.yml");
 const ciWorkflow = read(".github/workflows/ci.yml");
-assert.match(migrationWorkflow, /workflow_dispatch:/);
-assert.match(migrationWorkflow, /MIGRATE PRODUCTION/);
-assert.match(migrationWorkflow, /pnpm prisma:deploy/);
-assert.doesNotMatch(migrationWorkflow, /pnpm prisma:seed|prisma db seed/);
-assert.match(seedWorkflow, /workflow_dispatch:/);
-assert.match(seedWorkflow, /SEED PRODUCTION/);
-assert.match(seedWorkflow, /pnpm prisma:seed/);
-assert.doesNotMatch(seedWorkflow, /pnpm prisma:deploy|prisma migrate deploy/);
+assertProductionDatabaseWorkflow({
+  source: migrationWorkflow,
+  confirmationPrefix: "MIGRATE PRODUCTION",
+  operationCommand: "pnpm prisma:deploy",
+  forbiddenCommand: /pnpm prisma:seed|prisma db seed/,
+});
+assertProductionDatabaseWorkflow({
+  source: seedWorkflow,
+  confirmationPrefix: "SEED PRODUCTION",
+  operationCommand: "pnpm prisma:seed",
+  forbiddenCommand: /pnpm prisma:deploy|prisma migrate deploy/,
+});
 assert.doesNotMatch(ciWorkflow, /DATABASE_URL|secrets\./);
 
 const paymentCallback = read("src/app/api/payments/iyzico/callback/route.ts");
@@ -241,6 +245,51 @@ function createMockFetch(options?: {
   };
 
   return { fetch, productRequests };
+}
+
+function assertProductionDatabaseWorkflow({
+  source,
+  confirmationPrefix,
+  operationCommand,
+  forbiddenCommand,
+}: {
+  source: string;
+  confirmationPrefix: string;
+  operationCommand: string;
+  forbiddenCommand: RegExp;
+}) {
+  assert.match(source, /workflow_dispatch:/);
+  assert.doesNotMatch(
+    source,
+    /^\s{2}(?:push|pull_request|schedule|deployment_status|workflow_run):/m,
+  );
+  assert.match(source, /group:\s*production-database/);
+  assert.match(source, /test "\$GITHUB_REF" = "refs\/heads\/main"/);
+  assert.match(source, /\[\[ "\$GITHUB_SHA" =~ \^\[0-9a-f\]\{40\}\$ \]\]/);
+  assert.ok(
+    source.includes(
+      `test "$CONFIRMATION" = "${confirmationPrefix} $GITHUB_SHA"`,
+    ),
+  );
+  assert.match(source, /approved_sha=\$GITHUB_SHA/);
+  assert.match(source, /needs:\s*authorize/);
+  assert.match(source, /ref:\s*\$\{\{ needs\.authorize\.outputs\.approved_sha \}\}/);
+  assert.match(source, /persist-credentials:\s*false/);
+  assert.match(source, /environment:\s*Production/);
+  assert.equal(source.match(/secrets\.DATABASE_URL/g)?.length, 1);
+
+  const installIndex = source.indexOf("pnpm install --frozen-lockfile");
+  const secretIndex = source.indexOf("DATABASE_URL: ${{ secrets.DATABASE_URL }}");
+  const operationIndex = source.indexOf(operationCommand);
+  assert.ok(installIndex >= 0 && secretIndex > installIndex);
+  assert.ok(operationIndex > secretIndex);
+  assert.match(source, /DATABASE_URL:\s*\$\{\{ secrets\.DATABASE_URL \}\}/);
+  assert.match(source, new RegExp(escapeRegExp(operationCommand)));
+  assert.doesNotMatch(source, forbiddenCommand);
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function jsonResponse(
