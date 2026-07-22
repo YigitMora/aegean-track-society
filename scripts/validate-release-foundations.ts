@@ -21,13 +21,19 @@ import {
   getMobileApiContractManifest,
 } from "../src/lib/mobile-release-contract";
 import {
+  canonicalBackendProductionOrigin,
   ReleaseVerificationError,
   verifyProductionRelease,
 } from "../src/lib/release-verifier";
 
 const expectedSha = "0123456789abcdef0123456789abcdef01234567";
+const repository = "YigitMora/aegean-track-society";
 const deploymentHost = "ats-release-012345.vercel.app";
+const deploymentId = "dpl_TestDeployment123";
 const canonicalHost = "www.aegeantracksociety.com";
+const vercelProjectId = "prj_TestProject123";
+const vercelTeamId = "team_TestAccount123";
+const repositoryId = 123456789;
 const contract = getMobileApiContractManifest();
 
 async function main() {
@@ -54,17 +60,13 @@ assert.equal(buildMobileReleaseManifest("not-a-sha").backendCommitSha, null);
 
 const happy = createMockFetch();
 const result = await verifyProductionRelease({
-  repository: "YigitMora/aegean-track-society",
-  expectedSha,
-  canonicalUrl: `https://${canonicalHost}`,
-  githubToken: "test-token-not-a-real-credential",
-  expectedContract: contract,
-  fetchImpl: happy.fetch,
+  ...verificationOptions(happy.fetch),
 });
 assert.equal(result.expectedSha, expectedSha);
 assert.equal(result.verifiedProbeCount, 5);
 assert.equal(result.deploymentOrigin, `https://${deploymentHost}`);
 assert.equal(result.canonicalOrigin, `https://${canonicalHost}`);
+assert.equal(canonicalBackendProductionOrigin, `https://${canonicalHost}`);
 assert.equal(happy.productRequests.length, 7);
 assert.ok(happy.productRequests.every((request) => request.method === "GET"));
 assert.ok(
@@ -73,43 +75,94 @@ assert.ok(
   ),
 );
 
-await assert.rejects(
-  () =>
-    verifyProductionRelease({
-      repository: "YigitMora/aegean-track-society",
-      expectedSha,
-      canonicalUrl: `https://${canonicalHost}`,
-      githubToken: "test-token-not-a-real-credential",
-      expectedContract: contract,
-      fetchImpl: createMockFetch({ manifestSha: "f".repeat(40) }).fetch,
-    }),
-  (error: unknown) => hasCode(error, "DEPLOYED_SHA_MISMATCH"),
+await expectVerificationFailure(
+  { manifestSha: "f".repeat(40) },
+  "DEPLOYED_SHA_MISMATCH",
 );
-
-await assert.rejects(
-  () =>
-    verifyProductionRelease({
-      repository: "YigitMora/aegean-track-society",
-      expectedSha,
-      canonicalUrl: `https://${canonicalHost}`,
-      githubToken: "test-token-not-a-real-credential",
-      expectedContract: contract,
-      fetchImpl: createMockFetch({ redirectProbe: true }).fetch,
-    }),
-  (error: unknown) => hasCode(error, "AUTH_PROBE_REDIRECTED"),
+await expectVerificationFailure(
+  { redirectProbe: true },
+  "AUTH_PROBE_REDIRECTED",
 );
-
-await assert.rejects(
-  () =>
-    verifyProductionRelease({
-      repository: "YigitMora/aegean-track-society",
-      expectedSha,
-      canonicalUrl: `https://${canonicalHost}`,
-      githubToken: "test-token-not-a-real-credential",
-      expectedContract: contract,
-      fetchImpl: createMockFetch({ deploymentSucceeded: false }).fetch,
-    }),
-  (error: unknown) => hasCode(error, "PRODUCTION_DEPLOYMENT_NOT_VERIFIED"),
+await expectVerificationFailure(
+  { deploymentSucceeded: false },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
+  { wrongProject: true },
+  "VERCEL_PROJECT_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
+  { wrongRepository: true },
+  "VERCEL_PROJECT_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
+  { previewTarget: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
+  { untrustedDeploymentCreator: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
+  { untrustedStatusCreator: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
+  { missingDeployment: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
+  { ambiguousDeployment: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
+  { wrongDeploymentSha: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectVerificationFailure(
+  { staleCanonicalAlias: true },
+  "VERCEL_CANONICAL_ALIAS_MISMATCH",
+);
+await expectVerificationFailure(
+  { htmlResponse: true },
+  "RELEASE_MANIFEST_UNAVAILABLE",
+);
+await expectVerificationFailure(
+  { malformedJson: true },
+  "INVALID_JSON_RESPONSE",
+);
+await expectVerificationFailure(
+  { malformedContractHeader: true },
+  "CONTRACT_HEADER_MISMATCH",
+);
+await expectVerificationFailure(
+  { duplicateContractHeader: true },
+  "CONTRACT_HEADER_MISMATCH",
+);
+await expectVerificationFailure(
+  { wrongContractVersion: true },
+  "RELEASE_CONTRACT_MISMATCH",
+);
+await expectVerificationFailure(
+  { missingNoStore: true },
+  "NO_STORE_MISSING",
+);
+await expectVerificationFailure(
+  { missingBearer: true },
+  "BEARER_CHALLENGE_MISSING",
+);
+await expectVerificationFailure(
+  { githubApiFailure: true },
+  "DEPLOYMENTS_LOOKUP_FAILED",
+);
+await expectVerificationFailure(
+  { vercelApiFailure: true },
+  "VERCEL_PROJECT_LOOKUP_FAILED",
+);
+await assert.rejects(() =>
+  verifyProductionRelease(
+    verificationOptions(createMockFetch({ networkFailure: true }).fetch),
+  ),
 );
 
 const releaseRoute = read("src/app/api/mobile/v1/release/route.ts");
@@ -120,6 +173,7 @@ assert.match(releaseRoute, /dynamic = "force-dynamic"/);
 
 const migrationWorkflow = read(".github/workflows/production-database.yml");
 const seedWorkflow = read(".github/workflows/production-seed.yml");
+const releaseWorkflow = read(".github/workflows/verify-production-release.yml");
 const ciWorkflow = read(".github/workflows/ci.yml");
 assertProductionDatabaseWorkflow({
   source: migrationWorkflow,
@@ -134,6 +188,7 @@ assertProductionDatabaseWorkflow({
   forbiddenCommand: /pnpm prisma:deploy|prisma migrate deploy/,
 });
 assert.doesNotMatch(ciWorkflow, /DATABASE_URL|secrets\./);
+assertReleaseWorkflow(releaseWorkflow);
 
 const paymentCallback = read("src/app/api/payments/iyzico/callback/route.ts");
 assert.match(paymentCallback, /PAYMENT_CONFIRMATION_TRANSACTION_FAILED/);
@@ -154,14 +209,63 @@ main().catch((error: unknown) => {
   process.exitCode = 1;
 });
 
-function createMockFetch(options?: {
+type MockFetchOptions = {
   manifestSha?: string;
   redirectProbe?: boolean;
   deploymentSucceeded?: boolean;
-}) {
+  wrongProject?: boolean;
+  wrongRepository?: boolean;
+  previewTarget?: boolean;
+  untrustedDeploymentCreator?: boolean;
+  untrustedStatusCreator?: boolean;
+  missingDeployment?: boolean;
+  ambiguousDeployment?: boolean;
+  wrongDeploymentSha?: boolean;
+  staleCanonicalAlias?: boolean;
+  htmlResponse?: boolean;
+  malformedJson?: boolean;
+  malformedContractHeader?: boolean;
+  duplicateContractHeader?: boolean;
+  wrongContractVersion?: boolean;
+  missingNoStore?: boolean;
+  missingBearer?: boolean;
+  githubApiFailure?: boolean;
+  vercelApiFailure?: boolean;
+  networkFailure?: boolean;
+};
+
+function verificationOptions(fetchImpl: ReturnType<typeof createMockFetch>["fetch"]) {
+  return {
+    repository,
+    expectedSha,
+    githubToken: "test-github-token-not-a-real-credential",
+    vercelAccessToken: "test-vercel-token-not-a-real-credential",
+    vercelProjectId,
+    vercelTeamId,
+    expectedContract: contract,
+    fetchImpl,
+  };
+}
+
+async function expectVerificationFailure(
+  options: MockFetchOptions,
+  expectedCode: string,
+) {
+  await assert.rejects(
+    () =>
+      verifyProductionRelease(
+        verificationOptions(createMockFetch(options).fetch),
+      ),
+    (error: unknown) => hasCode(error, expectedCode),
+  );
+}
+
+function createMockFetch(options?: MockFetchOptions) {
   const productRequests: Array<{ method: string; headers: HeadersInit }> = [];
   const manifestSha = options?.manifestSha ?? expectedSha;
   const deploymentSucceeded = options?.deploymentSucceeded ?? true;
+  const trustedActor = { login: "vercel[bot]", type: "Bot" };
+  const untrustedActor = { login: "untrusted-bot[bot]", type: "Bot" };
 
   const fetch = async (
     input: string | URL | Request,
@@ -171,29 +275,107 @@ function createMockFetch(options?: {
       typeof input === "string" || input instanceof URL ? input : input.url,
     );
 
+    if (options?.networkFailure && url.hostname === "api.vercel.com") {
+      throw new Error("Simulated network failure without sensitive details");
+    }
+
     if (url.hostname === "api.github.com" && url.pathname.endsWith("/deployments")) {
-      return jsonResponse([
-        { id: 42, sha: expectedSha, environment: "Production" },
-      ]);
+      if (options?.githubApiFailure) {
+        return jsonResponse({ message: "Unavailable" }, 503);
+      }
+      if (options?.missingDeployment) {
+        return jsonResponse([]);
+      }
+      const githubDeployment = {
+        id: 42,
+        sha: options?.wrongDeploymentSha ? "f".repeat(40) : expectedSha,
+        ref: expectedSha,
+        task: "deploy",
+        environment: "Production",
+        creator: options?.untrustedDeploymentCreator
+          ? untrustedActor
+          : trustedActor,
+      };
+      return jsonResponse(
+        options?.ambiguousDeployment
+          ? [githubDeployment, { ...githubDeployment, id: 43 }]
+          : [githubDeployment],
+      );
     }
 
     if (url.hostname === "api.github.com" && url.pathname.endsWith("/statuses")) {
+      const statusCreator = options?.untrustedStatusCreator
+        ? untrustedActor
+        : trustedActor;
       return jsonResponse(
         deploymentSucceeded
           ? [
               {
                 state: "success",
                 environment_url: `https://${deploymentHost}`,
+                creator: statusCreator,
               },
             ]
           : [
-              { state: "failure" },
+              { state: "failure", creator: trustedActor },
               {
                 state: "success",
                 environment_url: `https://${deploymentHost}`,
+                creator: trustedActor,
               },
             ],
       );
+    }
+
+    if (url.hostname === "api.vercel.com") {
+      if (options?.vercelApiFailure) {
+        return jsonResponse({ error: { code: "unavailable" } }, 503);
+      }
+      if (url.pathname.startsWith("/v9/projects/")) {
+        return jsonResponse({
+          id: options?.wrongProject ? "prj_WrongProject" : vercelProjectId,
+          accountId: vercelTeamId,
+          name: "aegean-track-society",
+          link: {
+            type: "github",
+            org: "YigitMora",
+            repo: options?.wrongRepository
+              ? "another-repository"
+              : "aegean-track-society",
+            repoId: repositoryId,
+            productionBranch: "main",
+          },
+        });
+      }
+      if (url.pathname.startsWith("/v13/deployments/")) {
+        return jsonResponse({
+          id: deploymentId,
+          url: deploymentHost,
+          projectId: vercelProjectId,
+          ownerId: vercelTeamId,
+          target: options?.previewTarget ? "preview" : "production",
+          readyState: "READY",
+          status: "READY",
+          aliasAssigned: true,
+          gitSource: {
+            type: "github",
+            org: "YigitMora",
+            repo: "aegean-track-society",
+            repoId: repositoryId,
+            ref: "main",
+            sha: expectedSha,
+          },
+        });
+      }
+      if (url.pathname.startsWith("/v4/aliases/")) {
+        return jsonResponse({
+          alias: canonicalHost,
+          deploymentId: options?.staleCanonicalAlias
+            ? "dpl_PreviousDeployment"
+            : deploymentId,
+          projectId: vercelProjectId,
+        });
+      }
     }
 
     productRequests.push({
@@ -202,8 +384,37 @@ function createMockFetch(options?: {
     });
 
     if (url.pathname === "/api/mobile/v1/release") {
-      return jsonResponse(buildMobileReleaseManifest(manifestSha), 200, {
-        "Cache-Control": "no-store",
+      if (options?.htmlResponse) {
+        return new Response("<html>not a release manifest</html>", {
+          status: 200,
+          headers: { "Content-Type": "text/html" },
+        });
+      }
+      if (options?.malformedJson) {
+        return new Response("{", {
+          status: 200,
+          headers: {
+            "Cache-Control": "no-store",
+            "Content-Type": "application/json",
+            "X-ATS-Release-Contract": contract.releaseContract,
+          },
+        });
+      }
+      const releaseManifest = buildMobileReleaseManifest(manifestSha);
+      const manifest = options?.wrongContractVersion
+        ? {
+            ...releaseManifest,
+            contracts: {
+              ...releaseManifest.contracts,
+              auth: {
+                ...releaseManifest.contracts.auth,
+                supportedVersions: ["auth-v999"],
+              },
+            },
+          }
+        : releaseManifest;
+      return jsonResponse(manifest, 200, {
+        ...(options?.missingNoStore ? {} : { "Cache-Control": "no-store" }),
         "X-ATS-Release-Contract": contract.releaseContract,
       });
     }
@@ -217,12 +428,14 @@ function createMockFetch(options?: {
 
     const headers: Record<string, string> = {
       "Cache-Control": "no-store",
-      "WWW-Authenticate": "Bearer",
+      ...(options?.missingBearer ? {} : { "WWW-Authenticate": "Bearer" }),
       [mobileAuthContractHeader]: mobileAuthContractVersion,
     };
     if (url.pathname === "/api/mobile/v1/garage") {
       headers[mobileGarageLifecycleContractHeader] =
-        mobileGarageLifecycleContractVersion;
+        options?.malformedContractHeader
+          ? "garage-lifecycle-invalid"
+          : mobileGarageLifecycleContractVersion;
     } else if (url.pathname.endsWith("/build")) {
       headers[mobileGarageDetailContractHeader] = mobileGarageDetailContractVersion;
     } else if (
@@ -232,7 +445,7 @@ function createMockFetch(options?: {
       headers[mobileApplicationsContractHeader] = mobileApplicationsContractVersion;
     }
 
-    return jsonResponse(
+    const response = jsonResponse(
       {
         error: {
           code: "MOBILE_AUTH_MISSING_TOKEN",
@@ -242,6 +455,16 @@ function createMockFetch(options?: {
       401,
       headers,
     );
+    if (
+      options?.duplicateContractHeader &&
+      url.pathname === "/api/mobile/v1/garage"
+    ) {
+      response.headers.append(
+        mobileGarageLifecycleContractHeader,
+        mobileGarageLifecycleContractVersion,
+      );
+    }
+    return response;
   };
 
   return { fetch, productRequests };
@@ -286,6 +509,41 @@ function assertProductionDatabaseWorkflow({
   assert.match(source, /DATABASE_URL:\s*\$\{\{ secrets\.DATABASE_URL \}\}/);
   assert.match(source, new RegExp(escapeRegExp(operationCommand)));
   assert.doesNotMatch(source, forbiddenCommand);
+}
+
+function assertReleaseWorkflow(source: string) {
+  assert.match(source, /github\.ref == 'refs\/heads\/main'/);
+  assert.match(source, /github\.event\.deployment\.creator\.login == 'vercel\[bot\]'/);
+  assert.match(
+    source,
+    /github\.event\.deployment_status\.creator\.login == 'vercel\[bot\]'/,
+  );
+  assert.match(source, /\[\[ "\$EXPECTED_SHA" =~ \^\[0-9a-f\]\{40\}\$ \]\]/);
+  assert.match(
+    source,
+    /git merge-base --is-ancestor "\$EXPECTED_SHA" origin\/main/,
+  );
+  assert.match(source, /approved_sha=\$EXPECTED_SHA/);
+  assert.match(source, /needs:\s*authorize/);
+  assert.match(source, /environment:\s*Production/);
+  assert.match(
+    source,
+    /ref:\s*\$\{\{ needs\.authorize\.outputs\.approved_sha \}\}/,
+  );
+  assert.equal(source.match(/persist-credentials:\s*false/g)?.length, 2);
+  assert.doesNotMatch(source, /canonical_url|--canonical-url|CANONICAL_URL/);
+  assert.equal(source.match(/secrets\.VERCEL_ACCESS_TOKEN/g)?.length, 1);
+  assert.equal(source.match(/vars\.VERCEL_PROJECT_ID/g)?.length, 1);
+  assert.equal(source.match(/vars\.VERCEL_TEAM_ID/g)?.length, 1);
+
+  const installIndex = source.indexOf("pnpm install --frozen-lockfile");
+  const secretIndex = source.indexOf("VERCEL_ACCESS_TOKEN:");
+  const verificationIndex = source.indexOf("pnpm verify:production-release");
+  assert.ok(installIndex >= 0 && secretIndex > installIndex);
+  assert.ok(verificationIndex > secretIndex);
+
+  const actionPins = source.match(/uses:\s*[^\s]+@[0-9a-f]{40}\s+#\s+v\d+/g);
+  assert.equal(actionPins?.length, 4);
 }
 
 function escapeRegExp(value: string) {

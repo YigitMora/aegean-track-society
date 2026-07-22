@@ -10,13 +10,61 @@ type FetchLike = (
 type GitHubDeployment = {
   id: number;
   sha: string;
+  ref: string;
+  task: string;
   environment: string;
+  creator: GitHubActor;
 };
 
 type GitHubDeploymentStatus = {
   state: string;
   environment_url?: string | null;
   target_url?: string | null;
+  creator: GitHubActor;
+};
+
+type GitHubActor = {
+  login: string;
+  type: string;
+};
+
+type VercelProject = {
+  id: string;
+  accountId: string;
+  name: string;
+  link?: {
+    type?: unknown;
+    org?: unknown;
+    repo?: unknown;
+    repoId?: unknown;
+    productionBranch?: unknown;
+  } | null;
+};
+
+type VercelDeployment = {
+  id: string;
+  url: string;
+  projectId: string;
+  ownerId: string;
+  target?: string | null;
+  readyState: string;
+  status?: string;
+  aliasAssigned: boolean;
+  alias?: unknown;
+  gitSource?: {
+    type?: unknown;
+    org?: unknown;
+    repo?: unknown;
+    repoId?: unknown;
+    ref?: unknown;
+    sha?: unknown;
+  } | null;
+};
+
+type VercelAlias = {
+  alias: string;
+  deploymentId: string | null;
+  projectId: string | null;
 };
 
 type ReleaseManifest = MobileApiContractManifest & {
@@ -33,26 +81,37 @@ export class ReleaseVerificationError extends Error {
 export type VerifyProductionReleaseOptions = {
   repository: string;
   expectedSha: string;
-  canonicalUrl: string;
   githubToken: string;
+  vercelAccessToken: string;
+  vercelProjectId: string;
+  vercelTeamId: string;
   expectedContract: MobileApiContractManifest;
   fetchImpl?: FetchLike;
 };
 
+export const canonicalBackendProductionOrigin =
+  "https://www.aegeantracksociety.com";
+
 export async function verifyProductionRelease({
   repository,
   expectedSha,
-  canonicalUrl,
   githubToken,
+  vercelAccessToken,
+  vercelProjectId,
+  vercelTeamId,
   expectedContract,
   fetchImpl = fetch,
 }: VerifyProductionReleaseOptions) {
   const normalizedSha = normalizeSha(expectedSha);
-  const canonicalOrigin = normalizeHttpsOrigin(canonicalUrl);
-  const deploymentUrl = await findSuccessfulProductionDeployment({
+  const canonicalOrigin = canonicalBackendProductionOrigin;
+  const deploymentUrl = await findTrustedProductionDeployment({
     repository,
     expectedSha: normalizedSha,
     githubToken,
+    vercelAccessToken,
+    vercelProjectId,
+    vercelTeamId,
+    canonicalOrigin,
     fetchImpl,
   });
 
@@ -90,15 +149,23 @@ export async function verifyProductionRelease({
   };
 }
 
-async function findSuccessfulProductionDeployment({
+async function findTrustedProductionDeployment({
   repository,
   expectedSha,
   githubToken,
+  vercelAccessToken,
+  vercelProjectId,
+  vercelTeamId,
+  canonicalOrigin,
   fetchImpl,
 }: {
   repository: string;
   expectedSha: string;
   githubToken: string;
+  vercelAccessToken: string;
+  vercelProjectId: string;
+  vercelTeamId: string;
+  canonicalOrigin: string;
   fetchImpl: FetchLike;
 }) {
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) {
@@ -114,6 +181,11 @@ async function findSuccessfulProductionDeployment({
       "A read-only GitHub token is required for deployment verification.",
     );
   }
+  assertVercelConfiguration({
+    vercelAccessToken,
+    vercelProjectId,
+    vercelTeamId,
+  });
 
   const deploymentsUrl = new URL(
     `https://api.github.com/repos/${repository}/deployments`,
@@ -138,45 +210,220 @@ async function findSuccessfulProductionDeployment({
     );
   }
 
-  const candidates = deployments.filter(isGitHubDeployment).filter(
+  const matchingDeployments = deployments.filter(isGitHubDeployment).filter(
     (deployment) =>
       deployment.sha.toLowerCase() === expectedSha &&
-      deployment.environment.toLowerCase() === "production",
+      deployment.ref.toLowerCase() === expectedSha &&
+      deployment.task === "deploy" &&
+      deployment.environment === "Production" &&
+      isTrustedVercelActor(deployment.creator),
   );
 
-  for (const deployment of candidates) {
-    const statusesResponse = await fetchImpl(
-      `https://api.github.com/repos/${repository}/deployments/${deployment.id}/statuses?per_page=30`,
-      {
-        method: "GET",
-        redirect: "manual",
-        headers: githubHeaders(githubToken),
-      },
+  if (matchingDeployments.length !== 1) {
+    throw new ReleaseVerificationError(
+      "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+      "Exactly one trusted Vercel Production deployment must match the expected commit SHA.",
     );
-    const statuses = await readGitHubJson<unknown>(
-      statusesResponse,
-      "DEPLOYMENT_STATUS_LOOKUP_FAILED",
-    );
+  }
+  const [deployment] = matchingDeployments;
 
-    if (!Array.isArray(statuses)) {
-      continue;
-    }
-
-    const latestStatus = statuses.filter(isGitHubDeploymentStatus).at(0);
-    const deploymentUrl =
-      latestStatus?.state.toLowerCase() === "success"
+  const statusesResponse = await fetchImpl(
+    `https://api.github.com/repos/${repository}/deployments/${deployment.id}/statuses?per_page=30`,
+    {
+      method: "GET",
+      redirect: "manual",
+      headers: githubHeaders(githubToken),
+    },
+  );
+  const statuses = await readGitHubJson<unknown>(
+    statusesResponse,
+    "DEPLOYMENT_STATUS_LOOKUP_FAILED",
+  );
+  const latestStatus =
+    Array.isArray(statuses) && isGitHubDeploymentStatus(statuses[0])
+      ? statuses[0]
+      : null;
+  const deploymentUrl =
+    latestStatus?.state === "success" &&
+    isTrustedVercelActor(latestStatus.creator)
       ? getVercelDeploymentUrl(latestStatus)
       : null;
 
-    if (deploymentUrl) {
-      return deploymentUrl;
-    }
+  if (!deploymentUrl) {
+    throw new ReleaseVerificationError(
+      "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+      "The trusted Vercel deployment is not successful.",
+    );
   }
 
-  throw new ReleaseVerificationError(
-    "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
-    "No successful Production deployment matched the expected commit SHA.",
+  await verifyVercelProductionMetadata({
+    deploymentUrl,
+    repository,
+    expectedSha,
+    canonicalOrigin,
+    vercelAccessToken,
+    vercelProjectId,
+    vercelTeamId,
+    fetchImpl,
+  });
+
+  return deploymentUrl;
+}
+
+async function verifyVercelProductionMetadata({
+  deploymentUrl,
+  repository,
+  expectedSha,
+  canonicalOrigin,
+  vercelAccessToken,
+  vercelProjectId,
+  vercelTeamId,
+  fetchImpl,
+}: {
+  deploymentUrl: string;
+  repository: string;
+  expectedSha: string;
+  canonicalOrigin: string;
+  vercelAccessToken: string;
+  vercelProjectId: string;
+  vercelTeamId: string;
+  fetchImpl: FetchLike;
+}) {
+  const [expectedOwner, expectedRepository] = repository.split("/");
+  const projectUrl = new URL(
+    `/v9/projects/${encodeURIComponent(vercelProjectId)}`,
+    "https://api.vercel.com",
   );
+  projectUrl.searchParams.set("teamId", vercelTeamId);
+  const project = await readVercelJson<VercelProject>(
+    await fetchImpl(projectUrl, {
+      method: "GET",
+      redirect: "manual",
+      headers: vercelHeaders(vercelAccessToken),
+    }),
+    "VERCEL_PROJECT_LOOKUP_FAILED",
+  );
+
+  if (
+    project.id !== vercelProjectId ||
+    project.accountId !== vercelTeamId ||
+    !project.link ||
+    !["github", "github-limited", "vercel"].includes(
+      String(project.link.type),
+    ) ||
+    String(project.link.org).toLowerCase() !== expectedOwner?.toLowerCase() ||
+    String(project.link.repo).toLowerCase() !==
+      expectedRepository?.toLowerCase() ||
+    project.link.productionBranch !== "main"
+  ) {
+    throw new ReleaseVerificationError(
+      "VERCEL_PROJECT_PROVENANCE_MISMATCH",
+      "Vercel project metadata does not match the expected GitHub repository and Production branch.",
+    );
+  }
+
+  const deploymentHost = new URL(deploymentUrl).hostname;
+  const deploymentApiUrl = new URL(
+    `/v13/deployments/${encodeURIComponent(deploymentHost)}`,
+    "https://api.vercel.com",
+  );
+  deploymentApiUrl.searchParams.set("teamId", vercelTeamId);
+  deploymentApiUrl.searchParams.set("withGitRepoInfo", "true");
+  const deployment = await readVercelJson<VercelDeployment>(
+    await fetchImpl(deploymentApiUrl, {
+      method: "GET",
+      redirect: "manual",
+      headers: vercelHeaders(vercelAccessToken),
+    }),
+    "VERCEL_DEPLOYMENT_LOOKUP_FAILED",
+  );
+
+  const gitSource = deployment.gitSource;
+  const repositoryMatches =
+    gitSource &&
+    ["github", "github-limited", "vercel"].includes(String(gitSource.type)) &&
+    (gitSource.org === undefined ||
+      String(gitSource.org).toLowerCase() === expectedOwner?.toLowerCase()) &&
+    (gitSource.repo === undefined ||
+      String(gitSource.repo).toLowerCase() ===
+        expectedRepository?.toLowerCase()) &&
+    (gitSource.repoId === undefined ||
+      project.link.repoId === undefined ||
+      String(gitSource.repoId) === String(project.link.repoId));
+
+  if (
+    deployment.projectId !== vercelProjectId ||
+    deployment.ownerId !== vercelTeamId ||
+    deployment.target !== "production" ||
+    deployment.readyState !== "READY" ||
+    (deployment.status !== undefined && deployment.status !== "READY") ||
+    deployment.aliasAssigned !== true ||
+    deployment.url.toLowerCase() !== deploymentHost.toLowerCase() ||
+    !repositoryMatches ||
+    String(gitSource?.sha).toLowerCase() !== expectedSha ||
+    gitSource?.ref !== "main"
+  ) {
+    throw new ReleaseVerificationError(
+      "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+      "Vercel deployment metadata does not prove the expected READY Production deployment.",
+    );
+  }
+
+  const canonicalHost = new URL(canonicalOrigin).hostname;
+  const aliasUrl = new URL(
+    `/v4/aliases/${encodeURIComponent(canonicalHost)}`,
+    "https://api.vercel.com",
+  );
+  aliasUrl.searchParams.set("teamId", vercelTeamId);
+  aliasUrl.searchParams.set("projectId", vercelProjectId);
+  const alias = await readVercelJson<VercelAlias>(
+    await fetchImpl(aliasUrl, {
+      method: "GET",
+      redirect: "manual",
+      headers: vercelHeaders(vercelAccessToken),
+    }),
+    "VERCEL_ALIAS_LOOKUP_FAILED",
+  );
+
+  if (
+    alias.alias.toLowerCase() !== canonicalHost.toLowerCase() ||
+    alias.projectId !== vercelProjectId ||
+    alias.deploymentId !== deployment.id
+  ) {
+    throw new ReleaseVerificationError(
+      "VERCEL_CANONICAL_ALIAS_MISMATCH",
+      "The canonical production alias is not bound to the verified deployment.",
+    );
+  }
+}
+
+function assertVercelConfiguration({
+  vercelAccessToken,
+  vercelProjectId,
+  vercelTeamId,
+}: {
+  vercelAccessToken: string;
+  vercelProjectId: string;
+  vercelTeamId: string;
+}) {
+  if (!vercelAccessToken.trim()) {
+    throw new ReleaseVerificationError(
+      "VERCEL_ACCESS_TOKEN_MISSING",
+      "A read-only Vercel access token is required for deployment verification.",
+    );
+  }
+  if (!/^prj_[A-Za-z0-9]+$/.test(vercelProjectId)) {
+    throw new ReleaseVerificationError(
+      "VERCEL_PROJECT_ID_INVALID",
+      "The expected Vercel project identifier is missing or invalid.",
+    );
+  }
+  if (!/^(?:team|user)_[A-Za-z0-9]+$/.test(vercelTeamId)) {
+    throw new ReleaseVerificationError(
+      "VERCEL_TEAM_ID_INVALID",
+      "The expected Vercel team or account identifier is missing or invalid.",
+    );
+  }
 }
 
 async function verifyReleaseManifest(
@@ -369,6 +616,18 @@ async function readGitHubJson<T>(response: Response, code: string): Promise<T> {
   return (await safeJson(response)) as T;
 }
 
+async function readVercelJson<T>(response: Response, code: string): Promise<T> {
+  assertNoRedirect(response, code);
+  if (!response.ok || !isJsonResponse(response)) {
+    throw new ReleaseVerificationError(
+      code,
+      "Vercel deployment metadata could not be verified.",
+    );
+  }
+
+  return (await safeJson(response)) as T;
+}
+
 async function safeJson(response: Response) {
   try {
     return await response.json();
@@ -385,6 +644,13 @@ function githubHeaders(token: string) {
     Accept: "application/vnd.github+json",
     Authorization: `Bearer ${token}`,
     "X-GitHub-Api-Version": "2022-11-28",
+  };
+}
+
+function vercelHeaders(token: string) {
+  return {
+    Accept: "application/json",
+    Authorization: `Bearer ${token}`,
   };
 }
 
@@ -470,7 +736,10 @@ function isGitHubDeployment(value: unknown): value is GitHubDeployment {
   return (
     Number.isInteger(deployment.id) &&
     typeof deployment.sha === "string" &&
-    typeof deployment.environment === "string"
+    typeof deployment.ref === "string" &&
+    typeof deployment.task === "string" &&
+    typeof deployment.environment === "string" &&
+    isGitHubActor(deployment.creator)
   );
 }
 
@@ -481,7 +750,19 @@ function isGitHubDeploymentStatus(
     return false;
   }
   const status = value as Partial<GitHubDeploymentStatus>;
-  return typeof status.state === "string";
+  return typeof status.state === "string" && isGitHubActor(status.creator);
+}
+
+function isGitHubActor(value: unknown): value is GitHubActor {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const actor = value as Partial<GitHubActor>;
+  return typeof actor.login === "string" && typeof actor.type === "string";
+}
+
+function isTrustedVercelActor(actor: GitHubActor) {
+  return actor.login.toLowerCase() === "vercel[bot]" && actor.type === "Bot";
 }
 
 function getVercelDeploymentUrl(status: GitHubDeploymentStatus) {

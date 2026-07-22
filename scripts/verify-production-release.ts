@@ -9,8 +9,10 @@ async function main() {
   const result = await verifyProductionRelease({
     repository: options.repository,
     expectedSha: options.sha,
-    canonicalUrl: options.canonicalUrl,
     githubToken: process.env.GITHUB_TOKEN ?? "",
+    vercelAccessToken: process.env.VERCEL_ACCESS_TOKEN ?? "",
+    vercelProjectId: process.env.VERCEL_PROJECT_ID ?? "",
+    vercelTeamId: process.env.VERCEL_TEAM_ID ?? "",
     expectedContract: getMobileApiContractManifest(),
   });
 
@@ -34,15 +36,14 @@ function parseArguments(arguments_: string[]) {
 
   const repository = values.get("--repository");
   const sha = values.get("--sha");
-  const canonicalUrl = values.get("--canonical-url");
-  if (!repository || !sha || !canonicalUrl) {
+  if (!repository || !sha) {
     throw new ReleaseVerificationError(
       "ARGUMENTS_INVALID",
-      "Repository, SHA and canonical URL are required.",
+      "Repository and SHA are required.",
     );
   }
 
-  return { repository, sha, canonicalUrl };
+  return { repository, sha };
 }
 
 main().catch((error: unknown) => {
