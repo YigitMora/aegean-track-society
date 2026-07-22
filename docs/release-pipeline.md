@@ -105,6 +105,11 @@ U1A adds no live secret or variable. The production release gate is intentionall
 inoperable until the Vercel secret and both identifiers are configured in the
 authorized settings phase; missing configuration fails closed.
 
+The same authoritative verifier is exposed as a reusable workflow. The mobile
+release repository must call an immutable reviewed backend workflow SHA and may
+only perform its canonical contract check after that reusable provenance job
+succeeds. This avoids a second implementation of Vercel trust logic.
+
 Expo `EXPO_PUBLIC_*` values are intentionally bundled into the mobile binary and
 are not secrets. Service-role keys, database URLs, private keys, payment-provider
 secrets, and user/session data must never use an `EXPO_PUBLIC_*` name.

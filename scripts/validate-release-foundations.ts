@@ -587,6 +587,8 @@ function assertProductionDatabaseWorkflow({
 
 function assertReleaseWorkflow(source: string) {
   assert.match(source, /github\.ref == 'refs\/heads\/main'/);
+  assert.match(source, /workflow_call:/);
+  assert.match(source, /github\.event_name == 'workflow_call'/);
   assert.match(source, /github\.event\.deployment\.creator\.login == 'vercel\[bot\]'/);
   assert.match(
     source,
@@ -605,6 +607,14 @@ function assertReleaseWorkflow(source: string) {
     /ref:\s*\$\{\{ needs\.authorize\.outputs\.approved_sha \}\}/,
   );
   assert.equal(source.match(/persist-credentials:\s*false/g)?.length, 2);
+  assert.equal(
+    source.match(/repository:\s*YigitMora\/aegean-track-society/g)?.length,
+    2,
+  );
+  assert.match(
+    source,
+    /--repository "YigitMora\/aegean-track-society"/,
+  );
   assert.doesNotMatch(source, /canonical_url|--canonical-url|CANONICAL_URL/);
   assert.equal(source.match(/secrets\.VERCEL_ACCESS_TOKEN/g)?.length, 1);
   assert.equal(source.match(/vars\.VERCEL_PROJECT_ID/g)?.length, 1);

@@ -2,6 +2,12 @@ name: Verify Production Release
 
 on:
   deployment_status:
+  workflow_call:
+    inputs:
+      expected_sha:
+        description: "Exact backend commit SHA expected in Production"
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       expected_sha:
@@ -18,6 +24,7 @@ jobs:
     name: Authorize exact main commit
     if: >-
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'workflow_call' ||
       (github.event_name == 'deployment_status' &&
       github.event.deployment_status.state == 'success' &&
       github.event.deployment.environment == 'Production' &&
@@ -30,12 +37,13 @@ jobs:
     outputs:
       approved_sha: ${{ steps.authorize.outputs.approved_sha }}
     env:
-      EXPECTED_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_sha || github.event.deployment.sha }}
+      EXPECTED_SHA: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') && inputs.expected_sha || github.event.deployment.sha }}
 
     steps:
       - name: Check out main policy source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          repository: YigitMora/aegean-track-society
           ref: main
           fetch-depth: 0
           persist-credentials: false
@@ -61,6 +69,7 @@ jobs:
       - name: Check out approved commit
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          repository: YigitMora/aegean-track-society
           ref: ${{ needs.authorize.outputs.approved_sha }}
           persist-credentials: false
 
@@ -86,5 +95,5 @@ jobs:
           VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
         run: >-
           pnpm verify:production-release --
-          --repository "$GITHUB_REPOSITORY"
+          --repository "YigitMora/aegean-track-society"
           --sha "${{ needs.authorize.outputs.approved_sha }}"
