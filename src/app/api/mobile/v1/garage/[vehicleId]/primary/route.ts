@@ -1,4 +1,4 @@
-import { authenticateMobileMember } from "@/lib/mobile-auth";
+import { authenticateMobileGarageMember } from "@/lib/mobile-garage-contract";
 import { makePrimaryMobileGarageVehicle } from "@/lib/mobile-garage-detail";
 import {
   mobileGarageDetailErrorResponse,
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request, context: MobileGarageRouteContext) {
   try {
-    const { memberUser } = await authenticateMobileMember(request);
+    const { memberUser } = await authenticateMobileGarageMember(request);
     const vehicleId = await readMobileGarageRouteId(context, "vehicleId");
     const body = await makePrimaryMobileGarageVehicle({
       memberUserId: memberUser.id,

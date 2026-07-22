@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import {
   mobileApplicationsContractHeader,
   mobileApplicationsContractVersion,
@@ -43,10 +43,14 @@ assert.deepEqual(contract.contracts.auth, {
   header: mobileAuthContractHeader,
   supportedVersions: [mobileAuthContractVersion],
 });
-assert.deepEqual(contract.contracts.garageLifecycle, {
-  header: mobileGarageLifecycleContractHeader,
-  supportedVersions: [mobileGarageLifecycleContractVersion],
-});
+assert.equal(
+  contract.contracts.garageLifecycle.header,
+  mobileGarageLifecycleContractHeader,
+);
+assert.deepEqual(contract.contracts.garageLifecycle.supportedVersions, [
+  mobileGarageLifecycleContractVersion,
+]);
+assert.equal(contract.contracts.garageLifecycle.routes.length, 17);
 assert.deepEqual(contract.contracts.garageDetail, {
   header: mobileGarageDetailContractHeader,
   supportedVersions: [mobileGarageDetailContractVersion],
@@ -57,17 +61,18 @@ assert.deepEqual(contract.contracts.applications, {
 });
 assert.equal(buildMobileReleaseManifest(expectedSha).backendCommitSha, expectedSha);
 assert.equal(buildMobileReleaseManifest("not-a-sha").backendCommitSha, null);
+assertGarageLifecycleRouteCoverage();
 
 const happy = createMockFetch();
 const result = await verifyProductionRelease({
   ...verificationOptions(happy.fetch),
 });
 assert.equal(result.expectedSha, expectedSha);
-assert.equal(result.verifiedProbeCount, 5);
+assert.equal(result.verifiedProbeCount, 7);
 assert.equal(result.deploymentOrigin, `https://${deploymentHost}`);
 assert.equal(result.canonicalOrigin, `https://${canonicalHost}`);
 assert.equal(canonicalBackendProductionOrigin, `https://${canonicalHost}`);
-assert.equal(happy.productRequests.length, 7);
+assert.equal(happy.productRequests.length, 9);
 assert.ok(happy.productRequests.every((request) => request.method === "GET"));
 assert.ok(
   happy.productRequests.every(
@@ -431,14 +436,22 @@ function createMockFetch(options?: MockFetchOptions) {
       ...(options?.missingBearer ? {} : { "WWW-Authenticate": "Bearer" }),
       [mobileAuthContractHeader]: mobileAuthContractVersion,
     };
-    if (url.pathname === "/api/mobile/v1/garage") {
+    if (
+      url.pathname === "/api/mobile/v1/vehicle-definitions" ||
+      url.pathname.startsWith("/api/mobile/v1/garage")
+    ) {
       headers[mobileGarageLifecycleContractHeader] =
         options?.malformedContractHeader
           ? "garage-lifecycle-invalid"
           : mobileGarageLifecycleContractVersion;
-    } else if (url.pathname.endsWith("/build")) {
+    }
+    if (
+      url.pathname === "/api/mobile/v1/garage/release-verifier" ||
+      url.pathname.endsWith("/build")
+    ) {
       headers[mobileGarageDetailContractHeader] = mobileGarageDetailContractVersion;
-    } else if (
+    }
+    if (
       url.pathname === "/api/mobile/v1/events" ||
       url.pathname === "/api/mobile/v1/applications"
     ) {
@@ -468,6 +481,53 @@ function createMockFetch(options?: MockFetchOptions) {
   };
 
   return { fetch, productRequests };
+}
+
+function assertGarageLifecycleRouteCoverage() {
+  const garageRouteRoot = "src/app/api/mobile/v1/garage";
+  const routeFiles = [
+    "src/app/api/mobile/v1/vehicle-definitions/route.ts",
+    ...readdirSync(garageRouteRoot, { recursive: true })
+      .filter(
+        (entry): entry is string =>
+          typeof entry === "string" &&
+          (entry === "route.ts" || entry.endsWith("/route.ts")),
+      )
+      .map((entry) => `${garageRouteRoot}/${entry}`),
+  ];
+  const actualOperations = routeFiles.flatMap((file) => {
+    const routeSource = read(file);
+    const path = file
+      .replace(/^src\/app/, "")
+      .replace(/\/route\.ts$/, "")
+      .replaceAll(/\[([A-Za-z][A-Za-z0-9]*)\]/g, "{$1}");
+    return Array.from(
+      routeSource.matchAll(
+        /export async function (GET|POST|PATCH|DELETE)\s*\(/g,
+      ),
+      (match) => `${match[1]} ${path}`,
+    );
+  });
+  const manifestOperations = contract.contracts.garageLifecycle.routes.map(
+    (route) => `${route.method} ${route.path}`,
+  );
+
+  assert.deepEqual(actualOperations.sort(), manifestOperations.sort());
+
+  for (const route of contract.contracts.garageLifecycle.routes) {
+    const sourcePath = `src/app${route.path
+      .replaceAll(/\{([A-Za-z][A-Za-z0-9]*)\}/g, "[$1]")}/route.ts`;
+    const routeSource = read(sourcePath);
+    assert.match(routeSource, /authenticateMobileGarageMember\(request\)/);
+    if (route.contracts.includes("garageDetail")) {
+      assert.match(routeSource, /mobileGarageDetailJsonResponse/);
+      assert.match(routeSource, /mobileGarageDetailErrorResponse/);
+    } else {
+      assert.match(routeSource, /mobileGarageJsonResponse/);
+      assert.match(routeSource, /mobileGarageErrorResponse/);
+    }
+    assert.equal(route.liveProbe, route.method === "GET");
+  }
 }
 
 function assertProductionDatabaseWorkflow({

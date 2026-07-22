@@ -1,4 +1,4 @@
-import { authenticateMobileMember } from "@/lib/mobile-auth";
+import { authenticateMobileGarageMember } from "@/lib/mobile-garage-contract";
 import { removeMobileGarageVehicleImage } from "@/lib/mobile-garage-detail";
 import {
   mobileGarageDetailErrorResponse,
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export async function DELETE(request: Request, context: MobileGarageRouteContext) {
   try {
-    const { accessToken, memberUser } = await authenticateMobileMember(request);
+    const { accessToken, memberUser } = await authenticateMobileGarageMember(request);
     const vehicleId = await readMobileGarageRouteId(context, "vehicleId");
     const body = await removeMobileGarageVehicleImage({
       memberUserId: memberUser.id,

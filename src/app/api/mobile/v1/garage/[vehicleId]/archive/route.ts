@@ -1,10 +1,8 @@
-import {
-  authenticateMobileMember,
-  mobileJsonResponse,
-} from "@/lib/mobile-auth";
 import { archiveMobileGarageVehicle } from "@/lib/mobile-garage";
 import {
+  authenticateMobileGarageMember,
   mobileGarageErrorResponse,
+  mobileGarageJsonResponse,
   MobileGarageError,
 } from "@/lib/mobile-garage-contract";
 
@@ -17,7 +15,7 @@ type RouteContext = {
 
 export async function POST(request: Request, context: RouteContext) {
   try {
-    const { accessToken, memberUser } = await authenticateMobileMember(request);
+    const { accessToken, memberUser } = await authenticateMobileGarageMember(request);
     const vehicleId = await readVehicleId(context);
     const body = await archiveMobileGarageVehicle({
       memberUserId: memberUser.id,
@@ -25,7 +23,7 @@ export async function POST(request: Request, context: RouteContext) {
       accessToken,
     });
 
-    return mobileJsonResponse(body);
+    return mobileGarageJsonResponse(body);
   } catch (error) {
     return mobileGarageErrorResponse(error);
   }

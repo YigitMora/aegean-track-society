@@ -477,7 +477,6 @@ function buildUnauthenticatedProbes(
 ): UnauthenticatedProbe[] {
   const auth = contract.contracts.auth;
   const garage = contract.contracts.garageLifecycle;
-  const detail = contract.contracts.garageDetail;
   const applications = contract.contracts.applications;
 
   return [
@@ -485,22 +484,28 @@ function buildUnauthenticatedProbes(
       path: "/api/mobile/v1/me",
       responseHeaders: expectedHeaders(auth),
     },
-    {
-      path: "/api/mobile/v1/garage",
-      requestHeaders: currentRequestHeader(garage),
-      responseHeaders: {
-        ...expectedHeaders(auth),
-        ...expectedHeaders(garage),
-      },
-    },
-    {
-      path: "/api/mobile/v1/garage/release-verifier/build",
-      requestHeaders: currentRequestHeader(detail),
-      responseHeaders: {
-        ...expectedHeaders(auth),
-        ...expectedHeaders(detail),
-      },
-    },
+    ...garage.routes
+      .filter((route) => route.method === "GET" && route.liveProbe)
+      .map((route) => {
+        const routeContracts = route.contracts.map(
+          (name) => contract.contracts[name as keyof typeof contract.contracts],
+        );
+        return {
+          path: route.path.replaceAll(
+            /\{[A-Za-z][A-Za-z0-9]*\}/g,
+            "release-verifier",
+          ),
+          requestHeaders: Object.assign(
+            {},
+            ...routeContracts.map(currentRequestHeader),
+          ),
+          responseHeaders: Object.assign(
+            {},
+            expectedHeaders(auth),
+            ...routeContracts.map(expectedHeaders),
+          ),
+        };
+      }),
     {
       path: "/api/mobile/v1/events",
       requestHeaders: currentRequestHeader(applications),
@@ -588,13 +593,19 @@ function assertCompatibleContract(
 
   for (const [name, expectedEntry] of Object.entries(expected.contracts)) {
     const actualEntry = manifest.contracts[name as keyof typeof manifest.contracts];
+    const expectedRoutes =
+      "routes" in expectedEntry ? expectedEntry.routes : undefined;
+    const actualRoutes =
+      actualEntry && "routes" in actualEntry ? actualEntry.routes : undefined;
     if (
       !actualEntry ||
       actualEntry.header !== expectedEntry.header ||
       !Array.isArray(actualEntry.supportedVersions) ||
       !expectedEntry.supportedVersions.every((version) =>
         actualEntry.supportedVersions.includes(version),
-      )
+      ) ||
+      (expectedRoutes !== undefined &&
+        JSON.stringify(actualRoutes) !== JSON.stringify(expectedRoutes))
     ) {
       throw new ReleaseVerificationError(
         "RELEASE_CONTRACT_MISMATCH",

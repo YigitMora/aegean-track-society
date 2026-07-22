@@ -6,6 +6,8 @@ import type {
 import { parseVehicleForm, type VehicleInput } from "@/lib/vehicle-validation";
 import {
   mobileGarageErrorResponse,
+  mobileGarageLifecycleContractHeader,
+  mobileGarageLifecycleContractVersion,
   type MobileGarageRating,
 } from "@/lib/mobile-garage-contract";
 import { mobileJsonResponse } from "@/lib/mobile-auth";
@@ -196,6 +198,10 @@ export function mobileGarageDetailJsonResponse<TBody>(
   headers.set(
     mobileGarageDetailContractHeader,
     mobileGarageDetailContractVersion,
+  );
+  headers.set(
+    mobileGarageLifecycleContractHeader,
+    mobileGarageLifecycleContractVersion,
   );
   return mobileJsonResponse(body, { ...init, headers });
 }
