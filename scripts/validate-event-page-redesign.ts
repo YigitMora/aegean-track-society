@@ -1,6 +1,7 @@
 import { assertCondition, extractArrayBody, readRepoFile } from "./catalog-source-utils";
 
 const eventPage = readRepoFile("src/app/events/[slug]/page.tsx");
+const eventConfig = readRepoFile("src/lib/event-config.ts");
 const registerPage = readRepoFile("src/app/events/[slug]/register/page.tsx");
 const requiredSectionIds = [
   "event-hero",
@@ -28,7 +29,7 @@ const expectedGalleryImages = [
   "/images/events/kula-mytrack-2026/event-gallery-i20n-close.jpg",
 ] as const;
 const galleryBody = extractArrayBody(eventPage, "eventGalleryImages");
-const scheduleBody = extractArrayBody(eventPage, "eventScheduleItems");
+const scheduleBody = extractArrayBody(eventConfig, "kulaEventScheduleItems");
 const galleryImages = Array.from(
   galleryBody.matchAll(/\bsrc:\s*"([^"]+)"/g),
   (match) => match[1],
@@ -82,6 +83,11 @@ assertCondition(
     scheduleBody.includes("Pist seansları") &&
     scheduleBody.includes("Gün sonu"),
   "schedule must include the expected one-source timeline stages",
+);
+assertCondition(
+  eventPage.includes('import { kulaEventScheduleItems } from "@/lib/event-config"') &&
+    eventPage.includes("kulaEventScheduleItems.map"),
+  "event page must render the canonical shared schedule",
 );
 assertCondition(
   eventPage.includes('src: "/images/events/kula-mytrack-2026/event-gallery-ats-lineup.jpg"') &&

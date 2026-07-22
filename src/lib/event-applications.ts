@@ -7,6 +7,11 @@ import {
   type RegistrationStatus,
 } from "@prisma/client";
 import type { AtsMemberUser } from "@/lib/member-auth";
+import {
+  kulaEventPublicWindow,
+  kulaEventSlug,
+  kulaPackageCode,
+} from "@/lib/event-config";
 import { MobileAuthError } from "@/lib/mobile-auth";
 import {
   MobileApplicationsError,
@@ -19,8 +24,8 @@ import {
   normalizeTurkishPhone,
 } from "@/lib/registration-validation";
 
-export const mobileEventSlug = "kula-mytrack-2026";
-export const mobileEventPackageCode = "SEP20";
+export const mobileEventSlug = kulaEventSlug;
+export const mobileEventPackageCode = kulaPackageCode;
 
 const activeRegistrationStatuses = ["PENDING_PAYMENT", "CONFIRMED"] as const;
 const eventSummary =
@@ -207,6 +212,8 @@ export async function getMobileParticipantPass(
     throw new MobileApplicationsError("MOBILE_APPLICATIONS_PASS_UNAVAILABLE");
   }
 
+  const eventWindow = presentEventWindow(registration.event);
+
   return {
     data: {
       pass: {
@@ -215,7 +222,7 @@ export async function getMobileParticipantPass(
         event: {
           title: registration.event.name,
           venue: registration.event.venue,
-          startsAt: registration.event.startsAt.toISOString(),
+          startsAt: eventWindow.startsAt,
         },
         vehicle: {
           brandModel: registration.carBrandModel,
@@ -590,13 +597,14 @@ function presentEvent(
     hasExistingApplication: Boolean(existingApplication),
     now,
   });
+  const eventWindow = presentEventWindow(event);
 
   return {
     slug: event.slug,
     title: event.name,
     venue: event.venue,
-    startsAt: event.startsAt.toISOString(),
-    endsAt: event.endsAt.toISOString(),
+    startsAt: eventWindow.startsAt,
+    endsAt: eventWindow.endsAt,
     timezone: event.timezone,
     summary: eventSummary,
     registration: {
@@ -642,14 +650,15 @@ function presentApplication(registration: ApplicationRecord, includePrivate: boo
   );
   const passAvailable = isParticipantPassAvailable(registration);
   const paymentSnapshot = registration.payments[0];
+  const eventWindow = presentEventWindow(registration.event);
   return {
     id: registration.id,
     event: {
       slug: registration.event.slug,
       title: registration.event.name,
       venue: registration.event.venue,
-      startsAt: registration.event.startsAt.toISOString(),
-      endsAt: registration.event.endsAt.toISOString(),
+      startsAt: eventWindow.startsAt,
+      endsAt: eventWindow.endsAt,
       lifecycle:
         registration.event.status === "COMPLETED"
           ? ("COMPLETED" as const)
@@ -690,6 +699,19 @@ function presentApplication(registration: ApplicationRecord, includePrivate: boo
         }
       : {}),
   };
+}
+
+export function presentEventWindow(event: {
+  slug: string;
+  startsAt: Date;
+  endsAt: Date;
+}) {
+  return event.slug === kulaEventSlug
+    ? kulaEventPublicWindow
+    : {
+        startsAt: event.startsAt.toISOString(),
+        endsAt: event.endsAt.toISOString(),
+      };
 }
 
 function presentCheckInStatus(status: string) {

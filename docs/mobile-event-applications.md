@@ -74,6 +74,12 @@ Duplicate and capacity predicates are checked immediately before insert. Prisma
 serialization conflicts are retried at most three times; the mutation itself is
 never automatically replayed by the mobile client.
 
+The Kula event's member-facing `startsAt` and `endsAt` values mirror the public
+website schedule (`08:30` registration through `17:30` day close). The database
+`Event.startsAt` remains the authoritative registration cutoff and transaction
+boundary; it is returned separately as `registration.deadline` and is not
+presented as the public event start time.
+
 The registration stores immutable profile and vehicle snapshots. Manual mode
 also creates an `INITIATED` MANUAL `Payment` in the same transaction so amount
 and currency are server-selected at submission. Existing admin confirmation

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FooterCredit } from "@/components/footer-credit";
 import { PublicNav } from "@/components/public-nav";
+import { kulaEventScheduleItems } from "@/lib/event-config";
 import { prisma } from "@/lib/prisma";
 import { measureServerTiming } from "@/lib/server-timing";
 
@@ -85,34 +86,6 @@ const eventExperienceItems = [
   {
     title: "Topluluk deneyimi",
     body: "Amaç tur zamanı kovalamak değil; doğru kültürle daha temiz, daha bilinçli sürüş zamanı üretmek.",
-  },
-] as const;
-
-const eventScheduleItems = [
-  {
-    time: "08:30",
-    title: "Kayıt ve karşılama",
-    body: "Katılımcı doğrulama, araç bilgileri ve paddock yönlendirmesi.",
-  },
-  {
-    time: "09:00",
-    title: "Teknik kontrol",
-    body: "Araçların piste çıkış öncesi temel operasyon uygunluğu ve ekip yönlendirmeleri.",
-  },
-  {
-    time: "09:30",
-    title: "Sürücü briefingi",
-    body: "Bayraklar, pist disiplini, seans akışı ve güvenlik protokolü.",
-  },
-  {
-    time: "10:00",
-    title: "Pist seansları",
-    body: "Kontrollü gruplar, net çıkış ritmi ve odaklı sürüş zamanı.",
-  },
-  {
-    time: "17:30",
-    title: "Gün sonu",
-    body: "Seans kapanışı, paddock dönüşü ve operasyon kapanış kontrolleri.",
   },
 ] as const;
 
@@ -379,7 +352,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
             </p>
           </div>
           <ol className="space-y-0">
-            {eventScheduleItems.map((item) => (
+            {kulaEventScheduleItems.map((item) => (
               <li
                 key={item.time}
                 className="grid gap-4 border-t border-ats-border py-5 sm:grid-cols-[6rem_1fr]"

@@ -3,8 +3,13 @@ import { readFileSync } from "node:fs";
 import {
   deriveMobileEventEligibility,
   parseMobileApplicationInput,
+  presentEventWindow,
   presentApplicationStatus,
 } from "../src/lib/event-applications";
+import {
+  kulaEventPublicWindow,
+  kulaEventScheduleItems,
+} from "../src/lib/event-config";
 import { MobileAuthError } from "../src/lib/mobile-auth";
 import {
   mobileApplicationsContractHeader,
@@ -21,10 +26,38 @@ void main().catch((error) => {
 async function main() {
   validateStrictApplicationInput();
   validateEligibilityBoundaries();
+  validatePublicEventWindow();
   validateStatusPresentation();
   await validateStableErrorsAndHeaders();
   validateSourceSecurityAndTransactions();
-  console.log("validate-mobile-applications-api passed (65 assertions)");
+  console.log("validate-mobile-applications-api passed (71 assertions)");
+}
+
+function validatePublicEventWindow() {
+  assert.deepEqual(
+    presentEventWindow({
+      slug: "kula-mytrack-2026",
+      startsAt: new Date("2026-09-20T03:00:00.000Z"),
+      endsAt: new Date("2026-09-20T15:00:00.000Z"),
+    }),
+    kulaEventPublicWindow,
+  );
+  assert.equal(kulaEventScheduleItems[0].time, "08:30");
+  assert.equal(kulaEventScheduleItems.at(-1)?.time, "17:30");
+  assert.match(kulaEventPublicWindow.startsAt, /T08:30:00\+03:00$/);
+  assert.match(kulaEventPublicWindow.endsAt, /T17:30:00\+03:00$/);
+
+  assert.deepEqual(
+    presentEventWindow({
+      slug: "another-event",
+      startsAt: new Date("2027-01-01T07:00:00.000Z"),
+      endsAt: new Date("2027-01-01T15:00:00.000Z"),
+    }),
+    {
+      startsAt: "2027-01-01T07:00:00.000Z",
+      endsAt: "2027-01-01T15:00:00.000Z",
+    },
+  );
 }
 
 function validateStrictApplicationInput() {
