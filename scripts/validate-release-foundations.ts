@@ -101,7 +101,15 @@ await expectVerificationFailure(
   "VERCEL_PROJECT_PROVENANCE_MISMATCH",
 );
 await expectVerificationFailure(
+  { untrustedProjectLinkType: true },
+  "VERCEL_PROJECT_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
   { previewTarget: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+);
+await expectVerificationFailure(
+  { incompleteDeploymentGitSource: true },
   "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
 );
 await expectVerificationFailure(
@@ -232,7 +240,9 @@ type MockFetchOptions = {
   deploymentSucceeded?: boolean;
   wrongProject?: boolean;
   wrongRepository?: boolean;
+  untrustedProjectLinkType?: boolean;
   previewTarget?: boolean;
+  incompleteDeploymentGitSource?: boolean;
   untrustedDeploymentCreator?: boolean;
   untrustedStatusCreator?: boolean;
   missingDeployment?: boolean;
@@ -354,7 +364,7 @@ function createMockFetch(options?: MockFetchOptions) {
           accountId: vercelTeamId,
           name: "aegean-track-society",
           link: {
-            type: "github",
+            type: options?.untrustedProjectLinkType ? "vercel" : "github",
             org: "YigitMora",
             repo: options?.wrongRepository
               ? "another-repository"
@@ -376,9 +386,13 @@ function createMockFetch(options?: MockFetchOptions) {
           aliasAssigned: true,
           gitSource: {
             type: "github",
-            org: "YigitMora",
-            repo: "aegean-track-society",
-            repoId: repositoryId,
+            ...(options?.incompleteDeploymentGitSource
+              ? {}
+              : {
+                  org: "YigitMora",
+                  repo: "aegean-track-society",
+                  repoId: repositoryId,
+                }),
             ref: "main",
             sha: expectedSha,
           },

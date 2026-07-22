@@ -308,13 +308,12 @@ async function verifyVercelProductionMetadata({
     project.id !== vercelProjectId ||
     project.accountId !== vercelTeamId ||
     !project.link ||
-    !["github", "github-limited", "vercel"].includes(
-      String(project.link.type),
-    ) ||
+    !["github", "github-limited"].includes(String(project.link.type)) ||
     String(project.link.org).toLowerCase() !== expectedOwner?.toLowerCase() ||
     String(project.link.repo).toLowerCase() !==
       expectedRepository?.toLowerCase() ||
-    project.link.productionBranch !== "main"
+    project.link.productionBranch !== "main" ||
+    project.link.repoId === undefined
   ) {
     throw new ReleaseVerificationError(
       "VERCEL_PROJECT_PROVENANCE_MISMATCH",
@@ -341,15 +340,12 @@ async function verifyVercelProductionMetadata({
   const gitSource = deployment.gitSource;
   const repositoryMatches =
     gitSource &&
-    ["github", "github-limited", "vercel"].includes(String(gitSource.type)) &&
-    (gitSource.org === undefined ||
-      String(gitSource.org).toLowerCase() === expectedOwner?.toLowerCase()) &&
-    (gitSource.repo === undefined ||
-      String(gitSource.repo).toLowerCase() ===
-        expectedRepository?.toLowerCase()) &&
-    (gitSource.repoId === undefined ||
-      project.link.repoId === undefined ||
-      String(gitSource.repoId) === String(project.link.repoId));
+    ["github", "github-limited"].includes(String(gitSource.type)) &&
+    String(gitSource.org).toLowerCase() === expectedOwner?.toLowerCase() &&
+    String(gitSource.repo).toLowerCase() ===
+      expectedRepository?.toLowerCase() &&
+    gitSource.repoId !== undefined &&
+    String(gitSource.repoId) === String(project.link.repoId);
 
   if (
     deployment.projectId !== vercelProjectId ||
