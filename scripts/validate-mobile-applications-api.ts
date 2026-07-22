@@ -30,7 +30,7 @@ async function main() {
   validateStatusPresentation();
   await validateStableErrorsAndHeaders();
   validateSourceSecurityAndTransactions();
-  console.log("validate-mobile-applications-api passed (71 assertions)");
+  console.log("validate-mobile-applications-api passed (85 assertions)");
 }
 
 function validatePublicEventWindow() {
@@ -193,6 +193,7 @@ async function validateStableErrorsAndHeaders() {
 
 function validateSourceSecurityAndTransactions() {
   const service = source("src/lib/event-applications.ts");
+  const manualConfirmation = source("src/lib/manual-payment-confirmation.ts");
   const webRoute = source("src/app/api/registrations/route.ts");
   const routes = [
     "src/app/api/mobile/v1/events/route.ts",
@@ -231,6 +232,25 @@ function validateSourceSecurityAndTransactions() {
   assert.match(service, /participantCode: registration\.participantCode/);
   assert.doesNotMatch(service, /rawQrToken|qrTokenHash/);
   assert.match(webRoute, /createMemberEventApplication/);
+
+  const transactionNowIndex = service.indexOf("const transactionNow = clock()");
+  assert.ok(transactionNowIndex > service.indexOf("tx.registration.count"));
+  assert.ok(transactionNowIndex < service.indexOf("tx.registration.create"));
+  assert.match(service, /tx\.registration\.findUniqueOrThrow/);
+  assert.match(service, /error\.code !== "P2002"/);
+  assert.match(service, /Registration_member_active_package_key/);
+  assert.match(service, /MOBILE_APPLICATIONS_CREATE_FAILED/);
+  assert.match(service, /price: paymentSnapshot[\s\S]*?: null/);
+  assert.match(service, /"UNKNOWN" as const/);
+  assert.match(service, /registration\.event\.status !== "DRAFT"/);
+  assert.match(service, /registration\.event\.status !== "CANCELLED"/);
+
+  const existingPaymentUpdate = manualConfirmation.match(
+    /if \(existingManualPayment\) \{([\s\S]*?)\n        \} else \{/,
+  );
+  assert.ok(existingPaymentUpdate);
+  assert.doesNotMatch(existingPaymentUpdate[1], /amount:/);
+  assert.doesNotMatch(existingPaymentUpdate[1], /currency:/);
 }
 
 function source(path: string) {

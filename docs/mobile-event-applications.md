@@ -70,9 +70,12 @@ The current schema has no separate registration-deadline column. The audited
 deadline is therefore the event start time; submission is rejected at or after
 `startsAt`. A submission re-reads the active member/profile, published event,
 active package and owned non-archived vehicle inside a serializable transaction.
-Duplicate and capacity predicates are checked immediately before insert. Prisma
-serialization conflicts are retried at most three times; the mutation itself is
-never automatically replayed by the mobile client.
+Duplicate and capacity predicates are checked immediately before insert. The
+deadline clock is read again inside every serializable attempt, after those
+predicates and immediately before the insert. Prisma serialization conflicts
+are retried at most three times; exhaustion fails closed, and the existing
+partial unique index is translated to the stable duplicate response. The
+mutation itself is never automatically replayed by the mobile client.
 
 The Kula event's member-facing `startsAt` and `endsAt` values mirror the public
 website schedule (`08:30` registration through `17:30` day close). The database
@@ -83,8 +86,17 @@ presented as the public event start time.
 The registration stores immutable profile and vehicle snapshots. Manual mode
 also creates an `INITIATED` MANUAL `Payment` in the same transaction so amount
 and currency are server-selected at submission. Existing admin confirmation
-updates that row and remains the only way to mark payment received/confirm the
-application. Emails run after commit and cannot roll back a committed record.
+updates that row without replacing its amount or currency and remains the only
+way to mark payment received/confirm the application. The create response is
+reread inside the transaction after the Payment and AuditLog writes, so it
+reflects the committed snapshot. Emails run after commit and cannot roll back a
+committed record.
+
+Older manual registrations can predate the Payment snapshot. For those rows the
+applications API returns a null package price and an `UNKNOWN` payment mode with
+contact guidance; it never presents the package's current price as the
+historical payable amount. Once an administrator confirms a legacy payment, the
+created Payment row becomes the authoritative recorded amount.
 
 ## Status, Pass And Privacy
 
@@ -93,12 +105,14 @@ Raw Prisma status values are mapped to stable member presentation codes:
 `CANCELLED` and the fail-safe `STATUS_PENDING`. Online payment is never offered
 while `PAYMENT_MODE=manual`.
 
-The pass endpoint requires owner scope plus confirmed/paid state, participant
-code and prior QR issuance. The current QR token cannot be recovered from its
-stored hash. The endpoint therefore returns the participant code and explicitly
-reports that the existing QR is in the approval email; it returns no token,
-hash, check-in URL or generated replacement. Offline/stale native state hides
-the participant code until the endpoint is verified again.
+The pass endpoint requires owner scope plus confirmed/paid state, a currently
+published/sold-out/completed event, participant code and prior QR issuance.
+Draft or cancelled events cannot expose a pass. The current QR token cannot be
+recovered from its stored hash. The endpoint therefore returns the participant
+code and explicitly reports that the existing QR is in the approval email; it
+returns no token, hash, check-in URL or generated replacement. Offline/stale or
+in-flight native state hides the participant code until the endpoint is
+verified again.
 
 Responses omit member identity, admin notes, audit data, provider references,
 storage paths, raw internal enums and database implementation fields. Logs use

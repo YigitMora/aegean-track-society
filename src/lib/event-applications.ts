@@ -245,14 +245,14 @@ export async function createMemberEventApplication({
   input,
   consentIpAddress,
   source,
-  now = new Date(),
+  clock = () => new Date(),
 }: {
   memberUser: AtsMemberUser;
   slug: string;
   input: MobileApplicationInput;
   consentIpAddress: string | null;
   source: "member_registration_form" | "mobile_application";
-  now?: Date;
+  clock?: () => Date;
 }) {
   if (getPaymentMode() !== "manual") {
     throw new MobileApplicationsError(
@@ -306,10 +306,6 @@ export async function createMemberEventApplication({
     if (event.status !== "PUBLISHED") {
       throw new MobileApplicationsError("MOBILE_APPLICATIONS_EVENT_NOT_OPEN");
     }
-    if (now >= event.startsAt) {
-      throw new MobileApplicationsError("MOBILE_APPLICATIONS_DEADLINE_PASSED");
-    }
-
     const vehicle = await tx.vehicle.findFirst({
       where: {
         id: input.vehicleId,
@@ -363,6 +359,11 @@ export async function createMemberEventApplication({
       );
     }
 
+    const transactionNow = clock();
+    if (transactionNow >= event.startsAt) {
+      throw new MobileApplicationsError("MOBILE_APPLICATIONS_DEADLINE_PASSED");
+    }
+
     const snapshotVehicle = `${vehicle.brand} ${vehicle.model}`
       .trim()
       .replace(/\s+/g, " ");
@@ -385,12 +386,12 @@ export async function createMemberEventApplication({
         emergencyContactPhone: normalizeTurkishPhone(
           input.emergencyContactPhone,
         ),
-        kvkkAcceptedAt: now,
-        liabilityWaiverAcceptedAt: now,
+        kvkkAcceptedAt: transactionNow,
+        liabilityWaiverAcceptedAt: transactionNow,
         marketingConsentAt:
           currentMember.memberMarketingConsentAt &&
           !currentMember.memberMarketingConsentRevokedAt
-            ? now
+            ? transactionNow
             : null,
         consentIpAddress,
         status: "PENDING_PAYMENT",
@@ -429,7 +430,15 @@ export async function createMemberEventApplication({
       },
     });
 
-    return registration;
+    return tx.registration.findUniqueOrThrow({
+      where: { id: registration.id },
+      select: {
+        ...applicationSelect,
+        fullName: true,
+        phone: true,
+        email: true,
+      },
+    });
   });
 
   return {
@@ -668,10 +677,12 @@ function presentApplication(registration: ApplicationRecord, includePrivate: boo
     },
     package: {
       name: registration.package.name,
-      price: {
-        amount: (paymentSnapshot?.amount ?? registration.package.price).toFixed(2),
-        currency: paymentSnapshot?.currency ?? registration.package.currency,
-      },
+      price: paymentSnapshot
+        ? {
+            amount: paymentSnapshot.amount.toFixed(2),
+            currency: paymentSnapshot.currency,
+          }
+        : null,
     },
     vehicle: {
       brandModel: registration.carBrandModel,
@@ -679,7 +690,10 @@ function presentApplication(registration: ApplicationRecord, includePrivate: boo
     },
     experience: presentExperience(registration.experienceLevel),
     status,
-    payment: presentPayment(registration.paymentStatus),
+    payment: presentPayment(
+      registration.paymentStatus,
+      Boolean(paymentSnapshot),
+    ),
     participantPass: {
       available: passAvailable,
       action: passAvailable ? ("VIEW_PASS" as const) : null,
@@ -776,7 +790,10 @@ export function presentApplicationStatus(
   };
 }
 
-function presentPayment(paymentStatus: PaymentStatus) {
+function presentPayment(
+  paymentStatus: PaymentStatus,
+  hasManualPaymentSnapshot: boolean,
+) {
   const presentations: Record<
     PaymentStatus,
     { code: string; label: string; received: boolean }
@@ -789,9 +806,13 @@ function presentPayment(paymentStatus: PaymentStatus) {
     REFUNDED: { code: "REFUNDED", label: "Ödeme iade edildi", received: false },
   };
   return {
-    mode: "MANUAL" as const,
+    mode: hasManualPaymentSnapshot
+      ? ("MANUAL" as const)
+      : ("UNKNOWN" as const),
     ...presentations[paymentStatus],
-    instructions: manualPaymentInstructions,
+    instructions: hasManualPaymentSnapshot
+      ? manualPaymentInstructions
+      : "Bu eski başvurunun ödeme yöntemi ve ücret kaydı doğrulanamıyor. Güncel bilgi için ATS ekibiyle iletişime geçin.",
   };
 }
 
@@ -809,6 +830,8 @@ function isParticipantPassAvailable(registration: ApplicationRecord) {
   return Boolean(
     registration.status === "CONFIRMED" &&
       registration.paymentStatus === "PAID" &&
+      registration.event.status !== "DRAFT" &&
+      registration.event.status !== "CANCELLED" &&
       registration.participantCode &&
       registration.qrIssuedAt,
   );
@@ -843,8 +866,16 @@ export async function runApplicationsSerializableTransaction<T>(
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
       });
     } catch (error) {
-      if (attempt < 3 && isSerializableConflict(error)) {
-        continue;
+      if (isSerializableConflict(error)) {
+        if (attempt < 3) {
+          continue;
+        }
+        throw new MobileApplicationsError(
+          "MOBILE_APPLICATIONS_CREATE_FAILED",
+        );
+      }
+      if (isMemberApplicationUniqueConflict(error)) {
+        throw new MobileApplicationsError("MOBILE_APPLICATIONS_DUPLICATE");
       }
       throw error;
     }
@@ -856,6 +887,26 @@ function isSerializableConflict(error: unknown) {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError &&
     error.code === "P2034"
+  );
+}
+
+function isMemberApplicationUniqueConflict(error: unknown) {
+  if (
+    !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+    error.code !== "P2002"
+  ) {
+    return false;
+  }
+
+  const target = Array.isArray(error.meta?.target)
+    ? error.meta.target.join(",")
+    : String(error.meta?.target ?? "");
+
+  return (
+    target.includes("Registration_member_active_package_key") ||
+    (target.includes("userId") &&
+      target.includes("eventId") &&
+      target.includes("packageId"))
   );
 }
 
