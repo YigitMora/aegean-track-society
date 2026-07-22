@@ -19,11 +19,18 @@ database-dependent build boundary is redesigned.
 
 1. Merge and deploy the backend release first.
 2. Wait for a successful GitHub Production deployment for the exact backend SHA.
-3. Run `Verify Production Release`. It requires exactly one deployment created
-   by the trusted `vercel[bot]` integration for the expected SHA, then verifies
-   the configured Vercel project, team/account, linked GitHub repository,
-   `main` source ref, Production target, READY state and exact Git SHA through
-   the Vercel API.
+3. Run `Verify Production Release`. It independently verifies the immutable
+   GitHub repository ID `1293619947`, exhausts every trusted GitHub deployment
+   page, and requires exactly one deployment created by immutable Vercel actor
+   ID `35613825` for the expected SHA. It then verifies the configured Vercel
+   project, team/account, linked repository ID, `main` source ref, Production
+   target, READY state and exact Git SHA through the Vercel API.
+
+The repository ID was established from the read-only GitHub repository REST
+metadata for `YigitMora/aegean-track-society`. The actor ID was established from
+the read-only GitHub Production deployment and deployment-status responses
+emitted by Vercel. These public immutable identifiers are provenance anchors,
+not credentials or operator-supplied settings.
 4. Verify through the Vercel API that the fixed canonical alias
    `https://www.aegeantracksociety.com` is bound to that exact deployment.
 5. Verify that both the unique deployment and canonical production domain serve
@@ -32,9 +39,16 @@ database-dependent build boundary is redesigned.
 6. Only then may the mobile release-time contract gate accept the backend SHA.
 
 An HTTP status, environment label, `.vercel.app` hostname or self-reported SHA
-alone is not provenance. The verifier fails on untrusted or ambiguous GitHub
-deployment metadata, project/team/repository/target/SHA mismatch, a stale
-canonical alias, redirects, HTML, malformed JSON, or missing
+alone is not provenance. Repository owner/name and Vercel actor login/type are
+supplemental consistency checks, not roots of trust. Current live Vercel
+deployment and status responses expose no `performed_via_github_app` identity;
+their value is `null`. Until an App ID is independently established, unexpected
+non-null App metadata fails closed instead of being trusted. Pagination follows
+only sequential HTTPS GitHub API links for the same deployment endpoint, SHA and
+maximum page size; malformed, cyclic, cross-origin, truncated, excessive or
+incomplete enumeration fails closed. The verifier also fails on untrusted or
+ambiguous GitHub deployment metadata, project/team/repository/target/SHA
+mismatch, a stale canonical alias, redirects, HTML, malformed JSON, or missing
 no-store/Bearer/contract headers. The canonical origin is fixed in code and is
 not an operator input. The verifier never sends an application Bearer token and
 never performs a mutation.
@@ -92,8 +106,11 @@ the current database.
 
 Normal CI requires no repository or environment secrets. Its scanner checks
 tracked and non-ignored untracked text for repository-relevant credential
-families, hides matched values, and fails closed when a newly changed binary,
-non-regular or larger-than-5-MB file cannot be scanned safely.
+families, hides matched values, and suppresses only complete approved synthetic
+values or tightly anchored `<NAME>`/`${NAME}` placeholders. Placeholder-like
+substrings inside realistic values remain findings. The scanner fails closed
+when a newly changed binary, non-regular or larger-than-5-MB file cannot be
+scanned safely.
 
 Production database workflows require `DATABASE_URL` as a secret on the
 `Production` environment. The deployment verifier requires the workflow-provided

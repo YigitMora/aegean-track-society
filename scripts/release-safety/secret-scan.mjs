@@ -3,8 +3,23 @@ import { lstatSync, readFileSync } from 'node:fs';
 
 const maximumScannableBytes = 5 * 1024 * 1024;
 const privateKeyPrefix = '-----BEGIN ';
-const placeholderPattern =
-  /(?:your|example|replace|change|placeholder|sandbox|use-a-|localhost|127\.0\.0\.1|\.\.\.|<|\$\{)/i;
+const approvedPlaceholderValues = new Set(
+  [
+    'postgresql://...',
+    'postgresql://postgres:postgres@localhost:5432/aegean_track_days?schema=public',
+    'sandbox-your-api-key',
+    'sandbox-your-secret-key',
+    'change-this-password',
+    'change-this-long-random-secret',
+    'use-a-long-random-secret',
+    'your-vercel-access-token',
+    'your-supabase-service-role-key',
+  ].map((value) => value.toLowerCase()),
+);
+const anchoredPlaceholderPatterns = [
+  /^<[A-Z_][A-Z0-9_]*>$/i,
+  /^\$\{[A-Z_][A-Z0-9_]*\}$/i,
+];
 const rules = [
   {
     id: 'private-key',
@@ -127,7 +142,15 @@ if (findings.length > 0) {
 }
 
 function hasNonPlaceholderAssignment(text, pattern) {
-  return [...text.matchAll(pattern)].some(([, value]) => !placeholderPattern.test(value));
+  return [...text.matchAll(pattern)].some(([, value]) => !isApprovedPlaceholder(value));
+}
+
+function isApprovedPlaceholder(value) {
+  const normalized = value.trim();
+  return (
+    approvedPlaceholderValues.has(normalized.toLowerCase()) ||
+    anchoredPlaceholderPatterns.some((pattern) => pattern.test(normalized))
+  );
 }
 
 function readChangedPaths(comparisonBase) {

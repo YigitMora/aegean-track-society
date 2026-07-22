@@ -47,7 +47,44 @@ runFixture(
   fakeSecret,
 );
 
-console.log("validate-release-safety passed (4 fixtures)");
+runFixture("approved-placeholder", ({ directory }) => {
+  writeFileSync(
+    resolve(directory, "approved-placeholder.txt"),
+    `${secretName}=your-vercel-access-token\n`,
+  );
+});
+
+runFixture("anchored-placeholder", ({ directory }) => {
+  writeFileSync(
+    resolve(directory, "anchored-placeholder.txt"),
+    `${secretName}=<VERCEL_ACCESS_TOKEN>\n`,
+  );
+});
+
+for (const [name, value] of [
+  ["contains-example", `prod_${"a".repeat(24)}example${"b".repeat(8)}`],
+  ["contains-change", `prod_${"c".repeat(24)}change${"d".repeat(8)}`],
+  ["contains-sandbox", `prod_${"e".repeat(24)}sandbox${"f".repeat(8)}`],
+  ["mixed-case", `prod_${"g".repeat(24)}SaNdBoX${"h".repeat(8)}`],
+  [
+    "embedded-placeholder",
+    `prod_${"i".repeat(24)}your-vercel-access-token${"j".repeat(8)}`,
+  ],
+] as const) {
+  runFixture(
+    name,
+    ({ directory }) => {
+      writeFileSync(
+        resolve(directory, `${name}.txt`),
+        `${secretName}=${value}\n`,
+      );
+    },
+    `${name}.txt: vercel-access-token`,
+    value,
+  );
+}
+
+console.log("validate-release-safety passed (11 fixtures)");
 
 function runFixture(
   name: string,
