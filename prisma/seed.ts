@@ -1276,12 +1276,45 @@ const modificationCatalog = [
     code: "engine_rsa300",
     category: "ECU",
     brand: "RSA",
-    name: "Platform Tune Package",
-    variant: "RSA300",
+    name: "ECU Calibration",
+    variant: "RSA 300",
     componentTypeCode: "platform_tune_package",
     usageClass: "FAST_ROAD",
     active: false,
     sortOrder: 10,
+  },
+  {
+    code: "rsa_bmw_b48_g20_250",
+    category: "ECU",
+    brand: "RSA",
+    name: "ECU Calibration",
+    variant: "RSA 250",
+    componentTypeCode: "ecu_software",
+    usageClass: "FAST_ROAD",
+    active: false,
+    sortOrder: 11,
+  },
+  {
+    code: "rsa_bmw_b48_g20_280",
+    category: "ECU",
+    brand: "RSA",
+    name: "ECU Calibration",
+    variant: "RSA 280",
+    componentTypeCode: "ecu_software",
+    usageClass: "FAST_ROAD",
+    active: false,
+    sortOrder: 12,
+  },
+  {
+    code: "rsa_bmw_b48_g20_320_e25",
+    category: "ECU",
+    brand: "RSA",
+    name: "ECU Calibration",
+    variant: "RSA 320 E25",
+    componentTypeCode: "ecu_software",
+    usageClass: "STREET_TRACK",
+    active: false,
+    sortOrder: 13,
   },
   {
     code: "tune_mhd_b58_stage_1",
@@ -15913,6 +15946,15 @@ const bmwTurkeyB48Codes = [
   "bmw_g22_420i_tr_pre_lci",
   "bmw_g22_420i_tr_lci",
 ] as const;
+const bmwG20Turkey320i170Codes = [
+  "bmw_g20_320i_tr_pre_lci",
+  "bmw_g20_320i_tr_lci",
+] as const;
+const bmwG20RsaCalibrationCodes = [
+  "rsa_bmw_b48_g20_250",
+  "rsa_bmw_b48_g20_280",
+  "rsa_bmw_b48_g20_320_e25",
+] as const;
 const bmwB48Codes = [...bmwGlobalB48Codes, ...bmwTurkeyB48Codes] as const;
 const bmwN55Codes = [
   "bmw_f30_335i",
@@ -17039,6 +17081,7 @@ const iceOnlyModificationCodes = [
   "ecu_stage_1",
   "ecu_stage_2",
   "engine_rsa300",
+  ...bmwG20RsaCalibrationCodes,
   "tune_mhd_b58_stage_1",
   "tune_mhd_b58_stage_2",
   "tune_mhd_b58_stage_2_hpfp",
@@ -17186,6 +17229,12 @@ const platformModificationCompatibilities = [
     modificationCode: "engine_rsa300",
     vehicleCode,
   })),
+  ...bmwG20Turkey320i170Codes.flatMap((vehicleCode) =>
+    bmwG20RsaCalibrationCodes.map((modificationCode) => ({
+      modificationCode,
+      vehicleCode,
+    })),
+  ),
   ...turboIceCodes.flatMap((vehicleCode) => [
     { modificationCode: "ecu_stage_1", vehicleCode },
     { modificationCode: "ecu_stage_2", vehicleCode },
@@ -17372,17 +17421,82 @@ const platformFamilyModificationCompatibilities = [
 
 const tuningPackageSpecifications = [
   tuningPackageSpec("engine_rsa300", {
-    tuneType: "HARDWARE_SOFTWARE_PACKAGE",
+    tuneType: "ECU_TCU_BUNDLE",
     measurementBasis: "UNSPECIFIED",
-    mapStageLabel: "RSA300",
-    mapProgramCode: "RSA300",
+    mapStageLabel: "RSA 300",
+    mapProgramCode: "RSA 300",
+    claimedPowerMinHp: 300,
+    claimedPowerMaxHp: 300,
+    claimedTorqueMinNm: 380,
+    claimedTorqueMaxNm: 380,
     minimumFuelOctaneRon: 95,
-    requiredFuelNote: "Türkiye B48 1.6 kalibrasyonu için yakıt ve donanım doğrulaması gerekir.",
+    requiredFuelNote: "Pump-fuel map must match the logged fuel quality and ethanol content.",
     hardwareRequirementNote:
-      "RSA280/RSA320 için doğrudan resmi kaynak bulunmadı; RSA300 paket içeriği araç özelinde doğrulanmalıdır.",
-    coolingRecommendationNote: "Tekrarlı pist kullanımında intercooler ve yağ sıcaklığı izlenmelidir.",
+      "ECU unlock and transmission torque-limit compatibility must be verified before activation.",
+    transmissionLimitNote:
+      "Compatible ZF8 transmission software is required where the stock torque model cannot accept the target.",
+    coolingRecommendationNote:
+      "Upgraded charge-air cooling is recommended for repeated high-load or track use.",
     sourceNote:
-      "ATS internal RSA300 placeholder; numeric package label is not treated as a horsepower claim.",
+      "Existing RSA 300 stable package, now constrained to its represented B48 applications; target is not a dyno guarantee.",
+    confidence: "LOW",
+  }),
+  tuningPackageSpec("rsa_bmw_b48_g20_250", {
+    tuneType: "ECU_FLASH",
+    measurementBasis: "UNSPECIFIED",
+    mapStageLabel: "RSA 250",
+    mapProgramCode: "RSA 250",
+    claimedPowerMinHp: 250,
+    claimedPowerMaxHp: 250,
+    claimedTorqueMinNm: 350,
+    claimedTorqueMaxNm: 350,
+    minimumFuelOctaneRon: 95,
+    requiredFuelNote: "Conservative pump-fuel calibration; fuel quality must be logged and verified.",
+    hardwareRequirementNote:
+      "Stock-hardware-oriented calibration; ECU unlock is required where the represented controller is locked.",
+    coolingRecommendationNote:
+      "Monitor charge-air and oil temperature during repeated high-load use.",
+    sourceNote:
+      "ATS catalog target for represented G20 320i 170 PS B48 configuration; not a dyno guarantee.",
+    confidence: "LOW",
+  }),
+  tuningPackageSpec("rsa_bmw_b48_g20_280", {
+    tuneType: "ECU_TCU_BUNDLE",
+    measurementBasis: "UNSPECIFIED",
+    mapStageLabel: "RSA 280",
+    mapProgramCode: "RSA 280",
+    claimedPowerMinHp: 280,
+    claimedPowerMaxHp: 280,
+    claimedTorqueMinNm: 350,
+    claimedTorqueMaxNm: 350,
+    minimumFuelOctaneRon: 95,
+    requiredFuelNote: "Pump-fuel map must match the logged fuel quality and ethanol content.",
+    hardwareRequirementNote:
+      "ECU unlock is required where the represented controller is locked.",
+    transmissionLimitNote:
+      "Compatible ZF8 transmission software is required where the stock torque model cannot accept the target.",
+    coolingRecommendationNote:
+      "Upgraded charge-air cooling is recommended for repeated high-load use.",
+    sourceNote:
+      "ATS catalog target for represented G20 320i 170 PS B48 configuration; not a dyno guarantee.",
+    confidence: "LOW",
+  }),
+  tuningPackageSpec("rsa_bmw_b48_g20_320_e25", {
+    tuneType: "ECU_TCU_BUNDLE",
+    measurementBasis: "UNSPECIFIED",
+    mapStageLabel: "RSA 320 E25",
+    mapProgramCode: "RSA 320 E25",
+    claimedPowerMinHp: 320,
+    claimedPowerMaxHp: 320,
+    requiredFuelNote:
+      "Requires a measured E25 ethanol blend; this is not a pump-fuel-only calibration.",
+    hardwareRequirementNote:
+      "Requires ECU unlock where applicable and a compatible high-flow downpipe.",
+    transmissionLimitNote: "Requires compatible ZF8 transmission software.",
+    coolingRecommendationNote:
+      "Upgraded intercooler, engine oil cooling, colder plugs, and charge pipe are recommended.",
+    sourceNote:
+      "ATS catalog target for represented G20 320i 170 PS B48 E25 configuration; not a dyno guarantee.",
     confidence: "LOW",
   }),
   tuningPackageSpec("tune_mhd_b58_stage_1", {
@@ -17857,10 +17971,44 @@ const platformModificationImpacts = [
       reliabilityImpact: -3,
       thermalImpact: -4,
       confidence: "LOW",
+      claimedPowerDeltaHp: 130,
+      claimedTorqueDeltaNm: 130,
       sourceNote:
-        "ATS internal RSA300 placeholder; no claimed output stored until direct provider evidence is attached.",
+        "Existing RSA 300 rating contribution preserved; claimed deltas represent the catalog target, not a dyno guarantee.",
     }),
   ),
+  ...bmwG20Turkey320i170Codes.flatMap((vehicleCode) => [
+    impact(vehicleCode, "rsa_bmw_b48_g20_250", {
+      powerImpact: 6,
+      reliabilityImpact: -1,
+      thermalImpact: -1,
+      confidence: "LOW",
+      claimedPowerDeltaHp: 80,
+      claimedTorqueDeltaNm: 100,
+      sourceNote:
+        "Conservative stock-hardware-oriented RSA 250 target for the represented G20 320i 170 PS configuration.",
+    }),
+    impact(vehicleCode, "rsa_bmw_b48_g20_280", {
+      powerImpact: 8,
+      reliabilityImpact: -2,
+      thermalImpact: -2,
+      confidence: "LOW",
+      claimedPowerDeltaHp: 110,
+      claimedTorqueDeltaNm: 100,
+      sourceNote:
+        "Pump-fuel RSA 280 target with higher drivetrain and thermal load than RSA 250.",
+    }),
+    impact(vehicleCode, "rsa_bmw_b48_g20_320_e25", {
+      powerImpact: 11,
+      reliabilityImpact: -4,
+      thermalImpact: -5,
+      trackReadinessImpact: -1,
+      confidence: "LOW",
+      claimedPowerDeltaHp: 150,
+      sourceNote:
+        "E25 RSA 320 target applies only after required fuel, downpipe, ECU, and transmission support is valid.",
+    }),
+  ]),
   ...turboIceCodes.flatMap((vehicleCode) => [
     impact(vehicleCode, "engine_hybrid_turbo_generic", {
       powerImpact: 18,
