@@ -6,7 +6,10 @@ export type VehicleSeedRow = {
   brand: string;
   model: string;
   generation: string | null;
+  chassisCode: string | null;
   variant: string | null;
+  yearFrom: number | null;
+  yearTo: number | null;
   ratingStatus: "CALIBRATED" | "PROVISIONAL" | "UNAVAILABLE";
   sortOrder: number;
 };
@@ -55,7 +58,10 @@ export function extractVehicleRows(source: string, arrayName: string): VehicleSe
     brand: requiredString(block, "brand"),
     model: requiredString(block, "model"),
     generation: optionalString(block, "generation"),
+    chassisCode: optionalString(block, "chassisCode"),
     variant: optionalString(block, "variant"),
+    yearFrom: optionalNumber(block, "yearFrom"),
+    yearTo: optionalNumber(block, "yearTo"),
     ratingStatus: (optionalString(block, "ratingStatus") ?? "PROVISIONAL") as VehicleSeedRow["ratingStatus"],
     sortOrder: requiredNumber(block, "sortOrder"),
   }));
@@ -271,6 +277,11 @@ function requiredNumber(block: string, field: string) {
   }
 
   return Number(match[1]);
+}
+
+function optionalNumber(block: string, field: string) {
+  const match = new RegExp(`\\b${field}:\\s*(-?\\d+(?:\\.\\d+)?)`).exec(block);
+  return match ? Number(match[1]) : null;
 }
 
 function escapeRegExp(value: string) {
