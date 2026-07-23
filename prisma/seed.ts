@@ -18283,9 +18283,6 @@ const fordMountuneVehicleCodes = [
   "ford_focus_rs_mk2",
   "ford_focus_rs500_mk2",
   "ford_focus_rs_mk3",
-  "ford_fiesta_st_edition_mk8",
-  "ford_focus_st_edition_mk4",
-  "ford_focus_rs500_mk2",
   "ford_mustang_ecoboost_s550",
 ] as const;
 const bmwZf8PlatformCodes = [
@@ -19136,8 +19133,7 @@ const turboIceCodes = [
   "honda_civic_type_r_fl5",
   ...expandedTurboIceCodes,
 ] as const;
-const dsgAutomaticCodes = [
-  ...bmwZf8PlatformCodes,
+const vagDsgAutomaticCodes = [
   "vw_golf_gti_mk85",
   "vw_golf_gti_clubsport_mk85",
   "vw_golf_r_mk85",
@@ -19167,6 +19163,10 @@ const dsgAutomaticCodes = [
   "audi_rs3_8y",
   "audi_tts_8s",
   "audi_tt_rs_8s",
+] as const;
+const dsgAutomaticCodes = [
+  ...bmwZf8PlatformCodes,
+  ...vagDsgAutomaticCodes,
 ] as const;
 const lsdSupportedCodes = [
   "mazda_mx5_nd_15",
@@ -20683,7 +20683,7 @@ const platformModificationImpacts = [
     impact(vehicleCode, "intake_exhaust_intake", { powerImpact: 2 }),
     impact(vehicleCode, "intake_exhaust_high_flow_downpipe", { powerImpact: 3, thermalImpact: 1 }),
   ]),
-  ...dsgAutomaticCodes.map((vehicleCode) =>
+  ...vagDsgAutomaticCodes.map((vehicleCode) =>
     impact(vehicleCode, "drivetrain_transmission_software", { powerImpact: 2, trackReadinessImpact: 2 }),
   ),
   ...bmwB58Gen1Codes.map((vehicleCode) =>
@@ -22059,6 +22059,54 @@ function validateSeedReferenceGraph() {
     "engine family",
     vehicleEngineFamilies.map((item) => item.code),
   );
+  assertUniqueSeedKeys(
+    "modification powertrain applicability",
+    modificationPowertrainApplicabilities.flatMap((item) =>
+      item.powertrains.map(
+        (powertrain) => `${item.modificationCode}|${powertrain}`,
+      ),
+    ),
+  );
+  assertUniqueSeedKeys(
+    "exact modification compatibility",
+    platformModificationCompatibilities.map(
+      (item) => `${item.modificationCode}|${item.vehicleCode}`,
+    ),
+  );
+  assertUniqueSeedKeys(
+    "engine-family modification compatibility",
+    engineFamilyModificationCompatibilities.map(
+      (item) => `${item.modificationCode}|${item.familyCode}`,
+    ),
+  );
+  assertUniqueSeedKeys(
+    "platform-family modification compatibility",
+    platformFamilyModificationCompatibilities.map(
+      (item) => `${item.modificationCode}|${item.familyCode}`,
+    ),
+  );
+  assertUniqueSeedKeys(
+    "vehicle modification impact",
+    platformModificationImpacts.map(
+      (item) => `${item.vehicleCode}|${item.modificationCode}`,
+    ),
+  );
+  assertUniqueSeedKeys(
+    "modification conflict",
+    modificationConflictCodePairs.map(([sourceCode, targetCode]) =>
+      [sourceCode, targetCode].sort().join("|"),
+    ),
+  );
+  assertUniqueSeedKeys(
+    "modification requirement group",
+    modificationRequirementGroups.map((item) => item.code),
+  );
+  assertUniqueSeedKeys(
+    "modification requirement option",
+    modificationRequirementGroups.flatMap((item) =>
+      item.optionCodes.map((optionCode) => `${item.code}|${optionCode}`),
+    ),
+  );
   assertSeedCodes(
     "powertrain applicability modification",
     modificationPowertrainApplicabilities.map((item) => item.modificationCode),
@@ -22187,6 +22235,18 @@ function assertUniqueSeedCodes(label: string, codes: string[]) {
     }
 
     seenCodes.add(code);
+  }
+}
+
+function assertUniqueSeedKeys(label: string, keys: string[]) {
+  const seenKeys = new Set<string>();
+
+  for (const key of keys) {
+    if (seenKeys.has(key)) {
+      throw new Error(`Duplicate ${label} seed key ${key}`);
+    }
+
+    seenKeys.add(key);
   }
 }
 

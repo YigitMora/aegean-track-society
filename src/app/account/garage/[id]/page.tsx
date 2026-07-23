@@ -1038,7 +1038,7 @@ function buildCatalogGroups({
     modificationDefinitionId: string;
     modificationDefinition: {
       id: string;
-      code?: string | null;
+      code?: string;
       category: (typeof orderedModificationCategories)[number];
       brand: string | null;
       name: string;

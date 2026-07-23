@@ -15,6 +15,7 @@
     "validate:mobile-garage": "tsx scripts/validate-mobile-garage-api.ts",
     "validate:mobile-garage-detail": "tsx scripts/validate-mobile-garage-detail-api.ts",
     "validate:mobile-applications": "tsx scripts/validate-mobile-applications-api.ts",
+    "validate:modification-catalog": "tsx scripts/validate-modification-catalog-expansion.ts",
     "validate:release-foundations": "tsx scripts/validate-release-foundations.ts",
     "validate:release-safety": "tsx scripts/validate-release-safety.ts",
     "validate:repository-safety": "node scripts/release-safety/repository-safety.mjs",

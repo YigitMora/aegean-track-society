@@ -26,6 +26,22 @@ export type AuditRow = {
   trackReadiness: number;
 };
 
+export type ModificationSeedRow = {
+  code: string;
+  category: string;
+  brand: string | null;
+  name: string;
+  variant: string | null;
+  componentTypeCode: string | null;
+  active: boolean;
+  powerImpact: number;
+  handlingImpact: number;
+  brakingImpact: number;
+  reliabilityImpact: number;
+  trackReadinessImpact: number;
+  source: string;
+};
+
 export const root = process.cwd();
 
 export const finalVehicleArrayNames = [
@@ -75,6 +91,26 @@ export function extractFinalVehicleRows(source: string) {
       active: true,
     })),
   );
+}
+
+export function extractModificationRows(source: string): ModificationSeedRow[] {
+  const body = extractArrayBody(source, "modificationCatalog");
+
+  return extractTopLevelObjectBlocks(body).map((block) => ({
+    code: requiredString(block, "code"),
+    category: requiredString(block, "category"),
+    brand: optionalString(block, "brand"),
+    name: requiredString(block, "name"),
+    variant: optionalString(block, "variant"),
+    componentTypeCode: optionalString(block, "componentTypeCode"),
+    active: optionalBoolean(block, "active") ?? true,
+    powerImpact: optionalNumber(block, "powerImpact") ?? 0,
+    handlingImpact: optionalNumber(block, "handlingImpact") ?? 0,
+    brakingImpact: optionalNumber(block, "brakingImpact") ?? 0,
+    reliabilityImpact: optionalNumber(block, "reliabilityImpact") ?? 0,
+    trackReadinessImpact: optionalNumber(block, "trackReadinessImpact") ?? 0,
+    source: block,
+  }));
 }
 
 export function extractSpreadArrayNames(source: string, arrayName: string) {
@@ -165,7 +201,7 @@ export function extractArrayBody(text: string, arrayName: string) {
   return text.slice(openIndex + 1, closeIndex);
 }
 
-function extractTopLevelObjectBlocks(text: string) {
+export function extractTopLevelObjectBlocks(text: string) {
   const blocks: string[] = [];
   let stringDelimiter: string | null = null;
   let escaped = false;
@@ -282,6 +318,12 @@ function requiredNumber(block: string, field: string) {
 function optionalNumber(block: string, field: string) {
   const match = new RegExp(`\\b${field}:\\s*(-?\\d+(?:\\.\\d+)?)`).exec(block);
   return match ? Number(match[1]) : null;
+}
+
+function optionalBoolean(block: string, field: string) {
+  const value = new RegExp(`\\b${field}:\\s*(true|false)`).exec(block)?.[1];
+
+  return value ? value === "true" : null;
 }
 
 function escapeRegExp(value: string) {
