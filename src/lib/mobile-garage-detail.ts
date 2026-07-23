@@ -41,8 +41,10 @@ import {
 } from "@/lib/modification-presentation";
 import {
   isSelectableModificationLeaf,
+  missingModificationSupportGroups,
   modificationManufacturerLabel,
   modificationRecommendationGroups,
+  modificationSupportAdvisoryMessage,
 } from "@/lib/modification-catalog-metadata";
 import {
   componentSlotKeyForDefinition,
@@ -1100,6 +1102,10 @@ function serializeCatalogPart({
         : vehicleBuildResultLabel(availability.code, availability);
   const tuning = definition.tuningPackageSpecification;
   const visibleTyreClass = visibleTyreClassForDefinition(definition);
+  const missingSupportGroups = missingModificationSupportGroups(
+    definition,
+    installedIds,
+  );
 
   return {
     id: definition.id,
@@ -1164,6 +1170,13 @@ function serializeCatalogPart({
         }),
       }),
     ),
+    supportAdvisory:
+      definition.requirementGroups.length > 0
+        ? {
+            message: modificationSupportAdvisoryMessage,
+            missing: missingSupportGroups.length > 0,
+          }
+        : null,
     calibration: {
       confidence: tuning?.active ? tuning.confidence : null,
       sourceNote: tuning?.active ? tuning.sourceNote : null,

@@ -118,6 +118,10 @@ export type MobileGarageCatalogPart = {
     description: string;
     options: Array<{ label: string }>;
   }>;
+  supportAdvisory: {
+    message: string;
+    missing: boolean;
+  } | null;
   calibration: {
     confidence: string | null;
     sourceNote: string | null;

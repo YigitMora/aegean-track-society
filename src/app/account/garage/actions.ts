@@ -1784,8 +1784,8 @@ function batchResultMessage(
       .join(" veya ");
 
     return requiredNames
-      ? `Eksik gereksinim: ${requiredNames}`
-      : "Seçilen parçalardan biri için gerekli parça eksik.";
+      ? `Destek parçası öneriliyor: ${requiredNames}`
+      : "Bu kurulum için destekleyici parçalar öneriliyor.";
   }
 
   return "Parçalar toplu olarak eklenemedi. Lütfen tekrar deneyin.";
@@ -1916,8 +1916,8 @@ function previewMessage(
       .join(" veya ");
 
     return requiredNames
-      ? `${previewDefinitionName(context)} için önce ${requiredNames} gerekli.`
-      : "Seçilen parçalardan biri için gerekli parça eksik.";
+      ? `${previewDefinitionName(context)} için ${requiredNames} öneriliyor.`
+      : "Bu kurulum için destekleyici parçalar öneriliyor.";
   }
 
   return "Tahmini rating hesaplanamadı.";

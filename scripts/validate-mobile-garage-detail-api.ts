@@ -567,6 +567,7 @@ function validateSafeResponses() {
         conflictingModification: null,
         requirements: [],
         recommendations: [],
+        supportAdvisory: null,
         calibration: {
           confidence: "HIGH",
           sourceNote: null,

@@ -876,8 +876,8 @@ export function vehicleBuildResultLabel(
       .join(" veya ");
 
     return requiredNames
-      ? `Önce şu parça gerekli: ${requiredNames}`
-      : "Bu parça için önce başka bir parça eklenmeli.";
+      ? `Destek parçası öneriliyor: ${requiredNames}`
+      : "Bu kurulum için destekleyici parçalar öneriliyor.";
   }
 
   if (code === "MODIFICATION_REQUIRED_BY_INSTALLED_ITEM") {
@@ -886,8 +886,8 @@ export function vehicleBuildResultLabel(
       : null;
 
     return dependentName
-      ? `Bu parça ${dependentName} tarafından gerekli.`
-      : "Bu parça yüklü başka bir parça tarafından gerekli.";
+      ? `${dependentName} için bu destek parçası öneriliyor.`
+      : "Yüklü başka bir parça için bu destek parçası öneriliyor.";
   }
 
   return "Build profili güncellenemedi. Lütfen tekrar deneyin.";

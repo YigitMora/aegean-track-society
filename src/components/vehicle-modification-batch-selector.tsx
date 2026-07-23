@@ -51,6 +51,7 @@ export type ModificationCatalogGroup = {
         description: string | null;
         optionLabels: string[];
       }>;
+      supportAdvisoryMessage: string | null;
       recommendationGroups: Array<{
         description: string;
         optionLabels: string[];
@@ -719,7 +720,7 @@ function CatalogOptionDetails({
 
   if (option.tuningPackageSpecification?.requiredFuelNote) {
     tuningNotes.push([
-      "Yakıt gereksinimi",
+      "Yakıt yapılandırması öneriliyor",
       option.tuningPackageSpecification.requiredFuelNote,
     ]);
   }
@@ -729,22 +730,22 @@ function CatalogOptionDetails({
       /unlock|kilit/i.test(
         option.tuningPackageSpecification.hardwareRequirementNote,
       )
-        ? "ECU kilit açma gereksinimi"
-        : "Donanım gereksinimi",
+        ? "ECU unlock gerekebilir"
+        : "Donanım desteği öneriliyor",
       option.tuningPackageSpecification.hardwareRequirementNote,
     ]);
   }
 
   if (option.tuningPackageSpecification?.transmissionLimitNote) {
     tuningNotes.push([
-      "Şanzıman yazılımı gereksinimi",
+      "Şanzıman yazılımı öneriliyor",
       option.tuningPackageSpecification.transmissionLimitNote,
     ]);
   }
 
   if (option.tuningPackageSpecification?.coolingRecommendationNote) {
     tuningNotes.push([
-      "Önerilen destek parçaları",
+      "Soğutma desteği öneriliyor",
       option.tuningPackageSpecification.coolingRecommendationNote,
     ]);
   }
@@ -803,18 +804,23 @@ function CatalogOptionDetails({
             }`}
           >
             {option.hasMissingRequirements
-              ? "Eksik zorunlu parçalar"
-              : "Zorunlu parçalar"}
+              ? "Destek parçası öneriliyor"
+              : "Destek parçaları"}
           </p>
           <ul className="mt-2 grid gap-1 text-xs font-semibold leading-5 text-ats-text">
             {option.requirementGroups.map((requirement, index) => (
               <li key={`${requirement.description ?? "requirement"}:${index}`}>
                 {requirement.optionLabels.length > 0
                   ? requirement.optionLabels.join(" veya ")
-                  : requirement.description ?? "Zorunlu parça"}
+                  : requirement.description ?? "Destek parçası"}
               </li>
             ))}
           </ul>
+          {option.supportAdvisoryMessage ? (
+            <p className="mt-2 text-xs font-semibold leading-5 text-ats-text">
+              {option.supportAdvisoryMessage}
+            </p>
+          ) : null}
         </div>
       ) : null}
       {option.recommendationGroups.length > 0 ? (

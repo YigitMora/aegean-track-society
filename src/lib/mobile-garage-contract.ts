@@ -222,11 +222,11 @@ const mobileGarageErrors = {
   },
   MOBILE_GARAGE_MODIFICATION_REQUIREMENT_MISSING: {
     status: 409,
-    message: "Bu parça için gerekli destekleyici parça yüklü değil.",
+    message: "Bu kurulum için destekleyici parçalar öneriliyor.",
   },
   MOBILE_GARAGE_MODIFICATION_REQUIRED_BY_BUILD: {
     status: 409,
-    message: "Bu parça build profilindeki başka bir parça tarafından gerekli.",
+    message: "Bu destek parçası build profilindeki başka bir parça için öneriliyor.",
   },
   MOBILE_GARAGE_MODIFICATION_FAILED: {
     status: 500,

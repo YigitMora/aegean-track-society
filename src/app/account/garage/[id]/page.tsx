@@ -26,8 +26,10 @@ import {
   isLegacyGenericModificationDefinition,
   isSelectableModificationLeaf,
   legacyModificationWarning,
+  missingModificationSupportGroups,
   modificationManufacturerLabel,
   modificationRecommendationGroups,
+  modificationSupportAdvisoryMessage,
 } from "@/lib/modification-catalog-metadata";
 import {
   modificationTypeKey,
@@ -1074,6 +1076,11 @@ function buildCatalogGroups({
   const definitionsByCode = new Map(
     catalog.map((definition) => [definition.code, definition]),
   );
+  const installedDefinitionIds = new Set(
+    installedModifications.map(
+      (modification) => modification.modificationDefinitionId,
+    ),
+  );
 
   for (const definition of catalog) {
     if (!isSelectableModificationLeaf(definition)) {
@@ -1091,6 +1098,10 @@ function buildCatalogGroups({
     const typeCode = modificationTypeKey(definition);
     const typeKey = `${definition.category}:${typeCode}`;
     const visibleTyreClass = visibleTyreClassForDefinition(definition);
+    const missingSupportGroups = missingModificationSupportGroups(
+      definition,
+      installedDefinitionIds,
+    );
     const availability = evaluateModificationAvailability({
       vehicle,
       definition,
@@ -1182,6 +1193,10 @@ function buildCatalogGroups({
           formatModificationDefinition(option.requiredDefinition),
         ),
       })),
+      supportAdvisoryMessage:
+        definition.requirementGroups.length > 0
+          ? modificationSupportAdvisoryMessage
+          : null,
       recommendationGroups: modificationRecommendationGroups(definition.code).map(
         (recommendationGroup) => ({
           description: recommendationGroup.description,
@@ -1194,7 +1209,7 @@ function buildCatalogGroups({
           }),
         }),
       ),
-      hasMissingRequirements: mayQueueWithRequirements,
+      hasMissingRequirements: missingSupportGroups.length > 0,
       fitmentNote: fitmentNoteForDefinition(definition),
       availability: availability.ok || mayQueueWithRequirements
         ? "AVAILABLE"

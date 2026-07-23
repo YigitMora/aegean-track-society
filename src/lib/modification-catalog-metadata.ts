@@ -19,6 +19,9 @@ export const legacyTyreModificationWarning =
 export const concreteModificationRequiredMessage =
   "Yalnızca belirli bir ürün veya modifikasyon versiyonu seçilebilir.";
 
+export const modificationSupportAdvisoryMessage =
+  "Bu kurulum için destekleyici parçalar öneriliyor.";
+
 export const legacyGenericModificationCodes = new Set([
   "suspension_sport_springs_generic",
   "suspension_adjustable_front_camber_hardware",
@@ -213,6 +216,26 @@ const modificationRecommendationGroupsByCode: Readonly<
 
 export function modificationRecommendationGroups(code: string | null | undefined) {
   return code ? modificationRecommendationGroupsByCode[code] ?? [] : [];
+}
+
+export function missingModificationSupportGroups<
+  TGroup extends {
+    active: boolean;
+    options: Array<{ requiredDefinitionId: string }>;
+  },
+>(
+  definition: { requirementGroups: TGroup[] },
+  availableDefinitionIds: Iterable<string>,
+) {
+  const availableIds = new Set(availableDefinitionIds);
+
+  return definition.requirementGroups.filter(
+    (group) =>
+      group.active &&
+      !group.options.some((option) =>
+        availableIds.has(option.requiredDefinitionId),
+      ),
+  );
 }
 
 export function isLegacyGenericModificationDefinition(
