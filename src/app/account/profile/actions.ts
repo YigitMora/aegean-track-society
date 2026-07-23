@@ -26,11 +26,6 @@ export async function updateMemberProfileAction(formData: FormData) {
     requestIpAddress: await getRequestIpAddress(),
   });
 
-  console.log("AUTH_PROFILE_UPDATED", {
-    userId: memberUser.id,
-    completed: true,
-  });
-
   revalidatePath("/account");
   revalidatePath("/account/profile");
   revalidatePath("/account/onboarding");

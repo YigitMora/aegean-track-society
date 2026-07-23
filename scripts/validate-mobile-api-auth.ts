@@ -319,7 +319,7 @@ async function validateSuccessfulSafeResponse() {
       profile: {
         fullName: "Ada Yılmaz",
         displayName: "Ada",
-        phone: "+90 555 123 45 67",
+        phone: "+905551234567",
       },
     },
   };

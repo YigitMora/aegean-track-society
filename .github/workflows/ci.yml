@@ -65,6 +65,9 @@ jobs:
       - name: Validate mobile applications API
         run: pnpm validate:mobile-applications
 
+      - name: Validate mobile profile API
+        run: pnpm validate:mobile-profile
+
       - name: Validate release foundations
         run: pnpm validate:release-foundations
 
