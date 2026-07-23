@@ -108,6 +108,20 @@ const expectedMotecExpansionCodes = [
   "wheel_motec_mctc",
   "wheel_motec_mof1_r_cross",
 ] as const;
+const expectedMajorManufacturerModels = new Map([
+  ["HRE", ["FF10", "FF11"]],
+  ["Borbet", ["Y", "GTX"]],
+  ["Ronal", ["R62", "R70"]],
+  ["Japan Racing", ["JR3", "JR11", "JR21"]],
+  ["Fifteen52", ["Turbomac", "Podium"]],
+  ["Konig", ["Hypergram", "Dekagram"]],
+  ["WedsSport", ["TC105X", "SA-25R"]],
+  ["ATS", ["StreetRallye", "Racelight"]],
+  ["Autec", ["Wizard", "ClubRacing"]],
+  ["Brock", ["B40", "B41"]],
+  ["Rial", ["Lucca", "X10"]],
+  ["Dezent", ["TZ", "TA"]],
+] as const);
 
 assert.equal(baselineWheelRows.length, 67);
 assert.ok(wheelRows.length >= baselineWheelRows.length);
@@ -222,6 +236,34 @@ for (const excludedRaceCode of [
 ]) {
   assert.equal(wheelCodes.has(excludedRaceCode), false);
 }
+for (const [manufacturer, models] of expectedMajorManufacturerModels) {
+  for (const model of models) {
+    const row = wheelRows.find(
+      (candidate) =>
+        candidate.brand === manufacturer && candidate.variant === model,
+    );
+
+    assert.ok(row, `Missing ${manufacturer} ${model}`);
+    assert.equal(isConcreteModificationLeaf(row), true);
+    assert.equal(row.powerImpact, 0);
+    assert.equal(row.handlingImpact, 0);
+    assert.equal(row.brakingImpact, 0);
+    assert.equal(row.reliabilityImpact, 0);
+    assert.equal(row.trackReadinessImpact, 0);
+  }
+}
+assert.equal(manufacturers.size, 27);
+for (const code of [
+  "wheel_hre_ff10",
+  "wheel_hre_ff11",
+  "wheel_fifteen52_turbomac",
+  "wheel_fifteen52_podium",
+  "wheel_konig_hypergram",
+  "wheel_konig_dekagram",
+  "wheel_autec_clubracing",
+]) {
+  assert.equal(specificationCodes.has(code), true);
+}
 
 console.log("Wheel catalog validation passed.");
 console.log(`Wheel definitions before: ${baselineWheelRows.length}`);
@@ -245,6 +287,9 @@ console.log(`MSW models: ${mswRows.length}`);
 console.log(`MSW expansion models: ${expectedMswExpansionCodes.length}`);
 console.log(`Motec models: ${motecRows.length}`);
 console.log(`Motec expansion models: ${expectedMotecExpansionCodes.length}`);
+console.log(
+  `Major manufacturer models added: ${Array.from(expectedMajorManufacturerModels.values()).flat().length}`,
+);
 console.log("Wheel hierarchy: Jant -> Üretici -> Model");
 console.log("Existing build relation preservation: passed");
 
