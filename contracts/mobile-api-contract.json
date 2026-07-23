@@ -53,6 +53,12 @@
           "liveProbe": false
         },
         {
+          "method": "POST",
+          "path": "/api/mobile/v1/garage/bulk-lifecycle",
+          "contracts": ["garageLifecycle"],
+          "liveProbe": false
+        },
+        {
           "method": "DELETE",
           "path": "/api/mobile/v1/garage/{vehicleId}/permanent-delete",
           "contracts": ["garageLifecycle"],

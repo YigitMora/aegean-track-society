@@ -12,12 +12,14 @@ import {
   createGarageVehicle,
   permanentlyDeleteArchivedGarageVehicles,
   restoreGarageVehicle,
+  restoreGarageVehicles,
 } from "@/lib/garage-service";
 import {
   buildMobileGarageCreateResponseBody,
   buildMobileGarageResponseBody,
   buildMobileVehicleDefinitionsResponseBody,
   hasMobileGaragePermanentDeleteConfirmation,
+  parseMobileGarageBulkLifecycleBody,
   MobileGarageError,
   parseMobileGarageVehicleBody,
   type MobileGarageArchivedVehicle,
@@ -334,6 +336,82 @@ export async function permanentlyDeleteMobileGarageVehicle({
     authenticatedUserId: memberUserId,
     accessToken,
   });
+
+  return getMobileGarageResponseBody(memberUserId, accessToken, {
+    includeArchived: true,
+  });
+}
+
+export async function mutateMobileGarageVehicles({
+  memberUserId,
+  accessToken,
+  body,
+}: {
+  memberUserId: string;
+  accessToken: string;
+  body: unknown;
+}) {
+  const input = parseMobileGarageBulkLifecycleBody(body);
+  if (!input) {
+    throw new MobileGarageError("MOBILE_GARAGE_INVALID_BODY");
+  }
+
+  if (input.operation === "ARCHIVE") {
+    const result = await archiveGarageVehicles({
+      targetUserId: memberUserId,
+      vehicleIds: input.vehicleIds,
+    });
+    if (!result.ok) {
+      if (result.code === "not_found") {
+        throw new MobileGarageError("MOBILE_GARAGE_VEHICLE_NOT_FOUND");
+      }
+      if (result.code === "archived_vehicle_limit_reached") {
+        throw new MobileGarageError(
+          "MOBILE_GARAGE_ARCHIVED_CAPACITY_REACHED",
+        );
+      }
+      throw new MobileGarageError("MOBILE_GARAGE_ARCHIVE_FAILED");
+    }
+  } else if (input.operation === "RESTORE") {
+    const result = await restoreGarageVehicles({
+      targetUserId: memberUserId,
+      vehicleIds: input.vehicleIds,
+    });
+    if (!result.ok) {
+      if (result.code === "not_found") {
+        throw new MobileGarageError("MOBILE_GARAGE_VEHICLE_NOT_FOUND");
+      }
+      if (result.code === "active_vehicle_limit_reached") {
+        throw new MobileGarageError("MOBILE_GARAGE_CAPACITY_REACHED");
+      }
+      if (result.code === "restore_conflict") {
+        throw new MobileGarageError("MOBILE_GARAGE_RESTORE_CONFLICT");
+      }
+      throw new MobileGarageError("MOBILE_GARAGE_RESTORE_FAILED");
+    }
+  } else {
+    const result = await permanentlyDeleteArchivedGarageVehicles({
+      targetUserId: memberUserId,
+      vehicleIds: input.vehicleIds,
+    });
+    if (!result.ok) {
+      if (result.code === "not_found") {
+        throw new MobileGarageError("MOBILE_GARAGE_VEHICLE_NOT_FOUND");
+      }
+      if (result.code === "active_delete_forbidden") {
+        throw new MobileGarageError(
+          "MOBILE_GARAGE_ACTIVE_DELETE_FORBIDDEN",
+        );
+      }
+      throw new MobileGarageError("MOBILE_GARAGE_DELETE_FAILED");
+    }
+
+    await deleteOwnedVehicleImageObjects({
+      imagePaths: result.imagePaths,
+      authenticatedUserId: memberUserId,
+      accessToken,
+    });
+  }
 
   return getMobileGarageResponseBody(memberUserId, accessToken, {
     includeArchived: true,
