@@ -75,6 +75,39 @@ const expectedMswExpansionCodes = [
   "wheel_msw_x2",
   "wheel_msw_x4",
 ] as const;
+const motecRows = wheelRows.filter((row) => row.brand === "Motec");
+const expectedMotecExpansionCodes = [
+  "wheel_motec_mcf1_forged_one",
+  "wheel_motec_mcr2_ultralight_dc",
+  "wheel_motec_mcr3_hyper_mesh",
+  "wheel_motec_mcr4_ultimate",
+  "wheel_motec_mcr5_ultralight_evo",
+  "wheel_motec_mcr6_jpd",
+  "wheel_motec_mcr7_blaze",
+  "wheel_motec_mcrf1_forged",
+  "wheel_motec_mct1_antares",
+  "wheel_motec_mct2_pantera",
+  "wheel_motec_mct3_stream",
+  "wheel_motec_mct4_penta",
+  "wheel_motec_mct5_stryke",
+  "wheel_motec_mct6_blade",
+  "wheel_motec_mct7_xtreme",
+  "wheel_motec_mct8_diamond",
+  "wheel_motec_mct9_tornado",
+  "wheel_motec_mct9r_tornado_revolution",
+  "wheel_motec_mct10_radical",
+  "wheel_motec_mct11_aventus",
+  "wheel_motec_mct12_curve",
+  "wheel_motec_mct13_supreme",
+  "wheel_motec_mct14_gt_one",
+  "wheel_motec_mct15_street",
+  "wheel_motec_mct15a_aero_street",
+  "wheel_motec_mct16_futura",
+  "wheel_motec_mct17_bull",
+  "wheel_motec_mct18_venom",
+  "wheel_motec_mctc",
+  "wheel_motec_mof1_r_cross",
+] as const;
 
 assert.equal(baselineWheelRows.length, 67);
 assert.ok(wheelRows.length >= baselineWheelRows.length);
@@ -152,6 +185,43 @@ assert.match(requiredWheel("wheel_msw_80_4").source, /15-17 inch/);
 assert.match(requiredWheel("wheel_msw_80_5").source, /16-19 inch/);
 assert.equal(wheelCodes.has("wheel_msw_99_van"), false);
 assert.equal(wheelCodes.has("wheel_msw_dr1"), false);
+assert.equal(motecRows.length, 32);
+assert.equal(requiredWheel("wheel_motec_ultralight").variant, "MCR2 Ultralight");
+assert.equal(requiredWheel("wheel_motec_nitro").variant, "MCR1 Nitro");
+for (const code of expectedMotecExpansionCodes) {
+  const row = requiredWheel(code);
+
+  assert.equal(row.brand, "Motec");
+  assert.equal(isConcreteModificationLeaf(row), true);
+  assert.equal(row.powerImpact, 0);
+  assert.equal(row.handlingImpact, 0);
+  assert.equal(row.brakingImpact, 0);
+  assert.equal(row.reliabilityImpact, 0);
+  assert.equal(row.trackReadinessImpact, 0);
+}
+for (const forgedCode of [
+  "wheel_motec_mcf1_forged_one",
+  "wheel_motec_mcrf1_forged",
+]) {
+  assert.equal(specificationCodes.has(forgedCode), true);
+  assert.match(
+    seed,
+    new RegExp(
+      `wheelSpec\\(\\s*"${forgedCode}",\\s*"FORGED"[\\s\\S]*?No universal mass is stored\\.`,
+    ),
+  );
+}
+for (const excludedRaceCode of [
+  "wheel_motec_wm1_vantastic",
+  "wheel_motec_mtcr",
+  "wheel_motec_mcgt_race_gt",
+  "wheel_motec_mcry_rallye",
+  "wheel_motec_ta_082",
+  "wheel_motec_mcf3",
+  "wheel_motec_mcf4",
+]) {
+  assert.equal(wheelCodes.has(excludedRaceCode), false);
+}
 
 console.log("Wheel catalog validation passed.");
 console.log(`Wheel definitions before: ${baselineWheelRows.length}`);
@@ -173,6 +243,8 @@ console.log("MSW P1: selectable; regional/distributor-confirmed; neutral rating"
 console.log("MSW 85: selectable; official one-piece cast metadata; neutral rating");
 console.log(`MSW models: ${mswRows.length}`);
 console.log(`MSW expansion models: ${expectedMswExpansionCodes.length}`);
+console.log(`Motec models: ${motecRows.length}`);
+console.log(`Motec expansion models: ${expectedMotecExpansionCodes.length}`);
 console.log("Wheel hierarchy: Jant -> Üretici -> Model");
 console.log("Existing build relation preservation: passed");
 
