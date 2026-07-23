@@ -183,7 +183,7 @@ export default async function AdminCatalogRequestDetailPage({
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Link
-                    href={`/admin/members/${request.user.id}`}
+                    href={`/admin/members/${request.user.id}#garage-vehicle-${request.vehicle.id}`}
                     className="inline-flex h-9 items-center rounded-full border border-white/15 px-3 text-xs font-black uppercase text-white/70 transition hover:border-white hover:text-white"
                   >
                     Üye garajını aç

@@ -32,7 +32,6 @@ import {
   isGenericEcuFallbackDefinition,
   isGenericTurboFallbackDefinition,
   modificationCategoryLabels,
-  normalizeVehicleIdentity,
   orderedModificationCategories,
   vehicleBuildResultLabel,
 } from "@/lib/vehicle-build-rules";
@@ -181,12 +180,8 @@ export default async function EditVehiclePage({
       limit: 1,
     }),
   ]);
-  const safeVehicleDefinitions = safeVehicleDefinitionSuggestions(
-    vehicleDefinitions,
-    vehicle,
-  );
   const vehicleFormDefinitions = withCurrentVehicleDefinition(
-    safeVehicleDefinitions,
+    vehicleDefinitions,
     vehicle.vehicleDefinition,
   );
   const rating = calculateVehiclePerformanceRating({
@@ -952,6 +947,7 @@ const modificationDefinitionRuleSelect = {
 
 const vehicleDefinitionTemplateSelect = {
   id: true,
+  code: true,
   brand: true,
   model: true,
   generation: true,
@@ -959,6 +955,11 @@ const vehicleDefinitionTemplateSelect = {
   variant: true,
   yearFrom: true,
   yearTo: true,
+  engineFamily: {
+    select: {
+      name: true,
+    },
+  },
 } satisfies Prisma.VehicleDefinitionSelect;
 
 const vehicleDefinitionRatingSelect = {
@@ -1273,29 +1274,6 @@ function formatDate(date: Date) {
   }).format(date);
 }
 
-function safeVehicleDefinitionSuggestions(
-  definitions: Array<
-    Prisma.VehicleDefinitionGetPayload<{
-      select: typeof vehicleDefinitionTemplateSelect;
-    }>
-  >,
-  vehicle: {
-    brand: string;
-    model: string;
-    year: number | null;
-  },
-) {
-  const normalizedBrand = normalizeVehicleIdentity(vehicle.brand);
-  const normalizedModel = normalizeVehicleIdentity(vehicle.model);
-
-  return definitions.filter(
-    (definition) =>
-      normalizeVehicleIdentity(definition.brand) === normalizedBrand &&
-      normalizeVehicleIdentity(definition.model) === normalizedModel &&
-      yearMatchesDefinition(definition, vehicle.year),
-  );
-}
-
 function withCurrentVehicleDefinition(
   definitions: Array<
     Prisma.VehicleDefinitionGetPayload<{
@@ -1313,6 +1291,7 @@ function withCurrentVehicleDefinition(
   return [
     {
       id: currentDefinition.id,
+      code: currentDefinition.code,
       brand: currentDefinition.brand,
       model: currentDefinition.model,
       generation: currentDefinition.generation,
@@ -1320,31 +1299,10 @@ function withCurrentVehicleDefinition(
       variant: currentDefinition.variant,
       yearFrom: currentDefinition.yearFrom,
       yearTo: currentDefinition.yearTo,
+      engineFamily: currentDefinition.engineFamily,
     },
     ...definitions,
   ];
-}
-
-function yearMatchesDefinition(
-  definition: {
-    yearFrom: number | null;
-    yearTo: number | null;
-  },
-  year: number | null,
-) {
-  if (year === null) {
-    return true;
-  }
-
-  if (definition.yearFrom !== null && year < definition.yearFrom) {
-    return false;
-  }
-
-  if (definition.yearTo !== null && year > definition.yearTo) {
-    return false;
-  }
-
-  return true;
 }
 
 function vehicleDefinitionLabel(definition: {

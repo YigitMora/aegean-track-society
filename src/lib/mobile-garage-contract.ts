@@ -14,6 +14,7 @@ import {
   parseVehicleForm,
   type VehicleInput,
 } from "@/lib/vehicle-validation";
+import { buildVehicleCatalogHierarchy } from "@/lib/vehicle-catalog-hierarchy";
 
 export type MobileGarageRating = {
   overall: number;
@@ -52,6 +53,7 @@ export type MobileGarageArchivedVehicle = {
 
 export type MobileVehicleDefinition = {
   id: string;
+  code: string;
   brand: string;
   model: string;
   generation: string | null;
@@ -62,6 +64,9 @@ export type MobileVehicleDefinition = {
   powertrain: VehiclePowertrain;
   drivetrain: VehicleDrivetrain;
   ratingStatus: VehicleRatingStatus;
+  engineFamily: {
+    name: string;
+  } | null;
 };
 
 export type MobileGarageErrorCode =
@@ -305,9 +310,12 @@ export function buildMobileGarageResponseBody({
 export function buildMobileVehicleDefinitionsResponseBody(
   vehicleDefinitions: MobileVehicleDefinition[],
 ) {
+  const catalog = buildVehicleCatalogHierarchy(vehicleDefinitions);
+
   return {
     data: {
       vehicleDefinitions,
+      catalog,
     },
   };
 }

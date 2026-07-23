@@ -114,6 +114,7 @@ const mobileGarageVehicleSelect = {
 
 const mobileVehicleDefinitionSelect = {
   id: true,
+  code: true,
   brand: true,
   model: true,
   generation: true,
@@ -124,6 +125,11 @@ const mobileVehicleDefinitionSelect = {
   powertrain: true,
   drivetrain: true,
   ratingStatus: true,
+  engineFamily: {
+    select: {
+      name: true,
+    },
+  },
 } satisfies Prisma.VehicleDefinitionSelect;
 
 const mobileArchivedGarageVehicleSelect = {
@@ -454,6 +460,7 @@ function serializeMobileVehicleDefinition(
 ): MobileVehicleDefinition {
   return {
     id: definition.id,
+    code: definition.code,
     brand: definition.brand,
     model: definition.model,
     generation: definition.generation,
@@ -464,6 +471,7 @@ function serializeMobileVehicleDefinition(
     powertrain: definition.powertrain,
     drivetrain: definition.drivetrain,
     ratingStatus: definition.ratingStatus,
+    engineFamily: definition.engineFamily,
   };
 }
 

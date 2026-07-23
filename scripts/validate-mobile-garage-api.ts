@@ -252,6 +252,7 @@ function validateSafeResponseContracts() {
   const definitions = buildMobileVehicleDefinitionsResponseBody([
     {
       id: "definition-1",
+      code: "honda_civic_type_r_fl5",
       brand: "Honda",
       model: "Civic Type R",
       generation: "FL5",
@@ -262,11 +263,15 @@ function validateSafeResponseContracts() {
       powertrain: "ICE",
       drivetrain: "FWD",
       ratingStatus: "CALIBRATED",
+      engineFamily: {
+        name: "K20C1",
+      },
     },
   ]);
 
   assert.deepEqual(Object.keys(definitions.data.vehicleDefinitions[0] ?? {}), [
     "id",
+    "code",
     "brand",
     "model",
     "generation",
@@ -277,7 +282,16 @@ function validateSafeResponseContracts() {
     "powertrain",
     "drivetrain",
     "ratingStatus",
+    "engineFamily",
   ]);
+  assert.equal(definitions.data.catalog.definitionCount, 1);
+  assert.equal(definitions.data.catalog.brands[0]?.name, "Honda");
+  assert.equal(definitions.data.catalog.brands[0]?.models[0]?.name, "Civic");
+  assert.equal(
+    definitions.data.catalog.brands[0]?.models[0]?.generations[0]?.variants[0]
+      ?.vehicleDefinitionId,
+    "definition-1",
+  );
 }
 
 async function validateStableErrorsAndHeaders() {

@@ -9,7 +9,10 @@ import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { VehicleForm } from "@/components/vehicle-form";
-import type { VehicleTemplateOption } from "@/components/vehicle-template-fields";
+import {
+  VehicleTemplateFields,
+  type VehicleTemplateOption,
+} from "@/components/vehicle-template-fields";
 import { VehiclePerformanceRatingCard } from "@/components/vehicle-rating-card";
 import { formatDateTime, formatStatus } from "@/lib/admin-format";
 import { adminHasCapability, requireAdminCapability } from "@/lib/admin-authorization";
@@ -900,7 +903,11 @@ function VehicleList({
           const registrationCount = registrationCountsByVehicleId[vehicle.id] ?? 0;
 
           return (
-            <article key={vehicle.id} className="rounded-md border border-white/10 bg-white/5 p-4">
+            <article
+              key={vehicle.id}
+              id={`garage-vehicle-${vehicle.id}`}
+              className="scroll-mt-24 rounded-md border border-white/10 bg-white/5 p-4"
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-black text-white">
@@ -1113,23 +1120,18 @@ function AdminGarageVehicleActions({
                 <p className="mt-1">Baz ATS Rating ve uyumlu modifikasyonlar açılır.</p>
               </div>
             </div>
-            <label className="block">
-              <span className="text-xs font-black uppercase text-white/45">
-                Aktif katalog kaydı
-              </span>
-              <select
-                name="vehicleDefinitionId"
-                required
-                className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm font-semibold text-white outline-none focus:border-signal"
-              >
-                <option value="">Katalog kaydı seç</option>
-                {vehicleDefinitions.map((definition) => (
-                  <option key={definition.id} value={definition.id}>
-                    {definitionOptionLabel(definition)}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <VehicleTemplateFields
+              definitions={vehicleDefinitions}
+              currentVehicleDefinitionId={suggestedDefinitionId(
+                vehicle,
+                vehicleDefinitions,
+              )}
+              defaultBrand={vehicle.brand}
+              defaultModel={vehicle.model}
+              defaultYear={vehicle.year}
+              defaultMode="catalog"
+              allowManual={false}
+            />
             <label className="flex gap-2 text-xs font-semibold leading-5 text-white/60">
               <input
                 name="normalizeIdentity"
@@ -1194,6 +1196,24 @@ function AdminGarageVehicleActions({
       ) : null}
     </div>
   );
+}
+
+function suggestedDefinitionId(
+  vehicle: {
+    brand: string;
+    model: string;
+    year: number | null;
+  },
+  definitions: AdminVehicleDefinitionOption[],
+) {
+  return definitions.find(
+    (definition) =>
+      definition.brand === vehicle.brand &&
+      definition.model === vehicle.model &&
+      (vehicle.year === null ||
+        ((definition.yearFrom === null || vehicle.year >= definition.yearFrom) &&
+          (definition.yearTo === null || vehicle.year <= definition.yearTo))),
+  )?.id;
 }
 
 function AdminVehicleBuildProfile({
@@ -1507,30 +1527,6 @@ function vehicleDefinitionLabel(definition: {
   ]
     .filter(Boolean)
     .join(" / ");
-}
-
-function definitionOptionLabel(definition: AdminVehicleDefinitionOption) {
-  const rating = calculateVehiclePerformanceRating({
-    vehicleDefinition: definition,
-    installedModifications: [],
-  });
-  const ratingText = rating ? `ATS ${Math.round(rating.overall)}` : "ATS yok";
-  const platform = definition.platformFamily
-    ? vehiclePlatformFamilyLabel(definition.platformFamily)
-    : null;
-  const engine = definition.engineFamily
-    ? vehicleEngineFamilyLabel(definition.engineFamily)
-    : null;
-
-  return [
-    vehicleDefinitionLabel(definition),
-    ratingText,
-    definition.ratingStatus === "CALIBRATED" ? "Kalibre" : "Geçici",
-    platform,
-    engine,
-  ]
-    .filter(Boolean)
-    .join(" · ");
 }
 
 function vehiclePlatformFamilyLabel(family: {

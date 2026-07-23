@@ -36,6 +36,7 @@ type VehicleTemplateFieldsProps = {
   defaultModel?: string;
   defaultYear?: number | null;
   defaultMode?: "catalog" | "manual";
+  allowManual?: boolean;
 };
 
 export function VehicleTemplateFields({
@@ -45,6 +46,7 @@ export function VehicleTemplateFields({
   defaultModel = "",
   defaultYear = null,
   defaultMode,
+  allowManual = true,
 }: VehicleTemplateFieldsProps) {
   const initialDefinition =
     definitions.find((definition) => definition.id === currentVehicleDefinitionId) ??
@@ -92,6 +94,7 @@ export function VehicleTemplateFields({
     [catalogDefinitions, searchQuery],
   );
   const selectedDefinitionId = selectedPath?.variant.vehicleDefinitionId ?? "";
+  const catalogMode = !allowManual || mode === "catalog";
   const yearOptions = selectedDefinition ? yearsForDefinition(selectedDefinition) : [];
   const selectedYear = yearOptions.includes(year)
     ? year
@@ -110,20 +113,22 @@ export function VehicleTemplateFields({
 
   return (
     <div className="sm:col-span-2">
-      <div className="mb-5 flex flex-wrap gap-2">
-        <ModeButton
-          label="Katalogdan seç"
-          active={mode === "catalog"}
-          onClick={() => setMode("catalog")}
-        />
-        <ModeButton
-          label="Aracım listede yok"
-          active={mode === "manual"}
-          onClick={() => setMode("manual")}
-        />
-      </div>
+      {allowManual ? (
+        <div className="mb-5 flex flex-wrap gap-2">
+          <ModeButton
+            label="Katalogdan seç"
+            active={mode === "catalog"}
+            onClick={() => setMode("catalog")}
+          />
+          <ModeButton
+            label="Aracım listede yok"
+            active={mode === "manual"}
+            onClick={() => setMode("manual")}
+          />
+        </div>
+      ) : null}
 
-      {mode === "catalog" ? (
+      {catalogMode ? (
         <div className="grid gap-5 sm:grid-cols-2">
           <input type="hidden" name="vehicleDefinitionId" value={selectedDefinitionId} />
           <input type="hidden" name="brand" value={selectedDefinition?.brand ?? ""} />
