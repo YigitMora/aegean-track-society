@@ -24,6 +24,7 @@ export type ModificationCatalogGroup = {
       code?: string | null;
       definitionId: string;
       label: string;
+      manufacturerLabel: string;
       brand: string | null;
       name: string;
       variant: string | null;
@@ -37,6 +38,16 @@ export type ModificationCatalogGroup = {
       tyreSpecification?: TyreSpecificationSummary | null;
       wheelSpecification?: WheelSpecificationSummary | null;
       tuningPackageSpecification?: TuningPackageSpecificationSummary | null;
+      compatibilityLabel: string;
+      requirementGroups: Array<{
+        description: string | null;
+        optionLabels: string[];
+      }>;
+      recommendationGroups: Array<{
+        description: string;
+        optionLabels: string[];
+      }>;
+      hasMissingRequirements: boolean;
       fitmentNote?: string;
       reason?: string;
     }>;
@@ -154,33 +165,38 @@ export function VehicleModificationBatchSelector({
         .filter((group) => group.types.length > 0),
     [catalogGroups],
   );
-  const [selectedCategory, setSelectedCategory] = useState(
-    visibleCatalogGroups[0]?.category ?? "",
-  );
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedTypeKey, setSelectedTypeKey] = useState("");
+  const [selectedManufacturer, setSelectedManufacturer] = useState("");
+  const [selectedDefinitionId, setSelectedDefinitionId] = useState("");
   const selectedGroup =
     visibleCatalogGroups.find((group) => group.category === selectedCategory) ??
-    visibleCatalogGroups[0] ??
     null;
-  const [selectedTypeKey, setSelectedTypeKey] = useState(
-    selectedGroup?.types[0]?.typeKey ?? "",
-  );
   const selectedType =
     selectedGroup?.types.find((type) => type.typeKey === selectedTypeKey) ??
-    selectedGroup?.types[0] ??
     null;
-  const firstAvailableOption =
-    selectedType?.options.find((option) => option.availability === "AVAILABLE") ??
-    selectedType?.options[0] ??
-    null;
-  const [selectedDefinitionId, setSelectedDefinitionId] = useState(
-    firstAvailableOption?.definitionId ?? "",
+  const manufacturers = useMemo(() => {
+    const labelsByKey = new Map<string, string>();
+
+    for (const option of selectedType?.options ?? []) {
+      labelsByKey.set(manufacturerKey(option), option.manufacturerLabel);
+    }
+
+    return Array.from(labelsByKey, ([value, label]) => ({ value, label })).sort(
+      (first, second) => first.label.localeCompare(second.label, "tr-TR"),
+    );
+  }, [selectedType]);
+  const manufacturerOptions = useMemo(
+    () =>
+      (selectedType?.options ?? []).filter(
+        (option) => manufacturerKey(option) === selectedManufacturer,
+      ),
+    [selectedManufacturer, selectedType],
   );
   const selectedOption =
-    selectedType?.options.find(
+    manufacturerOptions.find(
       (option) => option.definitionId === selectedDefinitionId,
-    ) ??
-    firstAvailableOption ??
-    null;
+    ) ?? null;
   const queuedDefinitionIdSet = useMemo(
     () => new Set(queuedDefinitionIds),
     [queuedDefinitionIds],
@@ -201,53 +217,55 @@ export function VehicleModificationBatchSelector({
     null;
 
   useEffect(() => {
-    if (!selectedGroup) {
+    if (
+      selectedCategory &&
+      !visibleCatalogGroups.some((group) => group.category === selectedCategory)
+    ) {
       setSelectedCategory("");
       setSelectedTypeKey("");
+      setSelectedManufacturer("");
       setSelectedDefinitionId("");
       return;
     }
 
-    if (selectedGroup.category !== selectedCategory) {
-      const nextType = selectedGroup.types[0] ?? null;
-      const nextOption =
-        nextType?.options.find((option) => option.availability === "AVAILABLE") ??
-        nextType?.options[0] ??
-        null;
-
-      setSelectedCategory(selectedGroup.category);
-      setSelectedTypeKey(nextType?.typeKey ?? "");
-      setSelectedDefinitionId(nextOption?.definitionId ?? "");
+    if (
+      selectedTypeKey &&
+      !selectedGroup?.types.some((type) => type.typeKey === selectedTypeKey)
+    ) {
+      setSelectedTypeKey("");
+      setSelectedManufacturer("");
+      setSelectedDefinitionId("");
       return;
     }
 
-    if (!selectedType || selectedType.typeKey !== selectedTypeKey) {
-      const nextType = selectedGroup.types[0] ?? null;
-      const nextOption =
-        nextType?.options.find((option) => option.availability === "AVAILABLE") ??
-        nextType?.options[0] ??
-        null;
-
-      setSelectedTypeKey(nextType?.typeKey ?? "");
-      setSelectedDefinitionId(nextOption?.definitionId ?? "");
+    if (
+      selectedManufacturer &&
+      !manufacturers.some(
+        (manufacturer) => manufacturer.value === selectedManufacturer,
+      )
+    ) {
+      setSelectedManufacturer("");
+      setSelectedDefinitionId("");
       return;
     }
 
-    if (!selectedOption || selectedOption.definitionId !== selectedDefinitionId) {
-      const nextOption =
-        selectedType.options.find((option) => option.availability === "AVAILABLE") ??
-        selectedType.options[0] ??
-        null;
-
-      setSelectedDefinitionId(nextOption?.definitionId ?? "");
+    if (
+      selectedDefinitionId &&
+      !manufacturerOptions.some(
+        (option) => option.definitionId === selectedDefinitionId,
+      )
+    ) {
+      setSelectedDefinitionId("");
     }
   }, [
+    manufacturerOptions,
+    manufacturers,
     selectedCategory,
     selectedDefinitionId,
     selectedGroup,
-    selectedOption,
-    selectedType,
+    selectedManufacturer,
     selectedTypeKey,
+    visibleCatalogGroups,
   ]);
 
   useEffect(() => {
@@ -322,23 +340,16 @@ export function VehicleModificationBatchSelector({
 
   return (
     <div className="mt-4 grid gap-5">
-      <div className="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] xl:items-end">
         <SelectField
           label="Kategori"
-          value={selectedGroup?.category ?? ""}
+          placeholder="Kategori seçin"
+          value={selectedCategory}
           onChange={(value) => {
-            const nextGroup =
-              visibleCatalogGroups.find((group) => group.category === value) ??
-              visibleCatalogGroups[0];
-            const nextType = nextGroup?.types[0] ?? null;
-            const nextOption =
-              nextType?.options.find((option) => option.availability === "AVAILABLE") ??
-              nextType?.options[0] ??
-              null;
-
-            setSelectedCategory(nextGroup?.category ?? "");
-            setSelectedTypeKey(nextType?.typeKey ?? "");
-            setSelectedDefinitionId(nextOption?.definitionId ?? "");
+            setSelectedCategory(value);
+            setSelectedTypeKey("");
+            setSelectedManufacturer("");
+            setSelectedDefinitionId("");
           }}
           options={visibleCatalogGroups.map((group) => ({
             value: group.category,
@@ -347,20 +358,14 @@ export function VehicleModificationBatchSelector({
         />
 
         <SelectField
-          label="Parça tipi"
-          value={selectedType?.typeKey ?? ""}
+          label="Alt kategori"
+          placeholder="Alt kategori seçin"
+          value={selectedTypeKey}
+          disabled={!selectedGroup}
           onChange={(value) => {
-            const nextType =
-              selectedGroup?.types.find((type) => type.typeKey === value) ??
-              selectedGroup?.types[0] ??
-              null;
-            const nextOption =
-              nextType?.options.find((option) => option.availability === "AVAILABLE") ??
-              nextType?.options[0] ??
-              null;
-
-            setSelectedTypeKey(nextType?.typeKey ?? "");
-            setSelectedDefinitionId(nextOption?.definitionId ?? "");
+            setSelectedTypeKey(value);
+            setSelectedManufacturer("");
+            setSelectedDefinitionId("");
           }}
           options={(selectedGroup?.types ?? []).map((type) => ({
             value: type.typeKey,
@@ -369,15 +374,31 @@ export function VehicleModificationBatchSelector({
         />
 
         <SelectField
-          label="Marka / varyant"
-          value={selectedOption?.definitionId ?? ""}
+          label="Üretici"
+          placeholder="Üretici seçin"
+          value={selectedManufacturer}
+          disabled={!selectedType}
+          onChange={(value) => {
+            setSelectedManufacturer(value);
+            setSelectedDefinitionId("");
+          }}
+          options={manufacturers}
+        />
+
+        <SelectField
+          label="Ürün / versiyon"
+          placeholder="Ürün veya versiyon seçin"
+          value={selectedDefinitionId}
+          disabled={!selectedManufacturer}
           onChange={setSelectedDefinitionId}
-          options={(selectedType?.options ?? []).map((option) => ({
+          options={manufacturerOptions.map((option) => ({
             value: option.definitionId,
             label:
               option.availability === "AVAILABLE"
-                ? option.label
-                : `${option.label} - ${option.reason ?? availabilityLabel(option.availability)}`,
+                ? productOptionLabel(option)
+                : `${productOptionLabel(option)} - ${
+                    option.reason ?? availabilityLabel(option.availability)
+                  }`,
             disabled: option.availability !== "AVAILABLE",
           }))}
         />
@@ -402,14 +423,28 @@ export function VehicleModificationBatchSelector({
       </div>
 
       {selectedOption && selectedOption.availability !== "AVAILABLE" ? (
-        <p className="rounded-md border border-ats-border bg-ats-black px-4 py-3 text-sm font-semibold text-ats-muted">
-          {selectedOption.reason ?? availabilityLabel(selectedOption.availability)}
-        </p>
+        <div className="rounded-md border border-red-300/30 bg-red-500/10 px-4 py-3">
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-red-100">
+            Uyumsuz seçim
+          </p>
+          <p className="mt-1 text-sm font-semibold text-red-100">
+            {selectedOption.reason ??
+              availabilityLabel(selectedOption.availability)}
+          </p>
+        </div>
       ) : null}
 
       {selectedOption && queuedDefinitionIdSet.has(selectedOption.definitionId) ? (
         <p className="rounded-md border border-ats-blue/30 bg-ats-blue/10 px-4 py-3 text-sm font-semibold text-ats-text">
           Bu parça ekleme listesinde zaten var.
+        </p>
+      ) : null}
+
+      {selectedOption && (selectedType?.options.length ?? 0) > 1 ? (
+        <p className="rounded-md border border-ats-border bg-ats-black px-4 py-3 text-sm font-semibold text-ats-muted">
+          <span className="font-black text-ats-text">Alternatif seçenek:</span>{" "}
+          Aynı alt kategorideki ürünler birbirinin yerine değerlendirilir; aynı
+          fiziksel slotta birlikte kullanılamaz.
         </p>
       ) : null}
 
@@ -429,7 +464,12 @@ export function VehicleModificationBatchSelector({
           </div>
           <button
             type="submit"
-            disabled={queuedOptions.length === 0 || isPending}
+            disabled={
+              queuedOptions.length === 0 ||
+              isPending ||
+              isPreviewPending ||
+              (previewState !== null && !previewState.ok)
+            }
             className="inline-flex h-11 w-full items-center justify-center rounded-full bg-ats-blue px-5 text-sm font-black text-ats-black transition hover:bg-ats-blue-hover disabled:cursor-not-allowed disabled:border disabled:border-ats-border disabled:bg-ats-black disabled:text-ats-muted sm:w-auto"
           >
             {isPending
@@ -515,6 +555,7 @@ function CatalogOptionDetails({
 
   const details: Array<[string, string | number]> = [
     ["Kullanım", usageClassLabel(option.usageClass)],
+    ["Uyumluluk", option.compatibilityLabel],
   ];
   let warning: string | null = null;
 
@@ -654,18 +695,41 @@ function CatalogOptionDetails({
       ["Yol", suspensionRoadSuitabilityLabel(option.usageClass)],
       ["Pist", suspensionTrackSuitabilityLabel(option.usageClass)],
     );
-  } else {
-    return null;
   }
 
-  const tuningNotes = option.tuningPackageSpecification
-    ? [
-        option.tuningPackageSpecification.requiredFuelNote,
+  const tuningNotes: Array<[string, string]> = [];
+
+  if (option.tuningPackageSpecification?.requiredFuelNote) {
+    tuningNotes.push([
+      "Yakıt gereksinimi",
+      option.tuningPackageSpecification.requiredFuelNote,
+    ]);
+  }
+
+  if (option.tuningPackageSpecification?.hardwareRequirementNote) {
+    tuningNotes.push([
+      /unlock|kilit/i.test(
         option.tuningPackageSpecification.hardwareRequirementNote,
-        option.tuningPackageSpecification.transmissionLimitNote,
-        option.tuningPackageSpecification.coolingRecommendationNote,
-      ].filter((note): note is string => Boolean(note))
-    : [];
+      )
+        ? "ECU kilit açma gereksinimi"
+        : "Donanım gereksinimi",
+      option.tuningPackageSpecification.hardwareRequirementNote,
+    ]);
+  }
+
+  if (option.tuningPackageSpecification?.transmissionLimitNote) {
+    tuningNotes.push([
+      "Şanzıman yazılımı gereksinimi",
+      option.tuningPackageSpecification.transmissionLimitNote,
+    ]);
+  }
+
+  if (option.tuningPackageSpecification?.coolingRecommendationNote) {
+    tuningNotes.push([
+      "Önerilen destek parçaları",
+      option.tuningPackageSpecification.coolingRecommendationNote,
+    ]);
+  }
 
   return (
     <div className="rounded-md border border-ats-border bg-ats-black px-4 py-3">
@@ -687,6 +751,53 @@ function CatalogOptionDetails({
           {option.description}
         </p>
       ) : null}
+      {option.requirementGroups.length > 0 ? (
+        <div
+          className={`mt-3 rounded-md border px-3 py-2 ${
+            option.hasMissingRequirements
+              ? "border-amber-300/30 bg-amber-500/10"
+              : "border-ats-border bg-ats-surface"
+          }`}
+        >
+          <p
+            className={`text-xs font-black uppercase tracking-[0.12em] ${
+              option.hasMissingRequirements
+                ? "text-amber-100"
+                : "text-ats-muted"
+            }`}
+          >
+            {option.hasMissingRequirements
+              ? "Eksik zorunlu parçalar"
+              : "Zorunlu parçalar"}
+          </p>
+          <ul className="mt-2 grid gap-1 text-xs font-semibold leading-5 text-ats-text">
+            {option.requirementGroups.map((requirement, index) => (
+              <li key={`${requirement.description ?? "requirement"}:${index}`}>
+                {requirement.optionLabels.length > 0
+                  ? requirement.optionLabels.join(" veya ")
+                  : requirement.description ?? "Zorunlu parça"}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {option.recommendationGroups.length > 0 ? (
+        <div className="mt-3 rounded-md border border-ats-blue/30 bg-ats-blue/10 px-3 py-2">
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-ats-blue">
+            Önerilen destek parçaları
+          </p>
+          <ul className="mt-2 grid gap-1 text-xs font-semibold leading-5 text-ats-text">
+            {option.recommendationGroups.map((recommendation, index) => (
+              <li key={`${recommendation.description}:${index}`}>
+                {recommendation.optionLabels.length > 0
+                  ? `${recommendation.optionLabels.join(" veya ")}: `
+                  : ""}
+                {recommendation.description}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {option.wheelSpecification ? (
         <p className="mt-2 text-xs font-semibold leading-5 text-ats-muted">
           Jant uygunluğu araç, ebat, ET/ofset ve lastik ölçüsüne göre ayrıca doğrulanmalıdır.
@@ -699,8 +810,10 @@ function CatalogOptionDetails({
       ) : null}
       {tuningNotes.length > 0 ? (
         <ul className="mt-2 grid gap-1 text-xs font-semibold leading-5 text-ats-muted">
-          {tuningNotes.map((note) => (
-            <li key={note}>{note}</li>
+          {tuningNotes.map(([label, note]) => (
+            <li key={`${label}:${note}`}>
+              <span className="font-black text-ats-text">{label}:</span> {note}
+            </li>
           ))}
         </ul>
       ) : null}
@@ -865,11 +978,14 @@ function deltaToneClass(tone: RatingDeltaTone) {
 
 function SelectField({
   label,
+  placeholder,
   value,
   onChange,
   options,
+  disabled = false,
 }: {
   label: string;
+  placeholder: string;
   value: string;
   onChange: (value: string) => void;
   options: Array<{
@@ -877,17 +993,20 @@ function SelectField({
     label: string;
     disabled?: boolean;
   }>;
+  disabled?: boolean;
 }) {
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className="text-xs font-black uppercase tracking-[0.14em] text-ats-muted">
         {label}
       </span>
       <select
         value={value}
+        disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 h-11 w-full rounded-md border border-ats-border bg-ats-black px-3 text-sm font-semibold text-ats-text outline-none transition focus:border-ats-blue focus:ring-2 focus:ring-ats-blue/20"
+        className="mt-2 h-11 w-full rounded-md border border-ats-border bg-ats-black px-3 text-sm font-semibold text-ats-text outline-none transition focus:border-ats-blue focus:ring-2 focus:ring-ats-blue/20 disabled:cursor-not-allowed disabled:text-ats-muted"
       >
+        <option value="">{placeholder}</option>
         {options.map((option) => (
           <option
             key={option.value}
@@ -900,6 +1019,18 @@ function SelectField({
       </select>
     </label>
   );
+}
+
+function manufacturerKey(
+  option: ModificationCatalogGroup["types"][number]["options"][number],
+) {
+  return option.manufacturerLabel;
+}
+
+function productOptionLabel(
+  option: ModificationCatalogGroup["types"][number]["options"][number],
+) {
+  return [option.name, option.variant].filter(Boolean).join(" / ");
 }
 
 function optionByDefinitionId(

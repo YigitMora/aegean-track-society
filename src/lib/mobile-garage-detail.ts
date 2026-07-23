@@ -39,7 +39,11 @@ import {
   modificationSelectionGroupKey,
   modificationTypeGroup,
 } from "@/lib/modification-presentation";
-import { isSelectableModificationLeaf } from "@/lib/modification-catalog-metadata";
+import {
+  isSelectableModificationLeaf,
+  modificationManufacturerLabel,
+  modificationRecommendationGroups,
+} from "@/lib/modification-catalog-metadata";
 import {
   componentSlotKeyForDefinition,
   evaluateModificationAvailability,
@@ -113,6 +117,10 @@ const definitionRuleSelect = {
       active: true,
       confidence: true,
       sourceNote: true,
+      requiredFuelNote: true,
+      hardwareRequirementNote: true,
+      transmissionLimitNote: true,
+      coolingRecommendationNote: true,
     },
   },
   compatibilities: {
@@ -974,6 +982,9 @@ function serializeBuild(
       !(isGenericEcuFallbackDefinition(definition) && hasNamedProviderEcu) &&
       !(isGenericTurboFallbackDefinition(definition) && hasNamedProviderTurbo),
   );
+  const definitionsByCode = new Map(
+    visibleCatalog.map((definition) => [definition.code, definition]),
+  );
 
   return {
     vehicleId: vehicle.id,
@@ -990,6 +1001,7 @@ function serializeBuild(
         installedIds,
         hasNamedProviderEcu,
         hasNamedProviderTurbo,
+        definitionsByCode,
       }),
     ),
   };
@@ -1026,12 +1038,14 @@ function serializeCatalogPart({
   installedIds,
   hasNamedProviderEcu,
   hasNamedProviderTurbo,
+  definitionsByCode,
 }: {
   vehicle: OwnedVehicleRow;
   definition: DefinitionRow;
   installedIds: Set<string>;
   hasNamedProviderEcu: boolean;
   hasNamedProviderTurbo: boolean;
+  definitionsByCode: Map<string, DefinitionRow>;
 }): MobileGarageCatalogPart {
   const availability = evaluateModificationAvailability({
     vehicle,
@@ -1050,7 +1064,8 @@ function serializeCatalogPart({
     ? "INSTALLED"
     : unknown
       ? "UNKNOWN"
-      : availability.ok
+      : availability.ok ||
+          availability.code === "MODIFICATION_REQUIREMENT_MISSING"
         ? "AVAILABLE"
         : availability.code === "MODIFICATION_INCOMPATIBLE"
           ? "INCOMPATIBLE"
@@ -1074,6 +1089,10 @@ function serializeCatalogPart({
     category: definition.category,
     categoryLabel: modificationCategoryLabels[definition.category],
     group: modificationTypeGroup(definition),
+    manufacturer: {
+      key: modificationManufacturerLabel(definition),
+      label: modificationManufacturerLabel(definition),
+    },
     selectionGroupKey: modificationSelectionGroupKey(
       definition,
       componentSlotKeyForDefinition(definition),
@@ -1101,9 +1120,31 @@ function serializeCatalogPart({
         label: formatModificationDefinition(option.requiredDefinition),
       })),
     })),
+    recommendations: modificationRecommendationGroups(definition.code).map(
+      (group) => ({
+        description: group.description,
+        options: group.optionCodes.flatMap((optionCode) => {
+          const recommendedDefinition = definitionsByCode.get(optionCode);
+
+          return recommendedDefinition
+            ? [{ label: formatModificationDefinition(recommendedDefinition) }]
+            : [];
+        }),
+      }),
+    ),
     calibration: {
       confidence: tuning?.active ? tuning.confidence : null,
       sourceNote: tuning?.active ? tuning.sourceNote : null,
+      fuelRequirement: tuning?.active ? tuning.requiredFuelNote : null,
+      hardwareRequirement: tuning?.active
+        ? tuning.hardwareRequirementNote
+        : null,
+      transmissionRequirement: tuning?.active
+        ? tuning.transmissionLimitNote
+        : null,
+      coolingRecommendation: tuning?.active
+        ? tuning.coolingRecommendationNote
+        : null,
       provisional:
         vehicle.vehicleDefinition?.ratingStatus !== "CALIBRATED" ||
         Boolean(tuning?.active && tuning.confidence !== "HIGH"),

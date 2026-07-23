@@ -236,5 +236,9 @@ export function modificationManufacturerLabel(
 ) {
   const brand = definition.brand?.trim();
 
-  return brand && brand !== "Generic" ? brand : "Teknik konfigürasyon";
+  return brand &&
+    brand !== "Generic" &&
+    brand !== "Technical Configuration"
+    ? brand
+    : "Teknik konfigürasyon";
 }

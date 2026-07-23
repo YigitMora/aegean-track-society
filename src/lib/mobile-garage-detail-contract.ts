@@ -87,6 +87,10 @@ export type MobileGarageCatalogPart = {
     key: string;
     label: string;
   };
+  manufacturer: {
+    key: string;
+    label: string;
+  };
   selectionGroupKey: string | null;
   label: string;
   brand: string | null;
@@ -103,9 +107,17 @@ export type MobileGarageCatalogPart = {
     description: string | null;
     options: Array<{ label: string }>;
   }>;
+  recommendations: Array<{
+    description: string;
+    options: Array<{ label: string }>;
+  }>;
   calibration: {
     confidence: string | null;
     sourceNote: string | null;
+    fuelRequirement: string | null;
+    hardwareRequirement: string | null;
+    transmissionRequirement: string | null;
+    coolingRecommendation: string | null;
     provisional: boolean;
   };
 };

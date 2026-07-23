@@ -26,6 +26,8 @@ import {
   isLegacyGenericModificationDefinition,
   isSelectableModificationLeaf,
   legacyGenericModificationWarning,
+  modificationManufacturerLabel,
+  modificationRecommendationGroups,
 } from "@/lib/modification-catalog-metadata";
 import { modificationTypeLabel } from "@/lib/modification-presentation";
 import { prisma } from "@/lib/prisma";
@@ -1055,6 +1057,9 @@ function buildCatalogGroups({
     vehicle,
     definitions: catalog,
   });
+  const definitionsByCode = new Map(
+    catalog.map((definition) => [definition.code, definition]),
+  );
 
   for (const definition of catalog) {
     if (!isSelectableModificationLeaf(definition)) {
@@ -1079,6 +1084,9 @@ function buildCatalogGroups({
       hasNamedProviderEcuTune,
       hasNamedProviderTurbo,
     });
+    const mayQueueWithRequirements =
+      !availability.ok &&
+      availability.code === "MODIFICATION_REQUIREMENT_MISSING";
 
     if (!availability.ok && availability.code === "MODIFICATION_INCOMPATIBLE") {
       continue;
@@ -1103,6 +1111,7 @@ function buildCatalogGroups({
       code: definition.code,
       definitionId: definition.id,
       label: optionLabelForDefinition(definition),
+      manufacturerLabel: modificationManufacturerLabel(definition),
       brand: definition.brand,
       name: definition.name,
       variant: definition.variant,
@@ -1137,17 +1146,39 @@ function buildCatalogGroups({
       tuningPackageSpecification: definition.tuningPackageSpecification?.active
         ? definition.tuningPackageSpecification
         : null,
+      compatibilityLabel: compatibilityLabelForDefinition(definition, vehicle),
+      requirementGroups: definition.requirementGroups.map((requirementGroup) => ({
+        description: requirementGroup.description,
+        optionLabels: requirementGroup.options.map((option) =>
+          formatModificationDefinition(option.requiredDefinition),
+        ),
+      })),
+      recommendationGroups: modificationRecommendationGroups(definition.code).map(
+        (recommendationGroup) => ({
+          description: recommendationGroup.description,
+          optionLabels: recommendationGroup.optionCodes.flatMap((optionCode) => {
+            const recommendedDefinition = definitionsByCode.get(optionCode);
+
+            return recommendedDefinition
+              ? [formatModificationDefinition(recommendedDefinition)]
+              : [];
+          }),
+        }),
+      ),
+      hasMissingRequirements: mayQueueWithRequirements,
       fitmentNote: fitmentNoteForDefinition(definition),
-      availability: availability.ok
+      availability: availability.ok || mayQueueWithRequirements
         ? "AVAILABLE"
         : availability.code === "DUPLICATE_MODIFICATION"
           ? "INSTALLED"
           : "BLOCKED",
       reason: availability.ok
         ? undefined
-        : availability.code === "DUPLICATE_MODIFICATION"
-          ? "Zaten yüklü"
-          : vehicleBuildResultLabel(availability.code, availability),
+        : mayQueueWithRequirements
+          ? vehicleBuildResultLabel(availability.code, availability)
+          : availability.code === "DUPLICATE_MODIFICATION"
+            ? "Zaten yüklü"
+            : vehicleBuildResultLabel(availability.code, availability),
     });
 
     if (!group.types.some((candidate) => candidate.typeKey === typeKey)) {
@@ -1181,21 +1212,75 @@ function buildCatalogGroups({
   return groups;
 }
 
+function compatibilityLabelForDefinition(
+  definition: {
+    compatibilities: Array<{
+      vehicleDefinitionId: string | null;
+      platformFamilyId: string | null;
+      engineFamilyId: string | null;
+    }>;
+    powertrainApplicabilities: Array<{
+      active: boolean;
+      powertrain: VehiclePowertrain;
+    }>;
+  },
+  vehicle: {
+    vehicleDefinitionId: string | null;
+    vehicleDefinition?: {
+      platformFamilyId: string | null;
+      engineFamilyId: string | null;
+    } | null;
+  },
+) {
+  if (
+    vehicle.vehicleDefinitionId &&
+    definition.compatibilities.some(
+      (compatibility) =>
+        compatibility.vehicleDefinitionId === vehicle.vehicleDefinitionId,
+    )
+  ) {
+    return "Araç tanımıyla birebir uyumlu";
+  }
+
+  if (
+    vehicle.vehicleDefinition?.engineFamilyId &&
+    definition.compatibilities.some(
+      (compatibility) =>
+        compatibility.engineFamilyId ===
+        vehicle.vehicleDefinition?.engineFamilyId,
+    )
+  ) {
+    return "Motor ailesiyle uyumlu";
+  }
+
+  if (
+    vehicle.vehicleDefinition?.platformFamilyId &&
+    definition.compatibilities.some(
+      (compatibility) =>
+        compatibility.platformFamilyId ===
+        vehicle.vehicleDefinition?.platformFamilyId,
+    )
+  ) {
+    return "Platform ailesiyle uyumlu";
+  }
+
+  return definition.powertrainApplicabilities.length > 0
+    ? "Güç aktarma tipiyle uyumlu; ürün fitmentini doğrulayın"
+    : "Evrensel teknik konfigürasyon; araç özelinde doğrulayın";
+}
+
 function decimalToNumber(value: Prisma.Decimal | null) {
   return value ? value.toNumber() : null;
 }
 
 function optionLabelForDefinition(definition: {
+  code?: string;
   brand: string | null;
   name: string;
   variant: string | null;
   componentTypeCode?: string | null;
 }) {
-  const brand =
-    definition.brand && definition.brand !== "Generic" ? definition.brand : null;
-  const optionLabel = [brand, definition.variant].filter(Boolean).join(" / ");
-
-  return optionLabel || formatModificationDefinition(definition);
+  return formatModificationDefinition(definition);
 }
 
 function fitmentNoteForDefinition(definition: {
