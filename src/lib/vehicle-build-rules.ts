@@ -587,72 +587,16 @@ export function evaluateModificationAvailability({
     };
   }
 
-  const missingRequirement = definition.requirementGroups.find((group) => {
-    if (!group.active) {
-      return false;
-    }
-
-    return !group.options.some((option) =>
-      installedDefinitionIds.has(option.requiredDefinitionId),
-    );
-  });
-
-  if (missingRequirement) {
-    return {
-      ok: false,
-      code: "MODIFICATION_REQUIREMENT_MISSING",
-      missingRequirement,
-    };
-  }
-
   return {
     ok: true,
     code: null,
   };
 }
 
-export function evaluateModificationRemoval({
-  removingModification,
-  installedModifications,
-}: {
+export function evaluateModificationRemoval(_input: {
   removingModification: VehicleBuildInstalledModification;
   installedModifications: VehicleBuildInstalledModification[];
 }): VehicleModificationRemovalAvailability {
-  const remainingDefinitionIds = new Set(
-    installedModifications
-      .filter((modification) => modification.id !== removingModification.id)
-      .map((modification) => modification.modificationDefinitionId),
-  );
-
-  for (const installedModification of installedModifications) {
-    if (installedModification.id === removingModification.id) {
-      continue;
-    }
-
-    for (const group of installedModification.modificationDefinition.requirementGroups ?? []) {
-      if (!group.active) {
-        continue;
-      }
-
-      const removingDefinitionWasAnOption = group.options.some(
-        (option) =>
-          option.requiredDefinitionId === removingModification.modificationDefinitionId,
-      );
-      const stillSatisfied = group.options.some((option) =>
-        remainingDefinitionIds.has(option.requiredDefinitionId),
-      );
-
-      if (removingDefinitionWasAnOption && !stillSatisfied) {
-        return {
-          ok: false,
-          code: "MODIFICATION_REQUIRED_BY_INSTALLED_ITEM",
-          dependentModification: installedModification,
-          missingRequirement: group,
-        };
-      }
-    }
-  }
-
   return {
     ok: true,
     code: null,
@@ -677,7 +621,6 @@ export function evaluateModificationBatchAvailability({
   const installedDefinitionIds = new Set(
     installedModifications.map((modification) => modification.modificationDefinitionId),
   );
-  const selectedDefinitionIds = new Set(definitions.map((definition) => definition.id));
   const proposedModifications: VehicleBuildInstalledModification[] = definitions.map(
     (definition) => ({
       id: `batch:${definition.id}`,
@@ -786,26 +729,6 @@ export function evaluateModificationBatchAvailability({
       };
     }
 
-    const missingRequirement = definition.requirementGroups.find((group) => {
-      if (!group.active) {
-        return false;
-      }
-
-      return !group.options.some(
-        (option) =>
-          installedDefinitionIds.has(option.requiredDefinitionId) ||
-          selectedDefinitionIds.has(option.requiredDefinitionId),
-      );
-    });
-
-    if (missingRequirement) {
-      return {
-        ok: false,
-        code: "MODIFICATION_REQUIREMENT_MISSING",
-        offendingDefinitionId: definition.id,
-        missingRequirement,
-      };
-    }
   }
 
   return {

@@ -204,13 +204,17 @@ assert.match(selector, /placeholder="Üretici seçin"/);
 assert.match(selector, /Ürün veya versiyon seçin/);
 assert.match(selector, /Model seçin/);
 assert.doesNotMatch(selector, /firstAvailableOption/);
-assert.match(selector, /Eksik zorunlu parçalar/);
+assert.match(selector, /Destek parçası öneriliyor/);
 assert.match(selector, /Önerilen destek parçaları/);
 assert.match(selector, /Uyumsuz seçim/);
 assert.match(selector, /Alternatif seçenek/);
-assert.match(selector, /Yakıt gereksinimi/);
-assert.match(selector, /ECU kilit açma gereksinimi/);
-assert.match(selector, /Şanzıman yazılımı gereksinimi/);
+assert.match(selector, /Yakıt yapılandırması öneriliyor/);
+assert.match(selector, /ECU unlock gerekebilir/);
+assert.match(selector, /Şanzıman yazılımı öneriliyor/);
+assert.match(
+  metadata,
+  /Bu kurulum için destekleyici parçalar öneriliyor\. Build yine de kaydedilebilir\./,
+);
 assert.match(ratingEngine, /strongestCalibrationImpact/);
 assert.match(ratingEngine, /supportingAirflowPowerImpact/);
 assert.match(ratingEngine, /Math\.min\(1, Math\.max\(0, impact\.power\)\)/);
@@ -355,16 +359,12 @@ function validateServerRules() {
       },
     ],
   });
-  const missingRequirement = evaluateModificationBatchAvailability({
+  const advisoryOnlyRequirement = evaluateModificationBatchAvailability({
     vehicle,
     definitions: [requiredTune],
     installedModifications: [],
   });
-  assert.equal(missingRequirement.ok, false);
-  assert.equal(
-    missingRequirement.ok ? null : missingRequirement.code,
-    "MODIFICATION_REQUIREMENT_MISSING",
-  );
+  assert.equal(advisoryOnlyRequirement.ok, true);
   assert.equal(
     evaluateModificationBatchAvailability({
       vehicle,

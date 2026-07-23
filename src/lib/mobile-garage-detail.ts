@@ -1082,8 +1082,7 @@ function serializeCatalogPart({
     ? "INSTALLED"
     : unknown
       ? "UNKNOWN"
-      : availability.ok ||
-          availability.code === "MODIFICATION_REQUIREMENT_MISSING"
+      : availability.ok
         ? "AVAILABLE"
         : availability.code === "MODIFICATION_INCOMPATIBLE"
           ? "INCOMPATIBLE"

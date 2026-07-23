@@ -1269,7 +1269,7 @@ const modificationCatalog = [
     variant: "Stage 2",
     componentTypeCode: "ecu_software",
     usageClass: "STREET_TRACK",
-    active: false,
+    active: true,
     sortOrder: 20,
   },
   {
@@ -7494,28 +7494,28 @@ const modificationRequirementGroups = [
   ...damperCodes.map((damperCode, index) => ({
     code: `req_${damperCode}_sport_springs`,
     sourceCode: damperCode,
-    description: "Damper requires sport springs.",
+    description: "Sport springs are recommended for this damper.",
     optionCodes: sportSpringCodes,
     sortOrder: 10 + index,
   })),
   {
     code: "req_rsa_250_ecu_unlock",
     sourceCode: "rsa_bmw_b48_g20_250",
-    description: "RSA 250 requires a compatible ECU unlock.",
+    description: "A compatible ECU unlock is recommended for RSA 250.",
     optionCodes: ["ecu_unlock_bmw_mg1_g_series"],
     sortOrder: 200,
   },
   {
     code: "req_rsa_280_ecu_unlock",
     sourceCode: "rsa_bmw_b48_g20_280",
-    description: "RSA 280 requires a compatible ECU unlock.",
+    description: "A compatible ECU unlock is recommended for RSA 280.",
     optionCodes: ["ecu_unlock_bmw_mg1_g_series"],
     sortOrder: 201,
   },
   {
     code: "req_rsa_280_transmission_software",
     sourceCode: "rsa_bmw_b48_g20_280",
-    description: "RSA 280 requires compatible ZF8 transmission software.",
+    description: "Compatible ZF8 transmission software is recommended for RSA 280.",
     optionCodes: [
       "tune_xhp_bmw_zf8_stage_2",
       "tune_xhp_bmw_zf8_stage_3",
@@ -7525,7 +7525,7 @@ const modificationRequirementGroups = [
   {
     code: "req_rsa_300_ecu_unlock",
     sourceCode: "engine_rsa300",
-    description: "RSA 300 requires a compatible ECU unlock for new installations.",
+    description: "A compatible ECU unlock is recommended for new RSA 300 installations.",
     optionCodes: ["ecu_unlock_bmw_mg1_g_series"],
     sortOrder: 203,
   },
@@ -7533,7 +7533,7 @@ const modificationRequirementGroups = [
     code: "req_rsa_300_transmission_software",
     sourceCode: "engine_rsa300",
     description:
-      "RSA 300 requires compatible ZF8 transmission software for new installations.",
+      "Compatible ZF8 transmission software is recommended for new RSA 300 installations.",
     optionCodes: [
       "tune_xhp_bmw_zf8_stage_2",
       "tune_xhp_bmw_zf8_stage_3",
@@ -7543,28 +7543,28 @@ const modificationRequirementGroups = [
   {
     code: "req_rsa_320_e25_ecu_unlock",
     sourceCode: "rsa_bmw_b48_g20_320_e25",
-    description: "RSA 320 E25 requires a compatible ECU unlock.",
+    description: "A compatible ECU unlock is recommended for RSA 320 E25.",
     optionCodes: ["ecu_unlock_bmw_mg1_g_series"],
     sortOrder: 205,
   },
   {
     code: "req_rsa_320_e25_downpipe",
     sourceCode: "rsa_bmw_b48_g20_320_e25",
-    description: "RSA 320 E25 requires a compatible high-flow downpipe.",
+    description: "A compatible high-flow downpipe is recommended for RSA 320 E25.",
     optionCodes: ["downpipe_b48_high_flow_catted"],
     sortOrder: 206,
   },
   {
     code: "req_rsa_320_e25_fuel",
     sourceCode: "rsa_bmw_b48_g20_320_e25",
-    description: "RSA 320 E25 requires a measured E25 fuel configuration.",
+    description: "A measured E25 fuel configuration is recommended for RSA 320 E25.",
     optionCodes: ["fuel_b48_e25_configuration"],
     sortOrder: 207,
   },
   {
     code: "req_rsa_320_e25_transmission_software",
     sourceCode: "rsa_bmw_b48_g20_320_e25",
-    description: "RSA 320 E25 requires compatible ZF8 transmission software.",
+    description: "Compatible ZF8 transmission software is recommended for RSA 320 E25.",
     optionCodes: [
       "tune_xhp_bmw_zf8_stage_2",
       "tune_xhp_bmw_zf8_stage_3",
@@ -7575,7 +7575,7 @@ const modificationRequirementGroups = [
     code: "req_b48_hybrid_turbo_custom_calibration",
     sourceCode: "turbo_b48_g20_hybrid_vehicle_specific",
     description:
-      "The B48 hybrid turbo requires a dedicated vehicle-specific calibration.",
+      "A dedicated vehicle-specific calibration is recommended for the B48 hybrid turbo.",
     optionCodes: ["ecu_b48_g20_custom_dyno_hybrid_turbo"],
     sortOrder: 209,
   },
@@ -7583,7 +7583,7 @@ const modificationRequirementGroups = [
     code: "req_b48_custom_calibration_hybrid_turbo",
     sourceCode: "ecu_b48_g20_custom_dyno_hybrid_turbo",
     description:
-      "The B48 custom hybrid-turbo calibration requires the matching turbocharger.",
+      "The matching turbocharger is recommended for the B48 custom hybrid-turbo calibration.",
     optionCodes: ["turbo_b48_g20_hybrid_vehicle_specific"],
     sortOrder: 210,
   },
@@ -7591,7 +7591,7 @@ const modificationRequirementGroups = [
     code: "req_b48_custom_calibration_ecu_unlock",
     sourceCode: "ecu_b48_g20_custom_dyno_hybrid_turbo",
     description:
-      "The B48 custom hybrid-turbo calibration requires a compatible ECU unlock.",
+      "A compatible ECU unlock is recommended for the B48 custom hybrid-turbo calibration.",
     optionCodes: ["ecu_unlock_bmw_mg1_g_series"],
     sortOrder: 211,
   },
@@ -7599,7 +7599,7 @@ const modificationRequirementGroups = [
     code: "req_b48_custom_calibration_hpfp",
     sourceCode: "ecu_b48_g20_custom_dyno_hybrid_turbo",
     description:
-      "The B48 custom hybrid-turbo calibration requires verified high-pressure fuel capacity.",
+      "Verified high-pressure fuel capacity is recommended for the B48 custom hybrid-turbo calibration.",
     optionCodes: ["fuel_hpfp_upgrade_vehicle_specific"],
     sortOrder: 212,
   },
@@ -7607,7 +7607,7 @@ const modificationRequirementGroups = [
     code: "req_b48_custom_calibration_charge_cooling",
     sourceCode: "ecu_b48_g20_custom_dyno_hybrid_turbo",
     description:
-      "The B48 custom hybrid-turbo calibration requires upgraded charge-air cooling.",
+      "Upgraded charge-air cooling is recommended for the B48 custom hybrid-turbo calibration.",
     optionCodes: ["cooling_charge_air_cooler_vehicle_specific"],
     sortOrder: 213,
   },
@@ -7615,7 +7615,7 @@ const modificationRequirementGroups = [
     code: "req_b48_custom_calibration_transmission_software",
     sourceCode: "ecu_b48_g20_custom_dyno_hybrid_turbo",
     description:
-      "The B48 custom hybrid-turbo calibration requires compatible ZF8 transmission software.",
+      "Compatible ZF8 transmission software is recommended for the B48 custom hybrid-turbo calibration.",
     optionCodes: [
       "tune_xhp_bmw_zf8_stage_2",
       "tune_xhp_bmw_zf8_stage_3",
@@ -7626,7 +7626,7 @@ const modificationRequirementGroups = [
     code: "req_auxiliary_fueling_ecu_calibration",
     sourceCode: "fuel_auxiliary_injection_vehicle_specific",
     description:
-      "Auxiliary fueling requires a compatible vehicle-specific ECU calibration.",
+      "A compatible vehicle-specific ECU calibration is recommended for auxiliary fueling.",
     optionCodes: [
       "ecu_b48_g20_custom_dyno_hybrid_turbo",
       "tune_bootmod3_b58_flexfuel",
@@ -7638,7 +7638,7 @@ const modificationRequirementGroups = [
       code: `req_${harnessCode}_compatible_seat`,
       sourceCode: harnessCode,
       description:
-        "A multi-point harness requires a compatible fixed-back or race seat.",
+        "A compatible fixed-back or race seat is recommended for a multi-point harness.",
       optionCodes: seatAlternativeCodes,
       sortOrder: 300 + index * 2,
     },
@@ -7646,7 +7646,7 @@ const modificationRequirementGroups = [
       code: `req_${harnessCode}_rollover_protection`,
       sourceCode: harnessCode,
       description:
-        "A multi-point harness requires compatible rollover protection and belt geometry.",
+        "Compatible rollover protection and belt geometry are recommended for a multi-point harness.",
       optionCodes: rollProtectionAlternativeCodes,
       sortOrder: 301 + index * 2,
     },
@@ -7655,7 +7655,7 @@ const modificationRequirementGroups = [
     code: "req_hans_setup_harness",
     sourceCode: "safety_hans_setup_technical",
     description:
-      "A head-and-neck restraint setup requires a compatible multi-point harness.",
+      "A compatible multi-point harness is recommended for a head-and-neck restraint setup.",
     optionCodes: harnessAlternativeCodes,
     sortOrder: 350,
   },
@@ -7663,7 +7663,7 @@ const modificationRequirementGroups = [
     code: "req_hans_setup_seat",
     sourceCode: "safety_hans_setup_technical",
     description:
-      "A head-and-neck restraint setup requires a compatible seat and belt path.",
+      "A compatible seat and belt path are recommended for a head-and-neck restraint setup.",
     optionCodes: seatAlternativeCodes,
     sortOrder: 351,
   },
@@ -21717,7 +21717,7 @@ const platformModificationImpacts = [
       confidence: "LOW",
       claimedPowerDeltaHp: 150,
       sourceNote:
-        "E25 RSA 320 target applies only after required fuel, downpipe, ECU, and transmission support is valid.",
+        "E25 RSA 320 target remains selectable while fuel, downpipe, ECU, and transmission support are shown as advisory.",
     }),
   ]),
   ...bmwTurkeyB48Codes.map((vehicleCode) =>

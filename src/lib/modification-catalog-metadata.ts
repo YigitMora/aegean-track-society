@@ -20,7 +20,7 @@ export const concreteModificationRequiredMessage =
   "Yalnızca belirli bir ürün veya modifikasyon versiyonu seçilebilir.";
 
 export const modificationSupportAdvisoryMessage =
-  "Bu kurulum için destekleyici parçalar öneriliyor.";
+  "Bu kurulum için destekleyici parçalar öneriliyor. Build yine de kaydedilebilir.";
 
 export const legacyGenericModificationCodes = new Set([
   "suspension_sport_springs_generic",

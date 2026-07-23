@@ -241,7 +241,7 @@ function validateAuthoritativeBuildRules(
       definition: requiring,
       installedModifications: [],
     }).code,
-    "MODIFICATION_REQUIREMENT_MISSING",
+    null,
   );
 
   const conflictTarget = buildDefinition({ id: "conflict-target" });
@@ -280,7 +280,7 @@ function validateAuthoritativeBuildRules(
       removingModification: installedPrerequisite,
       installedModifications: [installedPrerequisite, installedRequiring],
     }).code,
-    "MODIFICATION_REQUIRED_BY_INSTALLED_ITEM",
+    null,
   );
 }
 

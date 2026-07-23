@@ -1109,10 +1109,6 @@ function buildCatalogGroups({
       hasNamedProviderEcuTune,
       hasNamedProviderTurbo,
     });
-    const mayQueueWithRequirements =
-      !availability.ok &&
-      availability.code === "MODIFICATION_REQUIREMENT_MISSING";
-
     if (!availability.ok && availability.code === "MODIFICATION_INCOMPATIBLE") {
       continue;
     }
@@ -1211,16 +1207,14 @@ function buildCatalogGroups({
       ),
       hasMissingRequirements: missingSupportGroups.length > 0,
       fitmentNote: fitmentNoteForDefinition(definition),
-      availability: availability.ok || mayQueueWithRequirements
+      availability: availability.ok
         ? "AVAILABLE"
         : availability.code === "DUPLICATE_MODIFICATION"
           ? "INSTALLED"
           : "BLOCKED",
       reason: availability.ok
         ? undefined
-        : mayQueueWithRequirements
-          ? vehicleBuildResultLabel(availability.code, availability)
-          : availability.code === "DUPLICATE_MODIFICATION"
+        : availability.code === "DUPLICATE_MODIFICATION"
             ? "Zaten yüklü"
             : vehicleBuildResultLabel(availability.code, availability),
     });
