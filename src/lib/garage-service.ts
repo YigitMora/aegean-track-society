@@ -701,10 +701,43 @@ export async function restoreGarageVehicle({
   vehicleId: string;
   actor?: GarageActorContext;
 }): Promise<GarageServiceResult<{ vehicleId: string }>> {
+  const result = await restoreGarageVehicles({
+    targetUserId,
+    vehicleIds: [vehicleId],
+    actor,
+  });
+
+  if (!result.ok) {
+    return result;
+  }
+
+  return {
+    ok: true,
+    vehicleId: result.vehicleIds[0]!,
+  };
+}
+
+export async function restoreGarageVehicles({
+  targetUserId,
+  vehicleIds,
+  actor = memberActor,
+}: {
+  targetUserId: string;
+  vehicleIds: string[];
+  actor?: GarageActorContext;
+}): Promise<GarageServiceResult<{ count: number; vehicleIds: string[] }>> {
+  const selectedVehicleIds = uniqueIds(vehicleIds);
+
+  if (selectedVehicleIds.length === 0) {
+    return garageFailure("batch_empty");
+  }
+
   return runGarageSerializableTransaction(async (tx) => {
-    const vehicle = await tx.vehicle.findFirst({
+    const vehicles = await tx.vehicle.findMany({
       where: {
-        id: vehicleId,
+        id: {
+          in: selectedVehicleIds,
+        },
         userId: targetUserId,
         deletedAt: {
           not: null,
@@ -713,7 +746,7 @@ export async function restoreGarageVehicle({
       select: vehicleSnapshotSelect,
     });
 
-    if (!vehicle) {
+    if (vehicles.length !== selectedVehicleIds.length) {
       return garageFailure("not_found");
     }
 
@@ -724,17 +757,44 @@ export async function restoreGarageVehicle({
       },
     });
 
-    if (!canRestoreVehicleCount(activeVehicleCount, 1)) {
+    if (!canRestoreVehicleCount(activeVehicleCount, selectedVehicleIds.length)) {
       return garageFailure("active_vehicle_limit_reached");
     }
 
-    const duplicateVehicle = await findActiveVehicleByPlate({
-      tx,
-      targetUserId,
-      plateNumber: vehicle.plateNumber,
+    const activeVehicles = await tx.vehicle.findMany({
+      where: {
+        userId: targetUserId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        plateNumber: true,
+      },
+    });
+    const selectedPlates = new Set<string>();
+    const hasDuplicatePlate = vehicles.some((vehicle) => {
+      if (
+        activeVehicles.some((activeVehicle) =>
+          arePlateNumbersEquivalent(
+            activeVehicle.plateNumber,
+            vehicle.plateNumber,
+          ),
+        )
+      ) {
+        return true;
+      }
+
+      const normalizedPlate = vehicle.plateNumber
+        .toLocaleUpperCase("tr-TR")
+        .replace(/[\s-]/g, "");
+      if (selectedPlates.has(normalizedPlate)) {
+        return true;
+      }
+      selectedPlates.add(normalizedPlate);
+      return false;
     });
 
-    if (duplicateVehicle) {
+    if (hasDuplicatePlate) {
       return garageFailure("restore_conflict");
     }
 
@@ -749,34 +809,61 @@ export async function restoreGarageVehicle({
       },
     });
 
-    const restoredVehicle = await tx.vehicle.update({
+    const restored = await tx.vehicle.updateMany({
       where: {
-        id: vehicleId,
+        id: {
+          in: selectedVehicleIds,
+        },
+        userId: targetUserId,
+        deletedAt: {
+          not: null,
+        },
       },
       data: {
         deletedAt: null,
-        isPrimary: !activePrimaryVehicle,
+        isPrimary: false,
+      },
+    });
+
+    if (restored.count !== selectedVehicleIds.length) {
+      return garageFailure("failed");
+    }
+
+    if (!activePrimaryVehicle) {
+      await tx.vehicle.update({
+        where: {
+          id: selectedVehicleIds[0],
+        },
+        data: {
+          isPrimary: true,
+        },
+      });
+    }
+
+    const restoredVehicles = await tx.vehicle.findMany({
+      where: {
+        id: {
+          in: selectedVehicleIds,
+        },
+        userId: targetUserId,
+        deletedAt: null,
       },
       select: vehicleSnapshotSelect,
     });
 
-    await createAdminAuditLog({
+    await createAdminAuditLogsForVehicles({
       tx,
       actor,
       action: "ADMIN_GARAGE_VEHICLE_RESTORED",
       targetUserId,
-      vehicleIds: [vehicle.id],
-      before: {
-        vehicle: snapshotVehicle(vehicle),
-      },
-      after: {
-        vehicle: snapshotVehicle(restoredVehicle),
-      },
+      beforeVehicles: vehicles,
+      afterVehicles: restoredVehicles,
     });
 
     return {
       ok: true as const,
-      vehicleId: restoredVehicle.id,
+      count: restored.count,
+      vehicleIds: selectedVehicleIds,
     };
   });
 }
