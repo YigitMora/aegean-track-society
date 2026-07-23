@@ -20,6 +20,9 @@ export type VisibleTyreClassKey = (typeof visibleTyreClasses)[number]["key"];
 
 type TyreCatalogDefinition = {
   category?: string | null;
+  brand?: string | null;
+  name?: string | null;
+  variant?: string | null;
   componentTypeCode?: string | null;
   tyreSpecification?: {
     tyreClass: string;
@@ -119,4 +122,18 @@ export function tyreRoadUseLabel(definition: TyreCatalogDefinition) {
   }
 
   return "Yasal durum doğrulanmalı";
+}
+
+export function tyreManufacturerLabel(definition: TyreCatalogDefinition) {
+  const brand = definition.brand?.trim();
+
+  if (!brand || brand === "Generic" || brand === "Technical Configuration") {
+    return "Teknik konfigürasyon";
+  }
+
+  return brand.replace(/ Motorsport$/, "");
+}
+
+export function tyreProductModelLabel(definition: TyreCatalogDefinition) {
+  return definition.variant?.trim() || definition.name?.trim() || "Lastik";
 }

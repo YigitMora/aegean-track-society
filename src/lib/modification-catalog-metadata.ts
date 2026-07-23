@@ -11,6 +11,9 @@ export type ModificationCatalogNodeInput = {
 export const legacyGenericModificationWarning =
   "Eski genel modifikasyon kaydı. Daha doğru rating için belirli bir ürün seçin.";
 
+export const legacyTyreModificationWarning =
+  "Eski genel lastik kaydı. Daha doğru rating için belirli bir marka ve model seçin.";
+
 export const concreteModificationRequiredMessage =
   "Yalnızca belirli bir ürün veya modifikasyon versiyonu seçilebilir.";
 
@@ -45,6 +48,11 @@ export const legacyGenericModificationCodes = new Set([
   "tyres_uhp_road",
   "tyres_semi_slick",
   "tyres_slick",
+  "tyre_performance_road_300tw_technical",
+  "tyre_track_200tw_technical",
+  "tyre_semi_slick_technical",
+  "tyre_full_slick_technical",
+  "tyre_wet_racing_technical",
   "wheels_lightweight",
   "drivetrain_aftermarket_lsd",
   "drivetrain_transmission_software",
@@ -211,6 +219,14 @@ export function isLegacyGenericModificationDefinition(
   return Boolean(
     definition.code && legacyGenericModificationCodes.has(definition.code),
   );
+}
+
+export function legacyModificationWarning(
+  definition: ModificationCatalogNodeInput,
+) {
+  return definition.category === "TYRES"
+    ? legacyTyreModificationWarning
+    : legacyGenericModificationWarning;
 }
 
 export function isConcreteModificationLeaf(

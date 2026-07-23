@@ -25,7 +25,7 @@ import {
   concreteModificationRequiredMessage,
   isLegacyGenericModificationDefinition,
   isSelectableModificationLeaf,
-  legacyGenericModificationWarning,
+  legacyModificationWarning,
   modificationManufacturerLabel,
   modificationRecommendationGroups,
 } from "@/lib/modification-catalog-metadata";
@@ -490,7 +490,9 @@ function VehicleBuildProfile({
                             ) : null}
                             {isLegacyGeneric ? (
                               <span className="font-black text-amber-200">
-                                {legacyGenericModificationWarning}
+                                {legacyModificationWarning(
+                                  modification.modificationDefinition,
+                                )}
                               </span>
                             ) : null}
                           </div>

@@ -3781,7 +3781,7 @@ const modificationCatalog = [
   {
     code: "tyre_michelin_motorsport_slick",
     category: "TYRES",
-    brand: "Michelin Motorsport",
+    brand: "Michelin",
     name: "Tyre",
     variant: "Pilot Sport GT Slick",
     componentTypeCode: "tyre_slick",
@@ -3795,7 +3795,7 @@ const modificationCatalog = [
   {
     code: "tyre_pirelli_p_zero_slick",
     category: "TYRES",
-    brand: "Pirelli Motorsport",
+    brand: "Pirelli",
     name: "Tyre",
     variant: "P Zero Slick",
     componentTypeCode: "tyre_slick",
@@ -3823,7 +3823,7 @@ const modificationCatalog = [
   {
     code: "tyre_hankook_ventus_race_slick",
     category: "TYRES",
-    brand: "Hankook Motorsport",
+    brand: "Hankook",
     name: "Tyre",
     variant: "Ventus Race Slick",
     componentTypeCode: "tyre_slick",
@@ -3851,7 +3851,7 @@ const modificationCatalog = [
   {
     code: "tyre_michelin_motorsport_rain",
     category: "TYRES",
-    brand: "Michelin Motorsport",
+    brand: "Michelin",
     name: "Tyre",
     variant: "Pilot Sport GT Rain",
     componentTypeCode: "tyre_wet_racing",
@@ -3865,7 +3865,7 @@ const modificationCatalog = [
   {
     code: "tyre_pirelli_cinturato_rain",
     category: "TYRES",
-    brand: "Pirelli Motorsport",
+    brand: "Pirelli",
     name: "Tyre",
     variant: "Cinturato Rain",
     componentTypeCode: "tyre_wet_racing",
@@ -3893,7 +3893,7 @@ const modificationCatalog = [
   {
     code: "tyre_hankook_ventus_race_rain",
     category: "TYRES",
-    brand: "Hankook Motorsport",
+    brand: "Hankook",
     name: "Tyre",
     variant: "Ventus Race Rain",
     componentTypeCode: "tyre_wet_racing",
