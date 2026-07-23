@@ -4,6 +4,12 @@ import {
   buildStockRatingLeaderboard,
   type StockRatingLeaderboardCandidate,
 } from "../src/lib/stock-rating-leaderboard";
+import {
+  buildMobileRatingDiscoveryResponseBody,
+  mobileRatingDiscoveryContractHeader,
+  mobileRatingDiscoveryContractVersion,
+  mobileRatingDiscoveryJsonResponse,
+} from "../src/lib/mobile-rating-discovery-contract";
 
 void main().catch((error) => {
   console.error(error);
@@ -14,7 +20,74 @@ async function main() {
   validateLimitAndStableOrdering();
   validateResponseContract();
   validateRouteGuards();
+  await validateRatingDiscoveryContract();
   console.log("validate-mobile-stock-leaderboard passed");
+}
+
+async function validateRatingDiscoveryContract() {
+  const rating = {
+    overall: 82,
+    power: 84,
+    handling: 81,
+    braking: 80,
+    reliability: 78,
+    thermal: 79,
+    trackReadiness: 83,
+    status: "CALIBRATED" as const,
+  };
+  const body = buildMobileRatingDiscoveryResponseBody({
+    vehicleLabel: "Ford Focus RS Mk3",
+    vehicleSubtitle: "2.3 EcoBoost",
+    presentationLabel: "Track Build",
+    sourceLabel: "Örnek ATS Build",
+    stockRating: { ...rating, overall: 76 },
+    buildRating: rating,
+    overallDelta: 6,
+    formattedOverallDelta: "+6",
+    deltaRows: [
+      {
+        label: "Güç",
+        key: "power",
+        stock: 78,
+        build: 84,
+        delta: 6,
+        formattedDelta: "+6",
+        tone: "positive",
+      },
+    ],
+    parts: [
+      {
+        code: "synthetic-part",
+        label: "Sentetik parça",
+        categoryLabel: "Motor",
+        fitmentLabel: "Focus RS",
+      },
+    ],
+  });
+  assert.equal(body.data.demo?.vehicleLabel, "Ford Focus RS Mk3");
+  assert.equal(body.data.demo?.stockRating.overall, 76);
+  assert.equal(body.data.demo?.buildRating.overall, 82);
+  assert.equal("code" in (body.data.demo?.parts[0] ?? {}), false);
+
+  const response = mobileRatingDiscoveryJsonResponse(body);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.equal(
+    response.headers.get(mobileRatingDiscoveryContractHeader),
+    mobileRatingDiscoveryContractVersion,
+  );
+
+  const route = readFileSync(
+    "src/app/api/mobile/v1/rating-discovery/route.ts",
+    "utf8",
+  );
+  assert.match(route, /getFocusRsRatingDiscoveryDemo/);
+  assert.match(route, /export const runtime = "nodejs"/);
+  assert.doesNotMatch(route, /authenticateMobile/);
+
+  const discovery = readFileSync("src/lib/rating-discovery.ts", "utf8");
+  assert.match(discovery, /getCachedFocusRsRatingDiscoveryDemo = unstable_cache/);
+  assert.match(discovery, /rating-discovery-focus-rs-demo-v1/);
 }
 
 function validateLimitAndStableOrdering() {

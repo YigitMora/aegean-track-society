@@ -121,6 +121,14 @@
     "applications": {
       "header": "X-ATS-Applications-Contract",
       "supportedVersions": ["applications-v1"]
+    },
+    "eventDiscovery": {
+      "header": "X-ATS-Event-Discovery-Contract",
+      "supportedVersions": ["event-discovery-v1"]
+    },
+    "ratingDiscovery": {
+      "header": "X-ATS-Rating-Discovery-Contract",
+      "supportedVersions": ["rating-discovery-v1"]
     }
   }
 }

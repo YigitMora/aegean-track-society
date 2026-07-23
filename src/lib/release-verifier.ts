@@ -516,6 +516,7 @@ function buildUnauthenticatedProbes(
   const auth = contract.contracts.auth;
   const garage = contract.contracts.garageLifecycle;
   const applications = contract.contracts.applications;
+  const eventDiscovery = contract.contracts.eventDiscovery;
 
   return [
     {
@@ -550,6 +551,14 @@ function buildUnauthenticatedProbes(
       responseHeaders: {
         ...expectedHeaders(auth),
         ...expectedHeaders(applications),
+      },
+    },
+    {
+      path: "/api/mobile/v1/events/release-verifier",
+      requestHeaders: currentRequestHeader(eventDiscovery),
+      responseHeaders: {
+        ...expectedHeaders(auth),
+        ...expectedHeaders(eventDiscovery),
       },
     },
     {

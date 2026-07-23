@@ -6,6 +6,7 @@ import {
   presentEventWindow,
   presentApplicationStatus,
 } from "../src/lib/event-applications";
+import { getMobileEventDiscovery } from "../src/lib/mobile-event-discovery";
 import {
   kulaEventPublicWindow,
   kulaEventScheduleItems,
@@ -17,6 +18,12 @@ import {
   mobileApplicationsErrorResponse,
   MobileApplicationsError,
 } from "../src/lib/mobile-applications-contract";
+import {
+  mobileEventDiscoveryContractHeader,
+  mobileEventDiscoveryContractVersion,
+  mobileEventDiscoveryErrorResponse,
+  mobileEventDiscoveryJsonResponse,
+} from "../src/lib/mobile-event-discovery-contract";
 
 void main().catch((error) => {
   console.error(error);
@@ -27,10 +34,44 @@ async function main() {
   validateStrictApplicationInput();
   validateEligibilityBoundaries();
   validatePublicEventWindow();
+  await validateEventDiscovery();
   validateStatusPresentation();
   await validateStableErrorsAndHeaders();
   validateSourceSecurityAndTransactions();
-  console.log("validate-mobile-applications-api passed (85 assertions)");
+  console.log("validate-mobile-applications-api passed (100 assertions)");
+}
+
+async function validateEventDiscovery() {
+  const discovery = getMobileEventDiscovery("kula-mytrack-2026");
+  assert.ok(discovery.data.discovery);
+  const presentation = discovery.data.discovery;
+  assert.match(presentation.hero.imagePath, /^\/images\/events\//);
+  assert.equal(presentation.schedule[0]?.time, "08:30");
+  assert.equal(presentation.schedule.at(-1)?.time, "17:30");
+  assert.ok(presentation.experience.length > 0);
+  assert.ok(presentation.requirements.length > 0);
+  assert.ok(presentation.included.length > 0);
+  assert.ok(presentation.faq.length > 0);
+  assert.equal(getMobileEventDiscovery("future-event").data.discovery, null);
+
+  const success = mobileEventDiscoveryJsonResponse(discovery);
+  assert.equal(success.status, 200);
+  assert.equal(success.headers.get("cache-control"), "no-store");
+  assert.equal(
+    success.headers.get(mobileEventDiscoveryContractHeader),
+    mobileEventDiscoveryContractVersion,
+  );
+
+  const unauthorized = mobileEventDiscoveryErrorResponse(
+    new MobileAuthError("MOBILE_AUTH_INVALID_TOKEN"),
+  );
+  assert.equal(unauthorized.status, 401);
+  assert.equal(unauthorized.headers.get("www-authenticate"), "Bearer");
+  assert.equal(unauthorized.headers.get("cache-control"), "no-store");
+  assert.equal(
+    unauthorized.headers.get(mobileEventDiscoveryContractHeader),
+    mobileEventDiscoveryContractVersion,
+  );
 }
 
 function validatePublicEventWindow() {
@@ -207,7 +248,10 @@ function validateSourceSecurityAndTransactions() {
   for (const route of routes) {
     assert.match(route, /authenticateMobileMember\(request\)/);
     assert.match(route, /runtime = "nodejs"/);
-    assert.match(route, /mobileApplications(?:Json|Error)Response/);
+    assert.match(
+      route,
+      /mobile(?:Applications|EventDiscovery)(?:Json|Error)Response/,
+    );
   }
   const createRoute = routes[2];
   assert.ok(

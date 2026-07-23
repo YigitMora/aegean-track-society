@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FooterCredit } from "@/components/footer-credit";
 import { PublicNav } from "@/components/public-nav";
-import { kulaEventScheduleItems } from "@/lib/event-config";
+import { kulaEventPresentation } from "@/lib/event-presentation";
 import { prisma } from "@/lib/prisma";
 import { measureServerTiming } from "@/lib/server-timing";
 
@@ -59,51 +59,20 @@ function displayPackageName(name: string) {
 }
 
 const eventHeroImage = {
-  src: "/images/events/kula-mytrack-2026/event-hero-i20n.jpg",
-  alt: "Hyundai i20 N gün batımında Kula MyTrack pistinde",
+  src: kulaEventPresentation.hero.imagePath,
+  alt: kulaEventPresentation.hero.imageAlt,
   className: "object-[62%_50%] sm:object-[60%_50%] lg:object-[58%_52%]",
 } as const;
 
 const eventConceptImage = {
-  src: "/images/events/kula-mytrack-2026/event-gallery-ats-lineup.jpg",
-  alt: "IONIQ 5 N, Honda Civic Type R ve Hyundai i20 N Kula MyTrack alanında",
+  src: kulaEventPresentation.concept.imagePath,
+  alt: kulaEventPresentation.concept.imageAlt,
   className: "object-[50%_58%]",
 } as const;
 
-const eventExperienceItems = [
-  {
-    title: "Kontrollü seans yapısı",
-    body: "Katılım sınırlı tutulur; pist çıkışları gün içindeki operasyon akışına göre yönetilir.",
-  },
-  {
-    title: "Sürücü briefingi",
-    body: "Bayraklar, pist disiplini, geçiş yaklaşımı ve paddock akışı gün başlamadan netleşir.",
-  },
-  {
-    title: "Pist operasyonu",
-    body: "Kayıt, teknik gözlem ve QR check-in akışı sahada hızlı karar vermeyi destekler.",
-  },
-  {
-    title: "Topluluk deneyimi",
-    body: "Amaç tur zamanı kovalamak değil; doğru kültürle daha temiz, daha bilinçli sürüş zamanı üretmek.",
-  },
-] as const;
-
-const eventRequirements = [
-  "Geçerli sürücü belgesi ve tamamlanmış dijital kayıt gerekir.",
-  "Araç yol kullanımına uygun, emniyet kemerli ve temel mekanik kontrolleri yapılmış olmalıdır.",
-  "Lastik, fren ve sıvı durumu piste çıkış öncesi sürüşe uygun seviyede olmalıdır.",
-  "Kask, yolcu, yaş ve gürültü kuralları etkinlik öncesi operasyon duyurusunda kesinleştirilir.",
-  "Briefing ve pist görevlisi yönlendirmeleri tüm katılımcılar için bağlayıcıdır.",
-] as const;
-
-const eventIncludedItems = [
-  "Kula MyTrack pist erişimi",
-  "Sürücü briefingi ve operasyon akışı",
-  "Dijital kayıt ve QR check-in",
-  "Sınırlı katılımcı yapısına göre seans planı",
-  "Paddock yönlendirmesi ve etkinlik günü destek akışı",
-] as const;
+const eventExperienceItems = kulaEventPresentation.experience;
+const eventRequirements = kulaEventPresentation.requirements;
+const eventIncludedItems = kulaEventPresentation.included;
 
 const eventGalleryImages = [
   {
@@ -132,38 +101,7 @@ const eventGalleryImages = [
   },
 ] as const;
 
-const eventFaqItems = [
-  {
-    question: "Kimler katılabilir?",
-    answer:
-      "Dijital kaydı tamamlanan, geçerli sürücü belgesine sahip ve etkinlik operasyon kurallarını kabul eden sürücüler katılabilir.",
-  },
-  {
-    question: "Kask gerekli mi?",
-    answer:
-      "Kask ve ekipman kuralları etkinlik öncesi operasyon duyurusunda netleştirilir; duyurudaki kural piste çıkış için esas alınır.",
-  },
-  {
-    question: "Araçta modifikasyon şart mı?",
-    answer:
-      "Hayır. Yol otomobiliyle katılım mümkündür; önemli olan aracın bakımlı, güvenli ve pist akışına uygun durumda olmasıdır.",
-  },
-  {
-    question: "Yanımda misafir getirebilir miyim?",
-    answer:
-      "Misafir ve yolcu kuralları kontenjan, paddock düzeni ve güvenlik planına göre etkinlik öncesi duyurulur.",
-  },
-  {
-    question: "Ödeme nasıl yapılır?",
-    answer:
-      "Başvuru alındıktan sonra ödeme ve kesin onay süreci ekip tarafından manuel olarak tamamlanır.",
-  },
-  {
-    question: "İptal veya hava şartları nasıl yönetilir?",
-    answer:
-      "İptal, iade ve hava şartlarına bağlı operasyon kararları etkinlik koşulları ve güncel duyuru üzerinden paylaşılır.",
-  },
-] as const;
+const eventFaqItems = kulaEventPresentation.faq;
 
 export default async function EventDetailPage({ params }: EventPageProps) {
   const { slug } = await params;
@@ -250,13 +188,13 @@ export default async function EventDetailPage({ params }: EventPageProps) {
                 KULA MYTRACK
               </p>
               <h1 className="mt-5 max-w-2xl text-5xl font-black leading-[0.95] text-white sm:text-6xl lg:text-7xl">
-                Kontrollü pist zamanı. Gerçek sürüş deneyimi.
+                {kulaEventPresentation.hero.title}
               </h1>
               <p className="mt-5 text-xl font-black text-ats-text">
                 {eventDate ? formatShortDate(eventDate) : "20 Eylül 2026"}
               </p>
               <p className="mt-5 max-w-xl text-base leading-7 text-ats-text/82 sm:text-lg sm:leading-8">
-                Limitlerini güvenli, disiplinli ve doğru toplulukla keşfet.
+                {kulaEventPresentation.hero.body}
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
@@ -292,13 +230,10 @@ export default async function EventDetailPage({ params }: EventPageProps) {
               Etkinlik konsepti
             </p>
             <h2 className="mt-4 text-4xl font-black leading-tight text-ats-text sm:text-5xl">
-              Kalabalık değil, kontrollü pist zamanı.
+              {kulaEventPresentation.concept.title}
             </h2>
             <p className="mt-6 text-base leading-8 text-ats-muted">
-              Kula MyTrack günü; sınırlı katılım, net briefing, düzenli seans
-              akışı ve güvenli sürüş kültürü üzerine kurulur. Amaç pistte daha
-              çok otomobil göstermek değil, her sürücünün daha temiz ve daha
-              bilinçli zaman geçirmesini sağlamaktır.
+              {kulaEventPresentation.concept.body}
             </p>
           </div>
           <div className="relative aspect-[16/10] overflow-hidden rounded-md border border-ats-border bg-ats-surface">
@@ -352,7 +287,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
             </p>
           </div>
           <ol className="space-y-0">
-            {kulaEventScheduleItems.map((item) => (
+            {kulaEventPresentation.schedule.map((item) => (
               <li
                 key={item.time}
                 className="grid gap-4 border-t border-ats-border py-5 sm:grid-cols-[6rem_1fr]"
