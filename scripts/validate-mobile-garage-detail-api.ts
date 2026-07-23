@@ -560,6 +560,7 @@ function validateSafeResponses() {
         name: "Pist Balatası",
         variant: null,
         description: "Safe description",
+        tyre: null,
         status: "AVAILABLE",
         reasonCode: null,
         reason: null,

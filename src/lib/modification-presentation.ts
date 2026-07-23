@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
 import type { ModificationCategory } from "@prisma/client";
+import {
+  visibleTyreClassForDefinition,
+  visibleTyreClassLabel,
+} from "@/lib/tyre-catalog";
 
 const modificationTypeLabels: Record<string, string> = {
   brake_pad: "Fren Balatası",
@@ -132,21 +136,38 @@ type ModificationTypeDefinition = {
   category: ModificationCategory;
   componentTypeCode?: string | null;
   name: string;
+  tyreSpecification?: {
+    tyreClass: string;
+  } | null;
 };
 
 const mobileCatalogKeyNamespace = "ats-mobile-build-v1";
 
 export function modificationTypeLabel(
-  definition: Pick<ModificationTypeDefinition, "componentTypeCode" | "name">,
+  definition: ModificationTypeDefinition,
 ) {
+  const visibleTyreClass = visibleTyreClassForDefinition(definition);
+
+  if (visibleTyreClass) {
+    return visibleTyreClassLabel(visibleTyreClass) ?? definition.name;
+  }
+
   return definition.componentTypeCode
     ? modificationTypeLabels[definition.componentTypeCode] ?? definition.name
     : definition.name;
 }
 
+export function modificationTypeKey(definition: ModificationTypeDefinition) {
+  const visibleTyreClass = visibleTyreClassForDefinition(definition);
+
+  return visibleTyreClass
+    ? `tyre:${visibleTyreClass}`
+    : definition.componentTypeCode ??
+        definition.name.toLocaleLowerCase("tr-TR");
+}
+
 export function modificationTypeGroup(definition: ModificationTypeDefinition) {
-  const typeKey =
-    definition.componentTypeCode ?? definition.name.toLocaleLowerCase("tr-TR");
+  const typeKey = modificationTypeKey(definition);
 
   return {
     key: opaqueMobileCatalogKey("group", `${definition.category}:${typeKey}`),

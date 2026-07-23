@@ -65,6 +65,14 @@ import {
   vehicleRatingDisclaimer,
 } from "@/lib/vehicle-performance-rating";
 import {
+  tyreProductModelLabel,
+  tyreRoadUseLabel,
+  tyreSurfaceIntentLabel,
+  visibleTyreClassBadgeLabel,
+  visibleTyreClassForDefinition,
+  visibleTyreClassLabel,
+} from "@/lib/tyre-catalog";
+import {
   buildVehicleImagePath,
   createAccessTokenStorageClient,
   createOwnedVehicleImageSignedUrl,
@@ -121,6 +129,13 @@ const definitionRuleSelect = {
       hardwareRequirementNote: true,
       transmissionLimitNote: true,
       coolingRecommendationNote: true,
+    },
+  },
+  tyreSpecification: {
+    select: {
+      active: true,
+      tyreClass: true,
+      roadLegal: true,
     },
   },
   compatibilities: {
@@ -1083,6 +1098,7 @@ function serializeCatalogPart({
         ? null
         : vehicleBuildResultLabel(availability.code, availability);
   const tuning = definition.tuningPackageSpecification;
+  const visibleTyreClass = visibleTyreClassForDefinition(definition);
 
   return {
     id: definition.id,
@@ -1097,11 +1113,25 @@ function serializeCatalogPart({
       definition,
       componentSlotKeyForDefinition(definition),
     ),
-    label: formatModificationDefinition(definition),
+    label:
+      definition.category === "TYRES"
+        ? tyreProductModelLabel(definition)
+        : formatModificationDefinition(definition),
     brand: definition.brand,
     name: definition.name,
     variant: definition.variant,
     description: definition.description,
+    tyre:
+      visibleTyreClass && definition.tyreSpecification?.active
+        ? {
+            classLabel:
+              visibleTyreClassLabel(visibleTyreClass) ?? "Lastik",
+            badgeLabel:
+              visibleTyreClassBadgeLabel(visibleTyreClass) ?? "Lastik",
+            roadUseLabel: tyreRoadUseLabel(definition),
+            surfaceIntentLabel: tyreSurfaceIntentLabel(definition),
+          }
+        : null,
     status,
     reasonCode,
     reason,

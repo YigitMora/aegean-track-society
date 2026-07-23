@@ -1,3 +1,5 @@
+import { tyreManufacturerLabel } from "@/lib/tyre-catalog";
+
 export type ModificationCatalogNodeInput = {
   active?: boolean;
   code?: string | null;
@@ -248,8 +250,12 @@ export function isSelectableModificationLeaf(
 }
 
 export function modificationManufacturerLabel(
-  definition: Pick<ModificationCatalogNodeInput, "brand">,
+  definition: Pick<ModificationCatalogNodeInput, "brand" | "category">,
 ) {
+  if (definition.category === "TYRES") {
+    return tyreManufacturerLabel(definition);
+  }
+
   const brand = definition.brand?.trim();
 
   return brand &&

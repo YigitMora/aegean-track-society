@@ -97,6 +97,12 @@ export type MobileGarageCatalogPart = {
   name: string;
   variant: string | null;
   description: string | null;
+  tyre: {
+    classLabel: string;
+    badgeLabel: string;
+    roadUseLabel: string;
+    surfaceIntentLabel: string;
+  } | null;
   status: MobileGarageCatalogPartStatus;
   reasonCode: string | null;
   reason: string | null;

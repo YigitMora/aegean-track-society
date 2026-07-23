@@ -24,6 +24,7 @@ export type ModificationCatalogGroup = {
       code?: string | null;
       definitionId: string;
       label: string;
+      productLabel: string;
       manufacturerLabel: string;
       brand: string | null;
       name: string;
@@ -36,6 +37,12 @@ export type ModificationCatalogGroup = {
       sportSpringSpecification?: SportSpringSpecificationSummary | null;
       bigBrakeKitSpecification?: BigBrakeKitSpecificationSummary | null;
       tyreSpecification?: TyreSpecificationSummary | null;
+      tyrePresentation?: {
+        classLabel: string;
+        badgeLabel: string;
+        roadUseLabel: string;
+        surfaceIntentLabel: string;
+      } | null;
       wheelSpecification?: WheelSpecificationSummary | null;
       tuningPackageSpecification?: TuningPackageSpecificationSummary | null;
       compatibilityLabel: string;
@@ -358,8 +365,12 @@ export function VehicleModificationBatchSelector({
         />
 
         <SelectField
-          label="Alt kategori"
-          placeholder="Alt kategori seçin"
+          label={selectedCategory === "TYRES" ? "Lastik sınıfı" : "Alt kategori"}
+          placeholder={
+            selectedCategory === "TYRES"
+              ? "Lastik sınıfı seçin"
+              : "Alt kategori seçin"
+          }
           value={selectedTypeKey}
           disabled={!selectedGroup}
           onChange={(value) => {
@@ -386,8 +397,12 @@ export function VehicleModificationBatchSelector({
         />
 
         <SelectField
-          label="Ürün / versiyon"
-          placeholder="Ürün veya versiyon seçin"
+          label={selectedCategory === "TYRES" ? "Model" : "Ürün / versiyon"}
+          placeholder={
+            selectedCategory === "TYRES"
+              ? "Model seçin"
+              : "Ürün veya versiyon seçin"
+          }
           value={selectedDefinitionId}
           disabled={!selectedManufacturer}
           onChange={setSelectedDefinitionId}
@@ -605,7 +620,9 @@ function CatalogOptionDetails({
     const spec = option.tyreSpecification;
 
     details.push(
-      ["Sınıf", tyreClassLabel(spec.tyreClass)],
+      ["Lastik sınıfı", option.tyrePresentation?.classLabel ?? tyreClassLabel(spec.tyreClass)],
+      ["Yol durumu", option.tyrePresentation?.roadUseLabel ?? "Belirsiz"],
+      ["Zemin", option.tyrePresentation?.surfaceIntentLabel ?? "Belirsiz"],
       ["Kuru", spec.dryGrip],
       ["Islak", spec.wetGrip],
       ["Soğuk", spec.coldPerformance],
@@ -733,6 +750,19 @@ function CatalogOptionDetails({
 
   return (
     <div className="rounded-md border border-ats-border bg-ats-black px-4 py-3">
+      {option.tyrePresentation ? (
+        <div className="mb-3 flex flex-wrap gap-2 text-xs font-black">
+          <span className="rounded-sm border border-ats-blue/40 bg-ats-blue/10 px-2 py-1 text-ats-blue">
+            {option.tyrePresentation.badgeLabel}
+          </span>
+          <span className="rounded-sm border border-ats-border px-2 py-1 text-ats-text">
+            {option.tyrePresentation.roadUseLabel}
+          </span>
+          <span className="rounded-sm border border-ats-border px-2 py-1 text-ats-text">
+            {option.tyrePresentation.surfaceIntentLabel}
+          </span>
+        </div>
+      ) : null}
       <dl className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold text-ats-muted">
         {details.map(([label, value]) => (
           <div key={label} className="flex items-center gap-1.5">
@@ -1030,7 +1060,7 @@ function manufacturerKey(
 function productOptionLabel(
   option: ModificationCatalogGroup["types"][number]["options"][number],
 ) {
-  return [option.name, option.variant].filter(Boolean).join(" / ");
+  return option.productLabel;
 }
 
 function optionByDefinitionId(

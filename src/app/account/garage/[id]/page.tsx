@@ -29,7 +29,10 @@ import {
   modificationManufacturerLabel,
   modificationRecommendationGroups,
 } from "@/lib/modification-catalog-metadata";
-import { modificationTypeLabel } from "@/lib/modification-presentation";
+import {
+  modificationTypeKey,
+  modificationTypeLabel,
+} from "@/lib/modification-presentation";
 import { prisma } from "@/lib/prisma";
 import { measureServerTiming } from "@/lib/server-timing";
 import {
@@ -45,6 +48,14 @@ import {
 } from "@/lib/vehicle-build-rules";
 import { createOwnedVehicleImageSignedUrl } from "@/lib/vehicle-images";
 import { calculateVehiclePerformanceRating } from "@/lib/vehicle-performance-rating";
+import {
+  tyreProductModelLabel,
+  tyreRoadUseLabel,
+  tyreSurfaceIntentLabel,
+  visibleTyreClassBadgeLabel,
+  visibleTyreClassForDefinition,
+  visibleTyreClassLabel,
+} from "@/lib/tyre-catalog";
 
 type EditVehiclePageProps = {
   params: Promise<{
@@ -1076,9 +1087,9 @@ function buildCatalogGroups({
       continue;
     }
 
-    const typeCode =
-      definition.componentTypeCode ?? definition.name.toLocaleLowerCase("tr-TR");
+    const typeCode = modificationTypeKey(definition);
     const typeKey = `${definition.category}:${typeCode}`;
+    const visibleTyreClass = visibleTyreClassForDefinition(definition);
     const availability = evaluateModificationAvailability({
       vehicle,
       definition,
@@ -1113,6 +1124,10 @@ function buildCatalogGroups({
       code: definition.code,
       definitionId: definition.id,
       label: optionLabelForDefinition(definition),
+      productLabel:
+        definition.category === "TYRES"
+          ? tyreProductModelLabel(definition)
+          : [definition.name, definition.variant].filter(Boolean).join(" / "),
       manufacturerLabel: modificationManufacturerLabel(definition),
       brand: definition.brand,
       name: definition.name,
@@ -1131,6 +1146,16 @@ function buildCatalogGroups({
         : null,
       tyreSpecification: definition.tyreSpecification?.active
         ? definition.tyreSpecification
+        : null,
+      tyrePresentation: visibleTyreClass
+        ? {
+            classLabel:
+              visibleTyreClassLabel(visibleTyreClass) ?? "Lastik",
+            badgeLabel:
+              visibleTyreClassBadgeLabel(visibleTyreClass) ?? "Lastik",
+            roadUseLabel: tyreRoadUseLabel(definition),
+            surfaceIntentLabel: tyreSurfaceIntentLabel(definition),
+          }
         : null,
       wheelSpecification: definition.wheelSpecification?.active
         ? {
