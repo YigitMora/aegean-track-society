@@ -241,6 +241,11 @@ export const singleInstanceComponentTypes = new Set([
   "sport_springs",
   "coilover",
   "damper",
+  "caster_adjustment",
+  "roll_center_correction",
+  "bump_steer_correction",
+  "subframe_bushing",
+  "spherical_bearing",
   "anti_roll_bar_front",
   "anti_roll_bar_rear",
   "camber_plate",
@@ -253,6 +258,7 @@ export const singleInstanceComponentTypes = new Set([
   "brake_pad",
   "brake_disc",
   "brake_cooling",
+  "master_cylinder_brace",
   "brake_fluid",
   "braided_brake_line",
   "tyre_touring",
@@ -269,6 +275,11 @@ export const singleInstanceComponentTypes = new Set([
   "front_splitter",
   "rear_diffuser",
   "rear_wing",
+  "rear_spoiler",
+  "flat_floor",
+  "canard",
+  "hood_vent",
+  "functional_underbody_aero",
   "aero_kit",
   "ecu_unlock",
   "ecu_software",
@@ -285,6 +296,27 @@ export const singleInstanceComponentTypes = new Set([
   "engine_mount",
   "transmission_mount",
   "differential_mount",
+  "rear_seat_removal",
+  "lightweight_battery",
+  "lightweight_exhaust",
+  "fixed_back_seat",
+  "carbon_panel",
+  "interior_removal",
+  "sound_deadening_removal",
+  "bucket_seat",
+  "race_seat",
+  "harness",
+  "harness_bar",
+  "roll_bar",
+  "half_roll_cage",
+  "full_roll_cage",
+  "fire_extinguisher",
+  "fire_suppression",
+  "tow_strap",
+  "battery_cutoff",
+  "hans_setup",
+  "track_number_mount",
+  "timing_transponder",
 ]);
 
 const tyreSlotComponentTypes = new Set([
@@ -310,6 +342,16 @@ const turboSlotComponentTypes = new Set([
   "turbocharger_upgrade",
   "twin_turbo_upgrade",
   "supercharger_upgrade",
+]);
+const seatSlotComponentTypes = new Set([
+  "bucket_seat",
+  "fixed_back_seat",
+  "race_seat",
+]);
+const rollProtectionSlotComponentTypes = new Set([
+  "roll_bar",
+  "half_roll_cage",
+  "full_roll_cage",
 ]);
 
 export function componentSlotKeyForDefinition(definition: {
@@ -339,6 +381,14 @@ export function componentSlotKeyForDefinition(definition: {
 
   if (turboSlotComponentTypes.has(componentTypeCode)) {
     return "turbo";
+  }
+
+  if (seatSlotComponentTypes.has(componentTypeCode)) {
+    return "driver_seat";
+  }
+
+  if (rollProtectionSlotComponentTypes.has(componentTypeCode)) {
+    return "roll_protection";
   }
 
   return componentTypeCode;

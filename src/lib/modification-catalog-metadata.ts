@@ -122,6 +122,83 @@ const modificationRecommendationGroupsByCode: Readonly<
       ],
     },
   ],
+  suspension_coilover_track_vehicle_specific: [
+    {
+      description:
+        "Ölçülmüş geometri düzeltmesi, kaster ve bump-steer kontrolü önerilir.",
+      optionCodes: [
+        "suspension_caster_adjustment_vehicle_specific",
+        "suspension_roll_center_correction_vehicle_specific",
+        "suspension_bump_steer_correction_vehicle_specific",
+      ],
+    },
+  ],
+  suspension_coilover_three_way_competition_vehicle_specific: [
+    {
+      description:
+        "Profesyonel geometri, mafsal ve alt şasi desteği önerilir.",
+      optionCodes: [
+        "suspension_roll_center_correction_vehicle_specific",
+        "suspension_bump_steer_correction_vehicle_specific",
+        "suspension_subframe_bushings_vehicle_specific",
+        "suspension_spherical_bearings_vehicle_specific",
+      ],
+    },
+  ],
+  brakes_pads_track_day_vehicle_specific: [
+    {
+      description:
+        "Yüksek sıcaklık fren hidroliği ve fren soğutma kanalları önerilir.",
+      optionCodes: [
+        "brakes_fluid_high_temperature_vehicle_specific",
+        "brakes_cooling_ducts_vehicle_specific",
+      ],
+    },
+  ],
+  brakes_pads_endurance_vehicle_specific: [
+    {
+      description:
+        "Yüksek sıcaklık fren hidroliği, iki parçalı disk ve fren soğutması önerilir.",
+      optionCodes: [
+        "brakes_fluid_high_temperature_vehicle_specific",
+        "brakes_rotors_two_piece_vehicle_specific",
+        "brakes_cooling_ducts_vehicle_specific",
+      ],
+    },
+  ],
+  brakes_big_brake_kit_vehicle_specific: [
+    {
+      description:
+        "Uyumlu balata, yüksek sıcaklık hidroliği ve fren soğutması önerilir.",
+      optionCodes: [
+        "brakes_pads_track_day_vehicle_specific",
+        "brakes_fluid_high_temperature_vehicle_specific",
+        "brakes_cooling_ducts_vehicle_specific",
+      ],
+    },
+  ],
+  aero_functional_front_splitter_technical: [
+    {
+      description: "Ön/arka aero dengesi için işlevsel arka kanat önerilir.",
+      optionCodes: ["aero_rear_wing_adjustable_technical"],
+    },
+  ],
+  aero_rear_wing_adjustable_technical: [
+    {
+      description: "Ön/arka aero dengesi için işlevsel ön splitter önerilir.",
+      optionCodes: ["aero_functional_front_splitter_technical"],
+    },
+  ],
+  safety_harness_six_point_technical: [
+    {
+      description:
+        "Uyumlu baş-boyun koruma sistemi ve yangın hazırlığı önerilir.",
+      optionCodes: [
+        "safety_hans_setup_technical",
+        "safety_fire_extinguisher_vehicle_specific",
+      ],
+    },
+  ],
 };
 
 export function modificationRecommendationGroups(code: string | null | undefined) {
