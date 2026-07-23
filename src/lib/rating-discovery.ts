@@ -680,15 +680,29 @@ function homepageStateWithPrimaryCta({
   };
 }
 
-async function getFocusRsRatingDiscoveryDemo(): Promise<RatingDiscoveryDemo | null> {
-  return getVehicleRatingDiscoveryDemo({
-    vehicleCode: "ford_focus_rs_mk3",
-    vehicleLabel: "Ford Focus RS Mk3",
-    vehicleSubtitle: "2.3 EcoBoost",
-    presentationLabel: "Track Build",
-    sourceLabel: "Örnek ATS Build",
-    candidateCodeGroups: focusRsDemoCandidateCodeGroups,
-  });
+const getCachedFocusRsRatingDiscoveryDemo = unstable_cache(
+  async (): Promise<RatingDiscoveryDemo | null> =>
+    getVehicleRatingDiscoveryDemo({
+      vehicleCode: "ford_focus_rs_mk3",
+      vehicleLabel: "Ford Focus RS Mk3",
+      vehicleSubtitle: "2.3 EcoBoost",
+      presentationLabel: "Track Build",
+      sourceLabel: "Örnek ATS Build",
+      candidateCodeGroups: focusRsDemoCandidateCodeGroups,
+    }),
+  ["rating-discovery-focus-rs-demo-v1"],
+  {
+    revalidate: 60 * 60 * 6,
+    tags: [
+      "rating-discovery-focus-rs-demo",
+      "vehicle-definitions",
+      "modification-definitions",
+    ],
+  },
+);
+
+export function getFocusRsRatingDiscoveryDemo() {
+  return getCachedFocusRsRatingDiscoveryDemo();
 }
 
 export async function getFl5AccountRatingDemo(): Promise<RatingDiscoveryDemo | null> {

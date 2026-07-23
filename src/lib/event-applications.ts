@@ -158,6 +158,7 @@ export async function getMobileEvent(
   memberUser: AtsMemberUser,
   slug: string,
   now = new Date(),
+  includeCapacityTotal = false,
 ) {
   if (slug !== mobileEventSlug) {
     throw new MobileApplicationsError("MOBILE_APPLICATIONS_EVENT_NOT_FOUND");
@@ -170,7 +171,13 @@ export async function getMobileEvent(
 
   return {
     data: {
-      event: presentEvent(event, memberUser, now, true),
+      event: presentEvent(
+        event,
+        memberUser,
+        now,
+        true,
+        includeCapacityTotal,
+      ),
     },
   };
 }
@@ -586,6 +593,7 @@ function presentEvent(
   memberUser: AtsMemberUser,
   now: Date,
   includeVehicles: boolean,
+  includeCapacityTotal = false,
 ) {
   const { event, eventPackage, reservedCount, activeVehicles, existingApplication } =
     context;
@@ -620,6 +628,9 @@ function presentEvent(
       state: registrationState(eligibility.reasons),
       deadline: event.startsAt.toISOString(),
       capacity: capacityState(eventPackage?.capacity ?? null, reservedCount),
+      ...(includeCapacityTotal
+        ? { totalCapacity: presentCapacityTotal(eventPackage?.capacity ?? null) }
+        : {}),
     },
     package: eventPackage
       ? {
@@ -650,6 +661,10 @@ function presentEvent(
         }
       : {}),
   };
+}
+
+export function presentCapacityTotal(capacity: number | null) {
+  return capacity && capacity > 0 ? capacity : null;
 }
 
 function presentApplication(registration: ApplicationRecord, includePrivate: boolean) {

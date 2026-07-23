@@ -5,6 +5,10 @@ import {
   mobileApplicationsContractVersion,
 } from "../src/lib/mobile-applications-contract";
 import {
+  mobileEventDiscoveryContractHeader,
+  mobileEventDiscoveryContractVersion,
+} from "../src/lib/mobile-event-discovery-contract";
+import {
   mobileAuthContractHeader,
   mobileAuthContractVersion,
 } from "../src/lib/mobile-auth-contract";
@@ -73,14 +77,14 @@ const result = await verifyProductionRelease({
   ...verificationOptions(happy.fetch),
 });
 assert.equal(result.expectedSha, expectedSha);
-assert.equal(result.verifiedProbeCount, 7);
+assert.equal(result.verifiedProbeCount, 8);
 assert.equal(result.deploymentOrigin, `https://${deploymentHost}`);
 assert.equal(result.canonicalOrigin, `https://${canonicalHost}`);
 assert.equal(canonicalBackendProductionOrigin, `https://${canonicalHost}`);
 assert.equal(expectedBackendRepositoryId, 1293619947);
 assert.equal(trustedVercelActorId, 35613825);
 assert.deepEqual(happy.githubDeploymentPages, [1]);
-assert.equal(happy.productRequests.length, 9);
+assert.equal(happy.productRequests.length, 10);
 assert.ok(happy.productRequests.every((request) => request.method === "GET"));
 assert.ok(
   happy.productRequests.every(
@@ -968,6 +972,10 @@ function createMockFetch(options?: MockFetchOptions) {
       url.pathname === "/api/mobile/v1/applications"
     ) {
       headers[mobileApplicationsContractHeader] = mobileApplicationsContractVersion;
+    }
+    if (url.pathname === "/api/mobile/v1/events/release-verifier") {
+      headers[mobileEventDiscoveryContractHeader] =
+        mobileEventDiscoveryContractVersion;
     }
 
     const response = jsonResponse(

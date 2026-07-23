@@ -3,9 +3,11 @@ import { readFileSync } from "node:fs";
 import {
   deriveMobileEventEligibility,
   parseMobileApplicationInput,
+  presentCapacityTotal,
   presentEventWindow,
   presentApplicationStatus,
 } from "../src/lib/event-applications";
+import { getMobileEventDiscovery } from "../src/lib/mobile-event-discovery";
 import {
   kulaEventPublicWindow,
   kulaEventScheduleItems,
@@ -17,6 +19,12 @@ import {
   mobileApplicationsErrorResponse,
   MobileApplicationsError,
 } from "../src/lib/mobile-applications-contract";
+import {
+  mobileEventDiscoveryContractHeader,
+  mobileEventDiscoveryContractVersion,
+  mobileEventDiscoveryErrorResponse,
+  mobileEventDiscoveryJsonResponse,
+} from "../src/lib/mobile-event-discovery-contract";
 
 void main().catch((error) => {
   console.error(error);
@@ -26,11 +34,52 @@ void main().catch((error) => {
 async function main() {
   validateStrictApplicationInput();
   validateEligibilityBoundaries();
+  validateCapacityPresentation();
   validatePublicEventWindow();
+  await validateEventDiscovery();
   validateStatusPresentation();
   await validateStableErrorsAndHeaders();
   validateSourceSecurityAndTransactions();
-  console.log("validate-mobile-applications-api passed (85 assertions)");
+  console.log("validate-mobile-applications-api passed (103 assertions)");
+}
+
+function validateCapacityPresentation() {
+  assert.equal(presentCapacityTotal(20), 20);
+  assert.equal(presentCapacityTotal(0), null);
+  assert.equal(presentCapacityTotal(null), null);
+}
+
+async function validateEventDiscovery() {
+  const discovery = getMobileEventDiscovery("kula-mytrack-2026");
+  assert.ok(discovery.data.discovery);
+  const presentation = discovery.data.discovery;
+  assert.match(presentation.hero.imagePath, /^\/images\/events\//);
+  assert.equal(presentation.schedule[0]?.time, "08:30");
+  assert.equal(presentation.schedule.at(-1)?.time, "17:30");
+  assert.ok(presentation.experience.length > 0);
+  assert.ok(presentation.requirements.length > 0);
+  assert.ok(presentation.included.length > 0);
+  assert.ok(presentation.faq.length > 0);
+  assert.equal(getMobileEventDiscovery("future-event").data.discovery, null);
+
+  const success = mobileEventDiscoveryJsonResponse(discovery);
+  assert.equal(success.status, 200);
+  assert.equal(success.headers.get("cache-control"), "no-store");
+  assert.equal(
+    success.headers.get(mobileEventDiscoveryContractHeader),
+    mobileEventDiscoveryContractVersion,
+  );
+
+  const unauthorized = mobileEventDiscoveryErrorResponse(
+    new MobileAuthError("MOBILE_AUTH_INVALID_TOKEN"),
+  );
+  assert.equal(unauthorized.status, 401);
+  assert.equal(unauthorized.headers.get("www-authenticate"), "Bearer");
+  assert.equal(unauthorized.headers.get("cache-control"), "no-store");
+  assert.equal(
+    unauthorized.headers.get(mobileEventDiscoveryContractHeader),
+    mobileEventDiscoveryContractVersion,
+  );
 }
 
 function validatePublicEventWindow() {
@@ -193,6 +242,9 @@ async function validateStableErrorsAndHeaders() {
 
 function validateSourceSecurityAndTransactions() {
   const service = source("src/lib/event-applications.ts");
+  const eventDetailRoute = source(
+    "src/app/api/mobile/v1/events/[slug]/route.ts",
+  );
   const manualConfirmation = source("src/lib/manual-payment-confirmation.ts");
   const webRoute = source("src/app/api/registrations/route.ts");
   const routes = [
@@ -207,7 +259,10 @@ function validateSourceSecurityAndTransactions() {
   for (const route of routes) {
     assert.match(route, /authenticateMobileMember\(request\)/);
     assert.match(route, /runtime = "nodejs"/);
-    assert.match(route, /mobileApplications(?:Json|Error)Response/);
+    assert.match(
+      route,
+      /mobile(?:Applications|EventDiscovery)(?:Json|Error)Response/,
+    );
   }
   const createRoute = routes[2];
   assert.ok(
@@ -224,6 +279,10 @@ function validateSourceSecurityAndTransactions() {
   assert.match(service, /TransactionIsolationLevel\.Serializable/);
   assert.match(service, /error\.code === "P2034"/);
   assert.match(service, /tx\.registration\.count/);
+  assert.match(
+    eventDetailRoute,
+    /getMobileEvent\([\s\S]*discoveryRequested[\s\S]*\)/,
+  );
   assert.match(service, /tx\.registration\.create/);
   assert.match(service, /tx\.payment\.create/);
   assert.match(service, /provider: "MANUAL"/);
