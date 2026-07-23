@@ -1,8 +1,19 @@
-import { normalizeTurkishPhone } from "@/lib/registration-validation";
+import {
+  isCanonicalTurkishMobilePhone,
+  normalizeTurkishPhone,
+} from "@/lib/registration-validation";
 
 const requiredTextMinLength = 2;
 const maxTextLength = 120;
-const normalizedTurkishMobileRegex = /^\+90 5\d{2} \d{3} \d{2} \d{2}$/;
+
+type NormalizedOptionalTextResult =
+  | {
+      ok: true;
+      value: string | null;
+    }
+  | {
+      ok: false;
+    };
 
 export type MemberProfileInput = {
   fullName: string;
@@ -63,7 +74,7 @@ export function parseMemberProfileForm(
     formData.get("memberKvkkAccepted") === "on" &&
     formData.get("memberTermsAccepted") === "on";
 
-  if (!fullName || !phone) {
+  if (!fullName || !phone || !displayName.ok) {
     return {
       ok: false,
     };
@@ -81,7 +92,7 @@ export function parseMemberProfileForm(
     data: {
       fullName,
       phone,
-      displayName,
+      displayName: displayName.value,
       memberMarketingConsent,
     },
   };
@@ -108,25 +119,46 @@ export function isMemberProfileComplete(member: {
 function normalizeRequiredText(value: FormDataEntryValue | null) {
   const normalized = normalizeOptionalText(value);
 
-  if (!normalized || normalized.length < requiredTextMinLength) {
+  if (
+    !normalized.ok ||
+    !normalized.value ||
+    normalized.value.length < requiredTextMinLength
+  ) {
     return null;
   }
 
-  return normalized;
+  return normalized.value;
 }
 
-function normalizeOptionalText(value: FormDataEntryValue | null) {
+function normalizeOptionalText(
+  value: FormDataEntryValue | null,
+): NormalizedOptionalTextResult {
   if (typeof value !== "string") {
-    return null;
+    return {
+      ok: true,
+      value: null,
+    };
   }
 
   const normalized = value.trim().replace(/\s+/g, " ");
 
   if (!normalized) {
-    return null;
+    return {
+      ok: true,
+      value: null,
+    };
   }
 
-  return normalized.slice(0, maxTextLength);
+  if (normalized.length > maxTextLength) {
+    return {
+      ok: false,
+    };
+  }
+
+  return {
+    ok: true,
+    value: normalized,
+  };
 }
 
 function normalizeRequiredTurkishPhone(value: FormDataEntryValue | null) {
@@ -142,7 +174,7 @@ function normalizeOptionalTurkishPhone(value: FormDataEntryValue | null) {
 
   const normalized = normalizeTurkishPhone(value);
 
-  if (!normalizedTurkishMobileRegex.test(normalized)) {
+  if (!isCanonicalTurkishMobilePhone(normalized)) {
     return null;
   }
 

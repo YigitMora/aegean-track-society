@@ -2,7 +2,11 @@ import { Prisma } from "@prisma/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { normalizeEmail, normalizeTurkishPhone } from "@/lib/registration-validation";
+import {
+  isCanonicalTurkishMobilePhone,
+  normalizeEmail,
+  normalizeTurkishPhone,
+} from "@/lib/registration-validation";
 import { prisma } from "@/lib/prisma";
 import { measureServerTiming } from "@/lib/server-timing";
 import { createOptionalSupabaseServerClient, createSupabaseServerClient } from "@/lib/supabase/server";
@@ -12,7 +16,6 @@ const uuidRegex =
 const maxReturnToLength = 2048;
 const maxMetadataFutureSkewMs = 5 * 60 * 1000;
 const earliestReasonableConsentAt = new Date("2025-01-01T00:00:00.000Z");
-const normalizedTurkishMobileRegex = /^\+90 5\d{2} \d{3} \d{2} \d{2}$/;
 const signupMetadataKeys = {
   fullName: "atsFullName",
   phone: "atsPhone",
@@ -386,7 +389,9 @@ function normalizeMetadataText(value: unknown) {
 
   const normalized = value.trim().replace(/\s+/g, " ");
 
-  return normalized.length >= 2 ? normalized.slice(0, 120) : null;
+  return normalized.length >= 2 && normalized.length <= 120
+    ? normalized
+    : null;
 }
 
 function normalizeMetadataPhone(value: unknown) {
@@ -396,7 +401,7 @@ function normalizeMetadataPhone(value: unknown) {
 
   const normalized = normalizeTurkishPhone(value);
 
-  return normalizedTurkishMobileRegex.test(normalized) ? normalized : null;
+  return isCanonicalTurkishMobilePhone(normalized) ? normalized : null;
 }
 
 function optionalDateFromMetadata(value: unknown) {
