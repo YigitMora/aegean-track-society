@@ -41,6 +41,7 @@ const vehicleRatingModificationSelect = {
     select: {
       code: true,
       category: true,
+      componentTypeCode: true,
       powerImpact: true,
       handlingImpact: true,
       brakingImpact: true,

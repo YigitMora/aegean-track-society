@@ -2242,6 +2242,7 @@ const modificationDefinitionRatingSelect = {
   brand: true,
   name: true,
   variant: true,
+  componentTypeCode: true,
   powerImpact: true,
   handlingImpact: true,
   brakingImpact: true,

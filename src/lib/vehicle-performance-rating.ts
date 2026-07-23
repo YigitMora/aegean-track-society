@@ -1,6 +1,7 @@
 import "server-only";
 
 import { ModificationCategory, type VehicleRatingStatus } from "@prisma/client";
+import { isLegacyGenericModificationDefinition } from "@/lib/modification-catalog-metadata";
 import {
   applyWeightPenalty,
   calculateVehicleOverall,
@@ -35,6 +36,7 @@ export type VehicleRatingModificationInput = {
     id?: string;
     code: string;
     category: ModificationCategory;
+    componentTypeCode?: string | null;
     powerImpact: number;
     handlingImpact: number;
     brakingImpact: number;
@@ -64,13 +66,31 @@ type MutableRating = Record<RatingComponent, number> & {
 
 type ImpactTotals = MutableRatingScoreSet;
 
-const universalBaseImpactCategories = new Set<ModificationCategory>([
-  ModificationCategory.SUSPENSION,
-  ModificationCategory.BRAKES,
-  ModificationCategory.TYRES,
-  ModificationCategory.WHEELS,
-  ModificationCategory.COOLING,
-  ModificationCategory.SAFETY,
+const powerTargetComponentTypes = new Set([
+  "ecu_software",
+  "platform_tune_package",
+]);
+const cosmeticAeroCodes = new Set([
+  "aero_maxton_front_splitter",
+  "aero_varis_body_kit",
+  "aero_mugen_under_spoiler",
+  "aero_cosmetic_front_splitter_technical",
+  "aero_rear_spoiler_cosmetic_technical",
+]);
+const meaningfulBrakeSupportComponentTypes = new Set([
+  "brake_pad",
+  "brake_disc",
+  "big_brake_kit",
+  "brake_cooling",
+]);
+const meaningfulCoolingSupportComponentTypes = new Set([
+  "intercooler",
+  "oil_cooler",
+  "radiator",
+  "auxiliary_radiator",
+  "transmission_cooler",
+  "differential_cooler",
+  "heat_exchanger",
 ]);
 
 export function calculateVehiclePerformanceRating({
@@ -94,26 +114,62 @@ export function calculateVehiclePerformanceRating({
   }, vehicleDefinition.weightPenalty);
   const rating: MutableRating = { ...baseRating };
   const impactTotals = emptyImpactTotals();
-  const installedCategories = new Set<ModificationCategory>();
+  const installedComponentTypes = new Set<string>();
+  let strongestCalibrationImpact: ImpactTotals | null = null;
+  let supportingAirflowPowerImpact = 0;
   let hasSlickTyres = false;
 
   for (const modification of installedModifications) {
     const definition = modification.modificationDefinition;
     const impact = impactForDefinition(definition, vehicleDefinition.id);
-    installedCategories.add(definition.category);
-    hasSlickTyres ||= definition.code === "tyres_slick";
+    const componentTypeCode = definition.componentTypeCode ?? null;
+    const isLegacyGeneric = isLegacyGenericModificationDefinition(definition);
 
-    for (const component of ratingComponents) {
-      rating[component] += impact[component];
-      impactTotals[component] += impact[component];
+    if (componentTypeCode && !isLegacyGeneric) {
+      installedComponentTypes.add(componentTypeCode);
     }
+
+    hasSlickTyres ||=
+      !isLegacyGeneric &&
+      (definition.code === "tyres_slick" ||
+        componentTypeCode === "tyre_slick");
+
+    if (isPowerTargetDefinition(definition)) {
+      if (
+        !strongestCalibrationImpact ||
+        impact.power > strongestCalibrationImpact.power
+      ) {
+        strongestCalibrationImpact = impact;
+      }
+      continue;
+    }
+
+    if (definition.category === ModificationCategory.INTAKE_EXHAUST) {
+      supportingAirflowPowerImpact = Math.max(
+        supportingAirflowPowerImpact,
+        Math.min(1, Math.max(0, impact.power)),
+      );
+      impact.power = 0;
+    }
+
+    applyImpact(rating, impactTotals, impact);
+  }
+
+  if (strongestCalibrationImpact) {
+    applyImpact(rating, impactTotals, strongestCalibrationImpact);
+  }
+
+  if (supportingAirflowPowerImpact > 0) {
+    const supportImpact = emptyImpactTotals();
+    supportImpact.power = supportingAirflowPowerImpact;
+    applyImpact(rating, impactTotals, supportImpact);
   }
 
   applyBuildBalancePenalties({
     rating,
     baseRating,
     impactTotals,
-    installedCategories,
+    installedComponentTypes,
     hasSlickTyres,
   });
 
@@ -170,47 +226,52 @@ function impactForDefinition(
   );
 
   if (platformImpact) {
-    return {
+    return sanitizeCategoryImpact(definition, {
       power: platformImpact.powerImpact,
       handling: platformImpact.handlingImpact,
       braking: platformImpact.brakingImpact,
       reliability: platformImpact.reliabilityImpact,
       thermal: platformImpact.thermalImpact,
       trackReadiness: platformImpact.trackReadinessImpact,
-    };
+    });
   }
 
-  if (!universalBaseImpactCategories.has(definition.category)) {
+  if (definition.category === ModificationCategory.ECU) {
     return emptyImpactTotals();
   }
 
-  return {
+  return sanitizeCategoryImpact(definition, {
     power: definition.powerImpact,
     handling: definition.handlingImpact,
     braking: definition.brakingImpact,
     reliability: definition.reliabilityImpact,
-    thermal: 0,
+    thermal: baseThermalImpactForDefinition(definition),
     trackReadiness: definition.trackReadinessImpact,
-  };
+  });
 }
 
 function applyBuildBalancePenalties({
   rating,
   baseRating,
   impactTotals,
-  installedCategories,
+  installedComponentTypes,
   hasSlickTyres,
 }: {
   rating: MutableRating;
   baseRating: MutableRating;
   impactTotals: ImpactTotals;
-  installedCategories: Set<ModificationCategory>;
+  installedComponentTypes: Set<string>;
   hasSlickTyres: boolean;
 }) {
   const largePowerIncrease = impactTotals.power >= 12;
-  const hasBrakingUpgrade = installedCategories.has(ModificationCategory.BRAKES);
-  const hasCoolingUpgrade = installedCategories.has(ModificationCategory.COOLING);
-  const hasSafetyPreparation = installedCategories.has(ModificationCategory.SAFETY);
+  const hasBrakingUpgrade = hasAnyComponentType(
+    installedComponentTypes,
+    meaningfulBrakeSupportComponentTypes,
+  );
+  const hasCoolingUpgrade = hasAnyComponentType(
+    installedComponentTypes,
+    meaningfulCoolingSupportComponentTypes,
+  );
 
   // First-pass balance guardrails keep power-only builds from outrunning their
   // braking, cooling, and safety preparation in the overall rating.
@@ -224,9 +285,195 @@ function applyBuildBalancePenalties({
     rating.thermal -= 6;
   }
 
-  if (hasSlickTyres && !hasSafetyPreparation) {
+  if (hasSlickTyres) {
     rating.trackReadiness = Math.min(rating.trackReadiness, baseRating.trackReadiness + 5);
   }
+}
+
+function sanitizeCategoryImpact(
+  definition: VehicleRatingModificationInput["modificationDefinition"],
+  impact: ImpactTotals,
+): ImpactTotals {
+  if (
+    isLegacyGenericModificationDefinition(definition) ||
+    definition.category === ModificationCategory.SAFETY ||
+    cosmeticAeroCodes.has(definition.code)
+  ) {
+    return emptyImpactTotals();
+  }
+
+  if (definition.category === ModificationCategory.ECU) {
+    return {
+      ...impact,
+      handling: 0,
+      braking: 0,
+    };
+  }
+
+  if (definition.category === ModificationCategory.ENGINE) {
+    return {
+      ...impact,
+      power: 0,
+      handling: 0,
+      braking: 0,
+    };
+  }
+
+  if (definition.category === ModificationCategory.INTAKE_EXHAUST) {
+    return {
+      ...impact,
+      power: Math.min(1, Math.max(0, impact.power)),
+      handling: 0,
+      braking: 0,
+    };
+  }
+
+  if (definition.category === ModificationCategory.COOLING) {
+    return {
+      power: 0,
+      handling: 0,
+      braking: 0,
+      reliability: impact.reliability,
+      thermal: impact.thermal,
+      trackReadiness: impact.trackReadiness,
+    };
+  }
+
+  if (definition.category === ModificationCategory.DRIVETRAIN) {
+    return {
+      ...impact,
+      power: 0,
+      braking: 0,
+      thermal: 0,
+    };
+  }
+
+  if (definition.category === ModificationCategory.SUSPENSION) {
+    return {
+      ...impact,
+      power: 0,
+      braking: 0,
+      thermal: 0,
+    };
+  }
+
+  if (definition.category === ModificationCategory.BRAKES) {
+    return {
+      ...impact,
+      power: 0,
+      handling: 0,
+      thermal: 0,
+    };
+  }
+
+  if (definition.category === ModificationCategory.TYRES) {
+    return {
+      ...impact,
+      power: 0,
+      thermal: 0,
+    };
+  }
+
+  if (definition.category === ModificationCategory.WHEELS) {
+    return {
+      ...impact,
+      power: 0,
+      thermal: 0,
+    };
+  }
+
+  if (
+    definition.category === ModificationCategory.AERO ||
+    definition.category === ModificationCategory.OTHER
+  ) {
+    return {
+      ...impact,
+      power: 0,
+      thermal: 0,
+    };
+  }
+
+  return impact;
+}
+
+function baseThermalImpactForDefinition(
+  definition: VehicleRatingModificationInput["modificationDefinition"],
+) {
+  const componentTypeCode = definition.componentTypeCode ?? null;
+
+  if (definition.category === ModificationCategory.COOLING) {
+    if (componentTypeCode === "thermostat") {
+      return 1;
+    }
+
+    return componentTypeCode ? 3 : 0;
+  }
+
+  if (definition.category === ModificationCategory.INTAKE_EXHAUST) {
+    if (
+      definition.code === "intake_open_high_flow_vehicle_specific" ||
+      componentTypeCode === "downpipe" ||
+      componentTypeCode === "sports_catalyst"
+    ) {
+      return -1;
+    }
+  }
+
+  if (definition.category === ModificationCategory.ENGINE) {
+    if (
+      componentTypeCode === "hybrid_turbo" ||
+      componentTypeCode === "big_turbo" ||
+      componentTypeCode === "turbo_upgrade" ||
+      componentTypeCode === "turbocharger_upgrade" ||
+      componentTypeCode === "twin_turbo_upgrade" ||
+      componentTypeCode === "supercharger_upgrade"
+    ) {
+      return -4;
+    }
+
+    if (
+      componentTypeCode === "wastegate" ||
+      componentTypeCode === "boost_control" ||
+      componentTypeCode === "methanol_injection"
+    ) {
+      return -1;
+    }
+  }
+
+  return 0;
+}
+
+function isPowerTargetDefinition(
+  definition: VehicleRatingModificationInput["modificationDefinition"],
+) {
+  return Boolean(
+    definition.componentTypeCode &&
+      powerTargetComponentTypes.has(definition.componentTypeCode),
+  );
+}
+
+function applyImpact(
+  rating: MutableRating,
+  impactTotals: ImpactTotals,
+  impact: ImpactTotals,
+) {
+  for (const component of ratingComponents) {
+    rating[component] += impact[component];
+    impactTotals[component] += impact[component];
+  }
+}
+
+function hasAnyComponentType(
+  installedComponentTypes: Set<string>,
+  candidates: Set<string>,
+) {
+  for (const candidate of candidates) {
+    if (installedComponentTypes.has(candidate)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function emptyImpactTotals(): ImpactTotals {
