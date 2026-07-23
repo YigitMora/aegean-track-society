@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireMemberUser, normalizeMemberReturnTo } from "@/lib/member-auth";
 import { parseMemberProfileForm } from "@/lib/member-profile-validation";
-import { prisma } from "@/lib/prisma";
+import { updateMemberProfile } from "@/lib/member-profile-service";
 import { getRequestIpAddress } from "@/lib/request-ip";
 
 export async function updateMemberProfileAction(formData: FormData) {
@@ -19,47 +19,11 @@ export async function updateMemberProfileAction(formData: FormData) {
     redirect(`${returnTo}?profileError=invalid`);
   }
 
-  const now = new Date();
-  const ipAddress = await getRequestIpAddress();
-
-  await prisma.$transaction(async (tx) => {
-    await tx.memberProfile.upsert({
-      where: {
-        userId: memberUser.id,
-      },
-      update: {
-        fullName: parsed.data.fullName,
-        phone: parsed.data.phone,
-        displayName: parsed.data.displayName,
-        profileCompletedAt: now,
-      },
-      create: {
-        userId: memberUser.id,
-        fullName: parsed.data.fullName,
-        phone: parsed.data.phone,
-        displayName: parsed.data.displayName,
-        profileCompletedAt: now,
-      },
-    });
-
-    await tx.user.update({
-      where: {
-        id: memberUser.id,
-      },
-      data: {
-        ...(requiresConsents && parsed.acceptedMissingConsents
-          ? {
-              memberKvkkAcceptedAt: memberUser.memberKvkkAcceptedAt ?? now,
-              memberTermsAcceptedAt: memberUser.memberTermsAcceptedAt ?? now,
-              memberConsentIpAddress: memberUser.memberConsentIpAddress ?? ipAddress,
-            }
-          : {}),
-        ...marketingConsentUpdate({
-          wantsMarketingConsent: parsed.data.memberMarketingConsent,
-          now,
-        }),
-      },
-    });
+  await updateMemberProfile({
+    memberUser,
+    data: parsed.data,
+    acceptedMissingConsents: parsed.acceptedMissingConsents,
+    requestIpAddress: await getRequestIpAddress(),
   });
 
   console.log("AUTH_PROFILE_UPDATED", {
@@ -72,23 +36,4 @@ export async function updateMemberProfileAction(formData: FormData) {
   revalidatePath("/account/onboarding");
 
   redirect(returnTo === "/account/onboarding" ? "/account?profile=updated" : `${returnTo}?profile=updated`);
-}
-
-function marketingConsentUpdate({
-  wantsMarketingConsent,
-  now,
-}: {
-  wantsMarketingConsent: boolean;
-  now: Date;
-}) {
-  if (wantsMarketingConsent) {
-    return {
-      memberMarketingConsentAt: now,
-      memberMarketingConsentRevokedAt: null,
-    };
-  }
-
-  return {
-    memberMarketingConsentRevokedAt: now,
-  };
 }
