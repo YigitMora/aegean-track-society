@@ -181,9 +181,11 @@ export function VehicleModificationBatchSelector({
   const selectedGroup =
     visibleCatalogGroups.find((group) => group.category === selectedCategory) ??
     null;
-  const selectedType =
-    selectedGroup?.types.find((type) => type.typeKey === selectedTypeKey) ??
-    null;
+  const isWheelSelection = selectedCategory === "WHEELS";
+  const selectedType = isWheelSelection
+    ? selectedGroup?.types[0] ?? null
+    : selectedGroup?.types.find((type) => type.typeKey === selectedTypeKey) ??
+      null;
   const manufacturers = useMemo(() => {
     const labelsByKey = new Map<string, string>();
 
@@ -238,6 +240,7 @@ export function VehicleModificationBatchSelector({
     }
 
     if (
+      !isWheelSelection &&
       selectedTypeKey &&
       !selectedGroup?.types.some((type) => type.typeKey === selectedTypeKey)
     ) {
@@ -274,6 +277,7 @@ export function VehicleModificationBatchSelector({
     selectedGroup,
     selectedManufacturer,
     selectedTypeKey,
+    isWheelSelection,
     visibleCatalogGroups,
   ]);
 
@@ -349,7 +353,13 @@ export function VehicleModificationBatchSelector({
 
   return (
     <div className="mt-4 grid gap-5">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] xl:items-end">
+      <div
+        className={`grid gap-4 md:grid-cols-2 ${
+          isWheelSelection
+            ? "xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto]"
+            : "xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto]"
+        } xl:items-end`}
+      >
         <SelectField
           label="Kategori"
           placeholder="Kategori seçin"
@@ -366,25 +376,27 @@ export function VehicleModificationBatchSelector({
           }))}
         />
 
-        <SelectField
-          label={selectedCategory === "TYRES" ? "Lastik sınıfı" : "Alt kategori"}
-          placeholder={
-            selectedCategory === "TYRES"
-              ? "Lastik sınıfı seçin"
-              : "Alt kategori seçin"
-          }
-          value={selectedTypeKey}
-          disabled={!selectedGroup}
-          onChange={(value) => {
-            setSelectedTypeKey(value);
-            setSelectedManufacturer("");
-            setSelectedDefinitionId("");
-          }}
-          options={(selectedGroup?.types ?? []).map((type) => ({
-            value: type.typeKey,
-            label: type.typeLabel,
-          }))}
-        />
+        {!isWheelSelection ? (
+          <SelectField
+            label={selectedCategory === "TYRES" ? "Lastik sınıfı" : "Alt kategori"}
+            placeholder={
+              selectedCategory === "TYRES"
+                ? "Lastik sınıfı seçin"
+                : "Alt kategori seçin"
+            }
+            value={selectedTypeKey}
+            disabled={!selectedGroup}
+            onChange={(value) => {
+              setSelectedTypeKey(value);
+              setSelectedManufacturer("");
+              setSelectedDefinitionId("");
+            }}
+            options={(selectedGroup?.types ?? []).map((type) => ({
+              value: type.typeKey,
+              label: type.typeLabel,
+            }))}
+          />
+        ) : null}
 
         <SelectField
           label="Üretici"
@@ -399,9 +411,13 @@ export function VehicleModificationBatchSelector({
         />
 
         <SelectField
-          label={selectedCategory === "TYRES" ? "Model" : "Ürün / versiyon"}
+          label={
+            selectedCategory === "TYRES" || isWheelSelection
+              ? "Model"
+              : "Ürün / versiyon"
+          }
           placeholder={
-            selectedCategory === "TYRES"
+            selectedCategory === "TYRES" || isWheelSelection
               ? "Model seçin"
               : "Ürün veya versiyon seçin"
           }
@@ -460,8 +476,9 @@ export function VehicleModificationBatchSelector({
       {selectedOption && (selectedType?.options.length ?? 0) > 1 ? (
         <p className="rounded-md border border-ats-border bg-ats-black px-4 py-3 text-sm font-semibold text-ats-muted">
           <span className="font-black text-ats-text">Alternatif seçenek:</span>{" "}
-          Aynı alt kategorideki ürünler birbirinin yerine değerlendirilir; aynı
-          fiziksel slotta birlikte kullanılamaz.
+          {isWheelSelection
+            ? "Yüklü jant seti başka bir modelle değiştirilmeden ikinci bir jant seti eklenemez."
+            : "Aynı alt kategorideki ürünler birbirinin yerine değerlendirilir; aynı fiziksel slotta birlikte kullanılamaz."}
         </p>
       ) : null}
 

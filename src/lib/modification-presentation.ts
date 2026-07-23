@@ -146,6 +146,10 @@ const mobileCatalogKeyNamespace = "ats-mobile-build-v1";
 export function modificationTypeLabel(
   definition: ModificationTypeDefinition,
 ) {
+  if (definition.category === "WHEELS") {
+    return "Jant";
+  }
+
   const visibleTyreClass = visibleTyreClassForDefinition(definition);
 
   if (visibleTyreClass) {
@@ -158,6 +162,10 @@ export function modificationTypeLabel(
 }
 
 export function modificationTypeKey(definition: ModificationTypeDefinition) {
+  if (definition.category === "WHEELS") {
+    return "wheel";
+  }
+
   const visibleTyreClass = visibleTyreClassForDefinition(definition);
 
   return visibleTyreClass

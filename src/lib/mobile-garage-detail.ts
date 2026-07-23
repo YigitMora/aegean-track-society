@@ -75,6 +75,7 @@ import {
   visibleTyreClassForDefinition,
   visibleTyreClassLabel,
 } from "@/lib/tyre-catalog";
+import { wheelProductModelLabel } from "@/lib/wheel-catalog";
 import {
   buildVehicleImagePath,
   createAccessTokenStorageClient,
@@ -1122,6 +1123,8 @@ function serializeCatalogPart({
     label:
       definition.category === "TYRES"
         ? tyreProductModelLabel(definition)
+        : definition.category === "WHEELS"
+          ? wheelProductModelLabel(definition)
         : formatModificationDefinition(definition),
     brand: definition.brand,
     name: definition.name,

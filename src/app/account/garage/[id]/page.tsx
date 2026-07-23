@@ -59,6 +59,7 @@ import {
   visibleTyreClassForDefinition,
   visibleTyreClassLabel,
 } from "@/lib/tyre-catalog";
+import { wheelProductModelLabel } from "@/lib/wheel-catalog";
 
 type EditVehiclePageProps = {
   params: Promise<{
@@ -1135,6 +1136,8 @@ function buildCatalogGroups({
       productLabel:
         definition.category === "TYRES"
           ? tyreProductModelLabel(definition)
+          : definition.category === "WHEELS"
+            ? wheelProductModelLabel(definition)
           : [definition.name, definition.variant].filter(Boolean).join(" / "),
       manufacturerLabel: modificationManufacturerLabel(definition),
       brand: definition.brand,

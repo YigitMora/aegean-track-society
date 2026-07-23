@@ -176,6 +176,8 @@ const selector = readRepoFile(
 const garagePage = readRepoFile("src/app/account/garage/[id]/page.tsx");
 const mobileGarage = readRepoFile("src/lib/mobile-garage-detail.ts");
 const metadata = readRepoFile("src/lib/modification-catalog-metadata.ts");
+const presentation = readRepoFile("src/lib/modification-presentation.ts");
+const wheelCatalog = readRepoFile("src/lib/wheel-catalog.ts");
 const productionCatalogSeed = readRepoFile(
   ".github/workflows/production-seed.yml",
 );
@@ -203,6 +205,14 @@ assert.match(selector, /Lastik sınıfı seçin/);
 assert.match(selector, /placeholder="Üretici seçin"/);
 assert.match(selector, /Ürün veya versiyon seçin/);
 assert.match(selector, /Model seçin/);
+assert.match(selector, /selectedCategory === "WHEELS"/);
+assert.match(selector, /!isWheelSelection/);
+assert.match(selector, /isWheelSelection\s*\?\s*"Model"/);
+assert.match(presentation, /definition\.category === "WHEELS"[\s\S]*?return "Jant"/);
+assert.match(presentation, /definition\.category === "WHEELS"[\s\S]*?return "wheel"/);
+assert.match(wheelCatalog, /wheelProductModelLabel/);
+assert.match(garagePage, /wheelProductModelLabel\(definition\)/);
+assert.match(mobileGarage, /wheelProductModelLabel\(definition\)/);
 assert.doesNotMatch(selector, /firstAvailableOption/);
 assert.match(selector, /Destek parçası öneriliyor/);
 assert.match(selector, /Önerilen destek parçaları/);

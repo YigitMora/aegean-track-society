@@ -638,6 +638,20 @@ function validateSafeResponses() {
   ok(intercoolerGroup.key !== radiatorGroup.key);
   ok(!oilCoolerGroup.key.includes("oil_cooler"));
 
+  const forgedWheelGroup = modificationTypeGroup({
+    category: ModificationCategory.WHEELS,
+    componentTypeCode: "forged_wheel",
+    name: "Forged Wheel",
+  });
+  const castWheelGroup = modificationTypeGroup({
+    category: ModificationCategory.WHEELS,
+    componentTypeCode: "wheel",
+    name: "Cast Wheel",
+  });
+  equal(forgedWheelGroup.label, "Jant");
+  equal(castWheelGroup.label, "Jant");
+  equal(forgedWheelGroup.key, castWheelGroup.key);
+
   const preview = buildMobileGarageRatingPreviewResponseBody({
     currentRating: ratingWithInternalCap,
     projectedRating: ratingWithInternalCap,
