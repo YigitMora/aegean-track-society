@@ -380,31 +380,14 @@ async function verifyVercelProductionMetadata({
   );
 
   const gitSource = deployment.gitSource;
-  const repositoryMatches =
+  const repositoryMatches = Boolean(
     gitSource &&
     ["github", "github-limited"].includes(String(gitSource.type)) &&
     String(gitSource.org).toLowerCase() === expectedOwner?.toLowerCase() &&
     String(gitSource.repo).toLowerCase() ===
       expectedRepository?.toLowerCase() &&
-    gitSource.repoId === repositoryId;
-
-  if (
-    deployment.projectId !== vercelProjectId ||
-    deployment.ownerId !== vercelTeamId ||
-    deployment.target !== "production" ||
-    deployment.readyState !== "READY" ||
-    (deployment.status !== undefined && deployment.status !== "READY") ||
-    deployment.aliasAssigned !== true ||
-    deployment.url.toLowerCase() !== deploymentHost.toLowerCase() ||
-    !repositoryMatches ||
-    String(gitSource?.sha).toLowerCase() !== expectedSha ||
-    gitSource?.ref !== "main"
-  ) {
-    throw new ReleaseVerificationError(
-      "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
-      "Vercel deployment metadata does not prove the expected READY Production deployment.",
-    );
-  }
+    gitSource.repoId === repositoryId,
+  );
 
   const canonicalHost = new URL(canonicalOrigin).hostname;
   const aliasUrl = new URL(
@@ -422,14 +405,32 @@ async function verifyVercelProductionMetadata({
     "VERCEL_ALIAS_LOOKUP_FAILED",
   );
 
-  if (
-    alias.alias.toLowerCase() !== canonicalHost.toLowerCase() ||
-    alias.projectId !== vercelProjectId ||
-    alias.deploymentId !== deployment.id
-  ) {
+  const provenanceChecks = {
+    project_id_match: deployment.projectId === vercelProjectId,
+    owner_team_id_match: deployment.ownerId === vercelTeamId,
+    production_target: deployment.target === "production",
+    ready_state:
+      deployment.readyState === "READY" &&
+      (deployment.status === undefined || deployment.status === "READY"),
+    alias_assigned: deployment.aliasAssigned === true,
+    deployment_url_match:
+      deployment.url.toLowerCase() === deploymentHost.toLowerCase(),
+    repository_match: repositoryMatches,
+    sha_match: String(gitSource?.sha).toLowerCase() === expectedSha,
+    ref_main: gitSource?.ref === "main",
+    canonical_alias_match:
+      alias.alias.toLowerCase() === canonicalHost.toLowerCase() &&
+      alias.projectId === vercelProjectId &&
+      alias.deploymentId === deployment.id,
+  } satisfies Record<string, boolean>;
+  const failedChecks = Object.entries(provenanceChecks)
+    .filter(([, passed]) => !passed)
+    .map(([name]) => name);
+
+  if (failedChecks.length > 0) {
     throw new ReleaseVerificationError(
-      "VERCEL_CANONICAL_ALIAS_MISMATCH",
-      "The canonical production alias is not bound to the verified deployment.",
+      "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+      `Vercel deployment provenance failed checks: ${failedChecks.join(", ")}.`,
     );
   }
 }

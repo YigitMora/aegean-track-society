@@ -135,10 +135,12 @@ await expectVerificationFailure(
 await expectVerificationFailure(
   { deploymentRepositoryIdWrong: true },
   "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "repository_match",
 );
 await expectVerificationFailure(
   { deploymentRepositoryIdMalformed: true },
   "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "repository_match",
 );
 await expectVerificationFailure(
   { bothVercelRepositoryIdsWrong: true },
@@ -151,10 +153,52 @@ await expectVerificationFailure(
 await expectVerificationFailure(
   { previewTarget: true },
   "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "production_target",
 );
 await expectVerificationFailure(
   { incompleteDeploymentGitSource: true },
   "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "repository_match",
+);
+await expectVerificationFailure(
+  { deploymentProjectIdWrong: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "project_id_match",
+);
+await expectVerificationFailure(
+  { deploymentOwnerIdWrong: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "owner_team_id_match",
+);
+await expectVerificationFailure(
+  { deploymentReadyStateWrong: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "ready_state",
+);
+await expectVerificationFailure(
+  { deploymentStatusWrong: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "ready_state",
+);
+await expectVerificationFailure(
+  { deploymentAliasNotAssigned: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "alias_assigned",
+);
+await expectVerificationFailure(
+  { deploymentUrlWrong: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "deployment_url_match",
+);
+await expectVerificationFailure(
+  { vercelDeploymentShaWrong: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "sha_match",
+);
+await expectVerificationFailure(
+  { vercelDeploymentRefWrong: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "ref_main",
 );
 await expectVerificationFailure(
   { untrustedDeploymentCreator: true },
@@ -300,7 +344,8 @@ await expectVerificationFailure(
 );
 await expectVerificationFailure(
   { staleCanonicalAlias: true },
-  "VERCEL_CANONICAL_ALIAS_MISMATCH",
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "canonical_alias_match",
 );
 await expectVerificationFailure(
   { htmlResponse: true },
@@ -358,6 +403,7 @@ const releaseWorkflow = read(".github/workflows/verify-production-release.yml");
 const ciWorkflow = read(".github/workflows/ci.yml");
 const secretScanner = read("scripts/release-safety/secret-scan.mjs");
 const repositorySafety = read("scripts/release-safety/repository-safety.mjs");
+const releaseVerifier = read("src/lib/release-verifier.ts");
 assertProductionDatabaseWorkflow({
   source: migrationWorkflow,
   confirmationPrefix: "MIGRATE PRODUCTION",
@@ -400,6 +446,19 @@ assert.match(secretScanner, /values are intentionally hidden/);
 assert.match(repositorySafety, /--name-status[\s\S]*--find-renames[\s\S]*-z/);
 assert.match(repositorySafety, /newly added migration\.sql/);
 assert.match(repositorySafety, /buildCommand !== 'prisma generate && next build'/);
+for (const check of [
+  "project_id_match",
+  "owner_team_id_match",
+  "production_target",
+  "ready_state",
+  "alias_assigned",
+  "repository_match",
+  "sha_match",
+  "ref_main",
+  "canonical_alias_match",
+]) {
+  assert.ok(releaseVerifier.includes(check), check);
+}
 
 const paymentCallback = read("src/app/api/payments/iyzico/callback/route.ts");
 assert.match(paymentCallback, /PAYMENT_CONFIRMATION_TRANSACTION_FAILED/);
@@ -440,6 +499,14 @@ type MockFetchOptions = {
   untrustedProjectLinkType?: boolean;
   previewTarget?: boolean;
   incompleteDeploymentGitSource?: boolean;
+  deploymentProjectIdWrong?: boolean;
+  deploymentOwnerIdWrong?: boolean;
+  deploymentReadyStateWrong?: boolean;
+  deploymentStatusWrong?: boolean;
+  deploymentAliasNotAssigned?: boolean;
+  deploymentUrlWrong?: boolean;
+  vercelDeploymentShaWrong?: boolean;
+  vercelDeploymentRefWrong?: boolean;
   untrustedDeploymentCreator?: boolean;
   deploymentActorWrongId?: boolean;
   deploymentActorTrustedLookingUser?: boolean;
@@ -498,6 +565,7 @@ function verificationOptions(fetchImpl: ReturnType<typeof createMockFetch>["fetc
 async function expectVerificationFailure(
   options: MockFetchOptions,
   expectedCode: string,
+  expectedFailedCheck?: string,
 ) {
   adversarialVerificationFixtureCount += 1;
   await assert.rejects(
@@ -505,7 +573,23 @@ async function expectVerificationFailure(
       verifyProductionRelease(
         verificationOptions(createMockFetch(options).fetch),
       ),
-    (error: unknown) => hasCode(error, expectedCode),
+    (error: unknown) => {
+      if (!hasCode(error, expectedCode)) {
+        return false;
+      }
+
+      assert.ok(error instanceof ReleaseVerificationError);
+      assert.doesNotMatch(error.message, /test-vercel-token|test-github-token/);
+
+      if (expectedFailedCheck) {
+        assert.match(
+          error.message,
+          new RegExp(`(?:^|[ ,:])${escapeRegExp(expectedFailedCheck)}(?:[,.]|$)`),
+        );
+      }
+
+      return true;
+    },
   );
 }
 
@@ -765,13 +849,19 @@ function createMockFetch(options?: MockFetchOptions) {
       if (url.pathname.startsWith("/v13/deployments/")) {
         return jsonResponse({
           id: deploymentId,
-          url: deploymentHost,
-          projectId: vercelProjectId,
-          ownerId: vercelTeamId,
+          url: options?.deploymentUrlWrong
+            ? "another-deployment.vercel.app"
+            : deploymentHost,
+          projectId: options?.deploymentProjectIdWrong
+            ? "prj_WrongDeploymentProject"
+            : vercelProjectId,
+          ownerId: options?.deploymentOwnerIdWrong
+            ? "team_WrongDeploymentOwner"
+            : vercelTeamId,
           target: options?.previewTarget ? "preview" : "production",
-          readyState: "READY",
-          status: "READY",
-          aliasAssigned: true,
+          readyState: options?.deploymentReadyStateWrong ? "ERROR" : "READY",
+          status: options?.deploymentStatusWrong ? "ERROR" : "READY",
+          aliasAssigned: options?.deploymentAliasNotAssigned ? false : true,
           gitSource: {
             type: "github",
             ...(options?.incompleteDeploymentGitSource
@@ -787,8 +877,10 @@ function createMockFetch(options?: MockFetchOptions) {
                       ? repositoryId + 1
                       : repositoryId,
                 }),
-            ref: "main",
-            sha: expectedSha,
+            ref: options?.vercelDeploymentRefWrong ? "preview" : "main",
+            sha: options?.vercelDeploymentShaWrong
+              ? "f".repeat(40)
+              : expectedSha,
           },
         });
       }
@@ -1174,6 +1266,13 @@ function assertWorkflowActionPins(source: string, expectedCount: number) {
   const actionPins = source.match(/uses:\s*[^\s]+@[0-9a-f]{40}\s+#\s+v\d+/g);
   assert.equal(actionPins?.length, expectedCount);
   assert.doesNotMatch(source, /uses:\s*[^\s]+@v\d+/);
+  assert.doesNotMatch(source, /actions\/checkout@(?!d23441a48e516b6c34aea4fa41551a30e30af803)/);
+  assert.doesNotMatch(source, /actions\/setup-node@(?!249970729cb0ef3589644e2896645e5dc5ba9c38)/);
+  assert.doesNotMatch(source, /pnpm\/action-setup@(?!f40ffcd9367d9f12939873eb1018b921a783ffaa)/);
+
+  if (source.includes("actions/setup-node@")) {
+    assert.match(source, /node-version:\s*24/);
+  }
 }
 
 function escapeRegExp(value: string) {
