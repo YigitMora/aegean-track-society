@@ -39,6 +39,7 @@ import {
   modificationSelectionGroupKey,
   modificationTypeGroup,
 } from "@/lib/modification-presentation";
+import { isSelectableModificationLeaf } from "@/lib/modification-catalog-metadata";
 import {
   componentSlotKeyForDefinition,
   evaluateModificationAvailability,
@@ -834,7 +835,7 @@ async function loadActiveOwnedVehicle(memberUserId: string, vehicleId: string) {
 }
 
 async function loadModificationCatalog() {
-  return prisma.modificationDefinition.findMany({
+  const definitions = await prisma.modificationDefinition.findMany({
     where: { active: true },
     orderBy: [
       { category: "asc" },
@@ -844,6 +845,8 @@ async function loadModificationCatalog() {
     ],
     select: definitionRuleSelect,
   });
+
+  return definitions.filter(isSelectableModificationLeaf);
 }
 
 async function loadDefinitionsByIds(ids: string[]) {
@@ -1131,6 +1134,12 @@ function errorCodeForBuildResult(
   }
   if (code === "MODIFICATION_INACTIVE" || code === "DEFINITION_INACTIVE") {
     return "MOBILE_GARAGE_MODIFICATION_INACTIVE";
+  }
+  if (
+    code === "MODIFICATION_NOT_SELECTABLE" ||
+    code === "DEFINITION_NOT_SELECTABLE"
+  ) {
+    return "MOBILE_GARAGE_MODIFICATION_NOT_SELECTABLE";
   }
   if (code === "DUPLICATE_MODIFICATION") {
     return "MOBILE_GARAGE_MODIFICATION_DUPLICATE";

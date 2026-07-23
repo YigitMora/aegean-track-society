@@ -92,6 +92,7 @@ export type MobileGarageErrorCode =
   | "MOBILE_GARAGE_BUILD_UNAVAILABLE"
   | "MOBILE_GARAGE_MODIFICATION_NOT_FOUND"
   | "MOBILE_GARAGE_MODIFICATION_INACTIVE"
+  | "MOBILE_GARAGE_MODIFICATION_NOT_SELECTABLE"
   | "MOBILE_GARAGE_MODIFICATION_DUPLICATE"
   | "MOBILE_GARAGE_MODIFICATION_SLOT_OCCUPIED"
   | "MOBILE_GARAGE_MODIFICATION_INCOMPATIBLE"
@@ -198,6 +199,10 @@ const mobileGarageErrors = {
   MOBILE_GARAGE_MODIFICATION_INACTIVE: {
     status: 409,
     message: "Bu parça şu anda build profiline eklenemez.",
+  },
+  MOBILE_GARAGE_MODIFICATION_NOT_SELECTABLE: {
+    status: 409,
+    message: "Yalnızca belirli bir ürün veya modifikasyon versiyonu seçilebilir.",
   },
   MOBILE_GARAGE_MODIFICATION_DUPLICATE: {
     status: 409,

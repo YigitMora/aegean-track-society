@@ -1242,6 +1242,7 @@ async function guardVehicleDefinitionChange({
           definitions,
         })
       : false,
+    allowLegacyNonSelectable: true,
   });
 
   if (availability.ok) {
@@ -1272,6 +1273,7 @@ function blockingModificationNames(
       vehicle,
       definitions: [definition],
       installedModifications: [],
+      allowLegacyNonSelectable: true,
     });
 
     return !availability.ok;

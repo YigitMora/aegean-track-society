@@ -22,6 +22,7 @@ export type GarageLifecycleErrorCode =
   | "remove_failed"
   | "modification_not_found"
   | "modification_inactive"
+  | "modification_not_selectable"
   | "duplicate_modification"
   | "modification_incompatible"
   | "component_slot_occupied"

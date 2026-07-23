@@ -11,6 +11,7 @@ import {
 import { sendCatalogMatchRequestAdminEmail } from "@/lib/email";
 import { requireCompleteMemberUser } from "@/lib/member-access";
 import { normalizeMemberReturnTo } from "@/lib/member-auth";
+import { concreteModificationRequiredMessage } from "@/lib/modification-catalog-metadata";
 import { prisma } from "@/lib/prisma";
 import {
   archiveGarageVehicles,
@@ -78,6 +79,7 @@ export type VehicleRatingPreviewState = {
     | "RATING_UNAVAILABLE"
     | "DEFINITION_NOT_FOUND"
     | "DEFINITION_INACTIVE"
+    | "DEFINITION_NOT_SELECTABLE"
     | "MODIFICATION_INCOMPATIBLE"
     | "COMPONENT_SLOT_OCCUPIED"
     | "DUPLICATE_MODIFICATION"
@@ -1736,6 +1738,10 @@ function batchResultMessage(
     return "Seçilen parçalardan biri şu anda aktif değil.";
   }
 
+  if (code === "DEFINITION_NOT_SELECTABLE") {
+    return concreteModificationRequiredMessage;
+  }
+
   if (code === "VEHICLE_NOT_FOUND") {
     return "Araç bulunamadı veya bu işlem için uygun değil.";
   }
@@ -1866,6 +1872,10 @@ function previewMessage(
 
   if (code === "DEFINITION_INACTIVE") {
     return `${previewDefinitionName(context)} şu anda aktif değil.`;
+  }
+
+  if (code === "DEFINITION_NOT_SELECTABLE") {
+    return concreteModificationRequiredMessage;
   }
 
   if (code === "MODIFICATION_INCOMPATIBLE") {
@@ -2417,6 +2427,10 @@ function garageErrorForVehicleBuildCode(code: VehicleBuildResultCode): GarageErr
 
   if (code === "MODIFICATION_INACTIVE") {
     return "modification_inactive";
+  }
+
+  if (code === "MODIFICATION_NOT_SELECTABLE") {
+    return "modification_not_selectable";
   }
 
   if (code === "DUPLICATE_MODIFICATION") {

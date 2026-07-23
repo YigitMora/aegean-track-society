@@ -21,6 +21,12 @@ import { VehiclePerformanceRatingCard } from "@/components/vehicle-rating-card";
 import { VehicleImageSubmitButton } from "@/components/vehicle-image-submit-button";
 import { getRecentCatalogMatchCompletionNotices } from "@/lib/catalog-match-requests";
 import { requireCompleteMemberUser } from "@/lib/member-access";
+import {
+  concreteModificationRequiredMessage,
+  isLegacyGenericModificationDefinition,
+  isSelectableModificationLeaf,
+  legacyGenericModificationWarning,
+} from "@/lib/modification-catalog-metadata";
 import { modificationTypeLabel } from "@/lib/modification-presentation";
 import { prisma } from "@/lib/prisma";
 import { measureServerTiming } from "@/lib/server-timing";
@@ -452,6 +458,10 @@ function VehicleBuildProfile({
                     const needsCompatibilityReview =
                       !vehicleDefinitionId &&
                       modification.modificationDefinition.compatibilities.length > 0;
+                    const isLegacyGeneric =
+                      isLegacyGenericModificationDefinition(
+                        modification.modificationDefinition,
+                      );
 
                     return (
                       <div
@@ -474,6 +484,11 @@ function VehicleBuildProfile({
                             {needsCompatibilityReview ? (
                               <span className="font-black text-amber-200">
                                 Uyumluluk yeniden doğrulanmalı
+                              </span>
+                            ) : null}
+                            {isLegacyGeneric ? (
+                              <span className="font-black text-amber-200">
+                                {legacyGenericModificationWarning}
                               </span>
                             ) : null}
                           </div>
@@ -752,6 +767,10 @@ function errorMessage(value?: string) {
     return "Bu parça şu anda eklenemez.";
   }
 
+  if (value === "modification_not_selectable") {
+    return concreteModificationRequiredMessage;
+  }
+
   if (value === "duplicate_modification") {
     return "Bu parça build profiline zaten eklenmiş.";
   }
@@ -1017,6 +1036,7 @@ function buildCatalogGroups({
     modificationDefinitionId: string;
     modificationDefinition: {
       id: string;
+      code?: string | null;
       category: (typeof orderedModificationCategories)[number];
       brand: string | null;
       name: string;
@@ -1037,6 +1057,10 @@ function buildCatalogGroups({
   });
 
   for (const definition of catalog) {
+    if (!isSelectableModificationLeaf(definition)) {
+      continue;
+    }
+
     if (isGenericEcuFallbackDefinition(definition) && hasNamedProviderEcuTune) {
       continue;
     }

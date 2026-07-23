@@ -5,6 +5,10 @@ import {
   ModificationRuleType,
   type VehiclePowertrain,
 } from "@prisma/client";
+import {
+  concreteModificationRequiredMessage,
+  isSelectableModificationLeaf,
+} from "@/lib/modification-catalog-metadata";
 
 export const orderedModificationCategories = [
   ModificationCategory.ENGINE,
@@ -39,6 +43,7 @@ export const modificationCategoryLabels: Record<ModificationCategory, string> = 
 export type VehicleBuildResultCode =
   | "MODIFICATION_NOT_FOUND"
   | "MODIFICATION_INACTIVE"
+  | "MODIFICATION_NOT_SELECTABLE"
   | "VEHICLE_NOT_FOUND"
   | "DUPLICATE_MODIFICATION"
   | "COMPONENT_SLOT_OCCUPIED"
@@ -53,6 +58,7 @@ export type VehicleBuildBatchResultCode =
   | "BATCH_TOO_LARGE"
   | "DEFINITION_NOT_FOUND"
   | "DEFINITION_INACTIVE"
+  | "DEFINITION_NOT_SELECTABLE"
   | "DUPLICATE_MODIFICATION"
   | "COMPONENT_SLOT_OCCUPIED"
   | "MODIFICATION_CONFLICT"
@@ -427,6 +433,13 @@ export function evaluateModificationAvailability({
     };
   }
 
+  if (!isSelectableModificationLeaf(definition)) {
+    return {
+      ok: false,
+      code: "MODIFICATION_NOT_SELECTABLE",
+    };
+  }
+
   if (
     !isModificationApplicableToVehiclePowertrain(
       definition,
@@ -575,12 +588,14 @@ export function evaluateModificationBatchAvailability({
   installedModifications,
   hasNamedProviderEcuTune = false,
   hasNamedProviderTurbo = false,
+  allowLegacyNonSelectable = false,
 }: {
   vehicle: VehicleBuildVehicle;
   definitions: VehicleBuildDefinitionForRules[];
   installedModifications: VehicleBuildInstalledModification[];
   hasNamedProviderEcuTune?: boolean;
   hasNamedProviderTurbo?: boolean;
+  allowLegacyNonSelectable?: boolean;
 }): VehicleModificationBatchAvailability {
   const installedDefinitionIds = new Set(
     installedModifications.map((modification) => modification.modificationDefinitionId),
@@ -599,6 +614,14 @@ export function evaluateModificationBatchAvailability({
       return {
         ok: false,
         code: "DEFINITION_INACTIVE",
+        offendingDefinitionId: definition.id,
+      };
+    }
+
+    if (!allowLegacyNonSelectable && !isSelectableModificationLeaf(definition)) {
+      return {
+        ok: false,
+        code: "DEFINITION_NOT_SELECTABLE",
         offendingDefinitionId: definition.id,
       };
     }
@@ -728,6 +751,10 @@ export function vehicleBuildResultLabel(
 
   if (code === "MODIFICATION_INACTIVE") {
     return "Bu parça şu anda eklenemez.";
+  }
+
+  if (code === "MODIFICATION_NOT_SELECTABLE") {
+    return concreteModificationRequiredMessage;
   }
 
   if (code === "VEHICLE_NOT_FOUND") {
