@@ -16,11 +16,21 @@ export const legacyGenericModificationWarning =
 export const legacyTyreModificationWarning =
   "Eski genel lastik kaydı. Daha doğru rating için belirli bir marka ve model seçin.";
 
+export const legacyWheelModificationWarning =
+  "Eski genel jant kaydı. Daha doğru rating için belirli bir marka ve model seçin.";
+
 export const concreteModificationRequiredMessage =
   "Yalnızca belirli bir ürün veya modifikasyon versiyonu seçilebilir.";
 
 export const modificationSupportAdvisoryMessage =
   "Bu kurulum için destekleyici parçalar öneriliyor. Build yine de kaydedilebilir.";
+
+export const legacyWheelModificationCodes = new Set([
+  "wheels_lightweight",
+  "wheel_lightweight_cast_18x8_5_technical",
+  "wheel_flow_formed_18x9_technical",
+  "wheel_forged_18x9_technical",
+]);
 
 export const legacyGenericModificationCodes = new Set([
   "suspension_sport_springs_generic",
@@ -58,7 +68,7 @@ export const legacyGenericModificationCodes = new Set([
   "tyre_semi_slick_technical",
   "tyre_full_slick_technical",
   "tyre_wet_racing_technical",
-  "wheels_lightweight",
+  ...legacyWheelModificationCodes,
   "drivetrain_aftermarket_lsd",
   "drivetrain_transmission_software",
   "drivetrain_performance_clutch",
@@ -249,9 +259,15 @@ export function isLegacyGenericModificationDefinition(
 export function legacyModificationWarning(
   definition: ModificationCatalogNodeInput,
 ) {
-  return definition.category === "TYRES"
-    ? legacyTyreModificationWarning
-    : legacyGenericModificationWarning;
+  if (definition.category === "TYRES") {
+    return legacyTyreModificationWarning;
+  }
+
+  if (definition.category === "WHEELS") {
+    return legacyWheelModificationWarning;
+  }
+
+  return legacyGenericModificationWarning;
 }
 
 export function isConcreteModificationLeaf(
@@ -278,6 +294,20 @@ export function isConcreteModificationLeaf(
       !product ||
       normalizedProduct === normalizedBrand ||
       groupingLabels.has(normalizedProduct ?? "")
+    ) {
+      return false;
+    }
+  }
+
+  if (definition.category === "WHEELS") {
+    const brand = definition.brand?.trim();
+    const product = definition.variant?.trim() || definition.name?.trim();
+
+    if (
+      !brand ||
+      brand === "Generic" ||
+      brand === "Technical Configuration" ||
+      !product
     ) {
       return false;
     }

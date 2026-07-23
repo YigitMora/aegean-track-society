@@ -9,6 +9,7 @@ import {
   concreteModificationRequiredMessage,
   isSelectableModificationLeaf,
 } from "@/lib/modification-catalog-metadata";
+import { wheelProductModelLabel } from "@/lib/wheel-catalog";
 
 export const orderedModificationCategories = [
   ModificationCategory.ENGINE,
@@ -472,6 +473,7 @@ export function hasNamedProviderTurboForVehicle({
 
 export function formatModificationDefinition(definition: {
   code?: string;
+  category?: ModificationCategory;
   brand: string | null;
   name: string;
   variant: string | null;
@@ -486,6 +488,10 @@ export function formatModificationDefinition(definition: {
 
   const brand =
     definition.brand && definition.brand !== "Generic" ? definition.brand : null;
+
+  if (definition.category === ModificationCategory.WHEELS) {
+    return [brand, wheelProductModelLabel(definition)].filter(Boolean).join(" / ");
+  }
 
   return [brand, definition.name, definition.variant].filter(Boolean).join(" / ");
 }

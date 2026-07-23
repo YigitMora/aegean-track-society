@@ -18,6 +18,7 @@
     "validate:advisory-dependencies": "tsx scripts/validate-advisory-dependencies.ts",
     "validate:modification-catalog": "tsx scripts/validate-modification-catalog-expansion.ts",
     "validate:tyre-catalog": "tsx scripts/validate-tyre-catalog.ts",
+    "validate:wheel-catalog": "tsx scripts/validate-wheel-catalog.ts",
     "validate:release-foundations": "tsx scripts/validate-release-foundations.ts",
     "validate:release-safety": "tsx scripts/validate-release-safety.ts",
     "validate:repository-safety": "node scripts/release-safety/repository-safety.mjs",
