@@ -380,14 +380,12 @@ async function verifyVercelProductionMetadata({
   );
 
   const gitSource = deployment.gitSource;
-  const repositoryMatches = Boolean(
-    gitSource &&
-    ["github", "github-limited"].includes(String(gitSource.type)) &&
-    String(gitSource.org).toLowerCase() === expectedOwner?.toLowerCase() &&
-    String(gitSource.repo).toLowerCase() ===
-      expectedRepository?.toLowerCase() &&
-    gitSource.repoId === repositoryId,
-  );
+  const repositoryMatches = matchesVercelGitHubRepository({
+    gitSource,
+    expectedOwner,
+    expectedRepository,
+    repositoryId,
+  });
 
   const canonicalHost = new URL(canonicalOrigin).hostname;
   const aliasUrl = new URL(
@@ -433,6 +431,51 @@ async function verifyVercelProductionMetadata({
       `Vercel deployment provenance failed checks: ${failedChecks.join(", ")}.`,
     );
   }
+}
+
+function matchesVercelGitHubRepository({
+  gitSource,
+  expectedOwner,
+  expectedRepository,
+  repositoryId,
+}: {
+  gitSource: VercelDeployment["gitSource"];
+  expectedOwner: string | undefined;
+  expectedRepository: string | undefined;
+  repositoryId: number;
+}) {
+  if (
+    !gitSource ||
+    !["github", "github-limited"].includes(String(gitSource.type)) ||
+    !expectedOwner ||
+    !expectedRepository
+  ) {
+    return false;
+  }
+
+  const hasRepositoryId =
+    gitSource.repoId !== undefined && gitSource.repoId !== null;
+  const repositoryIdMatches =
+    !hasRepositoryId || String(gitSource.repoId) === String(repositoryId);
+  const sourceOwner =
+    typeof gitSource.org === "string" ? gitSource.org : undefined;
+  const sourceRepository =
+    typeof gitSource.repo === "string" ? gitSource.repo : undefined;
+  const hasOwner = sourceOwner !== undefined;
+  const hasRepository = sourceRepository !== undefined;
+  const hasRepositoryCoordinates = hasOwner || hasRepository;
+  const repositoryCoordinatesMatch =
+    !hasRepositoryCoordinates ||
+    (hasOwner &&
+      hasRepository &&
+      sourceOwner.toLowerCase() === expectedOwner.toLowerCase() &&
+      sourceRepository.toLowerCase() === expectedRepository.toLowerCase());
+
+  return (
+    (hasRepositoryId || hasRepositoryCoordinates) &&
+    repositoryIdMatches &&
+    repositoryCoordinatesMatch
+  );
 }
 
 function assertVercelConfiguration({

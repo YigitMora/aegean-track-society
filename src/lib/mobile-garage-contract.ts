@@ -108,6 +108,13 @@ export type MobileGarageErrorCode =
   | "MOBILE_GARAGE_INTERNAL_ERROR";
 
 export const mobileGaragePermanentDeleteConfirmation = "PERMANENT_DELETE";
+export const mobileGarageBulkOperations = [
+  "ARCHIVE",
+  "RESTORE",
+  "PERMANENT_DELETE",
+] as const;
+export type MobileGarageBulkOperation =
+  (typeof mobileGarageBulkOperations)[number];
 export const mobileGarageLifecycleContractHeader = "X-ATS-Garage-Contract";
 export const mobileGarageLifecycleContractVersion = "lifecycle-v1";
 
@@ -382,6 +389,63 @@ export function hasMobileGaragePermanentDeleteConfirmation(value: unknown) {
     Object.keys(value).length === 1 &&
     value.confirmation === mobileGaragePermanentDeleteConfirmation
   );
+}
+
+export function parseMobileGarageBulkLifecycleBody(value: unknown):
+  | {
+      operation: MobileGarageBulkOperation;
+      vehicleIds: string[];
+      confirmation: typeof mobileGaragePermanentDeleteConfirmation | null;
+    }
+  | null {
+  if (!isPlainObject(value)) {
+    return null;
+  }
+
+  const expectedFields =
+    value.operation === "PERMANENT_DELETE"
+      ? new Set(["operation", "vehicleIds", "confirmation"])
+      : new Set(["operation", "vehicleIds"]);
+  const fields = Object.keys(value);
+
+  if (
+    fields.length !== expectedFields.size ||
+    !fields.every((field) => expectedFields.has(field)) ||
+    !mobileGarageBulkOperations.includes(
+      value.operation as MobileGarageBulkOperation,
+    ) ||
+    !Array.isArray(value.vehicleIds)
+  ) {
+    return null;
+  }
+
+  const vehicleIds = value.vehicleIds.map((vehicleId) =>
+    typeof vehicleId === "string" ? vehicleId.trim() : "",
+  );
+  if (
+    vehicleIds.length === 0 ||
+    vehicleIds.length > 5 ||
+    vehicleIds.some((vehicleId) => !vehicleId || vehicleId.length > 128) ||
+    new Set(vehicleIds).size !== vehicleIds.length
+  ) {
+    return null;
+  }
+
+  if (
+    value.operation === "PERMANENT_DELETE" &&
+    value.confirmation !== mobileGaragePermanentDeleteConfirmation
+  ) {
+    return null;
+  }
+
+  return {
+    operation: value.operation as MobileGarageBulkOperation,
+    vehicleIds,
+    confirmation:
+      value.operation === "PERMANENT_DELETE"
+        ? mobileGaragePermanentDeleteConfirmation
+        : null,
+  };
 }
 
 export async function authenticateMobileGarageMember(request: Request) {

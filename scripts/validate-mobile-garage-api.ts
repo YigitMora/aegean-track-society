@@ -4,6 +4,7 @@ import {
   buildMobileGarageResponseBody,
   buildMobileVehicleDefinitionsResponseBody,
   hasMobileGaragePermanentDeleteConfirmation,
+  parseMobileGarageBulkLifecycleBody,
   mobileGarageErrorResponse,
   mobileGarageLifecycleContractHeader,
   mobileGarageLifecycleContractVersion,
@@ -57,6 +58,46 @@ function validateLifecycleRequestContract() {
     },
   ]) {
     assert.equal(hasMobileGaragePermanentDeleteConfirmation(invalidBody), false);
+  }
+
+  assert.deepEqual(
+    parseMobileGarageBulkLifecycleBody({
+      operation: "ARCHIVE",
+      vehicleIds: [" vehicle-1 ", "vehicle-2"],
+    }),
+    {
+      operation: "ARCHIVE",
+      vehicleIds: ["vehicle-1", "vehicle-2"],
+      confirmation: null,
+    },
+  );
+  assert.deepEqual(
+    parseMobileGarageBulkLifecycleBody({
+      operation: "PERMANENT_DELETE",
+      vehicleIds: ["vehicle-1"],
+      confirmation: mobileGaragePermanentDeleteConfirmation,
+    }),
+    {
+      operation: "PERMANENT_DELETE",
+      vehicleIds: ["vehicle-1"],
+      confirmation: mobileGaragePermanentDeleteConfirmation,
+    },
+  );
+  for (const invalidBody of [
+    { operation: "ARCHIVE", vehicleIds: [] },
+    { operation: "ARCHIVE", vehicleIds: ["vehicle-1", "vehicle-1"] },
+    {
+      operation: "RESTORE",
+      vehicleIds: ["vehicle-1"],
+      userId: "must-not-be-accepted",
+    },
+    {
+      operation: "PERMANENT_DELETE",
+      vehicleIds: ["vehicle-1"],
+      confirmation: "yes",
+    },
+  ]) {
+    assert.equal(parseMobileGarageBulkLifecycleBody(invalidBody), null);
   }
 }
 
@@ -350,6 +391,9 @@ function validateSourceGuards() {
   const deleteRoute = source(
     "src/app/api/mobile/v1/garage/[vehicleId]/permanent-delete/route.ts",
   );
+  const bulkRoute = source(
+    "src/app/api/mobile/v1/garage/bulk-lifecycle/route.ts",
+  );
 
   for (const route of [garageRoute, definitionsRoute]) {
     assert.match(route, /runtime = "nodejs"/);
@@ -382,6 +426,12 @@ function validateSourceGuards() {
   assert.match(deleteRoute, /export async function DELETE/);
   assert.match(deleteRoute, /readRequestBody\(request\)/);
   assert.match(deleteRoute, /MOBILE_GARAGE_DELETE_CONFIRMATION_REQUIRED/);
+  assert.match(bulkRoute, /runtime = "nodejs"/);
+  assert.match(bulkRoute, /dynamic = "force-dynamic"/);
+  assert.match(bulkRoute, /authenticateMobileGarageMember\(request\)/);
+  assert.match(bulkRoute, /mutateMobileGarageVehicles\(\{/);
+  assert.match(bulkRoute, /memberUserId: memberUser\.id/);
+  assert.doesNotMatch(bulkRoute, /body\.userId|body\.email|prisma\./);
 
   assert.ok(
     garageRoute.indexOf("authenticateMobileGarageMember(request)") <
@@ -426,6 +476,8 @@ function validateSourceGuards() {
   );
   assert.match(implementation, /archiveGarageVehicles\(\{/);
   assert.match(implementation, /restoreGarageVehicle\(\{/);
+  assert.match(implementation, /restoreGarageVehicles\(\{/);
+  assert.match(implementation, /parseMobileGarageBulkLifecycleBody\(body\)/);
   assert.match(implementation, /permanentlyDeleteArchivedGarageVehicles\(\{/);
   assert.match(implementation, /deleteOwnedVehicleImageObjects\(\{/);
   assert.match(implementation, /targetUserId: memberUserId/);
