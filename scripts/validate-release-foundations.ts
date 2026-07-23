@@ -91,6 +91,21 @@ assert.ok(
     (request) => !new Headers(request.headers).has("Authorization"),
   ),
 );
+await verifyProductionRelease(
+  verificationOptions(
+    createMockFetch({ deploymentRepositoryIdOnly: true }).fetch,
+  ),
+);
+await verifyProductionRelease(
+  verificationOptions(
+    createMockFetch({ deploymentRepositoryIdOnlyAsString: true }).fetch,
+  ),
+);
+await verifyProductionRelease(
+  verificationOptions(
+    createMockFetch({ deploymentRepositoryCoordinatesOnly: true }).fetch,
+  ),
+);
 
 await expectVerificationFailure(
   { manifestSha: "f".repeat(40) },
@@ -143,6 +158,11 @@ await expectVerificationFailure(
 );
 await expectVerificationFailure(
   { deploymentRepositoryIdMalformed: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "repository_match",
+);
+await expectVerificationFailure(
+  { deploymentRepositoryCoordinatesOnlyWrong: true },
   "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
   "repository_match",
 );
@@ -472,7 +492,7 @@ assert.doesNotMatch(
 );
 
 console.log(
-  `validate-release-foundations passed (4 positive provenance fixtures, ${adversarialVerificationFixtureCount} adversarial provenance fixtures, ${adversarialInvocationFixtureCount} adversarial invocation fixtures)`,
+  `validate-release-foundations passed (7 positive provenance fixtures, ${adversarialVerificationFixtureCount} adversarial provenance fixtures, ${adversarialInvocationFixtureCount} adversarial invocation fixtures)`,
 );
 }
 
@@ -499,6 +519,10 @@ type MockFetchOptions = {
   projectRepositoryIdMalformed?: boolean;
   deploymentRepositoryIdWrong?: boolean;
   deploymentRepositoryIdMalformed?: boolean;
+  deploymentRepositoryIdOnly?: boolean;
+  deploymentRepositoryIdOnlyAsString?: boolean;
+  deploymentRepositoryCoordinatesOnly?: boolean;
+  deploymentRepositoryCoordinatesOnlyWrong?: boolean;
   bothVercelRepositoryIdsWrong?: boolean;
   untrustedProjectLinkType?: boolean;
   previewTarget?: boolean;
@@ -871,15 +895,29 @@ function createMockFetch(options?: MockFetchOptions) {
             ...(options?.incompleteDeploymentGitSource
               ? {}
               : {
-                  org: "YigitMora",
-                  repo: "aegean-track-society",
-                  repoId:
-                    options?.deploymentRepositoryIdMalformed
-                      ? String(repositoryId)
-                      : options?.deploymentRepositoryIdWrong ||
-                          options?.bothVercelRepositoryIdsWrong
-                      ? repositoryId + 1
-                      : repositoryId,
+                  ...(options?.deploymentRepositoryIdOnly ||
+                  options?.deploymentRepositoryIdOnlyAsString
+                    ? {}
+                    : {
+                        org: "YigitMora",
+                        repo: options?.deploymentRepositoryCoordinatesOnlyWrong
+                          ? "another-repository"
+                          : "aegean-track-society",
+                      }),
+                  ...(options?.deploymentRepositoryCoordinatesOnly ||
+                  options?.deploymentRepositoryCoordinatesOnlyWrong
+                    ? {}
+                    : {
+                        repoId:
+                          options?.deploymentRepositoryIdMalformed
+                            ? "not-a-repository-id"
+                            : options?.deploymentRepositoryIdOnlyAsString
+                            ? String(repositoryId)
+                            : options?.deploymentRepositoryIdWrong ||
+                              options?.bothVercelRepositoryIdsWrong
+                            ? repositoryId + 1
+                            : repositoryId,
+                      }),
                 }),
             ref: options?.vercelDeploymentRefWrong ? "preview" : "main",
             sha: options?.vercelDeploymentShaWrong
