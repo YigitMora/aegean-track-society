@@ -59,6 +59,75 @@ export const legacyGenericModificationCodes = new Set([
   "safety_fire_extinguisher",
 ]);
 
+export type ModificationRecommendationGroup = {
+  description: string;
+  optionCodes: readonly string[];
+};
+
+const modificationRecommendationGroupsByCode: Readonly<
+  Record<string, readonly ModificationRecommendationGroup[]>
+> = {
+  rsa_bmw_b48_g20_280: [
+    {
+      description: "Tekrarlı yük için yükseltilmiş şarj havası soğutması önerilir.",
+      optionCodes: ["cooling_charge_air_cooler_vehicle_specific"],
+    },
+  ],
+  engine_rsa300: [
+    {
+      description:
+        "Tekrarlı yüksek yük için şarj havası ve motor yağı soğutması önerilir.",
+      optionCodes: [
+        "cooling_charge_air_cooler_vehicle_specific",
+        "cooling_engine_oil_thermostatic_vehicle_specific",
+      ],
+    },
+  ],
+  rsa_bmw_b48_g20_320_e25: [
+    {
+      description: "Tekrarlı yük ve pist kullanımı için destek parçaları önerilir.",
+      optionCodes: [
+        "cooling_charge_air_cooler_vehicle_specific",
+        "cooling_engine_oil_thermostatic_vehicle_specific",
+        "ignition_colder_spark_plugs_vehicle_specific",
+        "charge_pipe_reinforced_vehicle_specific",
+      ],
+    },
+  ],
+  ecu_b48_g20_custom_dyno_hybrid_turbo: [
+    {
+      description:
+        "Ölçülmüş yakıt, ateşleme, yağ soğutma ve şanzıman desteği önerilir.",
+      optionCodes: [
+        "fuel_lpfp_upgrade_vehicle_specific",
+        "fuel_ethanol_content_sensor_vehicle_specific",
+        "ignition_colder_spark_plugs_vehicle_specific",
+        "ignition_coils_upgrade_vehicle_specific",
+        "cooling_engine_oil_thermostatic_vehicle_specific",
+        "tune_xhp_bmw_zf8_stage_3",
+      ],
+    },
+  ],
+  turbo_b48_g20_hybrid_vehicle_specific: [
+    {
+      description:
+        "Yakıt, şarj havası, ateşleme ve aktarma sistemi desteği önerilir.",
+      optionCodes: [
+        "fuel_hpfp_upgrade_vehicle_specific",
+        "fuel_lpfp_upgrade_vehicle_specific",
+        "cooling_charge_air_cooler_vehicle_specific",
+        "ignition_colder_spark_plugs_vehicle_specific",
+        "charge_pipe_reinforced_vehicle_specific",
+        "tune_xhp_bmw_zf8_stage_3",
+      ],
+    },
+  ],
+};
+
+export function modificationRecommendationGroups(code: string | null | undefined) {
+  return code ? modificationRecommendationGroupsByCode[code] ?? [] : [];
+}
+
 export function isLegacyGenericModificationDefinition(
   definition: ModificationCatalogNodeInput,
 ) {
