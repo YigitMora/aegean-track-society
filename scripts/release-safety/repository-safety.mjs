@@ -54,6 +54,7 @@ if (
 
 const migrationWorkflow = read('.github/workflows/production-database.yml');
 const seedWorkflow = read('.github/workflows/production-seed.yml');
+const eventSeedWorkflow = read('.github/workflows/production-event-seed.yml');
 const ciWorkflow = read('.github/workflows/ci.yml');
 
 requireMatch(migrationWorkflow, /workflow_dispatch:/, 'Migration must be manual.');
@@ -67,17 +68,36 @@ requireMatch(migrationWorkflow, /group:\s*production-database/, 'Migration concu
 requireMatch(migrationWorkflow, /pnpm prisma:deploy/, 'Migration command is missing.');
 requireNoMatch(migrationWorkflow, /prisma(?::seed|\s+db\s+seed)/, 'Migration must never seed.');
 
-requireMatch(seedWorkflow, /workflow_dispatch:/, 'Seed must be manual.');
+requireMatch(seedWorkflow, /workflow_dispatch:/, 'Catalog seed must be manual.');
 requireNoMatch(
   seedWorkflow,
   /^\s{2}(?:push|pull_request|schedule|deployment_status|workflow_run):/m,
-  'Seed workflow has an automatic trigger.',
+  'Catalog seed workflow has an automatic trigger.',
 );
-requireMatch(seedWorkflow, /environment:\s*Production/, 'Seed must use Production.');
-requireMatch(seedWorkflow, /group:\s*production-database/, 'Seed concurrency is missing.');
-requireMatch(seedWorkflow, /SEED PRODUCTION/, 'Seed typed confirmation is missing.');
-requireMatch(seedWorkflow, /pnpm prisma:seed/, 'Seed command is missing.');
-requireNoMatch(seedWorkflow, /prisma(?::deploy|\s+migrate\s+deploy)/, 'Seed must never migrate.');
+requireMatch(seedWorkflow, /environment:\s*Production/, 'Catalog seed must use Production.');
+requireMatch(seedWorkflow, /group:\s*production-database/, 'Catalog seed concurrency is missing.');
+requireMatch(seedWorkflow, /test "\$CONFIRMATION" = "SEED PRODUCTION"/, 'Catalog seed confirmation is missing.');
+requireMatch(seedWorkflow, /pnpm seed:catalog/, 'Catalog seed command is missing.');
+requireMatch(seedWorkflow, /git rev-parse origin\/main/, 'Catalog seed must verify current main.');
+requireNoMatch(seedWorkflow, /SEED_PACKAGE|event_slug|package_price|package_capacity/, 'Catalog seed must not accept event inputs.');
+requireNoMatch(seedWorkflow, /prisma(?::deploy|\s+migrate\s+deploy)/, 'Catalog seed must never migrate.');
+
+requireMatch(eventSeedWorkflow, /workflow_dispatch:/, 'Event seed must be manual.');
+requireNoMatch(
+  eventSeedWorkflow,
+  /^\s{2}(?:push|pull_request|schedule|deployment_status|workflow_run):/m,
+  'Event seed workflow has an automatic trigger.',
+);
+requireMatch(eventSeedWorkflow, /environment:\s*Production/, 'Event seed must use Production.');
+requireMatch(eventSeedWorkflow, /group:\s*production-database/, 'Event seed concurrency is missing.');
+requireMatch(eventSeedWorkflow, /test "\$CONFIRMATION" = "SEED EVENT PRODUCTION"/, 'Event seed confirmation is missing.');
+requireMatch(eventSeedWorkflow, /event_slug:/, 'Event seed slug input is missing.');
+requireMatch(eventSeedWorkflow, /package_price:/, 'Event seed price input is missing.');
+requireMatch(eventSeedWorkflow, /package_capacity:/, 'Event seed capacity input is missing.');
+requireMatch(eventSeedWorkflow, /pnpm seed:event/, 'Event seed command is missing.');
+requireMatch(eventSeedWorkflow, /git rev-parse origin\/main/, 'Event seed must verify current main.');
+requireNoMatch(eventSeedWorkflow, /pnpm seed:catalog/, 'Event seed must not run the catalog seed.');
+requireNoMatch(eventSeedWorkflow, /prisma(?::deploy|\s+migrate\s+deploy)/, 'Event seed must never migrate.');
 
 requireNoMatch(ciWorkflow, /DATABASE_URL|secrets\./, 'Ordinary CI must not receive secrets.');
 requireNoMatch(
@@ -96,6 +116,12 @@ if (packageJson.scripts?.['prisma:deploy'] !== 'prisma migrate deploy') {
 }
 if (packageJson.scripts?.['prisma:seed'] !== 'prisma db seed') {
   failures.push('The prisma:seed script must remain exactly prisma db seed.');
+}
+if (packageJson.scripts?.['seed:catalog'] !== 'tsx prisma/seed.ts --scope=catalog') {
+  failures.push('The catalog seed script must invoke only the catalog scope.');
+}
+if (packageJson.scripts?.['seed:event'] !== 'tsx prisma/seed.ts --scope=event') {
+  failures.push('The event seed script must invoke only the event scope.');
 }
 if (!/^PAYMENT_MODE=["']?manual["']?$/m.test(read('.env.example'))) {
   failures.push('The documented default PAYMENT_MODE must remain manual.');

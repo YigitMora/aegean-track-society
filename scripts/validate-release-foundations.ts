@@ -353,6 +353,7 @@ assert.match(releaseRoute, /dynamic = "force-dynamic"/);
 
 const migrationWorkflow = read(".github/workflows/production-database.yml");
 const seedWorkflow = read(".github/workflows/production-seed.yml");
+const eventSeedWorkflow = read(".github/workflows/production-event-seed.yml");
 const releaseWorkflow = read(".github/workflows/verify-production-release.yml");
 const ciWorkflow = read(".github/workflows/ci.yml");
 const secretScanner = read("scripts/release-safety/secret-scan.mjs");
@@ -366,9 +367,27 @@ assertProductionDatabaseWorkflow({
 assertProductionDatabaseWorkflow({
   source: seedWorkflow,
   confirmationPrefix: "SEED PRODUCTION",
-  operationCommand: "pnpm prisma:seed",
-  forbiddenCommand: /pnpm prisma:deploy|prisma migrate deploy/,
+  operationCommand: "pnpm seed:catalog",
+  forbiddenCommand: /pnpm prisma:deploy|prisma migrate deploy|SEED_PACKAGE|event_slug/,
+  confirmationIncludesSha: false,
+  verifyCurrentMain: true,
 });
+assertProductionDatabaseWorkflow({
+  source: eventSeedWorkflow,
+  confirmationPrefix: "SEED EVENT PRODUCTION",
+  operationCommand: "pnpm seed:event",
+  forbiddenCommand: /pnpm prisma:deploy|prisma migrate deploy|pnpm seed:catalog/,
+  confirmationIncludesSha: false,
+  verifyCurrentMain: true,
+});
+assert.doesNotMatch(
+  seedWorkflow,
+  /SEED_PACKAGE|event_slug|package_price|package_capacity/,
+);
+assert.match(eventSeedWorkflow, /event_slug:/);
+assert.match(eventSeedWorkflow, /package_price:/);
+assert.match(eventSeedWorkflow, /package_capacity:/);
+assert.match(eventSeedWorkflow, /SEED_EVENT_SLUG:/);
 assert.doesNotMatch(ciWorkflow, /DATABASE_URL|secrets\./);
 assertWorkflowActionPins(ciWorkflow, 3);
 assert.match(ciWorkflow, /persist-credentials:\s*false/);
@@ -946,11 +965,15 @@ function assertProductionDatabaseWorkflow({
   confirmationPrefix,
   operationCommand,
   forbiddenCommand,
+  confirmationIncludesSha = true,
+  verifyCurrentMain = false,
 }: {
   source: string;
   confirmationPrefix: string;
   operationCommand: string;
   forbiddenCommand: RegExp;
+  confirmationIncludesSha?: boolean;
+  verifyCurrentMain?: boolean;
 }) {
   assert.match(source, /workflow_dispatch:/);
   assert.doesNotMatch(
@@ -960,17 +983,23 @@ function assertProductionDatabaseWorkflow({
   assert.match(source, /group:\s*production-database/);
   assert.match(source, /test "\$GITHUB_REF" = "refs\/heads\/main"/);
   assert.match(source, /\[\[ "\$GITHUB_SHA" =~ \^\[0-9a-f\]\{40\}\$ \]\]/);
-  assert.ok(
-    source.includes(
-      `test "$CONFIRMATION" = "${confirmationPrefix} $GITHUB_SHA"`,
-    ),
-  );
+  const confirmation = confirmationIncludesSha
+    ? `${confirmationPrefix} $GITHUB_SHA`
+    : confirmationPrefix;
+  assert.ok(source.includes(`test "$CONFIRMATION" = "${confirmation}"`));
   assert.match(source, /approved_sha=\$GITHUB_SHA/);
   assert.match(source, /needs:\s*authorize/);
   assert.match(source, /ref:\s*\$\{\{ needs\.authorize\.outputs\.approved_sha \}\}/);
   assert.match(source, /persist-credentials:\s*false/);
   assert.match(source, /environment:\s*Production/);
   assert.equal(source.match(/secrets\.DATABASE_URL/g)?.length, 1);
+
+  if (verifyCurrentMain) {
+    assert.match(source, /fetch-depth:\s*0/);
+    assert.match(source, /git fetch --no-tags origin main/);
+    assert.match(source, /git rev-parse origin\/main/);
+    assert.match(source, /test "\$CHECKED_OUT_SHA" = "\$REMOTE_MAIN_SHA"/);
+  }
 
   const installIndex = source.indexOf("pnpm install --frozen-lockfile");
   const secretIndex = source.indexOf("DATABASE_URL: ${{ secrets.DATABASE_URL }}");

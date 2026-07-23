@@ -24,6 +24,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db seed",
+    "seed:catalog": "tsx prisma/seed.ts --scope=catalog",
+    "seed:event": "tsx prisma/seed.ts --scope=event",
     "prisma:studio": "prisma studio",
     "payments:reconcile": "tsx scripts/reconcile-payments.ts"
   },

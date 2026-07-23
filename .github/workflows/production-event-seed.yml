@@ -1,10 +1,22 @@
-name: Production Catalog Seed
+name: Production Event Seed
 
 on:
   workflow_dispatch:
     inputs:
+      event_slug:
+        description: "Event slug"
+        required: true
+        type: string
+      package_price:
+        description: "SEP20 package price"
+        required: true
+        type: string
+      package_capacity:
+        description: "SEP20 package capacity"
+        required: true
+        type: string
       confirmation:
-        description: "Type SEED PRODUCTION"
+        description: "Type SEED EVENT PRODUCTION"
         required: true
         type: string
 
@@ -17,40 +29,47 @@ concurrency:
 
 jobs:
   authorize:
-    name: Authorize current main catalog seed
+    name: Authorize current main event seed
     runs-on: ubuntu-latest
     timeout-minutes: 2
     outputs:
       approved_sha: ${{ steps.authorize.outputs.approved_sha }}
 
     steps:
-      - name: Verify trusted main dispatch and confirmation
+      - name: Verify trusted main dispatch and event inputs
         id: authorize
         shell: bash
         env:
           CONFIRMATION: ${{ inputs.confirmation }}
+          SEED_EVENT_SLUG: ${{ inputs.event_slug }}
+          SEED_PACKAGE_SEP20_PRICE: ${{ inputs.package_price }}
+          SEED_PACKAGE_SEP20_CAPACITY: ${{ inputs.package_capacity }}
         run: |
           test "$GITHUB_REF" = "refs/heads/main"
           [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
-          test "$CONFIRMATION" = "SEED PRODUCTION"
+          test "$CONFIRMATION" = "SEED EVENT PRODUCTION"
+          test "$SEED_EVENT_SLUG" = "kula-mytrack-2026"
+          [[ "$SEED_PACKAGE_SEP20_PRICE" =~ ^[0-9]+([.][0-9]{1,2})?$ ]]
+          [[ "$SEED_PACKAGE_SEP20_CAPACITY" =~ ^[1-9][0-9]*$ ]]
           echo "approved_sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Record authorized operation
         shell: bash
         run: |
           {
-            echo "### Authorized production catalog seed"
+            echo "### Authorized production event seed"
             echo "- Actor: $GITHUB_ACTOR"
+            echo "- Event: ${{ inputs.event_slug }}"
             echo "- Commit: $GITHUB_SHA"
             echo "- Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           } >> "$GITHUB_STEP_SUMMARY"
 
   seed:
-    name: Seed production catalog
+    name: Seed production event reference data
     needs: authorize
     runs-on: ubuntu-latest
     environment: Production
-    timeout-minutes: 20
+    timeout-minutes: 10
 
     steps:
       - name: Check out repository
@@ -83,9 +102,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Seed production catalog
+      - name: Seed production event reference data
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SEED_EVENT_SLUG: ${{ inputs.event_slug }}
+          SEED_PACKAGE_SEP20_PRICE: ${{ inputs.package_price }}
+          SEED_PACKAGE_SEP20_CAPACITY: ${{ inputs.package_capacity }}
         run: |
           test -n "$DATABASE_URL"
-          pnpm seed:catalog
+          pnpm seed:event

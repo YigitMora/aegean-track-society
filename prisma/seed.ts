@@ -20,7 +20,8 @@ import { calculateVehicleCalibrationScores } from "./vehicle-rating-calibration"
 
 const prisma = new PrismaClient();
 
-const eventSlug = "kula-mytrack-2026";
+const supportedEventSlug = "kula-mytrack-2026";
+const eventSlug = process.env.SEED_EVENT_SLUG ?? supportedEventSlug;
 const sep20 = new Date("2026-09-20T00:00:00.000Z");
 // Platform-specific definitions start inactive and are reactivated below only
 // after Sprint 4B template-based compatibility rows have been seeded.
@@ -19022,6 +19023,8 @@ type SeedPhaseLabel =
   | "SEED_TUNING_SPECIFICATIONS"
   | "SEED_TOTAL";
 
+type SeedScope = "all" | "catalog" | "event";
+
 type SeedPhaseCounts = {
   inputCount: number;
   createdCount: number;
@@ -19044,6 +19047,7 @@ const seedPhaseSummaries: SeedPhaseCounts[] = [];
 const seedUpdateConcurrency = 8;
 const seedDryRun = process.argv.includes("--dry-run") ||
   process.argv.includes("--validate-only");
+const seedScope = parseSeedScope(process.argv.slice(2));
 const modificationCompatibilitySelect = {
   id: true,
   modificationDefinitionId: true,
@@ -19538,29 +19542,52 @@ function compatibilityInputCount() {
   );
 }
 
-async function runSeedDryRun() {
-  validateSeedReferenceGraph();
-  logDryRunPhase("SEED_EVENTS", 4);
-  logDryRunPhase("SEED_MODIFICATION_DEFINITIONS", modificationCatalog.length);
-  logDryRunPhase("SEED_POWERTRAIN_APPLICABILITY", modificationPowertrainApplicabilities.length);
-  logDryRunPhase("SEED_PRODUCT_SPECIFICATIONS", productSpecificationInputCount());
-  logDryRunPhase("SEED_TUNING_SPECIFICATIONS", tuningPackageSpecifications.length);
-  logDryRunPhase("SEED_RULES", 0);
-  logDryRunPhase("SEED_CONFLICTS", modificationConflictCodePairs.length);
-  logDryRunPhase("SEED_REQUIREMENTS", modificationRequirementInputCount());
-  logDryRunPhase("SEED_PLATFORM_FAMILIES", vehiclePlatformFamilies.length);
-  logDryRunPhase("SEED_ENGINE_FAMILIES", vehicleEngineFamilies.length);
-  logDryRunPhase("SEED_VEHICLE_DEFINITIONS", vehicleDefinitions.length);
-  logDryRunPhase("SEED_COMPATIBILITIES", compatibilityInputCount());
-  logDryRunPhase(
-    "SEED_MODIFICATION_IMPACTS",
-    platformModificationImpacts.length + broadProductFamilyCompatibilityCodes.length,
-  );
-  console.log("SEED_DRY_RUN", {
-    status: "ok",
-    modificationDefinitions: modificationCatalog.length,
-    vehicleDefinitions: vehicleDefinitions.length,
-  });
+async function runSeedDryRun(scope: SeedScope) {
+  if (scope === "all" || scope === "event") {
+    validateEventSeedConfiguration();
+    logDryRunPhase("SEED_EVENTS", 4);
+    console.log("EVENT_SEED_DRY_RUN", {
+      status: "ok",
+      eventSlug,
+      packageCode: "SEP20",
+    });
+  }
+
+  if (scope === "all" || scope === "catalog") {
+    validateSeedReferenceGraph();
+    logDryRunPhase("SEED_MODIFICATION_DEFINITIONS", modificationCatalog.length);
+    logDryRunPhase(
+      "SEED_POWERTRAIN_APPLICABILITY",
+      modificationPowertrainApplicabilities.length,
+    );
+    logDryRunPhase(
+      "SEED_PRODUCT_SPECIFICATIONS",
+      productSpecificationInputCount(),
+    );
+    logDryRunPhase("SEED_TUNING_SPECIFICATIONS", tuningPackageSpecifications.length);
+    logDryRunPhase("SEED_RULES", 0);
+    logDryRunPhase("SEED_CONFLICTS", modificationConflictCodePairs.length);
+    logDryRunPhase("SEED_REQUIREMENTS", modificationRequirementInputCount());
+    logDryRunPhase("SEED_PLATFORM_FAMILIES", vehiclePlatformFamilies.length);
+    logDryRunPhase("SEED_ENGINE_FAMILIES", vehicleEngineFamilies.length);
+    logDryRunPhase("SEED_VEHICLE_DEFINITIONS", vehicleDefinitions.length);
+    logDryRunPhase("SEED_COMPATIBILITIES", compatibilityInputCount());
+    logDryRunPhase(
+      "SEED_MODIFICATION_IMPACTS",
+      platformModificationImpacts.length + broadProductFamilyCompatibilityCodes.length,
+    );
+    console.log("CATALOG_SEED_DRY_RUN", {
+      status: "ok",
+      modificationDefinitions: modificationCatalog.length,
+      vehicleDefinitions: vehicleDefinitions.length,
+      duplicateStableCodes: countDuplicateValues(
+        vehicleDefinitions.map((definition) => definition.code),
+      ),
+      bmwMBrandCount: vehicleDefinitions.filter(
+        (definition) => definition.brand === "BMW M",
+      ).length,
+    });
+  }
 }
 
 function logDryRunPhase(phase: Exclude<SeedPhaseLabel, "SEED_TOTAL">, inputCount: number) {
@@ -19736,15 +19763,60 @@ function assertSeedCodes(label: string, codes: string[], knownCodes: Set<string>
   }
 }
 
+function parseSeedScope(args: string[]): SeedScope {
+  const inlineScope = args.find((argument) => argument.startsWith("--scope="));
+  const scopeFlagIndex = args.indexOf("--scope");
+  const value = inlineScope?.slice("--scope=".length) ??
+    (scopeFlagIndex >= 0 ? args[scopeFlagIndex + 1] : undefined) ??
+    "all";
+
+  if (value === "all" || value === "catalog" || value === "event") {
+    return value;
+  }
+
+  throw new Error(`Unsupported seed scope ${value}`);
+}
+
+function validateEventSeedConfiguration() {
+  if (eventSlug !== supportedEventSlug) {
+    throw new Error(
+      `Unsupported event seed slug ${eventSlug}; expected ${supportedEventSlug}`,
+    );
+  }
+}
+
+function countDuplicateValues(values: readonly string[]) {
+  const counts = new Map<string, number>();
+
+  for (const value of values) {
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+
+  return Array.from(counts.values()).filter((count) => count > 1).length;
+}
+
 async function main() {
   const totalStartedAt = Date.now();
 
   if (seedDryRun) {
-    await runSeedDryRun();
+    await runSeedDryRun(seedScope);
     logSeedTotal(Date.now() - totalStartedAt);
     return;
   }
 
+  if (seedScope === "all" || seedScope === "event") {
+    await seedEventReferenceData();
+  }
+
+  if (seedScope === "all" || seedScope === "catalog") {
+    await seedCatalog();
+  }
+
+  logSeedTotal(Date.now() - totalStartedAt);
+}
+
+async function seedEventReferenceData() {
+  validateEventSeedConfiguration();
   const { event, links } = await timeSeedPhase("SEED_EVENTS", 4, async () => {
     const event = await prisma.event.upsert({
     where: { slug: eventSlug },
@@ -19838,6 +19910,13 @@ async function main() {
       updatedCount: 4,
     });
   });
+
+  console.log(`Seeded ${event.name} with ${links.length} package-day links.`);
+}
+
+async function seedCatalog() {
+  const phaseSummaryStart = seedPhaseSummaries.length;
+  const before = await readCatalogSeedSnapshot();
 
   const definitionsByCode = await timeSeedPhase(
     "SEED_MODIFICATION_DEFINITIONS",
@@ -19945,12 +20024,74 @@ async function main() {
     },
   );
 
-  console.log(`Seeded ${event.name} with ${links.length} package-day links.`);
+  const after = await readCatalogSeedSnapshot();
+  const missingStableCodes = Array.from(before.activeCodes).filter(
+    (code) => !after.activeCodes.has(code),
+  );
+
+  if (missingStableCodes.length > 0) {
+    throw new Error(
+      `Catalog seed removed active stable codes: ${missingStableCodes.join(", ")}`,
+    );
+  }
+
+  const counts = summarizeSeedCounts(
+    seedPhaseSummaries.slice(phaseSummaryStart),
+  );
   console.log(`Seeded ${modificationCatalog.length} modification definitions.`);
   console.log(`Seeded ${vehiclePlatformFamilies.length} platform families.`);
   console.log(`Seeded ${vehicleEngineFamilies.length} engine families.`);
   console.log(`Seeded ${vehicleDefinitions.length} vehicle definitions.`);
-  logSeedTotal(Date.now() - totalStartedAt);
+  console.log("CATALOG_SEED_SUMMARY", {
+    activeDefinitionsBefore: before.activeDefinitionCount,
+    activeDefinitionsAfter: after.activeDefinitionCount,
+    createdCount: counts.createdCount,
+    updatedCount: counts.updatedCount,
+    unchangedCount: counts.unchangedCount,
+    duplicateStableCodes: after.duplicateStableCodes,
+    bmwMBrandCount: after.bmwMBrandCount,
+    stableCodeLossCount: missingStableCodes.length,
+  });
+}
+
+async function readCatalogSeedSnapshot() {
+  const definitions = await prisma.vehicleDefinition.findMany({
+    where: {
+      active: true,
+    },
+    select: {
+      code: true,
+      brand: true,
+    },
+  });
+
+  return {
+    activeDefinitionCount: definitions.length,
+    activeCodes: new Set(definitions.map((definition) => definition.code)),
+    duplicateStableCodes: countDuplicateValues(
+      definitions.map((definition) => definition.code),
+    ),
+    bmwMBrandCount: definitions.filter(
+      (definition) => definition.brand === "BMW M",
+    ).length,
+  };
+}
+
+function summarizeSeedCounts(phases: readonly SeedPhaseCounts[]) {
+  return phases.reduce<SeedPhaseCounts>(
+    (summary, phase) => ({
+      inputCount: summary.inputCount + phase.inputCount,
+      createdCount: summary.createdCount + phase.createdCount,
+      updatedCount: summary.updatedCount + phase.updatedCount,
+      unchangedCount: summary.unchangedCount + phase.unchangedCount,
+    }),
+    {
+      inputCount: 0,
+      createdCount: 0,
+      updatedCount: 0,
+      unchangedCount: 0,
+    },
+  );
 }
 
 async function seedModificationCatalog(): Promise<
