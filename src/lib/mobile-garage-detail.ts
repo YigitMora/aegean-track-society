@@ -68,6 +68,7 @@ import {
   tyreProductModelLabel,
   tyreRoadUseLabel,
   tyreSurfaceIntentLabel,
+  tyreTreadwearLabel,
   visibleTyreClassBadgeLabel,
   visibleTyreClassForDefinition,
   visibleTyreClassLabel,
@@ -1130,6 +1131,7 @@ function serializeCatalogPart({
               visibleTyreClassBadgeLabel(visibleTyreClass) ?? "Lastik",
             roadUseLabel: tyreRoadUseLabel(definition),
             surfaceIntentLabel: tyreSurfaceIntentLabel(definition),
+            treadwearLabel: tyreTreadwearLabel(definition),
           }
         : null,
     status,

@@ -116,6 +116,7 @@ export function calculateVehiclePerformanceRating({
   const impactTotals = emptyImpactTotals();
   const installedComponentTypes = new Set<string>();
   let strongestCalibrationImpact: ImpactTotals | null = null;
+  let strongestTyreImpact: ImpactTotals | null = null;
   let supportingAirflowPowerImpact = 0;
   let hasSlickTyres = false;
 
@@ -144,6 +145,19 @@ export function calculateVehiclePerformanceRating({
       continue;
     }
 
+    if (
+      definition.category === ModificationCategory.TYRES &&
+      !isLegacyGeneric
+    ) {
+      if (
+        !strongestTyreImpact ||
+        tyreImpactStrength(impact) > tyreImpactStrength(strongestTyreImpact)
+      ) {
+        strongestTyreImpact = impact;
+      }
+      continue;
+    }
+
     if (definition.category === ModificationCategory.INTAKE_EXHAUST) {
       supportingAirflowPowerImpact = Math.max(
         supportingAirflowPowerImpact,
@@ -157,6 +171,10 @@ export function calculateVehiclePerformanceRating({
 
   if (strongestCalibrationImpact) {
     applyImpact(rating, impactTotals, strongestCalibrationImpact);
+  }
+
+  if (strongestTyreImpact) {
+    applyImpact(rating, impactTotals, strongestTyreImpact);
   }
 
   if (supportingAirflowPowerImpact > 0) {
@@ -485,6 +503,15 @@ function emptyImpactTotals(): ImpactTotals {
     thermal: 0,
     trackReadiness: 0,
   };
+}
+
+function tyreImpactStrength(impact: ImpactTotals) {
+  return (
+    impact.handling * 3 +
+    impact.braking * 2 +
+    impact.trackReadiness +
+    impact.reliability
+  );
 }
 
 function ratingModificationKey(modification: VehicleRatingModificationInput) {

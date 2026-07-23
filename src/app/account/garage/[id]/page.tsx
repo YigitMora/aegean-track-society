@@ -52,6 +52,7 @@ import {
   tyreProductModelLabel,
   tyreRoadUseLabel,
   tyreSurfaceIntentLabel,
+  tyreTreadwearLabel,
   visibleTyreClassBadgeLabel,
   visibleTyreClassForDefinition,
   visibleTyreClassLabel,
@@ -1155,6 +1156,7 @@ function buildCatalogGroups({
               visibleTyreClassBadgeLabel(visibleTyreClass) ?? "Lastik",
             roadUseLabel: tyreRoadUseLabel(definition),
             surfaceIntentLabel: tyreSurfaceIntentLabel(definition),
+            treadwearLabel: tyreTreadwearLabel(definition),
           }
         : null,
       wheelSpecification: definition.wheelSpecification?.active

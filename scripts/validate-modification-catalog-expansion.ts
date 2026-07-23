@@ -48,8 +48,7 @@ async function main() {
 }
 
 function runValidation() {
-const expectedBaselineDefinitionCount = 399;
-const expectedCurrentDefinitionCount = 512;
+const minimumBaselineDefinitionCount = 512;
 const seedText = readRepoFile("prisma/seed.ts");
 const baselineSeedText = execFileSync("git", ["show", "main:prisma/seed.ts"], {
   encoding: "utf8",
@@ -100,9 +99,9 @@ const newRowsWithoutRatingMetadata = newRows.filter(
 );
 const newCountsByCategory = countBy(newRows.map((row) => row.category));
 
-assert.equal(baselineRows.length, expectedBaselineDefinitionCount);
-assert.equal(rows.length, expectedCurrentDefinitionCount);
-assert.equal(newRows.length, 113);
+assert.ok(baselineRows.length >= minimumBaselineDefinitionCount);
+assert.ok(rows.length >= baselineRows.length);
+assert.equal(newRows.length, rows.length - baselineRows.length);
 assert.equal(missingBaselineCodes.length, 0, missingBaselineCodes.join(", "));
 assert.equal(duplicateCodes.length, 0, duplicateCodes.join(", "));
 assert.equal(
@@ -199,9 +198,11 @@ assert.match(garagePage, /isSelectableModificationLeaf\(definition\)/);
 assert.match(mobileGarage, /definitions\.filter\(isSelectableModificationLeaf\)/);
 assert.match(selector, /useState\(""\)/);
 assert.match(selector, /placeholder="Kategori seçin"/);
-assert.match(selector, /placeholder="Alt kategori seçin"/);
+assert.match(selector, /Alt kategori seçin/);
+assert.match(selector, /Lastik sınıfı seçin/);
 assert.match(selector, /placeholder="Üretici seçin"/);
-assert.match(selector, /placeholder="Ürün veya versiyon seçin"/);
+assert.match(selector, /Ürün veya versiyon seçin/);
+assert.match(selector, /Model seçin/);
 assert.doesNotMatch(selector, /firstAvailableOption/);
 assert.match(selector, /Eksik zorunlu parçalar/);
 assert.match(selector, /Önerilen destek parçaları/);

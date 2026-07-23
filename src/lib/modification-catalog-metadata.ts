@@ -234,6 +234,32 @@ export function legacyModificationWarning(
 export function isConcreteModificationLeaf(
   definition: ModificationCatalogNodeInput,
 ) {
+  if (definition.category === "TYRES") {
+    const brand = definition.brand?.trim();
+    const product = definition.variant?.trim() || definition.name?.trim();
+    const normalizedProduct = product?.toLocaleLowerCase("tr-TR");
+    const normalizedBrand = brand?.toLocaleLowerCase("tr-TR");
+    const groupingLabels = new Set([
+      "lastik",
+      "tyre",
+      "yol lastiği",
+      "semi-slick",
+      "semi slick",
+      "slick",
+    ]);
+
+    if (
+      !brand ||
+      brand === "Generic" ||
+      brand === "Technical Configuration" ||
+      !product ||
+      normalizedProduct === normalizedBrand ||
+      groupingLabels.has(normalizedProduct ?? "")
+    ) {
+      return false;
+    }
+  }
+
   return Boolean(
     definition.code?.trim() &&
       definition.category &&

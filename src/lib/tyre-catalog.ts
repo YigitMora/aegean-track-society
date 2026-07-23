@@ -19,6 +19,7 @@ export const visibleTyreClasses = [
 export type VisibleTyreClassKey = (typeof visibleTyreClasses)[number]["key"];
 
 type TyreCatalogDefinition = {
+  code?: string | null;
   category?: string | null;
   brand?: string | null;
   name?: string | null;
@@ -50,6 +51,22 @@ const visibleClassByComponentType: Record<string, VisibleTyreClassKey> = {
   tyre_semi_slick: "SEMI_SLICK",
   tyre_slick: "SLICK",
   tyre_wet_racing: "SLICK",
+};
+
+const treadwearByCode: Record<string, number> = {
+  tyre_yokohama_advan_a052: 200,
+  tyre_bridgestone_potenza_re_71r: 200,
+  tyre_bridgestone_potenza_re_71rs: 200,
+  tyre_yokohama_advan_neova_ad09: 200,
+  tyre_falken_azenis_rt660: 200,
+  tyre_hankook_ventus_rs4_z232: 200,
+  tyre_kumho_ecsta_v730: 200,
+  tyre_maxxis_victra_rc_1: 100,
+  tyre_maxxis_victra_vr_1: 200,
+  tyre_maxxis_victra_sport_vr2: 200,
+  tyre_bfgoodrich_g_force_rival_s_1_5: 200,
+  tyre_continental_extremecontact_force: 200,
+  tyre_goodyear_eagle_f1_supercar_3r: 100,
 };
 
 export const tyreComponentTypeCodes = new Set(
@@ -136,4 +153,12 @@ export function tyreManufacturerLabel(definition: TyreCatalogDefinition) {
 
 export function tyreProductModelLabel(definition: TyreCatalogDefinition) {
   return definition.variant?.trim() || definition.name?.trim() || "Lastik";
+}
+
+export function tyreTreadwearLabel(definition: TyreCatalogDefinition) {
+  const treadwear = definition.code
+    ? treadwearByCode[definition.code]
+    : undefined;
+
+  return treadwear ? `TW ${treadwear}` : null;
 }

@@ -42,6 +42,7 @@ export type ModificationCatalogGroup = {
         badgeLabel: string;
         roadUseLabel: string;
         surfaceIntentLabel: string;
+        treadwearLabel: string | null;
       } | null;
       wheelSpecification?: WheelSpecificationSummary | null;
       tuningPackageSpecification?: TuningPackageSpecificationSummary | null;
@@ -761,6 +762,11 @@ function CatalogOptionDetails({
           <span className="rounded-sm border border-ats-border px-2 py-1 text-ats-text">
             {option.tyrePresentation.surfaceIntentLabel}
           </span>
+          {option.tyrePresentation.treadwearLabel ? (
+            <span className="rounded-sm border border-ats-border px-2 py-1 text-ats-text">
+              {option.tyrePresentation.treadwearLabel}
+            </span>
+          ) : null}
         </div>
       ) : null}
       <dl className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold text-ats-muted">

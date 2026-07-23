@@ -102,6 +102,7 @@ export type MobileGarageCatalogPart = {
     badgeLabel: string;
     roadUseLabel: string;
     surfaceIntentLabel: string;
+    treadwearLabel: string | null;
   } | null;
   status: MobileGarageCatalogPartStatus;
   reasonCode: string | null;
