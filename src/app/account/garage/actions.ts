@@ -2248,6 +2248,17 @@ const modificationDefinitionRatingSelect = {
   brakingImpact: true,
   reliabilityImpact: true,
   trackReadinessImpact: true,
+  wheelSpecification: {
+    select: {
+      active: true,
+      construction: true,
+      nominalDiameterInches: true,
+      nominalWidthInches: true,
+      weightKg: true,
+      trackSuitability: true,
+      roadSuitability: true,
+    },
+  },
   modificationImpacts: {
     where: {
       active: true,

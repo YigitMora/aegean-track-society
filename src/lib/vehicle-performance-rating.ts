@@ -41,6 +41,19 @@ export type VehicleRatingModificationInput = {
     brakingImpact: number;
     reliabilityImpact: number;
     trackReadinessImpact: number;
+    wheelSpecification?: {
+      active: boolean;
+      construction?: string | null;
+      nominalDiameterInches: number | null;
+      nominalWidthInches:
+        | number
+        | string
+        | { toString(): string }
+        | null;
+      weightKg: number | string | { toString(): string } | null;
+      trackSuitability: number;
+      roadSuitability?: number;
+    } | null;
     modificationImpacts: Array<{
       vehicleDefinitionId: string;
       powerImpact: number;
@@ -98,12 +111,16 @@ export function calculateVehiclePerformanceRating({
   const rating: MutableRating = { ...baseRating };
   let strongestCalibrationImpact: ImpactTotals | null = null;
   let strongestTyreImpact: ImpactTotals | null = null;
+  let strongestWheelImpact: ImpactTotals | null = null;
   let supportingAirflowPowerImpact = 0;
   let hasSlickTyres = false;
 
   for (const modification of installedModifications) {
     const definition = modification.modificationDefinition;
-    const impact = impactForDefinition(definition, vehicleDefinition.id);
+    const impact =
+      definition.category === ModificationCategory.WHEELS
+        ? wheelImpactForDefinition(definition)
+        : impactForDefinition(definition, vehicleDefinition.id);
     const componentTypeCode = definition.componentTypeCode ?? null;
     const isLegacyGeneric = isLegacyGenericModificationDefinition(definition);
 
@@ -135,6 +152,19 @@ export function calculateVehiclePerformanceRating({
       continue;
     }
 
+    if (
+      definition.category === ModificationCategory.WHEELS &&
+      !isLegacyGeneric
+    ) {
+      if (
+        !strongestWheelImpact ||
+        wheelImpactStrength(impact) > wheelImpactStrength(strongestWheelImpact)
+      ) {
+        strongestWheelImpact = impact;
+      }
+      continue;
+    }
+
     if (definition.category === ModificationCategory.INTAKE_EXHAUST) {
       supportingAirflowPowerImpact = Math.max(
         supportingAirflowPowerImpact,
@@ -152,6 +182,10 @@ export function calculateVehiclePerformanceRating({
 
   if (strongestTyreImpact) {
     applyImpact(rating, strongestTyreImpact);
+  }
+
+  if (strongestWheelImpact) {
+    applyImpact(rating, strongestWheelImpact);
   }
 
   if (supportingAirflowPowerImpact > 0) {
@@ -445,6 +479,82 @@ function tyreImpactStrength(impact: ImpactTotals) {
     impact.braking * 2 +
     impact.trackReadiness +
     impact.reliability
+  );
+}
+
+export function wheelImpactForDefinition(
+  definition: VehicleRatingModificationInput["modificationDefinition"],
+): ImpactTotals {
+  const specification = definition.wheelSpecification;
+
+  if (
+    definition.category !== ModificationCategory.WHEELS ||
+    !specification?.active ||
+    specification.nominalDiameterInches === null
+  ) {
+    return emptyImpactTotals();
+  }
+
+  const weightKg = finiteNumber(specification.weightKg);
+  const widthInches =
+    finiteNumber(specification.nominalWidthInches) ?? 8;
+
+  if (weightKg === null || weightKg <= 0) {
+    return emptyImpactTotals();
+  }
+
+  const referenceStockWeightKg = estimatedStockWheelWeightKg(
+    specification.nominalDiameterInches,
+    widthInches,
+  );
+  const weightDeltaKg = referenceStockWeightKg - weightKg;
+  const impact = emptyImpactTotals();
+
+  if (weightDeltaKg >= 2) {
+    impact.handling = 2;
+    impact.braking = 1;
+    impact.trackReadiness = specification.trackSuitability >= 70 ? 1 : 0;
+  } else if (weightDeltaKg >= 0.75) {
+    impact.handling = 1;
+    impact.braking = weightDeltaKg >= 1.25 ? 1 : 0;
+  } else if (weightDeltaKg <= -2) {
+    impact.handling = -2;
+    impact.braking = -1;
+    impact.trackReadiness = -1;
+  } else if (weightDeltaKg <= -0.75) {
+    impact.handling = -1;
+    impact.braking = weightDeltaKg <= -1.25 ? -1 : 0;
+  }
+
+  return impact;
+}
+
+function estimatedStockWheelWeightKg(
+  diameterInches: number,
+  widthInches: number,
+) {
+  const diameterReference = 10.5 + (diameterInches - 17) * 0.8;
+  const widthAdjustment = (widthInches - 8) * 0.45;
+
+  return Math.max(7.5, Math.min(16, diameterReference + widthAdjustment));
+}
+
+function finiteNumber(
+  value: number | string | { toString(): string } | null | undefined,
+) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function wheelImpactStrength(impact: ImpactTotals) {
+  return (
+    Math.abs(impact.handling) * 3 +
+    Math.abs(impact.braking) * 2 +
+    Math.abs(impact.trackReadiness)
   );
 }
 

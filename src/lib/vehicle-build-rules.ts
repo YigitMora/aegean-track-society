@@ -356,8 +356,13 @@ const rollProtectionSlotComponentTypes = new Set([
 ]);
 
 export function componentSlotKeyForDefinition(definition: {
+  category?: ModificationCategory;
   componentTypeCode?: string | null;
 }) {
+  if (definition.category === ModificationCategory.WHEELS) {
+    return "wheel";
+  }
+
   const componentTypeCode = definition.componentTypeCode ?? null;
 
   if (!componentTypeCode || !singleInstanceComponentTypes.has(componentTypeCode)) {
