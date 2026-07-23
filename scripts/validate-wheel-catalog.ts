@@ -48,6 +48,33 @@ const garagePage = readRepoFile("src/app/account/garage/[id]/page.tsx");
 const mobileGarage = readRepoFile("src/lib/mobile-garage-detail.ts");
 const mswP1 = requiredWheel("wheel_msw_p1");
 const msw85 = requiredWheel("wheel_msw_85");
+const mswRows = wheelRows.filter((row) => row.brand === "MSW");
+const expectedMswExpansionCodes = [
+  "wheel_msw_27",
+  "wheel_msw_27t",
+  "wheel_msw_28",
+  "wheel_msw_29",
+  "wheel_msw_40",
+  "wheel_msw_41",
+  "wheel_msw_41t",
+  "wheel_msw_44",
+  "wheel_msw_47",
+  "wheel_msw_48",
+  "wheel_msw_49",
+  "wheel_msw_50",
+  "wheel_msw_71",
+  "wheel_msw_73",
+  "wheel_msw_74",
+  "wheel_msw_75",
+  "wheel_msw_78",
+  "wheel_msw_79",
+  "wheel_msw_80_4",
+  "wheel_msw_80_5",
+  "wheel_msw_82",
+  "wheel_msw_86",
+  "wheel_msw_x2",
+  "wheel_msw_x4",
+] as const;
 
 assert.equal(baselineWheelRows.length, 67);
 assert.ok(wheelRows.length >= baselineWheelRows.length);
@@ -107,6 +134,24 @@ for (const row of [mswP1, msw85]) {
   assert.equal(row.reliabilityImpact, 0);
   assert.equal(row.trackReadinessImpact, 0);
 }
+assert.equal(mswRows.length, 31);
+for (const code of expectedMswExpansionCodes) {
+  const row = requiredWheel(code);
+
+  assert.equal(row.brand, "MSW");
+  assert.equal(isConcreteModificationLeaf(row), true);
+  assert.equal(row.powerImpact, 0);
+  assert.equal(row.handlingImpact, 0);
+  assert.equal(row.brakingImpact, 0);
+  assert.equal(row.reliabilityImpact, 0);
+  assert.equal(row.trackReadinessImpact, 0);
+}
+assert.match(requiredWheel("wheel_msw_75").source, /gravity-cast monoblock/);
+assert.match(requiredWheel("wheel_msw_79").source, /16-18 inch/);
+assert.match(requiredWheel("wheel_msw_80_4").source, /15-17 inch/);
+assert.match(requiredWheel("wheel_msw_80_5").source, /16-19 inch/);
+assert.equal(wheelCodes.has("wheel_msw_99_van"), false);
+assert.equal(wheelCodes.has("wheel_msw_dr1"), false);
 
 console.log("Wheel catalog validation passed.");
 console.log(`Wheel definitions before: ${baselineWheelRows.length}`);
@@ -126,6 +171,8 @@ console.log(`Duplicate wheel codes: ${duplicateCodes.length}`);
 console.log(`Duplicate wheel products: ${duplicateProducts.length}`);
 console.log("MSW P1: selectable; regional/distributor-confirmed; neutral rating");
 console.log("MSW 85: selectable; official one-piece cast metadata; neutral rating");
+console.log(`MSW models: ${mswRows.length}`);
+console.log(`MSW expansion models: ${expectedMswExpansionCodes.length}`);
 console.log("Wheel hierarchy: Jant -> Üretici -> Model");
 console.log("Existing build relation preservation: passed");
 
@@ -143,7 +190,7 @@ function requiredWheel(code: string) {
 function wheelSpecificationCodes(source: string) {
   return new Set([
     ...Array.from(
-      source.matchAll(/\bwheelSpec\("([^"]+)"/g),
+      source.matchAll(/\bwheelSpec\(\s*"([^"]+)"/g),
       (match) => match[1],
     ),
     ...Array.from(
