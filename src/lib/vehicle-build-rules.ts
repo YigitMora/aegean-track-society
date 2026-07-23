@@ -243,8 +243,10 @@ export const singleInstanceComponentTypes = new Set([
   "rear_diffuser",
   "rear_wing",
   "aero_kit",
+  "ecu_unlock",
   "ecu_software",
   "platform_tune_package",
+  "ethanol_fuel_configuration",
   "transmission_software",
   "dogbone_mount",
   "clutch",
@@ -264,6 +266,10 @@ const tyreSlotComponentTypes = new Set([
 ]);
 const wheelSlotComponentTypes = new Set(["wheel", "lightweight_wheel", "forged_wheel"]);
 const ecuTuneSlotComponentTypes = new Set(["ecu_software", "platform_tune_package"]);
+const fuelCalibrationSlotComponentTypes = new Set([
+  "ethanol_fuel_configuration",
+  "flex_fuel",
+]);
 const turboSlotComponentTypes = new Set([
   "turbo_upgrade",
   "hybrid_turbo",
@@ -292,6 +298,10 @@ export function componentSlotKeyForDefinition(definition: {
 
   if (ecuTuneSlotComponentTypes.has(componentTypeCode)) {
     return "ecu_software";
+  }
+
+  if (fuelCalibrationSlotComponentTypes.has(componentTypeCode)) {
+    return "fuel_calibration";
   }
 
   if (turboSlotComponentTypes.has(componentTypeCode)) {

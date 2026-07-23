@@ -1317,6 +1317,45 @@ const modificationCatalog = [
     sortOrder: 13,
   },
   {
+    code: "ecu_unlock_bmw_mg1_g_series",
+    category: "ECU",
+    brand: "FEMTO",
+    name: "DME Unlock Service",
+    variant: "BMW MG1 G-Series Bench Unlock",
+    componentTypeCode: "ecu_unlock",
+    usageClass: "FAST_ROAD",
+    description:
+      "Controller-specific unlock service; exact DME hardware and software version must be verified before flashing.",
+    active: false,
+    sortOrder: 14,
+  },
+  {
+    code: "fuel_b48_e25_configuration",
+    category: "ENGINE",
+    brand: "Technical Configuration",
+    name: "Fuel Configuration",
+    variant: "BMW B48 Measured E25 Blend",
+    componentTypeCode: "ethanol_fuel_configuration",
+    usageClass: "STREET_TRACK",
+    description:
+      "Measured E25 blend configuration with ethanol-content verification; not a pump-fuel substitute.",
+    active: false,
+    sortOrder: 14,
+  },
+  {
+    code: "downpipe_b48_high_flow_catted",
+    category: "INTAKE_EXHAUST",
+    brand: "Technical Configuration",
+    name: "High-flow Catted Downpipe",
+    variant: "BMW B48 G20",
+    componentTypeCode: "downpipe",
+    usageClass: "STREET_TRACK",
+    description:
+      "Vehicle-specific catted downpipe configuration. Emissions, inspection, noise, and road-legality requirements must be verified locally.",
+    active: false,
+    sortOrder: 14,
+  },
+  {
     code: "tune_mhd_b58_stage_1",
     category: "ECU",
     brand: "MHD",
@@ -4936,6 +4975,12 @@ const bigBrakeKitCodes = modificationCatalog
 const tyreCodes = modificationCatalog
   .filter((item) => item.category === "TYRES")
   .map((item) => item.code);
+const bmwG20RsaAlternativeCodes = [
+  "engine_rsa300",
+  "rsa_bmw_b48_g20_250",
+  "rsa_bmw_b48_g20_280",
+  "rsa_bmw_b48_g20_320_e25",
+] as const;
 
 const modificationConflictCodePairs = [
   ...sportSpringCodes.flatMap((sportSpringCode) =>
@@ -4950,6 +4995,7 @@ const modificationConflictCodePairs = [
   ...pairwise(brakePadCodes),
   ...pairwise(bigBrakeKitCodes),
   ...pairwise(tyreCodes),
+  ...pairwise(bmwG20RsaAlternativeCodes),
   ["safety_half_cage", "safety_full_roll_cage"],
 ] as const;
 
@@ -4961,6 +5007,70 @@ const modificationRequirementGroups = [
     optionCodes: sportSpringCodes,
     sortOrder: 10 + index,
   })),
+  {
+    code: "req_rsa_250_ecu_unlock",
+    sourceCode: "rsa_bmw_b48_g20_250",
+    description: "RSA 250 requires a compatible ECU unlock.",
+    optionCodes: ["ecu_unlock_bmw_mg1_g_series"],
+    sortOrder: 200,
+  },
+  {
+    code: "req_rsa_280_ecu_unlock",
+    sourceCode: "rsa_bmw_b48_g20_280",
+    description: "RSA 280 requires a compatible ECU unlock.",
+    optionCodes: ["ecu_unlock_bmw_mg1_g_series"],
+    sortOrder: 201,
+  },
+  {
+    code: "req_rsa_280_transmission_software",
+    sourceCode: "rsa_bmw_b48_g20_280",
+    description: "RSA 280 requires compatible ZF8 transmission software.",
+    optionCodes: ["tune_xhp_bmw_zf8_stage_2"],
+    sortOrder: 202,
+  },
+  {
+    code: "req_rsa_300_ecu_unlock",
+    sourceCode: "engine_rsa300",
+    description: "RSA 300 requires a compatible ECU unlock for new installations.",
+    optionCodes: ["ecu_unlock_bmw_mg1_g_series"],
+    sortOrder: 203,
+  },
+  {
+    code: "req_rsa_300_transmission_software",
+    sourceCode: "engine_rsa300",
+    description:
+      "RSA 300 requires compatible ZF8 transmission software for new installations.",
+    optionCodes: ["tune_xhp_bmw_zf8_stage_2"],
+    sortOrder: 204,
+  },
+  {
+    code: "req_rsa_320_e25_ecu_unlock",
+    sourceCode: "rsa_bmw_b48_g20_320_e25",
+    description: "RSA 320 E25 requires a compatible ECU unlock.",
+    optionCodes: ["ecu_unlock_bmw_mg1_g_series"],
+    sortOrder: 205,
+  },
+  {
+    code: "req_rsa_320_e25_downpipe",
+    sourceCode: "rsa_bmw_b48_g20_320_e25",
+    description: "RSA 320 E25 requires a compatible high-flow downpipe.",
+    optionCodes: ["downpipe_b48_high_flow_catted"],
+    sortOrder: 206,
+  },
+  {
+    code: "req_rsa_320_e25_fuel",
+    sourceCode: "rsa_bmw_b48_g20_320_e25",
+    description: "RSA 320 E25 requires a measured E25 fuel configuration.",
+    optionCodes: ["fuel_b48_e25_configuration"],
+    sortOrder: 207,
+  },
+  {
+    code: "req_rsa_320_e25_transmission_software",
+    sourceCode: "rsa_bmw_b48_g20_320_e25",
+    description: "RSA 320 E25 requires compatible ZF8 transmission software.",
+    optionCodes: ["tune_xhp_bmw_zf8_stage_2"],
+    sortOrder: 208,
+  },
 ];
 
 const inactiveRequirementGroupCodes = [
@@ -15955,6 +16065,11 @@ const bmwG20RsaCalibrationCodes = [
   "rsa_bmw_b48_g20_280",
   "rsa_bmw_b48_g20_320_e25",
 ] as const;
+const bmwG20RsaSupportCodes = [
+  "ecu_unlock_bmw_mg1_g_series",
+  "fuel_b48_e25_configuration",
+  "downpipe_b48_high_flow_catted",
+] as const;
 const bmwB48Codes = [...bmwGlobalB48Codes, ...bmwTurkeyB48Codes] as const;
 const bmwN55Codes = [
   "bmw_f30_335i",
@@ -17082,6 +17197,7 @@ const iceOnlyModificationCodes = [
   "ecu_stage_2",
   "engine_rsa300",
   ...bmwG20RsaCalibrationCodes,
+  ...bmwG20RsaSupportCodes,
   "tune_mhd_b58_stage_1",
   "tune_mhd_b58_stage_2",
   "tune_mhd_b58_stage_2_hpfp",
@@ -17234,6 +17350,18 @@ const platformModificationCompatibilities = [
       modificationCode,
       vehicleCode,
     })),
+  ),
+  ...bmwTurkeyB48Codes.map((vehicleCode) => ({
+    modificationCode: "ecu_unlock_bmw_mg1_g_series",
+    vehicleCode,
+  })),
+  ...bmwG20Turkey320i170Codes.flatMap((vehicleCode) =>
+    ["fuel_b48_e25_configuration", "downpipe_b48_high_flow_catted"].map(
+      (modificationCode) => ({
+        modificationCode,
+        vehicleCode,
+      }),
+    ),
   ),
   ...turboIceCodes.flatMap((vehicleCode) => [
     { modificationCode: "ecu_stage_1", vehicleCode },
@@ -18007,6 +18135,28 @@ const platformModificationImpacts = [
       claimedPowerDeltaHp: 150,
       sourceNote:
         "E25 RSA 320 target applies only after required fuel, downpipe, ECU, and transmission support is valid.",
+    }),
+  ]),
+  ...bmwTurkeyB48Codes.map((vehicleCode) =>
+    impact(vehicleCode, "ecu_unlock_bmw_mg1_g_series", {
+      confidence: "LOW",
+      sourceNote:
+        "ECU unlock is an enabling service and has no direct performance-rating effect.",
+    }),
+  ),
+  ...bmwG20Turkey320i170Codes.flatMap((vehicleCode) => [
+    impact(vehicleCode, "fuel_b48_e25_configuration", {
+      confidence: "LOW",
+      sourceNote:
+        "E25 fuel configuration enables a compatible calibration and has no standalone rating effect.",
+    }),
+    impact(vehicleCode, "downpipe_b48_high_flow_catted", {
+      powerImpact: 1,
+      reliabilityImpact: -1,
+      thermalImpact: -1,
+      confidence: "LOW",
+      sourceNote:
+        "High-flow catted downpipe receives only a small standalone flow effect; it does not grant a tune target.",
     }),
   ]),
   ...turboIceCodes.flatMap((vehicleCode) => [
