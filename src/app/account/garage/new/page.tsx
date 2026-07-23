@@ -91,6 +91,7 @@ export default async function NewVehiclePage({ searchParams }: NewVehiclePagePro
     ],
     select: {
       id: true,
+      code: true,
       brand: true,
       model: true,
       generation: true,
@@ -98,6 +99,11 @@ export default async function NewVehiclePage({ searchParams }: NewVehiclePagePro
       variant: true,
       yearFrom: true,
       yearTo: true,
+      engineFamily: {
+        select: {
+          name: true,
+        },
+      },
     },
   });
 

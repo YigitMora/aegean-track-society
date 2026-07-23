@@ -1,13 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import {
   getCatalogVehicleYearOptions,
   getManualVehicleYearOptions,
 } from "@/lib/vehicle-year-contract";
+import {
+  buildVehicleCatalogHierarchy,
+  findVehicleCatalogPath,
+  searchVehicleCatalogDefinitions,
+  type VehicleCatalogDefinitionInput,
+  type VehicleCatalogHierarchy,
+  type VehicleCatalogPath,
+} from "@/lib/vehicle-catalog-hierarchy";
 
 export type VehicleTemplateOption = {
   id: string;
+  code?: string;
   brand: string;
   model: string;
   generation: string | null;
@@ -15,6 +24,9 @@ export type VehicleTemplateOption = {
   variant: string | null;
   yearFrom: number | null;
   yearTo: number | null;
+  engineFamily?: {
+    name: string;
+  } | null;
 };
 
 type VehicleTemplateFieldsProps = {
@@ -38,51 +50,48 @@ export function VehicleTemplateFields({
     definitions.find((definition) => definition.id === currentVehicleDefinitionId) ??
     definitions[0] ??
     null;
+  const catalogDefinitions = useMemo(
+    () => definitions.map(toCatalogDefinition),
+    [definitions],
+  );
+  const hierarchy = useMemo(
+    () => buildVehicleCatalogHierarchy(catalogDefinitions),
+    [catalogDefinitions],
+  );
   const [mode, setMode] = useState<"catalog" | "manual">(
     defaultMode ??
       (currentVehicleDefinitionId ? "catalog" : definitions.length ? "catalog" : "manual"),
-  );
-  const [brand, setBrand] = useState(initialDefinition?.brand ?? definitions[0]?.brand ?? "");
-  const [model, setModel] = useState(initialDefinition?.model ?? "");
-  const [generationKey, setGenerationKey] = useState(
-    initialDefinition ? generationKeyForDefinition(initialDefinition) : "",
   );
   const [definitionId, setDefinitionId] = useState(initialDefinition?.id ?? "");
   const [year, setYear] = useState(
     initialDefinition ? defaultYearForDefinition(initialDefinition, defaultYear) : "",
   );
-  const brandOptions = useMemo(
-    () => Array.from(new Set(definitions.map((definition) => definition.brand))),
-    [definitions],
-  );
-  const modelOptions = definitions
-    .filter((definition) => definition.brand === brand)
-    .map((definition) => definition.model)
-    .filter((value, index, values) => values.indexOf(value) === index);
-  const definitionsForModel = definitions.filter(
-    (definition) => definition.brand === brand && definition.model === model,
-  );
-  const generationOptions = Array.from(
-    new Map(
-      definitionsForModel.map((definition) => [
-        generationKeyForDefinition(definition),
-        {
-          value: generationKeyForDefinition(definition),
-          label: generationLabelForDefinition(definition),
-        },
-      ]),
-    ).values(),
-  );
-  const variantOptions = definitionsForModel.filter(
-    (definition) => generationKeyForDefinition(definition) === generationKey,
-  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchResultsId = useId();
+  const selectedPath =
+    findVehicleCatalogPath(hierarchy, definitionId) ?? firstCatalogPath(hierarchy);
   const selectedDefinition =
-    variantOptions.find((definition) => definition.id === definitionId) ??
-    variantOptions[0] ??
-    definitionsForModel[0] ??
-    definitions[0] ??
-    null;
-  const selectedDefinitionId = selectedDefinition?.id ?? "";
+    definitions.find(
+      (definition) =>
+        definition.id === selectedPath?.variant.vehicleDefinitionId,
+    ) ?? initialDefinition;
+  const selectedBrand = hierarchy.brands.find(
+    (brand) => brand.name === selectedPath?.brand,
+  );
+  const selectedModel = selectedBrand?.models.find(
+    (model) => model.name === selectedPath?.modelFamily,
+  );
+  const selectedGeneration = selectedModel?.generations.find(
+    (generation) => generation.name === selectedPath?.generation,
+  );
+  const searchResults = useMemo(
+    () =>
+      searchQuery.trim().length >= 2
+        ? searchVehicleCatalogDefinitions(catalogDefinitions, searchQuery).slice(0, 8)
+        : [],
+    [catalogDefinitions, searchQuery],
+  );
+  const selectedDefinitionId = selectedPath?.variant.vehicleDefinitionId ?? "";
   const yearOptions = selectedDefinition ? yearsForDefinition(selectedDefinition) : [];
   const selectedYear = yearOptions.includes(year)
     ? year
@@ -121,60 +130,72 @@ export function VehicleTemplateFields({
           <input type="hidden" name="model" value={selectedDefinition?.model ?? ""} />
           <input type="hidden" name="year" value={selectedYear} />
 
+          <CatalogSearch
+            query={searchQuery}
+            results={searchResults}
+            hierarchy={hierarchy}
+            resultsId={searchResultsId}
+            onQueryChange={setSearchQuery}
+            onSelect={(vehicleDefinitionId) => {
+              applyDefinitionSelection(vehicleDefinitionId);
+              setSearchQuery("");
+            }}
+          />
           <SelectField
             label="Marka"
-            value={brand}
+            value={selectedPath?.brand ?? ""}
             onChange={(value) => {
-              const nextDefinition =
-                definitions.find((definition) => definition.brand === value) ?? definitions[0];
-
-              applyDefinitionSelection(nextDefinition);
+              applyHierarchySelection({ brand: value });
             }}
-            options={brandOptions.map((value) => ({ label: value, value }))}
-          />
-          <SelectField
-            label="Model"
-            value={model}
-            onChange={(value) => {
-              const nextDefinition =
-                definitions.find(
-                  (definition) =>
-                    definition.brand === brand && definition.model === value,
-                ) ?? definitions[0];
-
-              applyDefinitionSelection(nextDefinition);
-            }}
-            options={modelOptions.map((value) => ({ label: value, value }))}
-          />
-          <SelectField
-            label="Jenerasyon / kasa"
-            value={generationKey}
-            onChange={(value) => {
-              const nextDefinition =
-                definitionsForModel.find(
-                  (definition) => generationKeyForDefinition(definition) === value,
-                ) ?? definitionsForModel[0] ?? definitions[0];
-
-              applyDefinitionSelection(nextDefinition);
-            }}
-            options={generationOptions}
-          />
-          <SelectField
-            label="Versiyon"
-            value={selectedDefinitionId}
-            onChange={(value) => {
-              const nextDefinition =
-                definitions.find((definition) => definition.id === value) ?? selectedDefinition;
-
-              if (nextDefinition) {
-                applyDefinitionSelection(nextDefinition);
-              }
-            }}
-            options={variantOptions.map((definition) => ({
-              label: definition.variant ?? "Standart",
-              value: definition.id,
+            options={hierarchy.brands.map((brand) => ({
+              label: brand.name,
+              value: brand.name,
             }))}
           />
+          {selectedBrand && selectedBrand.models.length > 1 ? (
+            <SelectField
+              label="Model"
+              value={selectedPath?.modelFamily ?? ""}
+              onChange={(value) => {
+                applyHierarchySelection({
+                  brand: selectedBrand.name,
+                  modelFamily: value,
+                });
+              }}
+              options={selectedBrand.models.map((model) => ({
+                label: model.name,
+                value: model.name,
+              }))}
+            />
+          ) : null}
+          {selectedModel && selectedModel.generations.length > 1 ? (
+            <SelectField
+              label="Kasa / Nesil"
+              value={selectedPath?.generation ?? ""}
+              onChange={(value) => {
+                applyHierarchySelection({
+                  brand: selectedPath?.brand,
+                  modelFamily: selectedModel.name,
+                  generation: value,
+                });
+              }}
+              options={selectedModel.generations.map((generation) => ({
+                label: generation.name,
+                value: generation.name,
+              }))}
+            />
+          ) : null}
+          {selectedGeneration && selectedGeneration.variants.length > 1 ? (
+            <SelectField
+              label="Motor / Versiyon"
+              value={selectedDefinitionId}
+              onChange={applyDefinitionSelection}
+              options={selectedGeneration.variants.map((variant) => ({
+                label: variant.label,
+                value: variant.vehicleDefinitionId,
+              }))}
+            />
+          ) : null}
           <SelectField
             label="Yıl"
             value={selectedYear}
@@ -187,7 +208,7 @@ export function VehicleTemplateFields({
                 Seçili platform
               </p>
               <p className="mt-2 text-sm font-black text-ats-text">
-                {definitionSummary(selectedDefinition)}
+                {selectedPath ? catalogPathSummary(selectedPath) : ""}
                 {selectedYear ? ` · ${selectedYear}` : ""}
               </p>
             </div>
@@ -206,13 +227,111 @@ export function VehicleTemplateFields({
     </div>
   );
 
-  function applyDefinitionSelection(definition: VehicleTemplateOption) {
-    setBrand(definition.brand);
-    setModel(definition.model);
-    setGenerationKey(generationKeyForDefinition(definition));
+  function applyDefinitionSelection(nextDefinitionId: string) {
+    const definition = definitions.find(
+      (candidate) => candidate.id === nextDefinitionId,
+    );
+
+    if (!definition) {
+      return;
+    }
+
     setDefinitionId(definition.id);
     setYear(defaultYearForDefinition(definition, defaultYear));
   }
+
+  function applyHierarchySelection({
+    brand,
+    modelFamily,
+    generation,
+  }: {
+    brand?: string;
+    modelFamily?: string;
+    generation?: string;
+  }) {
+    const nextBrand =
+      hierarchy.brands.find((candidate) => candidate.name === brand) ??
+      hierarchy.brands[0];
+    const nextModel =
+      nextBrand?.models.find(
+        (candidate) =>
+          candidate.name === (modelFamily ?? selectedPath?.modelFamily),
+      ) ?? nextBrand?.models[0];
+    const nextGeneration =
+      nextModel?.generations.find(
+        (candidate) =>
+          candidate.name === (generation ?? selectedPath?.generation),
+      ) ?? nextModel?.generations[0];
+    const nextVariant =
+      nextGeneration?.variants.find(
+        (candidate) => candidate.label === selectedPath?.variant.label,
+      ) ?? nextGeneration?.variants[0];
+
+    if (nextVariant) {
+      applyDefinitionSelection(nextVariant.vehicleDefinitionId);
+    }
+  }
+}
+
+function CatalogSearch({
+  query,
+  results,
+  hierarchy,
+  resultsId,
+  onQueryChange,
+  onSelect,
+}: {
+  query: string;
+  results: VehicleCatalogDefinitionInput[];
+  hierarchy: VehicleCatalogHierarchy;
+  resultsId: string;
+  onQueryChange: (value: string) => void;
+  onSelect: (vehicleDefinitionId: string) => void;
+}) {
+  return (
+    <div className="sm:col-span-2">
+      <label className="block">
+        <span className="text-sm font-bold text-ats-text">Katalogda ara</span>
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+          autoComplete="off"
+          aria-controls={resultsId}
+          className="mt-2 h-12 w-full rounded-md border border-ats-border bg-ats-black px-3 text-sm font-semibold text-ats-text outline-none transition placeholder:text-ats-muted/60 focus:border-ats-blue focus:ring-2 focus:ring-ats-blue/20"
+        />
+      </label>
+      {results.length > 0 ? (
+        <div
+          id={resultsId}
+          className="mt-2 divide-y divide-ats-border overflow-hidden rounded-md border border-ats-border bg-ats-black"
+        >
+          <p className="px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-ats-muted">
+            Hızlı seçim
+          </p>
+          {results.map((definition) => {
+            const path = findVehicleCatalogPath(hierarchy, definition.id);
+
+            return (
+              <button
+                key={definition.id}
+                type="button"
+                onClick={() => onSelect(definition.id)}
+                className="block w-full px-3 py-3 text-left transition hover:bg-ats-surface focus:bg-ats-surface focus:outline-none"
+              >
+                <span className="block text-sm font-black text-ats-text">
+                  {path ? catalogPathSummary(path) : definition.model}
+                </span>
+                <span className="mt-1 block break-all font-mono text-[11px] text-ats-muted">
+                  {definition.code}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function ManualVehicleFields({
@@ -344,14 +463,6 @@ function TextField({
   );
 }
 
-function generationKeyForDefinition(definition: VehicleTemplateOption) {
-  return [definition.generation, definition.chassisCode].filter(Boolean).join("|") || "default";
-}
-
-function generationLabelForDefinition(definition: VehicleTemplateOption) {
-  return [definition.generation, definition.chassisCode].filter(Boolean).join(" / ") || "Standart";
-}
-
 function yearsForDefinition(definition: VehicleTemplateOption) {
   const options = getCatalogVehicleYearOptions(definition);
   return options.ok ? options.years.map(String) : [];
@@ -370,13 +481,33 @@ function defaultYearForDefinition(
   return yearOptions[0] ?? "";
 }
 
-function definitionSummary(definition: VehicleTemplateOption) {
-  return [
-    definition.brand,
-    definition.model,
-    generationLabelForDefinition(definition),
-    definition.variant,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+function toCatalogDefinition(
+  definition: VehicleTemplateOption,
+): VehicleCatalogDefinitionInput {
+  return {
+    ...definition,
+    code: definition.code ?? definition.id,
+  };
+}
+
+function firstCatalogPath(hierarchy: VehicleCatalogHierarchy) {
+  const brand = hierarchy.brands[0];
+  const model = brand?.models[0];
+  const generation = model?.generations[0];
+  const variant = generation?.variants[0];
+
+  return brand && model && generation && variant
+    ? {
+        brand: brand.name,
+        modelFamily: model.name,
+        generation: generation.name,
+        variant,
+      }
+    : null;
+}
+
+function catalogPathSummary(path: VehicleCatalogPath) {
+  return [path.brand, path.modelFamily, path.generation, path.variant.label].join(
+    " · ",
+  );
 }
