@@ -24,11 +24,16 @@ export async function GET(request: Request, context: MobileEventRouteContext) {
   try {
     const { memberUser } = await authenticateMobileMember(request);
     const { slug } = await context.params;
-    const event = await getMobileEvent(memberUser, slug);
-    if (
+    const discoveryRequested =
       request.headers.get(mobileEventDiscoveryContractHeader) ===
-      mobileEventDiscoveryContractVersion
-    ) {
+      mobileEventDiscoveryContractVersion;
+    const event = await getMobileEvent(
+      memberUser,
+      slug,
+      new Date(),
+      discoveryRequested,
+    );
+    if (discoveryRequested) {
       return mobileEventDiscoveryJsonResponse(
         {
           data: {

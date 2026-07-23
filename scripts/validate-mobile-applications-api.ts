@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import {
   deriveMobileEventEligibility,
   parseMobileApplicationInput,
+  presentCapacityTotal,
   presentEventWindow,
   presentApplicationStatus,
 } from "../src/lib/event-applications";
@@ -33,12 +34,19 @@ void main().catch((error) => {
 async function main() {
   validateStrictApplicationInput();
   validateEligibilityBoundaries();
+  validateCapacityPresentation();
   validatePublicEventWindow();
   await validateEventDiscovery();
   validateStatusPresentation();
   await validateStableErrorsAndHeaders();
   validateSourceSecurityAndTransactions();
-  console.log("validate-mobile-applications-api passed (100 assertions)");
+  console.log("validate-mobile-applications-api passed (103 assertions)");
+}
+
+function validateCapacityPresentation() {
+  assert.equal(presentCapacityTotal(20), 20);
+  assert.equal(presentCapacityTotal(0), null);
+  assert.equal(presentCapacityTotal(null), null);
 }
 
 async function validateEventDiscovery() {
@@ -234,6 +242,9 @@ async function validateStableErrorsAndHeaders() {
 
 function validateSourceSecurityAndTransactions() {
   const service = source("src/lib/event-applications.ts");
+  const eventDetailRoute = source(
+    "src/app/api/mobile/v1/events/[slug]/route.ts",
+  );
   const manualConfirmation = source("src/lib/manual-payment-confirmation.ts");
   const webRoute = source("src/app/api/registrations/route.ts");
   const routes = [
@@ -268,6 +279,10 @@ function validateSourceSecurityAndTransactions() {
   assert.match(service, /TransactionIsolationLevel\.Serializable/);
   assert.match(service, /error\.code === "P2034"/);
   assert.match(service, /tx\.registration\.count/);
+  assert.match(
+    eventDetailRoute,
+    /getMobileEvent\([\s\S]*discoveryRequested[\s\S]*\)/,
+  );
   assert.match(service, /tx\.registration\.create/);
   assert.match(service, /tx\.payment\.create/);
   assert.match(service, /provider: "MANUAL"/);
