@@ -11,9 +11,7 @@ export async function GET(request: Request) {
   );
 
   if (!code) {
-    console.warn("AUTH_CALLBACK_FAILED", {
-      reason: "missing_code",
-    });
+    console.error("AUTH_CALLBACK_FAILED");
     return redirectTo(request, "/auth/login?error=callback_failed");
   }
 
@@ -22,10 +20,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
-      console.warn("AUTH_CALLBACK_FAILED", {
-        errorName: error.name,
-        errorMessage: safeAuthRouteMessage(error.message),
-      });
+      console.error("AUTH_CALLBACK_FAILED");
       return redirectTo(request, "/auth/login?error=callback_failed");
     }
 
@@ -33,13 +28,9 @@ export async function GET(request: Request) {
 
     if (!userError && data.user) {
       try {
-        const memberUser = await ensureMemberUser(data.user);
-
-        console.log("AUTH_CALLBACK_SUCCESS", {
-          userId: memberUser.id,
-        });
-      } catch (provisioningError) {
-        console.error("AUTH_USER_PROVISION_FAILED", serializeRouteError(provisioningError));
+        await ensureMemberUser(data.user);
+      } catch {
+        console.error("AUTH_USER_PROVISION_FAILED");
 
         if (nextPath !== "/auth/reset-password") {
           return redirectTo(request, "/auth/login?error=provisioning_failed");
@@ -49,7 +40,7 @@ export async function GET(request: Request) {
 
     return redirectTo(request, nextPath);
   } catch (error) {
-    console.error("AUTH_CALLBACK_FAILED", serializeRouteError(error));
+    console.error("AUTH_CALLBACK_FAILED");
 
     if (error instanceof SupabaseConfigurationError) {
       return redirectTo(request, "/auth/login?error=config");
@@ -63,29 +54,4 @@ function redirectTo(request: Request, pathname: string) {
   return NextResponse.redirect(new URL(pathname, request.url), {
     status: 303,
   });
-}
-
-function serializeRouteError(error: unknown) {
-  if (error instanceof Error) {
-    return {
-      errorName: error.name,
-      errorMessage: safeAuthRouteMessage(error.message),
-      stackFirstThreeLines: error.stack?.split("\n").slice(0, 3).map(safeAuthRouteMessage) ?? [],
-    };
-  }
-
-  return {
-    errorName: "UnknownError",
-    errorMessage: safeAuthRouteMessage(String(error)),
-    stackFirstThreeLines: [],
-  };
-}
-
-function safeAuthRouteMessage(message: string) {
-  return message
-    .replace(/(access_token=)([^&\s]+)/gi, "$1***")
-    .replace(/(refresh_token=)([^&\s]+)/gi, "$1***")
-    .replace(/(token_hash=)([^&\s]+)/gi, "$1***")
-    .replace(/(password=)([^&\s]+)/gi, "$1***")
-    .replace(/(cookie:?\s*)(.+)/gi, "$1***");
 }
