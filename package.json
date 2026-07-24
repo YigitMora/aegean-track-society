@@ -16,6 +16,7 @@
     "validate:mobile-garage-detail": "tsx scripts/validate-mobile-garage-detail-api.ts",
     "validate:mobile-applications": "tsx scripts/validate-mobile-applications-api.ts",
     "validate:mobile-profile": "tsx scripts/validate-mobile-profile-api.ts",
+    "validate:admin-login-log-safety": "tsx scripts/validate-admin-login-log-safety.ts",
     "validate:advisory-dependencies": "tsx scripts/validate-advisory-dependencies.ts",
     "validate:modification-catalog": "tsx scripts/validate-modification-catalog-expansion.ts",
     "validate:tyre-catalog": "tsx scripts/validate-tyre-catalog.ts",
