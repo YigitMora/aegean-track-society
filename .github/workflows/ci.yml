@@ -71,6 +71,9 @@ jobs:
       - name: Validate mobile profile API
         run: pnpm validate:mobile-profile
 
+      - name: Validate password recovery safety
+        run: pnpm validate:password-recovery
+
       - name: Validate release foundations
         run: pnpm validate:release-foundations
 
