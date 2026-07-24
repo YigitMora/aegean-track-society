@@ -1,4 +1,3 @@
-import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import {
   createAdminSessionCookie,
@@ -7,22 +6,17 @@ import {
 } from "@/lib/admin-auth";
 
 export async function POST(request: Request) {
-  let normalizedEmail = "";
   let returnTo = "/admin";
 
   try {
     const formData = await request.formData();
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
-    normalizedEmail = normalizeAdminEmail(email);
+    const normalizedEmail = normalizeAdminEmail(email);
     returnTo = normalizeAdminReturnTo(String(formData.get("returnTo") ?? ""));
-    logAdminLoginDebug(normalizedEmail, password);
 
     if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
-      logAdminLoginSubmitError(
-        new Error("Admin email or password is not configured."),
-        normalizedEmail,
-      );
+      console.error("ADMIN_LOGIN_CONFIGURATION_ERROR");
 
       return invalidCredentialsRedirect(request, returnTo);
     }
@@ -36,8 +30,8 @@ export async function POST(request: Request) {
     return NextResponse.redirect(new URL(returnTo, request.url), {
       status: 303,
     });
-  } catch (error) {
-    logAdminLoginSubmitError(error, normalizedEmail);
+  } catch {
+    console.error("ADMIN_LOGIN_SUBMIT_ERROR");
 
     return invalidCredentialsRedirect(request, returnTo);
   }
@@ -45,23 +39,6 @@ export async function POST(request: Request) {
 
 function normalizeAdminEmail(email: string) {
   return email.trim().toLowerCase();
-}
-
-function logAdminLoginDebug(normalizedEmail: string, password: string) {
-  const configuredEmail = process.env.ADMIN_EMAIL ?? "";
-  const configuredPassword = process.env.ADMIN_PASSWORD ?? "";
-  const normalizedAdminEmail = normalizeAdminEmail(configuredEmail);
-  const emailsMatch = Boolean(configuredEmail) && normalizedEmail === normalizedAdminEmail;
-  const passwordMatch = Boolean(configuredPassword) && safeEqual(password, configuredPassword);
-
-  console.log("ADMIN_LOGIN_DEBUG", {
-    enteredNormalizedEmail: normalizedEmail,
-    normalizedAdminEmail,
-    emailsMatch,
-    adminEmailExists: Boolean(configuredEmail),
-    adminPasswordExists: Boolean(configuredPassword),
-    passwordMatch,
-  });
 }
 
 function invalidCredentialsRedirect(request: Request, returnTo: string) {
@@ -72,28 +49,4 @@ function invalidCredentialsRedirect(request: Request, returnTo: string) {
   return NextResponse.redirect(loginUrl, {
     status: 303,
   });
-}
-
-function logAdminLoginSubmitError(error: unknown, normalizedEmail: string) {
-  const errorObject = error instanceof Error ? error : new Error(String(error));
-
-  console.error("ADMIN_LOGIN_SUBMIT_ERROR", {
-    errorName: errorObject.name,
-    errorMessage: errorObject.message,
-    stackFirstThreeLines: errorObject.stack?.split("\n").slice(0, 3) ?? [],
-    adminEmailExists: Boolean(process.env.ADMIN_EMAIL),
-    adminPasswordExists: Boolean(process.env.ADMIN_PASSWORD),
-    enteredEmailNormalized: normalizedEmail,
-  });
-}
-
-function safeEqual(left: string, right: string) {
-  const leftBuffer = Buffer.from(left);
-  const rightBuffer = Buffer.from(right);
-
-  if (leftBuffer.length !== rightBuffer.length) {
-    return false;
-  }
-
-  return timingSafeEqual(leftBuffer, rightBuffer);
 }

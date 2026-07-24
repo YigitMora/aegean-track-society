@@ -53,6 +53,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Validate admin login log safety
+        run: pnpm validate:admin-login-log-safety
+
       - name: Validate mobile authentication API
         run: pnpm validate:mobile-api-auth
 
