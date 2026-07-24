@@ -134,31 +134,21 @@ export async function forgotPasswordAction(formData: FormData) {
     redirect("/auth/forgot-password?sent=1");
   }
 
-  console.log("AUTH_PASSWORD_RESET_REQUESTED", {
-    emailDomain: emailDomainOf(email),
-  });
-
   try {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: buildPublicAuthUrl("/auth/callback", {
-        next: "/auth/reset-password",
-      }),
+      redirectTo: buildPublicAuthUrl("/auth/confirm"),
     });
 
     if (error) {
-      console.warn("AUTH_PASSWORD_RESET_REQUESTED", {
-        status: "provider_error",
-        errorName: error.name,
-        errorMessage: safeAuthErrorMessage(error.message),
-      });
+      console.error("AUTH_PASSWORD_RESET_REQUEST_FAILED");
     }
   } catch (error) {
     if (error instanceof SupabaseConfigurationError) {
       redirect("/auth/forgot-password?error=config");
     }
 
-    console.error("AUTH_PASSWORD_RESET_REQUESTED", serializeActionError(error));
+    console.error("AUTH_PASSWORD_RESET_REQUEST_FAILED");
   }
 
   redirect("/auth/forgot-password?sent=1");
@@ -179,10 +169,7 @@ export async function resetPasswordAction(formData: FormData) {
     });
 
     if (error) {
-      console.warn("AUTH_PASSWORD_RESET_FAILED", {
-        errorName: error.name,
-        errorMessage: safeAuthErrorMessage(error.message),
-      });
+      console.error("AUTH_PASSWORD_RESET_UPDATE_FAILED");
       redirect("/auth/reset-password?error=failed");
     }
   } catch (error) {
@@ -190,7 +177,7 @@ export async function resetPasswordAction(formData: FormData) {
       throw error;
     }
 
-    console.error("AUTH_PASSWORD_RESET_FAILED", serializeActionError(error));
+    console.error("AUTH_PASSWORD_RESET_UPDATE_FAILED");
     redirect(`/auth/reset-password?error=${errorCodeForAction(error)}`);
   }
 
