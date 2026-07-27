@@ -273,6 +273,12 @@ function validateSourceSecurityAndTransactions() {
     createRoute.indexOf("authenticateMobileMember(request)") <
       createRoute.indexOf("context.params"),
   );
+  assert.match(createRoute, /import \{ after \} from "next\/server"/);
+  assert.match(createRoute, /after\(async \(\) => \{[\s\S]*Promise\.allSettled/);
+  assert.ok(
+    createRoute.indexOf("after(async () =>") <
+      createRoute.lastIndexOf("return mobileApplicationsJsonResponse"),
+  );
   assert.match(service, /userId: memberUserId/);
   assert.match(service, /userId: currentMember\.id/);
   assert.match(service, /deletedAt: null/);
