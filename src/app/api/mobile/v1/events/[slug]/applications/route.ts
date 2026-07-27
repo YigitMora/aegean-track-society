@@ -2,6 +2,7 @@ import {
   sendAdminNewRegistrationEmail,
   sendRegistrationReceivedEmail,
 } from "@/lib/email";
+import { after } from "next/server";
 import {
   createMemberEventApplication,
   parseMobileApplicationInput,
@@ -61,27 +62,29 @@ export async function POST(
       source: "mobile_application",
     });
 
-    await Promise.allSettled([
-      sendRegistrationReceivedEmail({
-        registrationId: result.email.registrationId,
-        to: result.email.to,
-        fullName: result.email.fullName,
-        carBrandModel: result.email.carBrandModel,
-        plateNumber: result.email.plateNumber,
-      }),
-      sendAdminNewRegistrationEmail({
-        registrationId: result.email.registrationId,
-        to: result.email.to,
-        fullName: result.email.fullName,
-        email: result.email.to,
-        phone: result.email.phone,
-        carBrandModel: result.email.carBrandModel,
-        plateNumber: result.email.plateNumber,
-        experienceLevel: result.email.experienceLevel,
-        emergencyContactName: result.email.emergencyContactName,
-        emergencyContactPhone: result.email.emergencyContactPhone,
-      }),
-    ]);
+    after(async () => {
+      await Promise.allSettled([
+        sendRegistrationReceivedEmail({
+          registrationId: result.email.registrationId,
+          to: result.email.to,
+          fullName: result.email.fullName,
+          carBrandModel: result.email.carBrandModel,
+          plateNumber: result.email.plateNumber,
+        }),
+        sendAdminNewRegistrationEmail({
+          registrationId: result.email.registrationId,
+          to: result.email.to,
+          fullName: result.email.fullName,
+          email: result.email.to,
+          phone: result.email.phone,
+          carBrandModel: result.email.carBrandModel,
+          plateNumber: result.email.plateNumber,
+          experienceLevel: result.email.experienceLevel,
+          emergencyContactName: result.email.emergencyContactName,
+          emergencyContactPhone: result.email.emergencyContactPhone,
+        }),
+      ]);
+    });
 
     return mobileApplicationsJsonResponse(
       { data: { application: result.application } },
