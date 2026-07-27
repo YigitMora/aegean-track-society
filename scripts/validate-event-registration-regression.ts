@@ -24,8 +24,9 @@ assertCondition(
   "registration page must retain member-gated dynamic form behavior",
 );
 assertCondition(
-  registrationForm.includes('fetch("/api/registrations"') &&
+    registrationForm.includes('fetch("/api/registrations"') &&
     registrationForm.includes("emergencyContactName") &&
+    registrationForm.includes("paymentPreference") &&
     registrationForm.includes("defaultVehicleId"),
   "registration form must still submit existing payload fields",
 );
@@ -33,6 +34,7 @@ assertCondition(
   registrationApi.includes('const eventSlug = "kula-mytrack-2026";') &&
     registrationApi.includes('const packageCode = "SEP20";') &&
     registrationApi.includes("manualReservationMessage") &&
+    registrationApi.includes("myTrackMemberEventRegistrationSchema") &&
     registrationApi.includes("createMemberEventApplication") &&
     applicationService.includes("tx.registration.count") &&
     applicationService.includes("tx.registration.create") &&

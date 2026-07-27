@@ -12,6 +12,7 @@ import {
 } from "@/lib/admin-format";
 import { adminHasCapability, requireAdminCapability } from "@/lib/admin-authorization";
 import { prisma } from "@/lib/prisma";
+import { myTrackPaymentPreferenceLabel } from "@/lib/mytrack-payment-preference";
 import {
   addAdminNote,
 } from "./actions";
@@ -62,6 +63,7 @@ export default async function ParticipantDetailPage({
       adminNotes: true,
       status: true,
       paymentStatus: true,
+      mytrackPaymentPreference: true,
       qrIssuedAt: true,
       deletedAt: true,
       deleteReason: true,
@@ -229,6 +231,10 @@ export default async function ParticipantDetailPage({
               <DetailRow label="Updated" value={formatDateTime(registration.updatedAt)} />
               <DetailRow label="Registration status" value={<StatusBadge value={registration.status} />} />
               <DetailRow label="Payment status" value={<StatusBadge value={registration.paymentStatus} />} />
+              <DetailRow
+                label="MyTrack ödeme tercihi"
+                value={myTrackPaymentPreferenceLabel(registration.mytrackPaymentPreference)}
+              />
             </DetailGrid>
           </DetailSection>
 
@@ -470,6 +476,7 @@ async function renderCheckinParticipantDetail(registrationId: string) {
       emergencyContactPhone: true,
       status: true,
       paymentStatus: true,
+      mytrackPaymentPreference: true,
       qrIssuedAt: true,
       deletedAt: true,
       createdAt: true,
@@ -561,6 +568,10 @@ async function renderCheckinParticipantDetail(registrationId: string) {
               <DetailRow
                 label="Payment status"
                 value={<StatusBadge value={registration.paymentStatus} />}
+              />
+              <DetailRow
+                label="MyTrack ödeme tercihi"
+                value={myTrackPaymentPreferenceLabel(registration.mytrackPaymentPreference)}
               />
             </DetailGrid>
           </DetailSection>

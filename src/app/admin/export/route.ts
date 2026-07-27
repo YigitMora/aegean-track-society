@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminHasCapability, getAdminActorForRoute } from "@/lib/admin-authorization";
 import { formatDateOnly } from "@/lib/admin-format";
 import { kulaEventSlug } from "@/lib/event-config";
+import { myTrackPaymentPreferenceLabel } from "@/lib/mytrack-payment-preference";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ const headers = [
   "emergencyContactPhone",
   "status",
   "paymentStatus",
+  "myTrackPaymentPreference",
   "checkedInStatus",
   "createdAt",
 ];
@@ -57,6 +59,7 @@ export async function GET(request: Request) {
       emergencyContactPhone: true,
       status: true,
       paymentStatus: true,
+      mytrackPaymentPreference: true,
       createdAt: true,
       checkIns: {
         orderBy: { eventDate: "asc" },
@@ -81,6 +84,7 @@ export async function GET(request: Request) {
     registration.emergencyContactPhone,
     registration.status,
     registration.paymentStatus,
+    myTrackPaymentPreferenceLabel(registration.mytrackPaymentPreference),
     formatCheckInStatus(registration.checkIns),
     registration.createdAt.toISOString(),
   ]);

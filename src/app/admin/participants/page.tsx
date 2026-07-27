@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/admin/status-badge";
 import { formatDateTime } from "@/lib/admin-format";
 import { adminHasCapability, requireAdminCapability } from "@/lib/admin-authorization";
 import { kulaEventSlug } from "@/lib/event-config";
+import { myTrackPaymentPreferenceLabel } from "@/lib/mytrack-payment-preference";
 import { prisma } from "@/lib/prisma";
 
 const statusFilters = [
@@ -16,6 +17,11 @@ const statusFilters = [
   { value: "archived", label: "Archived" },
 ] as const;
 const paymentStatuses = ["UNPAID", "PENDING", "PAID", "FAILED", "REFUNDED", "REVIEW"] as const;
+const myTrackPaymentPreferenceFilters = [
+  "BANK_TRANSFER",
+  "CARD_AT_TRACK",
+  "LEGACY",
+] as const;
 const pageSize = 50;
 const maxQueryLength = 100;
 
@@ -24,6 +30,7 @@ type ParticipantsPageProps = {
     q?: string;
     status?: string;
     paymentStatus?: string;
+    myTrackPaymentPreference?: string;
     page?: string;
     adminError?: string;
   }>;
@@ -39,6 +46,11 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
   const query = normalizeQuery(filters.q);
   const status = isStatusFilter(filters.status) ? filters.status : "active";
   const paymentStatus = isPaymentStatus(filters.paymentStatus) ? filters.paymentStatus : undefined;
+  const myTrackPaymentPreference = isMyTrackPaymentPreferenceFilter(
+    filters.myTrackPaymentPreference,
+  )
+    ? filters.myTrackPaymentPreference
+    : undefined;
   const page = normalizePage(filters.page);
   const skip = (page - 1) * pageSize;
 
@@ -82,7 +94,15 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
     ];
   }
 
-  const [totalParticipants, participants] = await prisma.$transaction([
+  const preferenceCountsWhere = { ...where };
+
+  if (myTrackPaymentPreference === "LEGACY") {
+    where.mytrackPaymentPreference = null;
+  } else if (myTrackPaymentPreference) {
+    where.mytrackPaymentPreference = myTrackPaymentPreference;
+  }
+
+  const [totalParticipants, participants, paymentPreferenceCounts] = await prisma.$transaction([
     prisma.registration.count({ where }),
     prisma.registration.findMany({
       where,
@@ -99,11 +119,24 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
         plateNumber: true,
         status: true,
         paymentStatus: true,
+        mytrackPaymentPreference: true,
         deletedAt: true,
         createdAt: true,
       },
     }),
+    prisma.registration.groupBy({
+      by: ["mytrackPaymentPreference"],
+      where: preferenceCountsWhere,
+      orderBy: { mytrackPaymentPreference: "asc" },
+      _count: { _all: true },
+    }),
   ]);
+  const paymentPreferenceCountByCode = new Map(
+    paymentPreferenceCounts.map((entry) => [
+      entry.mytrackPaymentPreference ?? "LEGACY",
+      typeof entry._count === "object" ? (entry._count._all ?? 0) : 0,
+    ]),
+  );
   const totalPages = Math.max(Math.ceil(totalParticipants / pageSize), 1);
   const startRow = totalParticipants === 0 ? 0 : skip + 1;
   const endRow = Math.min(skip + participants.length, totalParticipants);
@@ -128,7 +161,7 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
       <form
         action="/admin/participants"
         method="get"
-        className="grid gap-3 rounded-lg border border-white/10 bg-white/10 p-4 md:grid-cols-[1fr_180px_180px_auto_auto]"
+        className="grid gap-3 rounded-lg border border-white/10 bg-white/10 p-4 md:grid-cols-[1fr_180px_180px_220px_auto_auto]"
       >
         <label className="block">
           <span className="text-xs font-black uppercase text-white/50">Search</span>
@@ -138,6 +171,19 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
             placeholder="Name, phone, email, plate, code"
             className="mt-2 h-11 w-full rounded-md border border-white/15 bg-white px-3 text-sm font-semibold text-asphalt outline-none transition focus:border-signal"
           />
+        </label>
+        <label className="block">
+          <span className="text-xs font-black uppercase text-white/50">MyTrack tercihi</span>
+          <select
+            name="myTrackPaymentPreference"
+            defaultValue={myTrackPaymentPreference ?? ""}
+            className="mt-2 h-11 w-full rounded-md border border-white/15 bg-white px-3 text-sm font-semibold text-asphalt outline-none transition focus:border-signal"
+          >
+            <option value="">Tümü</option>
+            <option value="BANK_TRANSFER">MyTrack’e EFT / havale</option>
+            <option value="CARD_AT_TRACK">Pistte kredi kartı</option>
+            <option value="LEGACY">Belirtilmedi — eski kayıt</option>
+          </select>
         </label>
         <label className="block">
           <span className="text-xs font-black uppercase text-white/50">Status</span>
@@ -182,6 +228,12 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
         </Link>
       </form>
 
+      <p className="mt-3 text-xs font-semibold text-white/60">
+        MyTrack tercihleri: EFT / havale {paymentPreferenceCountByCode.get("BANK_TRANSFER") ?? 0}
+        {" · "}Pistte kredi kartı {paymentPreferenceCountByCode.get("CARD_AT_TRACK") ?? 0}
+        {" · "}Eski kayıt {paymentPreferenceCountByCode.get("LEGACY") ?? 0}
+      </p>
+
       <section className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-white/10">
         <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4">
           <p className="text-sm font-black uppercase text-signal">
@@ -202,6 +254,7 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
                 <th className="px-5 py-3">Vehicle</th>
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3">Payment</th>
+                <th className="px-5 py-3">MyTrack tercihi</th>
                 <th className="px-5 py-3">Created</th>
                 <th className="px-5 py-3">Detail</th>
               </tr>
@@ -246,6 +299,9 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
                   <td className="px-5 py-4">
                     <StatusBadge value={participant.paymentStatus} />
                   </td>
+                  <td className="px-5 py-4 text-white/70">
+                    {myTrackPaymentPreferenceLabel(participant.mytrackPaymentPreference)}
+                  </td>
                   <td className="px-5 py-4 text-white/60">
                     {formatDateTime(participant.createdAt)}
                   </td>
@@ -261,7 +317,7 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
               ))}
               {participants.length === 0 ? (
                 <tr>
-                  <td className="px-5 py-8 text-white/60" colSpan={8}>
+                  <td className="px-5 py-8 text-white/60" colSpan={9}>
                     No participants match the current filters.
                   </td>
                 </tr>
@@ -277,7 +333,13 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
         </p>
         <div className="flex gap-3">
           <PaginationLink
-            href={participantsHref({ query, status, paymentStatus, page: Math.max(page - 1, 1) })}
+            href={participantsHref({
+              query,
+              status,
+              paymentStatus,
+              myTrackPaymentPreference,
+              page: Math.max(page - 1, 1),
+            })}
             disabled={page <= 1}
           >
             Previous
@@ -287,6 +349,7 @@ export default async function AdminParticipantsPage({ searchParams }: Participan
               query,
               status,
               paymentStatus,
+              myTrackPaymentPreference,
               page: Math.min(page + 1, totalPages),
             })}
             disabled={page >= totalPages}
@@ -305,6 +368,17 @@ function isStatusFilter(value?: string): value is (typeof statusFilters)[number]
 
 function isPaymentStatus(value?: string): value is (typeof paymentStatuses)[number] {
   return Boolean(value && paymentStatuses.includes(value as (typeof paymentStatuses)[number]));
+}
+
+function isMyTrackPaymentPreferenceFilter(
+  value?: string,
+): value is (typeof myTrackPaymentPreferenceFilters)[number] {
+  return Boolean(
+    value &&
+      myTrackPaymentPreferenceFilters.includes(
+        value as (typeof myTrackPaymentPreferenceFilters)[number],
+      ),
+  );
 }
 
 function PaginationLink({
@@ -338,11 +412,13 @@ function participantsHref({
   query,
   status,
   paymentStatus,
+  myTrackPaymentPreference,
   page,
 }: {
   query: string;
   status: (typeof statusFilters)[number]["value"];
   paymentStatus?: (typeof paymentStatuses)[number];
+  myTrackPaymentPreference?: (typeof myTrackPaymentPreferenceFilters)[number];
   page: number;
 }) {
   const params = new URLSearchParams();
@@ -357,6 +433,10 @@ function participantsHref({
 
   if (paymentStatus) {
     params.set("paymentStatus", paymentStatus);
+  }
+
+  if (myTrackPaymentPreference) {
+    params.set("myTrackPaymentPreference", myTrackPaymentPreference);
   }
 
   if (page > 1) {

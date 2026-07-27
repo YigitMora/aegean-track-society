@@ -28,6 +28,11 @@ const experienceLevels = [
   { value: "BEGINNER", label: "İlk pist tecrübem olacak" },
 ];
 
+const myTrackPaymentPreferences = [
+  { value: "BANK_TRANSFER", label: "MyTrack’e EFT / havale" },
+  { value: "CARD_AT_TRACK", label: "Pistte kredi kartı" },
+] as const;
+
 const messageTranslations: Record<string, string> = {
   "Registration received. Redirecting to secure payment...":
     "Kayıt talebiniz alındı. Güvenli ödeme sayfasına yönlendiriliyorsunuz...",
@@ -42,6 +47,8 @@ const messageTranslations: Record<string, string> = {
     "Geçerli bir Türkiye acil durum telefonu girin.",
   "KVKK consent is required.": "KVKK onayı zorunludur.",
   "Liability waiver acceptance is required.": "Sorumluluk beyanı onayı zorunludur.",
+  "MyTrack payment preference is required.": "MyTrack ödeme tercihi seçilmelidir.",
+  "MyTrack payment preference is invalid.": "Geçerli bir MyTrack ödeme tercihi seçin.",
 };
 
 export function RegistrationForm({
@@ -69,6 +76,7 @@ export function RegistrationForm({
       emergencyContactPhone: valueOf(formData, "emergencyContactPhone"),
       kvkkAccepted: formData.get("kvkkAccepted") === "on",
       liabilityWaiverAccepted: formData.get("liabilityWaiverAccepted") === "on",
+      paymentPreference: valueOf(formData, "paymentPreference"),
     };
 
     try {
@@ -216,6 +224,36 @@ export function RegistrationForm({
               : undefined
           }
         />
+        <fieldset className="sm:col-span-2">
+          <legend className="text-sm font-bold text-ats-text">MyTrack ödeme tercihi</legend>
+          <p className="mt-2 text-sm leading-6 text-ats-muted">
+            Bu tercih yalnız MyTrack’e iletilir. ATS tahsilat yapmaz; banka veya kart
+            bilgisi istenmez.
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {myTrackPaymentPreferences.map((preference) => (
+              <label
+                key={preference.value}
+                className="flex cursor-pointer items-center gap-3 rounded-md border border-ats-border bg-ats-black px-4 py-3 text-sm font-bold text-ats-text transition has-[:checked]:border-ats-blue"
+              >
+                <input
+                  name="paymentPreference"
+                  type="radio"
+                  value={preference.value}
+                  required
+                  className="h-4 w-4 accent-ats-blue"
+                />
+                {preference.label}
+              </label>
+            ))}
+          </div>
+          <ErrorText
+            message={fieldErrors.paymentPreference?.[0] ? translateMessage(
+              fieldErrors.paymentPreference[0],
+              fieldErrors.paymentPreference[0],
+            ) : undefined}
+          />
+        </fieldset>
       </div>
 
       <div className="mt-8 space-y-4 border-t border-ats-border pt-6">

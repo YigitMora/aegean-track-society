@@ -117,8 +117,16 @@ function validateStrictApplicationInput() {
     emergencyContactPhone: "0555 111 22 33",
     kvkkAccepted: true,
     liabilityWaiverAccepted: true,
+    paymentPreference: "BANK_TRANSFER",
   };
-  assert.ok(parseMobileApplicationInput(valid));
+  assert.deepEqual(parseMobileApplicationInput(valid), valid);
+  assert.deepEqual(
+    parseMobileApplicationInput({ ...valid, paymentPreference: "CARD_AT_TRACK" }),
+    { ...valid, paymentPreference: "CARD_AT_TRACK" },
+  );
+  assert.equal(parseMobileApplicationInput({ ...valid, paymentPreference: undefined }), null);
+  assert.equal(parseMobileApplicationInput({ ...valid, paymentPreference: null }), null);
+  assert.equal(parseMobileApplicationInput({ ...valid, paymentPreference: "PAID" }), null);
 
   for (const forged of [
     { userId: "forged" },
@@ -297,6 +305,9 @@ function validateSourceSecurityAndTransactions() {
   assert.match(service, /participantCode: registration\.participantCode/);
   assert.doesNotMatch(service, /rawQrToken|qrTokenHash/);
   assert.match(webRoute, /createMemberEventApplication/);
+  assert.match(service, /paymentPreference: input\.paymentPreference/);
+  assert.match(service, /mytrackPaymentPreference: input\.paymentPreference/);
+  assert.match(webRoute, /myTrackMemberEventRegistrationSchema/);
 
   const transactionNowIndex = service.indexOf("const transactionNow = clock()");
   assert.ok(transactionNowIndex > service.indexOf("tx.registration.count"));

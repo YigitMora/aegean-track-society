@@ -1,6 +1,10 @@
 import { prisma } from "./prisma";
 import { buildAppUrl } from "./app-url";
 import { buildCheckInUrl, generateQrPngBase64 } from "./qr";
+import {
+  myTrackPaymentPreferenceLabel,
+  type MyTrackPaymentPreference,
+} from "./mytrack-payment-preference";
 
 type BaseRegistrationEmailInput = {
   registrationId: string;
@@ -10,7 +14,9 @@ type BaseRegistrationEmailInput = {
   plateNumber: string;
 };
 
-type RegistrationReceivedEmailInput = BaseRegistrationEmailInput;
+type RegistrationReceivedEmailInput = BaseRegistrationEmailInput & {
+  paymentPreference: MyTrackPaymentPreference;
+};
 
 type AdminNewRegistrationEmailInput = BaseRegistrationEmailInput & {
   email: string;
@@ -18,6 +24,7 @@ type AdminNewRegistrationEmailInput = BaseRegistrationEmailInput & {
   experienceLevel: string;
   emergencyContactName: string;
   emergencyContactPhone: string;
+  paymentPreference: MyTrackPaymentPreference;
 };
 
 type RegistrationApprovedEmailInput = BaseRegistrationEmailInput & {
@@ -456,6 +463,7 @@ function buildRegistrationReceivedHtml(input: RegistrationReceivedEmailInput) {
     ${detailsTable([
       ["Kayıt referansı", input.registrationId],
       ["Araç", input.carBrandModel],
+      ["MyTrack ödeme tercihi", myTrackPaymentPreferenceLabel(input.paymentPreference)],
       ["Tarih", "20 Eylül 2026 Pazar"],
     ])}
   `);
@@ -470,6 +478,7 @@ function buildRegistrationReceivedText(input: RegistrationReceivedEmailInput) {
     "Ekibimiz bilgilerinizi kontrol edecek ve ödeme/kesin kayıt süreci için sizinle iletişime geçecektir.",
     `Kayıt referansı: ${input.registrationId}`,
     `Araç: ${input.carBrandModel}`,
+    `MyTrack ödeme tercihi: ${myTrackPaymentPreferenceLabel(input.paymentPreference)}`,
     "Tarih: 20 Eylül 2026 Pazar",
     "",
     ...contactFooterText(),
@@ -489,6 +498,7 @@ function buildAdminNewRegistrationHtml(input: AdminNewRegistrationEmailInput) {
       ["Plaka", input.plateNumber],
       ["Sürüş deneyimi", formatExperienceLevel(input.experienceLevel)],
       ["Acil durum", `${input.emergencyContactName} · ${input.emergencyContactPhone}`],
+      ["MyTrack ödeme tercihi", myTrackPaymentPreferenceLabel(input.paymentPreference)],
       ["Kayıt ID", input.registrationId],
     ])}
     <p style="margin:24px 0 0;">
@@ -508,6 +518,7 @@ function buildAdminNewRegistrationText(input: AdminNewRegistrationEmailInput) {
     `Plaka: ${input.plateNumber}`,
     `Sürüş deneyimi: ${formatExperienceLevel(input.experienceLevel)}`,
     `Acil durum: ${input.emergencyContactName} · ${input.emergencyContactPhone}`,
+    `MyTrack ödeme tercihi: ${myTrackPaymentPreferenceLabel(input.paymentPreference)}`,
     `Kayıt ID: ${input.registrationId}`,
     `Admin panel: ${buildAdminRegistrationUrl(input.registrationId)}`,
   ].join("\n");
