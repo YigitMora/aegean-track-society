@@ -68,6 +68,12 @@ jobs:
       - name: Validate mobile applications API
         run: pnpm validate:mobile-applications
 
+      - name: Validate MyTrack payment preference
+        run: pnpm validate:mytrack-payment-preference
+
+      - name: Validate event registration regression
+        run: pnpm validate:event-registration-regression
+
       - name: Validate mobile profile API
         run: pnpm validate:mobile-profile
 

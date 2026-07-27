@@ -20,9 +20,14 @@ import {
 import { getPaymentMode } from "@/lib/payment-mode";
 import { prisma } from "@/lib/prisma";
 import {
-  memberEventRegistrationSchema,
+  myTrackMemberEventRegistrationSchema,
   normalizeTurkishPhone,
 } from "@/lib/registration-validation";
+import {
+  myTrackPaymentPreferenceLabel,
+  myTrackPaymentPreferenceOptions,
+  type MyTrackPaymentPreference,
+} from "@/lib/mytrack-payment-preference";
 
 export const mobileEventSlug = kulaEventSlug;
 export const mobileEventPackageCode = kulaPackageCode;
@@ -40,6 +45,7 @@ export type MobileApplicationInput = {
   emergencyContactPhone: string;
   kvkkAccepted: true;
   liabilityWaiverAccepted: true;
+  paymentPreference: MyTrackPaymentPreference;
 };
 
 export type CreatedRegistrationEmailData = {
@@ -52,6 +58,7 @@ export type CreatedRegistrationEmailData = {
   experienceLevel: ExperienceLevel;
   emergencyContactName: string;
   emergencyContactPhone: string;
+  paymentPreference: MyTrackPaymentPreference;
 };
 
 type EligibilityInput = {
@@ -133,12 +140,13 @@ export function parseMobileApplicationInput(
     "emergencyContactPhone",
     "kvkkAccepted",
     "liabilityWaiverAccepted",
+    "paymentPreference",
   ]);
   if (Object.keys(value).some((key) => !allowedKeys.has(key))) {
     return null;
   }
 
-  const parsed = memberEventRegistrationSchema.safeParse(value);
+  const parsed = myTrackMemberEventRegistrationSchema.safeParse(value);
   return parsed.success ? parsed.data : null;
 }
 
@@ -403,6 +411,7 @@ export async function createMemberEventApplication({
         consentIpAddress,
         status: "PENDING_PAYMENT",
         paymentStatus: "UNPAID",
+        mytrackPaymentPreference: input.paymentPreference,
       },
       select: {
         ...applicationSelect,
@@ -431,6 +440,7 @@ export async function createMemberEventApplication({
           source,
           status: "PENDING_PAYMENT",
           paymentStatus: "UNPAID",
+          paymentPreference: input.paymentPreference,
         },
         reason: "Registration created from an authenticated member flow.",
         ipAddress: consentIpAddress,
@@ -460,6 +470,7 @@ export async function createMemberEventApplication({
       experienceLevel: committed.experienceLevel,
       emergencyContactName: committed.emergencyContactName,
       emergencyContactPhone: committed.emergencyContactPhone,
+      paymentPreference: input.paymentPreference,
     } satisfies CreatedRegistrationEmailData,
   };
 }
@@ -473,6 +484,7 @@ const applicationSelect = Prisma.validator<Prisma.RegistrationSelect>()({
   emergencyContactPhone: true,
   status: true,
   paymentStatus: true,
+  mytrackPaymentPreference: true,
   participantCode: true,
   qrIssuedAt: true,
   createdAt: true,
@@ -641,6 +653,10 @@ function presentEvent(
           },
           paymentMode: "MANUAL" as const,
           paymentInstructions: manualPaymentInstructions,
+          paymentPreference: {
+            required: true,
+            options: myTrackPaymentPreferenceOptions,
+          },
         }
       : null,
     eligibility,
@@ -709,6 +725,10 @@ function presentApplication(registration: ApplicationRecord, includePrivate: boo
       registration.paymentStatus,
       Boolean(paymentSnapshot),
     ),
+    paymentPreference: {
+      code: registration.mytrackPaymentPreference,
+      label: myTrackPaymentPreferenceLabel(registration.mytrackPaymentPreference),
+    },
     participantPass: {
       available: passAvailable,
       action: passAvailable ? ("VIEW_PASS" as const) : null,

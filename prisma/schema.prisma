@@ -45,6 +45,11 @@ enum PaymentStatus {
   REVIEW
 }
 
+enum MyTrackPaymentPreference {
+  BANK_TRANSFER
+  CARD_AT_TRACK
+}
+
 enum PaymentProvider {
   IYZICO
   MANUAL
@@ -315,6 +320,7 @@ model Registration {
   adminNoteEntries          AdminNote[]
   status                    RegistrationStatus @default(DRAFT)
   paymentStatus             PaymentStatus      @default(UNPAID)
+  mytrackPaymentPreference  MyTrackPaymentPreference?
   qrTokenHash               String?            @unique
   qrIssuedAt                DateTime?
   deletedAt                 DateTime?
@@ -330,6 +336,7 @@ model Registration {
 
   @@index([eventId, status])
   @@index([paymentStatus])
+  @@index([mytrackPaymentPreference])
   @@index([packageId])
   @@index([email])
   @@index([phone])

@@ -15,6 +15,8 @@
     "validate:mobile-garage": "tsx scripts/validate-mobile-garage-api.ts",
     "validate:mobile-garage-detail": "tsx scripts/validate-mobile-garage-detail-api.ts",
     "validate:mobile-applications": "tsx scripts/validate-mobile-applications-api.ts",
+    "validate:mytrack-payment-preference": "tsx scripts/validate-mytrack-payment-preference.ts",
+    "validate:event-registration-regression": "tsx scripts/validate-event-registration-regression.ts",
     "validate:mobile-profile": "tsx scripts/validate-mobile-profile-api.ts",
     "validate:admin-login-log-safety": "tsx scripts/validate-admin-login-log-safety.ts",
     "validate:password-recovery": "tsx scripts/validate-password-recovery.ts",

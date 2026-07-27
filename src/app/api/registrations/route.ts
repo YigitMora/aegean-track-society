@@ -15,9 +15,10 @@ import { MobileApplicationsError } from "@/lib/mobile-applications-contract";
 import { prisma } from "@/lib/prisma";
 import { consumeRateLimit, getRateLimitHeaders } from "@/lib/rate-limit";
 import {
-  memberEventRegistrationSchema,
+  myTrackMemberEventRegistrationSchema,
   normalizeTurkishPhone,
 } from "@/lib/registration-validation";
+import { myTrackPaymentPreferenceLabel } from "@/lib/mytrack-payment-preference";
 import { getClientIpFromRequest } from "@/lib/request-ip";
 
 const eventSlug = "kula-mytrack-2026";
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const parsed = memberEventRegistrationSchema.safeParse(body);
+  const parsed = myTrackMemberEventRegistrationSchema.safeParse(body);
 
   if (!parsed.success) {
     return NextResponse.json(
@@ -124,6 +125,7 @@ export async function POST(request: Request) {
           fullName: result.email.fullName,
           carBrandModel: result.email.carBrandModel,
           plateNumber: result.email.plateNumber,
+          paymentPreference: result.email.paymentPreference,
         }),
         sendAdminNewRegistrationEmail({
           registrationId: result.email.registrationId,
@@ -136,6 +138,7 @@ export async function POST(request: Request) {
           experienceLevel: result.email.experienceLevel,
           emergencyContactName: result.email.emergencyContactName,
           emergencyContactPhone: result.email.emergencyContactPhone,
+          paymentPreference: result.email.paymentPreference,
         }),
       ]);
 
@@ -148,6 +151,10 @@ export async function POST(request: Request) {
             id: result.application.id,
             status: "PENDING_PAYMENT",
             paymentStatus: "UNPAID",
+            paymentPreference: {
+              code: result.application.paymentPreference.code,
+              label: result.application.paymentPreference.label,
+            },
           },
         },
         { status: 201 },
@@ -327,6 +334,7 @@ export async function POST(request: Request) {
         consentIpAddress,
         status: "PENDING_PAYMENT",
         paymentStatus: "UNPAID",
+        mytrackPaymentPreference: input.paymentPreference,
       },
       select: {
         id: true,
@@ -363,7 +371,11 @@ export async function POST(request: Request) {
           })
         : null;
 
-    await createRegistrationCreatedAuditLog(registration.id, consentIpAddress);
+    await createRegistrationCreatedAuditLog(
+      registration.id,
+      consentIpAddress,
+      input.paymentPreference,
+    );
     await Promise.allSettled([
       sendRegistrationReceivedEmail({
         registrationId: registration.id,
@@ -371,6 +383,7 @@ export async function POST(request: Request) {
         fullName: registration.fullName,
         carBrandModel: registration.carBrandModel,
         plateNumber: registration.plateNumber,
+        paymentPreference: input.paymentPreference,
       }),
       sendAdminNewRegistrationEmail({
         registrationId: registration.id,
@@ -383,6 +396,7 @@ export async function POST(request: Request) {
         experienceLevel: registration.experienceLevel,
         emergencyContactName: registration.emergencyContactName,
         emergencyContactPhone: registration.emergencyContactPhone,
+        paymentPreference: input.paymentPreference,
       }),
     ]);
 
@@ -450,6 +464,10 @@ export async function POST(request: Request) {
           id: registration.id,
           status: registration.status,
           paymentStatus: registration.paymentStatus,
+          paymentPreference: {
+            code: input.paymentPreference,
+            label: myTrackPaymentPreferenceLabel(input.paymentPreference),
+          },
         },
         payment: {
           conversationId: payment.conversationId,
@@ -532,6 +550,7 @@ function duplicateMessageForUniqueError(error: Prisma.PrismaClientKnownRequestEr
 async function createRegistrationCreatedAuditLog(
   registrationId: string,
   ipAddress: string | null,
+  paymentPreference: "BANK_TRANSFER" | "CARD_AT_TRACK",
 ) {
   try {
     await prisma.auditLog.create({
@@ -542,6 +561,7 @@ async function createRegistrationCreatedAuditLog(
           source: "member_registration_form",
           status: "PENDING_PAYMENT",
           paymentStatus: "UNPAID",
+          paymentPreference,
         },
         reason: "Registration created from member account registration form.",
         ipAddress,

@@ -70,6 +70,7 @@ export async function POST(
           fullName: result.email.fullName,
           carBrandModel: result.email.carBrandModel,
           plateNumber: result.email.plateNumber,
+          paymentPreference: result.email.paymentPreference,
         }),
         sendAdminNewRegistrationEmail({
           registrationId: result.email.registrationId,
@@ -82,6 +83,7 @@ export async function POST(
           experienceLevel: result.email.experienceLevel,
           emergencyContactName: result.email.emergencyContactName,
           emergencyContactPhone: result.email.emergencyContactPhone,
+          paymentPreference: result.email.paymentPreference,
         }),
       ]);
     });

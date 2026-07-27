@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { myTrackPaymentPreferenceValues } from "@/lib/mytrack-payment-preference";
 
 const requiredText = (field: string) =>
   z
@@ -62,6 +63,20 @@ export const memberEventRegistrationSchema = z.object({
 });
 
 export type MemberEventRegistrationInput = z.infer<typeof memberEventRegistrationSchema>;
+
+export const myTrackMemberEventRegistrationSchema =
+  memberEventRegistrationSchema
+    .extend({
+      paymentPreference: z.enum(myTrackPaymentPreferenceValues, {
+        required_error: "MyTrack payment preference is required.",
+        invalid_type_error: "MyTrack payment preference is invalid.",
+      }),
+    })
+    .strict();
+
+export type MyTrackMemberEventRegistrationInput = z.infer<
+  typeof myTrackMemberEventRegistrationSchema
+>;
 
 export function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
