@@ -59,7 +59,7 @@ assert.equal(
 assert.deepEqual(contract.contracts.garageLifecycle.supportedVersions, [
   mobileGarageLifecycleContractVersion,
 ]);
-assert.equal(contract.contracts.garageLifecycle.routes.length, 18);
+assert.equal(contract.contracts.garageLifecycle.routes.length, 19);
 assert.deepEqual(contract.contracts.garageDetail, {
   header: mobileGarageDetailContractHeader,
   supportedVersions: [mobileGarageDetailContractVersion],

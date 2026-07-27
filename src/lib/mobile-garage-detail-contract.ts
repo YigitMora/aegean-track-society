@@ -203,6 +203,18 @@ export function buildMobileGarageMutationResponseBody(vehicleId: string) {
   return { data: { vehicleId } };
 }
 
+export function buildMobileGarageModificationRemovalResponseBody({
+  vehicleId,
+  requestedCount,
+  updatedCount,
+}: {
+  vehicleId: string;
+  requestedCount: number;
+  updatedCount: number;
+}) {
+  return { data: { vehicleId, requestedCount, updatedCount } };
+}
+
 export function buildMobileGarageImageUploadIntentResponseBody({
   objectPath,
   token,
@@ -280,6 +292,27 @@ export function parseMobileGarageModificationIds(value: unknown) {
   }
 
   const ids = value.modificationDefinitionIds;
+  if (
+    !Array.isArray(ids) ||
+    ids.length === 0 ||
+    ids.length > mobileGarageMaxModificationBatch ||
+    ids.some((id) => typeof id !== "string" || !id.trim() || id.length > 128)
+  ) {
+    return null;
+  }
+
+  const normalizedIds = ids.map((id) => (id as string).trim());
+  return new Set(normalizedIds).size === normalizedIds.length
+    ? normalizedIds
+    : null;
+}
+
+export function parseMobileGarageInstalledModificationIds(value: unknown) {
+  if (!isPlainObject(value) || !hasExactFields(value, installedModificationFields)) {
+    return null;
+  }
+
+  const ids = value.modificationIds;
   if (
     !Array.isArray(ids) ||
     ids.length === 0 ||
@@ -375,6 +408,7 @@ const vehicleEditFields = new Set([
   "color",
 ]);
 const modificationFields = new Set(["modificationDefinitionIds"]);
+const installedModificationFields = new Set(["modificationIds"]);
 const catalogMatchFields = new Set(["memberNote"]);
 const imageUploadIntentFields = new Set(["mimeType", "fileSize"]);
 const imageFinalizeFields = new Set(["objectPath"]);

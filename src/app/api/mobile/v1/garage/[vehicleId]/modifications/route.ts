@@ -1,5 +1,8 @@
 import { authenticateMobileGarageMember } from "@/lib/mobile-garage-contract";
-import { addMobileGarageModifications } from "@/lib/mobile-garage-detail";
+import {
+  addMobileGarageModifications,
+  removeMobileGarageModifications,
+} from "@/lib/mobile-garage-detail";
 import {
   mobileGarageDetailErrorResponse,
   mobileGarageDetailJsonResponse,
@@ -24,6 +27,22 @@ export async function POST(request: Request, context: MobileGarageRouteContext) 
       body: requestBody,
     });
     return mobileGarageDetailJsonResponse(body, { status: 201 });
+  } catch (error) {
+    return mobileGarageDetailErrorResponse(error);
+  }
+}
+
+export async function DELETE(request: Request, context: MobileGarageRouteContext) {
+  try {
+    const { memberUser } = await authenticateMobileGarageMember(request);
+    const vehicleId = await readMobileGarageRouteId(context, "vehicleId");
+    const requestBody = await readMobileGarageJsonBody(request);
+    const body = await removeMobileGarageModifications({
+      memberUserId: memberUser.id,
+      vehicleId,
+      body: requestBody,
+    });
+    return mobileGarageDetailJsonResponse(body);
   } catch (error) {
     return mobileGarageDetailErrorResponse(error);
   }

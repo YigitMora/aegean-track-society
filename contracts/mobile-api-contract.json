@@ -108,6 +108,12 @@
         },
         {
           "method": "DELETE",
+          "path": "/api/mobile/v1/garage/{vehicleId}/modifications",
+          "contracts": ["garageLifecycle", "garageDetail"],
+          "liveProbe": false
+        },
+        {
+          "method": "DELETE",
           "path": "/api/mobile/v1/garage/{vehicleId}/modifications/{modificationId}",
           "contracts": ["garageLifecycle", "garageDetail"],
           "liveProbe": false
