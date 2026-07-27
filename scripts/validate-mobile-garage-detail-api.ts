@@ -9,6 +9,7 @@ import {
 import {
   buildMobileGarageBuildResponseBody,
   buildMobileGarageImageUploadIntentResponseBody,
+  buildMobileGarageModificationRemovalResponseBody,
   buildMobileGarageRatingPreviewResponseBody,
   buildMobileGarageVehicleDetailResponseBody,
   mobileGarageDetailContractHeader,
@@ -17,6 +18,7 @@ import {
   parseMobileGarageCatalogMatchBody,
   parseMobileGarageImageFinalizeBody,
   parseMobileGarageImageUploadIntentBody,
+  parseMobileGarageInstalledModificationIds,
   parseMobileGarageModificationIds,
   parseMobileGarageVehicleEditBody,
 } from "../src/lib/mobile-garage-detail-contract";
@@ -58,6 +60,7 @@ async function main() {
   ]);
   validateEditBody();
   validateModificationBodies();
+  validateModificationRemovalResponse();
   validateImageBodies();
   validateSafeResponses();
   await validateImageFiles();
@@ -457,6 +460,7 @@ function validateEditBody() {
 
 function validateModificationBodies() {
   equal(parseMobileGarageModificationIds({ modificationDefinitionIds: ["a", "b"] }), ["a", "b"]);
+  equal(parseMobileGarageInstalledModificationIds({ modificationIds: ["a", "b"] }), ["a", "b"]);
   for (const body of [
     null,
     { modificationDefinitionIds: [] },
@@ -472,6 +476,18 @@ function validateModificationBodies() {
     equal(parseMobileGarageModificationIds(body), null);
   }
 
+  for (const body of [
+    null,
+    {},
+    { modificationIds: [] },
+    { modificationIds: ["a", "a"] },
+    { modificationIds: Array.from({ length: 21 }, (_, index) => String(index)) },
+    { modificationIds: ["a"], userId: "must-not-be-accepted" },
+    { modificationIds: ["a"], modificationDefinitionIds: ["forged"] },
+  ]) {
+    equal(parseMobileGarageInstalledModificationIds(body), null);
+  }
+
   equal(parseMobileGarageCatalogMatchBody({ memberNote: "  Pist aracı  " }), {
     memberNote: "Pist aracı",
   });
@@ -480,6 +496,23 @@ function validateModificationBodies() {
   equal(
     parseMobileGarageCatalogMatchBody({ memberNote: null, email: "must-not-be-accepted" }),
     null,
+  );
+}
+
+function validateModificationRemovalResponse() {
+  equal(
+    buildMobileGarageModificationRemovalResponseBody({
+      vehicleId: "vehicle-one",
+      requestedCount: 2,
+      updatedCount: 2,
+    }),
+    {
+      data: {
+        vehicleId: "vehicle-one",
+        requestedCount: 2,
+        updatedCount: 2,
+      },
+    },
   );
 }
 
@@ -759,6 +792,7 @@ function validateRouteAndDomainGuards() {
   for (const path of [
     "src/app/api/mobile/v1/garage/[vehicleId]/image/upload-intent/route.ts",
     "src/app/api/mobile/v1/garage/[vehicleId]/image/finalize/route.ts",
+    "src/app/api/mobile/v1/garage/[vehicleId]/modifications/route.ts",
   ]) {
     const route = source(path);
     ok(
@@ -771,6 +805,12 @@ function validateRouteAndDomainGuards() {
     "src/app/api/mobile/v1/garage/[vehicleId]/image/route.ts",
   );
   ok(!/request\.formData|uploadMobileGarageVehicleImage/.test(imageRoute));
+
+  const modificationsRoute = source(
+    "src/app/api/mobile/v1/garage/[vehicleId]/modifications/route.ts",
+  );
+  match(modificationsRoute, /export async function DELETE/);
+  match(modificationsRoute, /removeMobileGarageModifications/);
 
   const detailService = source("src/lib/mobile-garage-detail.ts");
   for (const guard of [
@@ -785,6 +825,9 @@ function validateRouteAndDomainGuards() {
     /timeoutMs: mobileGarageBuildTransactionTimeoutMs/,
     /evaluateModificationBatchAvailability/,
     /evaluateModificationRemoval/,
+    /parseMobileGarageInstalledModificationIds/,
+    /requestedCount: modificationIds\.length/,
+    /updatedCount: result\.updatedCount/,
     /calculateProjectedVehiclePerformanceRating/,
     /validateVehicleImageFile/,
     /createSignedUploadUrl/,

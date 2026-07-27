@@ -15,12 +15,14 @@ import {
 import {
   buildMobileGarageBuildResponseBody,
   buildMobileGarageImageUploadIntentResponseBody,
+  buildMobileGarageModificationRemovalResponseBody,
   buildMobileGarageMutationResponseBody,
   buildMobileGarageRatingPreviewResponseBody,
   buildMobileGarageVehicleDetailResponseBody,
   parseMobileGarageCatalogMatchBody,
   parseMobileGarageImageFinalizeBody,
   parseMobileGarageImageUploadIntentBody,
+  parseMobileGarageInstalledModificationIds,
   parseMobileGarageModificationIds,
   parseMobileGarageVehicleEditBody,
   type MobileGarageBuild,
@@ -760,6 +762,27 @@ export async function removeMobileGarageModification({
   vehicleId: string;
   modificationId: string;
 }) {
+  return removeMobileGarageModifications({
+    memberUserId,
+    vehicleId,
+    body: { modificationIds: [modificationId] },
+  });
+}
+
+export async function removeMobileGarageModifications({
+  memberUserId,
+  vehicleId,
+  body,
+}: {
+  memberUserId: string;
+  vehicleId: string;
+  body: unknown;
+}) {
+  const modificationIds = parseMobileGarageInstalledModificationIds(body);
+  if (!modificationIds) {
+    throw new MobileGarageError("MOBILE_GARAGE_INVALID_BODY");
+  }
+
   const result = await runGarageSerializableTransaction(async (tx) => {
     const vehicle = await tx.vehicle.findFirst({
       where: { id: vehicleId, userId: memberUserId, deletedAt: null },
@@ -774,32 +797,36 @@ export async function removeMobileGarageModification({
       where: { vehicleId: vehicle.id, deletedAt: null },
       select: installedModificationSelect,
     });
-    const removing = installed.find((item) => item.id === modificationId);
+    const requestedIds = new Set(modificationIds);
+    const removing = installed.filter((item) => requestedIds.has(item.id));
 
-    if (!removing) {
+    if (removing.length !== modificationIds.length) {
       return { ok: false as const, code: "MODIFICATION_NOT_FOUND" as const };
     }
 
-    const availability = evaluateModificationRemoval({
-      removingModification: removing,
-      installedModifications: installed,
-    });
+    const remaining = installed.filter((item) => !requestedIds.has(item.id));
+    for (const item of removing) {
+      const availability = evaluateModificationRemoval({
+        removingModification: item,
+        installedModifications: remaining,
+      });
 
-    if (!availability.ok) {
-      return availability;
+      if (!availability.ok) {
+        return availability;
+      }
     }
 
     const removed = await tx.vehicleModification.updateMany({
       where: {
-        id: modificationId,
+        id: { in: modificationIds },
         vehicleId: vehicle.id,
         deletedAt: null,
       },
       data: { deletedAt: new Date() },
     });
 
-    return removed.count === 1
-      ? { ok: true as const }
+    return removed.count === modificationIds.length
+      ? { ok: true as const, updatedCount: removed.count }
       : { ok: false as const, code: "MODIFICATION_WRITE_FAILED" as const };
   }, { timeoutMs: mobileGarageBuildTransactionTimeoutMs });
 
@@ -807,7 +834,11 @@ export async function removeMobileGarageModification({
     throw new MobileGarageError(errorCodeForBuildResult(result.code));
   }
 
-  return buildMobileGarageMutationResponseBody(vehicleId);
+  return buildMobileGarageModificationRemovalResponseBody({
+    vehicleId,
+    requestedCount: modificationIds.length,
+    updatedCount: result.updatedCount,
+  });
 }
 
 export async function requestMobileGarageCatalogMatch({
