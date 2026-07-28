@@ -21,6 +21,7 @@
     "validate:admin-login-log-safety": "tsx scripts/validate-admin-login-log-safety.ts",
     "validate:password-recovery": "tsx scripts/validate-password-recovery.ts",
     "validate:account-deletion": "tsx scripts/validate-account-deletion.ts",
+    "test:account-deletion-contract": "tsx scripts/test-account-deletion-contract.ts",
     "validate:advisory-dependencies": "tsx scripts/validate-advisory-dependencies.ts",
     "validate:modification-catalog": "tsx scripts/validate-modification-catalog-expansion.ts",
     "validate:tyre-catalog": "tsx scripts/validate-tyre-catalog.ts",

@@ -1,0 +1,34 @@
+import assert from "node:assert/strict";
+
+async function main() {
+  process.env.ACCOUNT_DELETION_CODE_PEPPER = "test-only-account-deletion-pepper";
+
+  const {
+  accountDeletionHash,
+  createAccountDeletionReceipt,
+  deletionConfirmationSchema,
+  deletionStatusSchema,
+  } = await import("@/lib/mobile-account-deletion-contract");
+
+  const receipt = createAccountDeletionReceipt();
+  assert.match(receipt, /^[A-Za-z0-9_-]{43}$/);
+  assert.notEqual(accountDeletionHash(receipt), receipt);
+
+  assert.equal(deletionStatusSchema.safeParse({ receipt }).success, true);
+  assert.equal(deletionStatusSchema.safeParse({ receipt, identity: "leak" }).success, false);
+  assert.equal(deletionStatusSchema.safeParse({ receipt: "not-a-receipt" }).success, false);
+
+  const validConfirmation = {
+  confirmation: "DELETE_MY_ACCOUNT",
+  acknowledgementVersion: "account-deletion-v1",
+  verificationCode: "123456",
+  idempotencyKey: "00000000-0000-4000-8000-000000000000",
+  };
+  assert.equal(deletionConfirmationSchema.safeParse(validConfirmation).success, true);
+  assert.equal(deletionConfirmationSchema.safeParse({ ...validConfirmation, email: "not-accepted" }).success, false);
+  assert.equal(deletionConfirmationSchema.safeParse({ ...validConfirmation, verificationCode: "12345" }).success, false);
+
+  console.log("account-deletion contract runtime passed (receipt, strict bodies, no identity fields)");
+}
+
+void main();
