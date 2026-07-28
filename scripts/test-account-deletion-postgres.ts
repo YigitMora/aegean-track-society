@@ -150,14 +150,30 @@ async function verifyConcurrentClaims() {
 
 async function verifyOutboxUniqueness() {
   const { id } = await createOperation();
-  const first = await primary!.accountDeletionEmailOutbox.create({ data: { id: `outbox-${randomUUID()}`, accountDeletionRequestId: id } });
-  await assert.rejects(primary!.accountDeletionEmailOutbox.create({ data: { id: `outbox-${randomUUID()}`, accountDeletionRequestId: id } }));
-  assert.equal((await primary!.accountDeletionEmailOutbox.count({ where: { accountDeletionRequestId: first.accountDeletionRequestId } })), 1);
+  const contenders = [
+    new PrismaClient({ datasources: { db: { url: databaseUrl } } }),
+    new PrismaClient({ datasources: { db: { url: databaseUrl } } }),
+  ];
+  let arrived = 0;
+  let release: () => void = () => undefined;
+  const barrier = new Promise<void>((resolve) => { release = resolve; });
+  const create = async (client: PrismaClient) => {
+    arrived += 1;
+    if (arrived === contenders.length) release();
+    await barrier;
+    return client.accountDeletionEmailOutbox.create({ data: { id: `outbox-${randomUUID()}`, accountDeletionRequestId: id } });
+  };
+  const result = await Promise.allSettled(contenders.map(create));
+  await Promise.all(contenders.map((client) => client.$disconnect()));
+  assert.equal(result.filter((entry) => entry.status === "fulfilled").length, 1);
+  assert.equal(result.filter((entry) => entry.status === "rejected").length, 1);
+  assert.equal(await primary!.accountDeletionEmailOutbox.count({ where: { accountDeletionRequestId: id } }), 1);
   checkpoint("completion-outbox-unique");
 }
 
 async function verifyServiceRecovery() {
-  const { runAccountDeletionWorker } = await import("@/lib/account-deletion-service");
+  const { AccountDeletionError, accountDeletionHash } = await import("@/lib/mobile-account-deletion-contract");
+  const { confirmAccountDeletion, runAccountDeletionWorker } = await import("@/lib/account-deletion-service");
   await primary!.accountDeletionRequest.updateMany({
     where: { stage: "VERIFIED" },
     data: { legalHold: true },
@@ -166,6 +182,17 @@ async function verifyServiceRecovery() {
     where: { status: "PENDING", recipientCiphertext: null },
     data: { status: "SENT", sentAt: new Date() },
   });
+
+  const idempotency = await createOperation();
+  await primary!.accountDeletionRequest.update({
+    where: { id: idempotency.id },
+    data: { idempotencyKeyHash: accountDeletionHash("first-key"), legalHold: true },
+  });
+  await assert.rejects(
+    confirmAccountDeletion({ authUserId: idempotency.authUserId, verificationCode: "123456", idempotencyKey: "00000000-0000-4000-8000-000000000000" }),
+    (error: unknown) => error instanceof AccountDeletionError && error.code === "ACCOUNT_DELETION_IN_PROGRESS",
+  );
+  assert.equal((await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: idempotency.id } })).idempotencyKeyHash, accountDeletionHash("first-key"));
 
   authMode = "success";
   emailMode = "success";
@@ -219,6 +246,14 @@ async function verifyServiceRecovery() {
   assert.equal(failedAfterStorage.stage, "FAILED_RETRYABLE");
   assert.equal(failedAfterStorage.safeErrorCode, "DATABASE_DELETE_FAILED");
   assert.notEqual(failedAfterStorage.storageCompletedAt, null);
+  await primary!.user.create({ data: { id: absentAuthUserId, email: `recovered-${randomUUID()}@invalid.local` } });
+  await primary!.accountDeletionRequest.update({
+    where: { id: noDatabaseUser.id },
+    data: { executionLeaseExpiresAt: new Date(0), nextAttemptAt: new Date(0) },
+  });
+  emailMode = "success";
+  await runAccountDeletionWorker({ limit: 1 });
+  assert.equal((await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: noDatabaseUser.id } })).stage, "COMPLETED");
   assert.ok(externalCalls.auth >= 2);
   assert.ok(externalCalls.email >= 2);
   checkpoint("storage-auth-email-recovery");
