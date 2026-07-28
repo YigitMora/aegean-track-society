@@ -23,6 +23,8 @@ let primary: PrismaClient | undefined;
 let authMode: "success" | "not-found" | "failure" = "success";
 let emailMode: "success" | "failure" = "success";
 let externalCalls = { auth: 0, email: 0, storage: 0 };
+const logicalEffects = { auth: new Set<string>(), email: new Set<string>(), storage: new Set<string>() };
+const transportEffectKeys = { auth: [] as string[], email: [] as string[], storage: [] as string[] };
 
 function checkpoint(name: string) {
   console.log(`account-deletion-postgres ${name}: PASS`);
@@ -96,6 +98,8 @@ async function verifyMigrationMetadata() {
   assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionRequest' AND column_name IN ('operationReceiptHash', 'encryptedAuthUserId', 'encryptedEmail', 'executionLeaseId', 'executionLeaseExpiresAt', 'operationVersion', 'nextAttemptAt', 'purgeAfter')"), "8");
   assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionRequest' AND column_name IN ('storageReservationId', 'storageReservationExpiresAt', 'authReservationId', 'authReservationExpiresAt')"), "4");
   assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionEmailOutbox' AND column_name IN ('deliveryReservationId', 'deliveryReservationExpiresAt')"), "2");
+  assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionRequest' AND column_name IN ('storageInvocationKey', 'storageInvocationState', 'storageInvocationStartedAt', 'storageInvocationTarget', 'authInvocationKey', 'authInvocationState', 'authInvocationStartedAt')"), "7");
+  assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionEmailOutbox' AND column_name IN ('deliveryInvocationKey', 'deliveryInvocationState', 'deliveryInvocationStartedAt')"), "3");
   assert.equal(psql("SELECT count(*) FROM pg_indexes WHERE tablename = 'AccountDeletionEmailOutbox' AND indexname = 'AccountDeletionEmailOutbox_accountDeletionRequestId_key'"), "1");
   assert.equal(psql("SELECT count(*) FROM pg_indexes WHERE tablename = 'AccountDeletionRequest' AND indexname = 'AccountDeletionRequest_operationReceiptHash_idx'"), "0");
   checkpoint("fresh-migration-metadata");
@@ -108,6 +112,7 @@ async function verifyUpgradeMigration() {
   command("cp", ["-R", "prisma", upgradePrismaDirectory]);
   rmSync(join(upgradePrismaDirectory, "migrations", "20260728170000_account_deletion_recovery"), { recursive: true });
   rmSync(join(upgradePrismaDirectory, "migrations", "20260728200000_account_deletion_side_effect_reservations"), { recursive: true });
+  rmSync(join(upgradePrismaDirectory, "migrations", "20260728210000_account_deletion_side_effect_invocations"), { recursive: true });
   command("./node_modules/.bin/prisma", ["migrate", "deploy", "--schema", join(upgradePrismaDirectory, "schema.prisma")], {
     ...process.env, DATABASE_URL: upgradeUrl, CI: "1", PRISMA_HIDE_UPDATE_MESSAGE: "1",
   });
@@ -408,6 +413,166 @@ async function verifyDurableReservationOrdering() {
   checkpoint("durable-side-effect-reservation-ordering-20x");
 }
 
+async function verifyInvocationTakeoverIdempotency() {
+  const service = await import("@/lib/account-deletion-service");
+  const observer = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
+  await observer.$connect();
+  let now = new Date("2026-02-04T00:00:00.000Z");
+  const clock = () => now;
+  const cases: Array<{
+    name: "storage" | "auth" | "completion_email";
+    operation: Parameters<typeof createOperation>[0];
+    hook: "afterStorageInvocationBeforeAdapter" | "afterAuthInvocationBeforeAdapter" | "afterCompletionEmailInvocationBeforeAdapter";
+    callKey: keyof typeof externalCalls;
+    prepare?: (operation: { id: string }) => Promise<void>;
+    assertState: (operation: { id: string }) => Promise<void>;
+  }> = [
+    {
+      name: "storage",
+      operation: { withImage: true },
+      hook: "afterStorageInvocationBeforeAdapter",
+      callKey: "storage",
+      assertState: async (operation) => {
+        const request = await observer.accountDeletionRequest.findUniqueOrThrow({ where: { id: operation.id } });
+        assert.equal(request.storageInvocationState, "SUCCEEDED");
+        assert.match(request.storageInvocationKey ?? "", /^account-deletion\//);
+      },
+    },
+    {
+      name: "auth",
+      operation: { stage: "AUTH_PENDING", storageCompleted: true, databaseCompleted: true },
+      hook: "afterAuthInvocationBeforeAdapter",
+      callKey: "auth",
+      assertState: async (operation) => {
+        const request = await observer.accountDeletionRequest.findUniqueOrThrow({ where: { id: operation.id } });
+        assert.equal(request.authInvocationState, "SUCCEEDED");
+        assert.match(request.authInvocationKey ?? "", /^account-deletion\//);
+      },
+    },
+    {
+      name: "completion_email",
+      operation: {},
+      hook: "afterCompletionEmailInvocationBeforeAdapter",
+      callKey: "email",
+      prepare: async (operation) => {
+        const crypto = await import("@/lib/account-deletion-crypto");
+        await primary!.accountDeletionRequest.update({ where: { id: operation.id }, data: { stage: "COMPLETED", completedAt: now, databaseCompletedAt: now } });
+        await primary!.accountDeletionEmailOutbox.create({ data: { id: `takeover-email-${randomUUID()}`, accountDeletionRequestId: operation.id, recipientCiphertext: crypto.encryptAccountDeletionValue("takeover-email@invalid.local") } });
+      },
+      assertState: async (operation) => {
+        const outbox = await observer.accountDeletionEmailOutbox.findUniqueOrThrow({ where: { accountDeletionRequestId: operation.id } });
+        assert.equal(outbox.status, "SENT");
+        assert.equal(outbox.deliveryInvocationState, "SUCCEEDED");
+        assert.match(outbox.deliveryInvocationKey ?? "", /^account-deletion\//);
+      },
+    },
+  ];
+
+  try {
+    for (const scenario of cases) {
+      for (let iteration = 0; iteration < 20; iteration += 1) {
+        const operation = await createOperation(scenario.operation);
+        await isolateOperation(operation.id);
+        await scenario.prepare?.(operation);
+        let arrived: () => void = () => undefined;
+        const invoked = new Promise<void>((resolve) => { arrived = resolve; });
+        let release: () => void = () => undefined;
+        const barrier = new Promise<void>((resolve) => { release = resolve; });
+        const beforeTransport = externalCalls[scenario.callKey];
+        const beforeLogical = logicalEffects[scenario.callKey].size;
+        const beforeTransportKeys = transportEffectKeys[scenario.callKey].length;
+        const workerA = service.runAccountDeletionWorker({
+          limit: 1,
+          clock,
+          hooks: { [scenario.hook]: async () => { arrived(); await barrier; } },
+        });
+        await invoked;
+        now = new Date(now.getTime() + 60_001);
+        await service.runAccountDeletionWorker({ limit: 1, clock });
+        release();
+        await workerA;
+        assert.equal(externalCalls[scenario.callKey], beforeTransport + 2, `${scenario.name} transport attempts ${iteration}`);
+        assert.equal(logicalEffects[scenario.callKey].size, beforeLogical + 1, `${scenario.name} logical effect ${iteration}`);
+        assert.equal(new Set(transportEffectKeys[scenario.callKey].slice(beforeTransportKeys)).size, 1, `${scenario.name} stable effect identity ${iteration}`);
+        await scenario.assertState(operation);
+      }
+    }
+  } finally {
+    await observer.$disconnect();
+  }
+  checkpoint("invoking-takeover-provider-idempotency-20x");
+}
+
+async function verifyDurableFuturePhaseHold() {
+  const service = await import("@/lib/account-deletion-service");
+  const holdClient = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
+  await holdClient.$connect();
+  let now = new Date("2026-02-05T00:00:00.000Z");
+  const clock = () => now;
+  const cases: Array<{
+    name: "storage" | "auth";
+    operation: Parameters<typeof createOperation>[0];
+    hook: "afterStorageReservationBeforeAdapter" | "afterAuthReservationBeforeAdapter";
+    expectedCurrentEffect: keyof typeof externalCalls;
+    assertFutureBlocked: (before: typeof externalCalls) => void;
+  }> = [
+    {
+      name: "storage",
+      operation: { withImage: true },
+      hook: "afterStorageReservationBeforeAdapter",
+      expectedCurrentEffect: "storage",
+      assertFutureBlocked: (before) => {
+        assert.equal(externalCalls.auth, before.auth);
+        assert.equal(externalCalls.email, before.email);
+      },
+    },
+    {
+      name: "auth",
+      operation: { stage: "AUTH_PENDING", storageCompleted: true, databaseCompleted: true },
+      hook: "afterAuthReservationBeforeAdapter",
+      expectedCurrentEffect: "auth",
+      assertFutureBlocked: (before) => assert.equal(externalCalls.email, before.email),
+    },
+  ];
+
+  try {
+    for (const scenario of cases) {
+      for (let iteration = 0; iteration < 20; iteration += 1) {
+        const operation = await createOperation(scenario.operation);
+        await isolateOperation(operation.id);
+        let arrived: () => void = () => undefined;
+        const reserved = new Promise<void>((resolve) => { arrived = resolve; });
+        let release: () => void = () => undefined;
+        const barrier = new Promise<void>((resolve) => { release = resolve; });
+        const before = { ...externalCalls };
+        const worker = service.runAccountDeletionWorker({
+          limit: 1,
+          clock,
+          hooks: { [scenario.hook]: async () => { arrived(); await barrier; } },
+        });
+        await reserved;
+        const hold = await service.setAccountDeletionLegalHold({ requestId: operation.id, active: true, reason: "durable-future-phase-hold", now }, holdClient);
+        assert.equal(hold.status, "COMMIT_POINT_PASSED", `${scenario.name} hold persisted ${iteration}`);
+        assert.equal((await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: operation.id } })).legalHold, true);
+        release();
+        await worker;
+        assert.equal(externalCalls[scenario.expectedCurrentEffect], before[scenario.expectedCurrentEffect] + 1, `${scenario.name} committed effect completes ${iteration}`);
+        scenario.assertFutureBlocked(before);
+        const held = await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: operation.id } });
+        assert.equal(held.legalHold, true);
+        assert.equal(held.executionLeaseId, null, `${scenario.name} current phase releases lease while held ${iteration}`);
+        assert.equal((await service.setAccountDeletionLegalHold({ requestId: operation.id, active: false, now }, holdClient)).status, "CLEARED");
+        now = new Date(now.getTime() + 60_001);
+        await service.runAccountDeletionWorker({ limit: 1, clock });
+        assert.equal((await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: operation.id } })).stage, "COMPLETED");
+      }
+    }
+  } finally {
+    await holdClient.$disconnect();
+  }
+  checkpoint("durable-future-phase-hold-20x");
+}
+
 async function verifyExpiredReservationRecovery() {
   const { runAccountDeletionWorker } = await import("@/lib/account-deletion-service");
   const now = new Date("2026-02-03T00:00:00.000Z");
@@ -609,18 +774,27 @@ async function main() {
   process.env.RESEND_API_KEY = "disposable-email-key";
   process.env.EMAIL_FROM = "noreply@invalid.local";
   const realFetch = globalThis.fetch;
-  globalThis.fetch = async (input) => {
+  globalThis.fetch = async (input, init) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
     if (url.includes("api.resend.com")) {
       externalCalls.email += 1;
+      const headers = new Headers(init?.headers);
+      const key = headers.get("Idempotency-Key") ?? "missing-email-idempotency-key";
+      transportEffectKeys.email.push(key);
+      if (emailMode === "success") logicalEffects.email.add(key);
       return new Response("{}", { status: emailMode === "success" ? 200 : 503 });
     }
     if (url.includes("/auth/v1/admin/users/")) {
       externalCalls.auth += 1;
+      transportEffectKeys.auth.push(url);
+      if (authMode === "success" || authMode === "not-found") logicalEffects.auth.add(url);
       return new Response("{}", { status: authMode === "success" ? 200 : authMode === "not-found" ? 404 : 503 });
     }
     if (url.includes("/storage/v1/object/")) {
       externalCalls.storage += 1;
+      const key = typeof init?.body === "string" ? init.body : url;
+      transportEffectKeys.storage.push(key);
+      logicalEffects.storage.add(key);
       return new Response("{}", { status: 200 });
     }
     return new Response("{}", { status: 200 });
@@ -642,6 +816,8 @@ async function main() {
     await verifyConcurrentClaims();
     await verifyInFlightLegalHolds();
     await verifyDurableReservationOrdering();
+    await verifyInvocationTakeoverIdempotency();
+    await verifyDurableFuturePhaseHold();
     await verifyExpiredReservationRecovery();
     await verifyOutboxUniqueness();
     await verifyServiceRecovery();
