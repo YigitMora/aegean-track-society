@@ -119,6 +119,7 @@ enum AccountDeletionStage {
 enum AccountDeletionOutboxStatus {
   PENDING
   RETRYABLE
+  RECONCILIATION_REQUIRED
   SENT
   FAILED_FINAL
 }
@@ -524,6 +525,7 @@ model AccountDeletionRequest {
   authInvocationKey    String?
   authInvocationState  AccountDeletionSideEffectInvocationState?
   authInvocationStartedAt DateTime?
+  authProviderIdentity String?
   nextAttemptAt        DateTime?
   purgeAfter           DateTime?
   legalHold            Boolean              @default(false)
@@ -562,6 +564,12 @@ model AccountDeletionEmailOutbox {
   deliveryInvocationKey    String?
   deliveryInvocationState  AccountDeletionSideEffectInvocationState?
   deliveryInvocationStartedAt DateTime?
+  deliveryPayloadCiphertext String?                    @db.Text
+  deliveryPayloadFingerprint String?
+  deliveryFirstTransportAt  DateTime?
+  deliveryRetryDeadlineAt  DateTime?
+  providerMessageId        String?
+  reconciliationRequiredAt DateTime?
   attemptCount             Int                          @default(0)
   lastAttemptAt            DateTime?
   sentAt                   DateTime?

@@ -3,9 +3,12 @@ import { randomInt, randomUUID } from "node:crypto";
 import { AccountDeletionSideEffectInvocationState, AccountDeletionStage, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient, getSupabaseAdminProviderIdentity } from "@/lib/supabase/admin";
 import { vehicleImagesBucket } from "@/lib/vehicle-images";
 import {
+  AccountDeletionCompletedEmailError,
+  AccountDeletionCompletedEmailPayload,
+  createAccountDeletionCompletedEmailPayload,
   sendAccountDeletionCompletedEmail,
   sendAccountDeletionVerificationEmail,
 } from "@/lib/account-deletion-email";
@@ -29,6 +32,9 @@ const receiptRetentionMs = 7 * 24 * 60 * 60 * 1000;
 const receiptStatusWindowMs = 60 * 1000;
 const receiptStatusMaxRequests = 20;
 const receiptStatusMaxEntries = 1_000;
+// Resend keeps an idempotency key for 24 hours. Stop one hour earlier rather
+// than allowing an uncertain retry to become a second logical delivery.
+const completionEmailRetryWindowMs = 23 * 60 * 60 * 1000;
 type ReceiptStatusAttempt = {
   count: number;
   expiresAt: number;
@@ -48,9 +54,10 @@ type DeletionClock = () => Date;
 type WorkerLease = { id: string; operationVersion: number };
 
 type AccountDeletionWorkerHooks = Partial<Record<
-  "beforeStorage" | "beforeDatabase" | "beforeAuth" | "beforeCompletion" | "beforeCompletionEmail" |
+    "beforeStorage" | "beforeDatabase" | "beforeAuth" | "beforeCompletion" | "beforeCompletionEmail" |
     "afterStorageReservationBeforeAdapter" | "afterAuthReservationBeforeAdapter" | "afterCompletionEmailReservationBeforeAdapter" |
-    "afterStorageInvocationBeforeAdapter" | "afterAuthInvocationBeforeAdapter" | "afterCompletionEmailInvocationBeforeAdapter",
+    "afterStorageInvocationBeforeAdapter" | "afterAuthInvocationBeforeAdapter" | "afterCompletionEmailInvocationBeforeAdapter" |
+    "afterCompletionEmailAdapterBeforeSuccessCommit" | "afterDatabaseCommitMarkerBeforePurge",
   () => void | Promise<void>
 >>;
 
@@ -64,6 +71,8 @@ export type AccountDeletionWorkerOptions = {
 
 export async function startAccountDeletionVerification(input: { authUserId: string; email: string }) {
   const authUserIdHash = accountDeletionHash(input.authUserId);
+  const authProviderIdentity = getSupabaseAdminProviderIdentity();
+  if (!authProviderIdentity) throw new AccountDeletionError("ACCOUNT_DELETION_CONFIGURATION_ERROR");
   const now = new Date();
   const existing = await prisma.accountDeletionRequest.findUnique({ where: { authUserIdHash } });
 
@@ -87,6 +96,7 @@ export async function startAccountDeletionVerification(input: { authUserId: stri
     operationReceiptHash: accountDeletionHash(receipt),
     encryptedAuthUserId: encryptAccountDeletionValue(input.authUserId),
     encryptedEmail: encryptAccountDeletionValue(input.email),
+    authProviderIdentity,
   };
 
   if (existing) {
@@ -372,7 +382,7 @@ async function processClaimedDeletionOperation(
     afterDatabase = completedDatabase;
   }
 
-  await runAuthPhase(afterDatabase.id, lease, authUserId, afterDatabase.encryptedEmail, clock, hooks);
+  await runAuthPhase(afterDatabase.id, lease, authUserId, afterDatabase.encryptedEmail, afterDatabase.authProviderIdentity, clock, hooks);
 }
 
 async function runStoragePhase(requestId: string, lease: WorkerLease, authUserId: string, clock: DeletionClock, hooks?: AccountDeletionWorkerHooks) {
@@ -477,6 +487,10 @@ async function runDatabasePhase(
         },
       });
       if (!transitioned.count) throw new LeaseLostError();
+      // The request-row lock remains held until this transaction commits. A
+      // legal-hold setter that starts here waits, then observes the durable
+      // databaseCompletedAt marker after commit.
+      await hooks?.afterDatabaseCommitMarkerBeforePurge?.();
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     lease.operationVersion = transactionVersion + 2;
     return true;
@@ -492,6 +506,7 @@ async function runAuthPhase(
   lease: WorkerLease,
   authUserId: string,
   encryptedEmail: string | null,
+  authProviderIdentity: string | null,
   clock: DeletionClock,
   hooks?: AccountDeletionWorkerHooks,
 ) {
@@ -502,6 +517,10 @@ async function runAuthPhase(
   await hooks?.beforeAuth?.();
   if (!(await renewDeletionLease(requestId, lease, ["AUTH_PENDING"], clock()))) return;
 
+  const currentProviderIdentity = getSupabaseAdminProviderIdentity();
+  if (!authProviderIdentity || !currentProviderIdentity || authProviderIdentity !== currentProviderIdentity) {
+    return markDeletionFinal(requestId, lease, "AUTH_PROVIDER_IDENTITY_MISMATCH", clock);
+  }
   const admin = createSupabaseAdminClient();
   if (!admin) return markDeletionRetryable(requestId, lease, "AUTH_CONFIGURATION", "AUTH_DELETE_RETRY", clock);
   await hooks?.beforeCompletion?.();
@@ -513,7 +532,7 @@ async function runAuthPhase(
   const { error } = await admin.auth.admin.deleteUser(authUserId);
   // A missing Auth user safely reconciles the response-loss boundary only after
   // this operation has completed its own database tombstone phase.
-  if (error && statusFromUnknown(error) !== 404) {
+  if (error && !isExactAuthUserNotFound(error)) {
     return releaseRequestSideEffect(requestId, lease, "auth", reservation.id, "AUTH_DELETE_FAILED", "AUTH_DELETE_RETRY", clock);
   }
 
@@ -744,7 +763,7 @@ async function releaseRequestSideEffect(
 
 export type AccountDeletionLegalHoldResult =
   | { status: "APPLIED" | "CLEARED" | "ALREADY_APPLIED" }
-  | { status: "COMMIT_POINT_PASSED"; sideEffects: Array<"storage" | "auth" | "completion_email"> }
+  | { status: "COMMIT_POINT_PASSED"; sideEffects: Array<"database" | "storage" | "auth" | "completion_email"> }
   | { status: "NOT_FOUND" };
 
 /**
@@ -773,7 +792,10 @@ export async function setAccountDeletionLegalHold(input: {
       return { status: "CLEARED" };
     }
     if (request.legalHold) return { status: "ALREADY_APPLIED" };
-    const sideEffects: Array<"storage" | "auth" | "completion_email"> = [];
+    const sideEffects: Array<"database" | "storage" | "auth" | "completion_email"> = [];
+    // databaseCompletedAt is committed atomically with the database purge.
+    // A transaction rollback removes it, so this is a truthful commit marker.
+    if (request.databaseCompletedAt) sideEffects.push("database");
     if (request.storageReservationId && request.storageReservationExpiresAt && request.storageReservationExpiresAt > now) sideEffects.push("storage");
     if (request.authReservationId && request.authReservationExpiresAt && request.authReservationExpiresAt > now) sideEffects.push("auth");
     if (request.emailOutbox.some((outbox) => outbox.deliveryReservationId && outbox.deliveryReservationExpiresAt && outbox.deliveryReservationExpiresAt > now)) sideEffects.push("completion_email");
@@ -783,7 +805,7 @@ export async function setAccountDeletionLegalHold(input: {
     });
     if (sideEffects.length) return { status: "COMMIT_POINT_PASSED", sideEffects };
     return { status: "APPLIED" };
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  });
 }
 
 async function findActiveDeletionOperation(requestId: string, lease: WorkerLease, stages: AccountDeletionStage[], now: Date) {
@@ -854,10 +876,11 @@ async function deliverCompletionEmailOutbox(
       },
       data: { executionLeaseId: leaseId, executionLeaseExpiresAt: new Date(now.getTime() + leaseLifetimeMs), attemptCount: { increment: 1 }, lastAttemptAt: now },
     });
-    if (!claimed.count || !outbox.recipientCiphertext) continue;
+    if (!claimed.count || (!outbox.recipientCiphertext && !outbox.deliveryPayloadCiphertext)) continue;
     try {
       await hooks?.beforeCompletionEmail?.();
-      const reservation = await reserveCompletionEmailSideEffect(outbox.id, outbox.accountDeletionRequestId, leaseId, clock());
+      const payload = readCompletionEmailPayload(outbox);
+      const reservation = await reserveCompletionEmailSideEffect(outbox.id, outbox.accountDeletionRequestId, leaseId, clock(), payload);
       if (!reservation) {
         await prisma.accountDeletionEmailOutbox.updateMany({ where: { id: outbox.id, executionLeaseId: leaseId }, data: { executionLeaseId: null, executionLeaseExpiresAt: null } });
         continue;
@@ -865,7 +888,8 @@ async function deliverCompletionEmailOutbox(
       await hooks?.afterCompletionEmailReservationBeforeAdapter?.();
       if (!(await beginCompletionEmailInvocation(outbox.id, outbox.accountDeletionRequestId, leaseId, reservation.id, clock()))) continue;
       await hooks?.afterCompletionEmailInvocationBeforeAdapter?.();
-      await sendAccountDeletionCompletedEmail({ to: decryptAccountDeletionValue(outbox.recipientCiphertext), idempotencyKey: reservation.idempotencyKey });
+      const delivery = await sendAccountDeletionCompletedEmail({ payload: reservation.payload, idempotencyKey: reservation.idempotencyKey });
+      await hooks?.afterCompletionEmailAdapterBeforeSuccessCommit?.();
       await prisma.$transaction(async (tx) => {
         await lockDeletionRequest(tx, outbox.accountDeletionRequestId);
         const completed = await tx.accountDeletionEmailOutbox.updateMany({
@@ -880,6 +904,7 @@ async function deliverCompletionEmailOutbox(
             executionLeaseId: null, executionLeaseExpiresAt: null,
             deliveryReservationId: null, deliveryReservationExpiresAt: null,
             deliveryInvocationState: AccountDeletionSideEffectInvocationState.SUCCEEDED,
+            providerMessageId: delivery.providerMessageId,
             safeErrorCode: null,
           },
         });
@@ -890,29 +915,54 @@ async function deliverCompletionEmailOutbox(
           });
         }
       });
-    } catch {
-      await prisma.accountDeletionEmailOutbox.updateMany({
-        where: { id: outbox.id, executionLeaseId: leaseId },
-        data: {
-          status: "RETRYABLE", safeErrorCode: "COMPLETION_EMAIL_FAILED",
-          executionLeaseId: null, executionLeaseExpiresAt: null,
-          deliveryReservationId: null, deliveryReservationExpiresAt: null,
-          deliveryInvocationState: AccountDeletionSideEffectInvocationState.RETRYABLE,
-        },
-      });
+    } catch (error) {
+      const safeErrorCode = error instanceof AccountDeletionCompletedEmailError
+        ? error.safeCode
+        : "COMPLETION_EMAIL_FAILED";
+      const reconciliationRequired = error instanceof AccountDeletionCompletedEmailError
+        && error.disposition === "RECONCILIATION_REQUIRED";
+      await releaseCompletionEmailSideEffect(outbox.id, outbox.accountDeletionRequestId, leaseId, safeErrorCode, reconciliationRequired, clock);
     }
   }
 }
 
-type CompletionEmailReservation = { id: string; idempotencyKey: string };
+type CompletionEmailReservation = {
+  id: string;
+  idempotencyKey: string;
+  payload: AccountDeletionCompletedEmailPayload;
+};
 
-async function reserveCompletionEmailSideEffect(outboxId: string, requestId: string, leaseId: string, now: Date) {
+async function reserveCompletionEmailSideEffect(
+  outboxId: string,
+  requestId: string,
+  leaseId: string,
+  now: Date,
+  payload: AccountDeletionCompletedEmailPayload,
+) {
   const reservationId = randomUUID();
   return prisma.$transaction(async (tx) => {
     await lockDeletionRequest(tx, requestId);
     const outbox = await tx.accountDeletionEmailOutbox.findUnique({ where: { id: outboxId } });
     if (!outbox) return null;
+    if (outbox.deliveryRetryDeadlineAt && outbox.deliveryRetryDeadlineAt <= now) {
+      await tx.accountDeletionEmailOutbox.updateMany({
+        where: { id: outboxId, executionLeaseId: leaseId },
+        data: {
+          status: "RECONCILIATION_REQUIRED",
+          safeErrorCode: "COMPLETION_EMAIL_RECONCILIATION_REQUIRED",
+          reconciliationRequiredAt: now,
+          executionLeaseId: null,
+          executionLeaseExpiresAt: null,
+          deliveryReservationId: null,
+          deliveryReservationExpiresAt: null,
+          deliveryInvocationState: AccountDeletionSideEffectInvocationState.RECONCILING,
+        },
+      });
+      return null;
+    }
     const idempotencyKey = outbox.deliveryInvocationKey ?? `account-deletion/${requestId}/completion-email`;
+    const payloadCiphertext = outbox.deliveryPayloadCiphertext ?? encryptAccountDeletionValue(JSON.stringify(payload));
+    const payloadFingerprint = outbox.deliveryPayloadFingerprint ?? accountDeletionHash(JSON.stringify(payload));
     const updated = await tx.accountDeletionEmailOutbox.updateMany({
       where: {
         id: outboxId,
@@ -927,6 +977,8 @@ async function reserveCompletionEmailSideEffect(outboxId: string, requestId: str
         deliveryReservationId: reservationId,
         deliveryReservationExpiresAt: new Date(now.getTime() + leaseLifetimeMs),
         deliveryInvocationKey: idempotencyKey,
+        deliveryPayloadCiphertext: payloadCiphertext,
+        deliveryPayloadFingerprint: payloadFingerprint,
         deliveryInvocationState: outbox.deliveryInvocationState === AccountDeletionSideEffectInvocationState.INVOKING
           ? AccountDeletionSideEffectInvocationState.RECONCILING
           : AccountDeletionSideEffectInvocationState.RESERVED,
@@ -934,7 +986,7 @@ async function reserveCompletionEmailSideEffect(outboxId: string, requestId: str
         executionLeaseExpiresAt: new Date(now.getTime() + leaseLifetimeMs),
       },
     });
-    return updated.count === 1 ? { id: reservationId, idempotencyKey } : null;
+    return updated.count === 1 ? { id: reservationId, idempotencyKey, payload } : null;
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
@@ -947,6 +999,11 @@ async function beginCompletionEmailInvocation(
 ) {
   const begun = await prisma.$transaction(async (tx) => {
     await lockDeletionRequest(tx, requestId);
+    const outbox = await tx.accountDeletionEmailOutbox.findUnique({
+      where: { id: outboxId },
+      select: { deliveryFirstTransportAt: true, deliveryRetryDeadlineAt: true },
+    });
+    if (!outbox) return { count: 0 };
     return tx.accountDeletionEmailOutbox.updateMany({
       where: {
         id: outboxId,
@@ -960,15 +1017,77 @@ async function beginCompletionEmailInvocation(
       data: {
         deliveryInvocationState: AccountDeletionSideEffectInvocationState.INVOKING,
         deliveryInvocationStartedAt: now,
+        deliveryFirstTransportAt: outbox.deliveryFirstTransportAt ?? now,
+        deliveryRetryDeadlineAt: outbox.deliveryRetryDeadlineAt ?? new Date(now.getTime() + completionEmailRetryWindowMs),
       },
     });
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   return begun.count === 1;
 }
 
+async function releaseCompletionEmailSideEffect(
+  outboxId: string,
+  requestId: string,
+  leaseId: string,
+  safeErrorCode: string,
+  reconciliationRequired: boolean,
+  clock: DeletionClock,
+) {
+  const now = clock();
+  await prisma.$transaction(async (tx) => {
+    await lockDeletionRequest(tx, requestId);
+    const outbox = await tx.accountDeletionEmailOutbox.findUnique({
+      where: { id: outboxId },
+      select: { deliveryRetryDeadlineAt: true },
+    });
+    if (!outbox) return;
+    const deadlinePassed = Boolean(outbox.deliveryRetryDeadlineAt && outbox.deliveryRetryDeadlineAt <= now);
+    const requiresReconciliation = reconciliationRequired || deadlinePassed;
+    await tx.accountDeletionEmailOutbox.updateMany({
+      where: { id: outboxId, executionLeaseId: leaseId },
+      data: {
+        status: requiresReconciliation ? "RECONCILIATION_REQUIRED" : "RETRYABLE",
+        safeErrorCode: requiresReconciliation ? "COMPLETION_EMAIL_RECONCILIATION_REQUIRED" : safeErrorCode,
+        reconciliationRequiredAt: requiresReconciliation ? now : null,
+        executionLeaseId: null,
+        executionLeaseExpiresAt: null,
+        deliveryReservationId: null,
+        deliveryReservationExpiresAt: null,
+        deliveryInvocationState: requiresReconciliation
+          ? AccountDeletionSideEffectInvocationState.RECONCILING
+          : AccountDeletionSideEffectInvocationState.RETRYABLE,
+      },
+    });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+function readCompletionEmailPayload(outbox: {
+  recipientCiphertext: string | null;
+  deliveryPayloadCiphertext: string | null;
+}): AccountDeletionCompletedEmailPayload {
+  if (!outbox.deliveryPayloadCiphertext) {
+    if (!outbox.recipientCiphertext) throw new AccountDeletionError("ACCOUNT_DELETION_CONFIGURATION_ERROR");
+    return createAccountDeletionCompletedEmailPayload(decryptAccountDeletionValue(outbox.recipientCiphertext));
+  }
+
+  const value: unknown = JSON.parse(decryptAccountDeletionValue(outbox.deliveryPayloadCiphertext));
+  if (!value || typeof value !== "object") throw new AccountDeletionError("ACCOUNT_DELETION_CONFIGURATION_ERROR");
+  const record = value as Record<string, unknown>;
+  if (![record.to, record.from, record.subject, record.text, record.html].every((entry) => typeof entry === "string" && entry.length > 0)) {
+    throw new AccountDeletionError("ACCOUNT_DELETION_CONFIGURATION_ERROR");
+  }
+  return {
+    to: record.to as string,
+    from: record.from as string,
+    subject: record.subject as string,
+    text: record.text as string,
+    html: record.html as string,
+  };
+}
+
 async function purgeCompletedDeletionReceipts(clock: DeletionClock) {
   await prisma.accountDeletionRequest.deleteMany({
-    where: { legalHold: false, stage: "COMPLETED", purgeAfter: { lte: clock() }, emailOutbox: { none: { status: { in: ["PENDING", "RETRYABLE"] } } } },
+    where: { legalHold: false, stage: "COMPLETED", purgeAfter: { lte: clock() }, emailOutbox: { none: { status: { in: ["PENDING", "RETRYABLE", "RECONCILIATION_REQUIRED"] } } } },
   });
 }
 
@@ -977,12 +1096,34 @@ async function deleteVehicleImages(imagePaths: string[]) {
   const admin = createSupabaseAdminClient();
   if (!admin) throw new AccountDeletionError("ACCOUNT_DELETION_CONFIGURATION_ERROR");
   const { error } = await admin.storage.from(vehicleImagesBucket).remove(Array.from(new Set(imagePaths)));
-  // Storage treats an already-absent object as an idempotent delete success.
-  if (error && statusFromUnknown(error) !== 404) throw new AccountDeletionError("ACCOUNT_DELETION_STORAGE_FAILED");
+  // Only Supabase Storage's exact missing-object code is idempotent. Other
+  // 404s can mean a missing bucket, tenant, or unrecognized contract drift.
+  if (error && storageErrorCode(error) !== "NoSuchKey") throw new AccountDeletionError("ACCOUNT_DELETION_STORAGE_FAILED");
 }
 
 function statusFromUnknown(error: unknown) {
   if (typeof error !== "object" || !error) return null;
   const candidate = error as { status?: unknown; statusCode?: unknown };
-  return typeof candidate.status === "number" ? candidate.status : typeof candidate.statusCode === "number" ? candidate.statusCode : null;
+  const value = candidate.status ?? candidate.statusCode;
+  if (typeof value === "number") return value;
+  if (typeof value === "string" && /^\d{3}$/.test(value)) return Number(value);
+  return null;
+}
+
+function providerErrorCode(error: unknown) {
+  if (typeof error !== "object" || !error) return null;
+  const candidate = error as { code?: unknown; error?: unknown };
+  const value = candidate.code ?? candidate.error;
+  return typeof value === "string" ? value : null;
+}
+
+function storageErrorCode(error: unknown) {
+  if (typeof error !== "object" || !error) return null;
+  const statusCode = (error as { statusCode?: unknown }).statusCode;
+  if (typeof statusCode === "string" && !/^\d{3}$/.test(statusCode)) return statusCode;
+  return providerErrorCode(error);
+}
+
+function isExactAuthUserNotFound(error: unknown) {
+  return statusFromUnknown(error) === 404 && providerErrorCode(error) === "user_not_found";
 }

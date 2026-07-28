@@ -32,3 +32,23 @@ the hold intent. If an effect was already reserved it returns
 `COMMIT_POINT_PASSED`: that current effect may complete or reconcile, while all
 future irreversible phases are held. Releasing the hold resumes the durable
 operation from its recorded stage without caller-managed retry timing.
+
+## Reconciliation-required operations
+
+The completion-email payload is encrypted and persisted before its first
+transport invocation, together with a stable key, payload fingerprint, first
+transport time and retry deadline. The retry deadline is deliberately inside
+the email provider's 24-hour idempotency window. A retry after that deadline,
+or a provider response that indicates an invalid idempotency request, becomes
+`RECONCILIATION_REQUIRED`; it is not silently resent and must be reviewed with
+the recorded provider message identifier when available.
+
+Storage accepts only the provider's structured `NoSuchKey` response as an
+already-deleted object. Other 404 responses remain retryable failures. The Auth
+phase is bound to the persisted normalized provider identity and accepts only a
+matched provider's structured `user_not_found` response as an idempotent
+success. Provider drift or an ambiguous 404 is fail-closed.
+
+`databaseCompletedAt` is the durable database commit marker. A legal hold that
+waits for this transaction reports `COMMIT_POINT_PASSED` with `database` and
+prevents the later Auth and completion-email effects.
