@@ -29,14 +29,27 @@ const receiptRetentionMs = 7 * 24 * 60 * 60 * 1000;
 const receiptStatusWindowMs = 60 * 1000;
 const receiptStatusMaxRequests = 20;
 const receiptStatusMaxEntries = 1_000;
-const receiptStatusAttempts = new Map<string, { count: number; startedAt: number }>();
+type ReceiptStatusAttempt = {
+  count: number;
+  expiresAt: number;
+  previous: string | null;
+  next: string | null;
+};
+
+// A linked expiry queue keeps cleanup O(1) per expired record. Receipt hashes,
+// never raw receipts, are the only keys retained in process memory.
+const receiptStatusAttempts = new Map<string, ReceiptStatusAttempt>();
+let receiptStatusExpiryHead: string | null = null;
+let receiptStatusExpiryTail: string | null = null;
+let receiptStatusLastCleanupWork = 0;
 
 type WorkerRequest = Awaited<ReturnType<typeof prisma.accountDeletionRequest.findUnique>>;
 type DeletionClock = () => Date;
 type WorkerLease = { id: string; operationVersion: number };
 
 type AccountDeletionWorkerHooks = Partial<Record<
-  "beforeStorage" | "beforeDatabase" | "beforeAuth" | "beforeCompletion" | "beforeCompletionEmail",
+  "beforeStorage" | "beforeDatabase" | "beforeAuth" | "beforeCompletion" | "beforeCompletionEmail" |
+  "afterStorageReservationBeforeAdapter" | "afterAuthReservationBeforeAdapter" | "afterCompletionEmailReservationBeforeAdapter",
   () => void | Promise<void>
 >>;
 
@@ -184,21 +197,50 @@ export async function getAccountDeletionStatusByReceipt(receipt: string) {
 }
 
 function limitReceiptStatusLookup(receiptHash: string, now = Date.now()) {
-  for (const [key, entry] of receiptStatusAttempts) {
-    if (now - entry.startedAt > receiptStatusWindowMs) receiptStatusAttempts.delete(key);
-  }
+  pruneExpiredReceiptStatusAttempts(now);
   const prior = receiptStatusAttempts.get(receiptHash);
-  if (!prior) {
+  if (prior && prior.expiresAt <= now) removeReceiptStatusAttempt(receiptHash, prior);
+  const current = receiptStatusAttempts.get(receiptHash);
+  if (!current) {
     if (receiptStatusAttempts.size >= receiptStatusMaxEntries) {
       // Reject new receipts while saturated rather than evicting an existing
       // entry and allowing an attacker-controlled stream to reach Prisma.
       throw new AccountDeletionError("ACCOUNT_DELETION_STATUS_LIMITED");
     }
-    receiptStatusAttempts.set(receiptHash, { count: 1, startedAt: now });
+    appendReceiptStatusAttempt(receiptHash, { count: 1, expiresAt: now + receiptStatusWindowMs, previous: null, next: null });
     return;
   }
-  if (prior.count >= receiptStatusMaxRequests) throw new AccountDeletionError("ACCOUNT_DELETION_STATUS_LIMITED");
-  prior.count += 1;
+  if (current.count >= receiptStatusMaxRequests) throw new AccountDeletionError("ACCOUNT_DELETION_STATUS_LIMITED");
+  current.count += 1;
+}
+
+function appendReceiptStatusAttempt(receiptHash: string, entry: ReceiptStatusAttempt) {
+  entry.previous = receiptStatusExpiryTail;
+  if (receiptStatusExpiryTail) receiptStatusAttempts.get(receiptStatusExpiryTail)!.next = receiptHash;
+  else receiptStatusExpiryHead = receiptHash;
+  receiptStatusExpiryTail = receiptHash;
+  receiptStatusAttempts.set(receiptHash, entry);
+}
+
+function removeReceiptStatusAttempt(receiptHash: string, entry: ReceiptStatusAttempt) {
+  if (entry.previous) receiptStatusAttempts.get(entry.previous)!.next = entry.next;
+  else receiptStatusExpiryHead = entry.next;
+  if (entry.next) receiptStatusAttempts.get(entry.next)!.previous = entry.previous;
+  else receiptStatusExpiryTail = entry.previous;
+  receiptStatusAttempts.delete(receiptHash);
+}
+
+function pruneExpiredReceiptStatusAttempts(now: number) {
+  let work = 0;
+  // Bound public-request cleanup independently of map cardinality.
+  while (receiptStatusExpiryHead && work < 16) {
+    const receiptHash = receiptStatusExpiryHead;
+    const entry = receiptStatusAttempts.get(receiptHash);
+    if (!entry || entry.expiresAt > now) break;
+    removeReceiptStatusAttempt(receiptHash, entry);
+    work += 1;
+  }
+  receiptStatusLastCleanupWork = work;
 }
 
 export function accountDeletionRateLimitEntryCountForTests() {
@@ -207,6 +249,13 @@ export function accountDeletionRateLimitEntryCountForTests() {
 
 export function resetAccountDeletionRateLimitForTests() {
   receiptStatusAttempts.clear();
+  receiptStatusExpiryHead = null;
+  receiptStatusExpiryTail = null;
+  receiptStatusLastCleanupWork = 0;
+}
+
+export function accountDeletionRateLimitStatsForTests() {
+  return { entryCount: receiptStatusAttempts.size, lastCleanupWork: receiptStatusLastCleanupWork };
 }
 
 export function recordAccountDeletionRateLimitForTests(receipt: string, now: number) {
@@ -339,17 +388,24 @@ async function runStoragePhase(requestId: string, lease: WorkerLease, authUserId
       await markDeletionFinal(requestId, lease, "STORAGE_PATH_INVALID", clock);
       return false;
     }
-    // This renewal is the storage phase commit point. A hold recorded before
-    // it prevents the adapter call; a later hold is observed before the next
-    // irreversible phase because external storage cannot share the DB lock.
-    if (!(await renewDeletionLease(requestId, lease, ["STORAGE_PENDING"], clock()))) return false;
+    if (!imagePaths.length) {
+      const now = clock();
+      return transition(requestId, lease, ["STORAGE_PENDING"], {
+        storageCompletedAt: now, stage: "DATABASE_PENDING", safeErrorCode: null, nextAttemptAt: now,
+      }, now);
+    }
+    const reservationId = await reserveRequestSideEffect(requestId, lease, ["STORAGE_PENDING"], "storage", clock());
+    if (!reservationId) return false;
+    // This hook is intentionally after the durable reservation and immediately
+    // before adapter entry; the PostgreSQL harness uses it to prove ordering.
+    await hooks?.afterStorageReservationBeforeAdapter?.();
     await deleteVehicleImages(imagePaths);
     const now = clock();
-    return transition(requestId, lease, ["STORAGE_PENDING"], {
+    return completeRequestSideEffect(requestId, lease, ["STORAGE_PENDING"], "storage", reservationId, {
       storageCompletedAt: now, stage: "DATABASE_PENDING", safeErrorCode: null, nextAttemptAt: now,
     }, now);
   } catch {
-    await markDeletionRetryable(requestId, lease, "STORAGE_DELETE_FAILED", "FAILED_RETRYABLE", clock);
+    await releaseRequestSideEffect(requestId, lease, "storage", "STORAGE_DELETE_FAILED", "FAILED_RETRYABLE", clock);
     return false;
   }
 }
@@ -444,25 +500,31 @@ async function runAuthPhase(
 
   const admin = createSupabaseAdminClient();
   if (!admin) return markDeletionRetryable(requestId, lease, "AUTH_CONFIGURATION", "AUTH_DELETE_RETRY", clock);
-  // This CAS is the Auth deletion commit point. A legal hold or expired lease
-  // observed here prevents the external Auth call from starting.
-  if (!(await renewDeletionLease(requestId, lease, ["AUTH_PENDING"], clock()))) return;
+  await hooks?.beforeCompletion?.();
+  const reservationId = await reserveRequestSideEffect(requestId, lease, ["AUTH_PENDING"], "auth", clock());
+  if (!reservationId) return;
+  await hooks?.afterAuthReservationBeforeAdapter?.();
   const { error } = await admin.auth.admin.deleteUser(authUserId);
   // A missing Auth user safely reconciles the response-loss boundary only after
   // this operation has completed its own database tombstone phase.
   if (error && statusFromUnknown(error) !== 404) {
-    return markDeletionRetryable(requestId, lease, "AUTH_DELETE_FAILED", "AUTH_DELETE_RETRY", clock);
+    return releaseRequestSideEffect(requestId, lease, "auth", "AUTH_DELETE_FAILED", "AUTH_DELETE_RETRY", clock);
   }
 
-  await hooks?.beforeCompletion?.();
   const now = clock();
   await prisma.$transaction(async (tx) => {
+    await lockDeletionRequest(tx, requestId);
     const completed = await tx.accountDeletionRequest.updateMany({
-      where: activeDeletionWhere(requestId, lease, ["AUTH_PENDING"], now),
+      where: {
+        ...activeDeletionWhere(requestId, lease, ["AUTH_PENDING"], now),
+        authReservationId: reservationId,
+        authReservationExpiresAt: { gt: now },
+      },
       data: {
         stage: "COMPLETED", authCompletedAt: now, completedAt: now, purgeAfter: new Date(now.getTime() + receiptRetentionMs),
         safeErrorCode: null, verificationHash: null, verificationExpiresAt: null, encryptedAuthUserId: null,
         executionLeaseId: null, executionLeaseExpiresAt: null, nextAttemptAt: null,
+        authReservationId: null, authReservationExpiresAt: null,
         operationVersion: { increment: 1 },
       },
     });
@@ -489,6 +551,148 @@ function activeDeletionWhere(requestId: string, lease: WorkerLease, stages: Acco
     legalHold: false,
     stage: { in: stages },
   };
+}
+
+type RequestSideEffect = "storage" | "auth";
+
+const requestSideEffectFields = {
+  storage: { id: "storageReservationId", expiresAt: "storageReservationExpiresAt" },
+  auth: { id: "authReservationId", expiresAt: "authReservationExpiresAt" },
+} as const;
+
+async function lockDeletionRequest(tx: Prisma.TransactionClient, requestId: string) {
+  await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "AccountDeletionRequest" WHERE "id" = ${requestId} FOR UPDATE`);
+}
+
+/**
+ * A reservation is the durable, database-serialized commit point for a single
+ * external side effect. No transaction stays open while the adapter runs.
+ */
+async function reserveRequestSideEffect(
+  requestId: string,
+  lease: WorkerLease,
+  stages: AccountDeletionStage[],
+  sideEffect: RequestSideEffect,
+  now: Date,
+) {
+  const fields = requestSideEffectFields[sideEffect];
+  const reservationId = randomUUID();
+  let reserved = false;
+  await prisma.$transaction(async (tx) => {
+    await lockDeletionRequest(tx, requestId);
+    const updated = await tx.accountDeletionRequest.updateMany({
+      where: {
+        ...activeDeletionWhere(requestId, lease, stages, now),
+        OR: [{ [fields.id]: null }, { [fields.expiresAt]: { lte: now } }],
+      },
+      data: {
+        [fields.id]: reservationId,
+        [fields.expiresAt]: new Date(now.getTime() + leaseLifetimeMs),
+        executionLeaseExpiresAt: new Date(now.getTime() + leaseLifetimeMs),
+        operationVersion: { increment: 1 },
+      },
+    });
+    reserved = updated.count === 1;
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  if (reserved) lease.operationVersion += 1;
+  return reserved ? reservationId : null;
+}
+
+async function completeRequestSideEffect(
+  requestId: string,
+  lease: WorkerLease,
+  stages: AccountDeletionStage[],
+  sideEffect: RequestSideEffect,
+  reservationId: string,
+  data: Prisma.AccountDeletionRequestUpdateManyMutationInput,
+  now: Date,
+) {
+  const fields = requestSideEffectFields[sideEffect];
+  let completed = false;
+  await prisma.$transaction(async (tx) => {
+    await lockDeletionRequest(tx, requestId);
+    const updated = await tx.accountDeletionRequest.updateMany({
+      where: {
+        ...activeDeletionWhere(requestId, lease, stages, now),
+        [fields.id]: reservationId,
+        [fields.expiresAt]: { gt: now },
+      },
+      data: { ...data, [fields.id]: null, [fields.expiresAt]: null, operationVersion: { increment: 1 } },
+    });
+    completed = updated.count === 1;
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  if (completed) lease.operationVersion += 1;
+  return completed;
+}
+
+async function releaseRequestSideEffect(
+  requestId: string,
+  lease: WorkerLease,
+  sideEffect: RequestSideEffect,
+  safeErrorCode: string,
+  stage: AccountDeletionStage,
+  clock: DeletionClock,
+) {
+  const fields = requestSideEffectFields[sideEffect];
+  const at = clock();
+  const released = await prisma.accountDeletionRequest.updateMany({
+    where: activeDeletionWhere(requestId, lease, ["STORAGE_PENDING", "AUTH_PENDING", "AUTH_DELETE_RETRY", "FAILED_RETRYABLE"], at),
+    data: {
+      stage,
+      safeErrorCode,
+      nextAttemptAt: new Date(at.getTime() + leaseLifetimeMs),
+      executionLeaseId: null,
+      executionLeaseExpiresAt: null,
+      [fields.id]: null,
+      [fields.expiresAt]: null,
+      operationVersion: { increment: 1 },
+    },
+  });
+  if (released.count) lease.operationVersion += 1;
+}
+
+export type AccountDeletionLegalHoldResult =
+  | { status: "APPLIED" | "CLEARED" | "ALREADY_APPLIED" }
+  | { status: "COMMIT_POINT_PASSED"; sideEffects: Array<"storage" | "auth" | "completion_email"> }
+  | { status: "NOT_FOUND" };
+
+/**
+ * The legal-hold setter and reservations lock the same request row. A hold
+ * therefore either wins before any adapter reservation, or truthfully reports
+ * that it can no longer stop the already-reserved side effect.
+ */
+export async function setAccountDeletionLegalHold(input: {
+  requestId: string;
+  active: boolean;
+  reason?: string | null;
+  until?: Date | null;
+  now?: Date;
+}, database: Pick<typeof prisma, "$transaction"> = prisma): Promise<AccountDeletionLegalHoldResult> {
+  const now = input.now ?? new Date();
+  return database.$transaction(async (tx) => {
+    await lockDeletionRequest(tx, input.requestId);
+    const request = await tx.accountDeletionRequest.findUnique({
+      where: { id: input.requestId },
+      include: { emailOutbox: { select: { deliveryReservationId: true, deliveryReservationExpiresAt: true } } },
+    });
+    if (!request) return { status: "NOT_FOUND" };
+    if (!input.active) {
+      if (!request.legalHold) return { status: "CLEARED" };
+      await tx.accountDeletionRequest.update({ where: { id: request.id }, data: { legalHold: false, legalHoldReason: null, legalHoldUntil: null } });
+      return { status: "CLEARED" };
+    }
+    if (request.legalHold) return { status: "ALREADY_APPLIED" };
+    const sideEffects: Array<"storage" | "auth" | "completion_email"> = [];
+    if (request.storageReservationId && request.storageReservationExpiresAt && request.storageReservationExpiresAt > now) sideEffects.push("storage");
+    if (request.authReservationId && request.authReservationExpiresAt && request.authReservationExpiresAt > now) sideEffects.push("auth");
+    if (request.emailOutbox.some((outbox) => outbox.deliveryReservationId && outbox.deliveryReservationExpiresAt && outbox.deliveryReservationExpiresAt > now)) sideEffects.push("completion_email");
+    if (sideEffects.length) return { status: "COMMIT_POINT_PASSED", sideEffects };
+    await tx.accountDeletionRequest.update({
+      where: { id: request.id, legalHold: false },
+      data: { legalHold: true, legalHoldReason: input.reason ?? null, legalHoldUntil: input.until ?? null },
+    });
+    return { status: "APPLIED" };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
 async function findActiveDeletionOperation(requestId: string, lease: WorkerLease, stages: AccountDeletionStage[], now: Date) {
@@ -562,25 +766,29 @@ async function deliverCompletionEmailOutbox(
     if (!claimed.count || !outbox.recipientCiphertext) continue;
     try {
       await hooks?.beforeCompletionEmail?.();
-      // Revalidate immediately before the external email commit point. A
-      // legal hold placed after the claim must prevent delivery.
-      const readyAt = clock();
-      const ready = await prisma.accountDeletionEmailOutbox.updateMany({
-        where: {
-          id: outbox.id,
-          executionLeaseId: leaseId,
-          executionLeaseExpiresAt: { gt: readyAt },
-          status: { in: ["PENDING", "RETRYABLE"] },
-          request: { legalHold: false },
-        },
-        data: { executionLeaseExpiresAt: new Date(readyAt.getTime() + leaseLifetimeMs) },
-      });
-      if (!ready.count) continue;
+      const reservationId = await reserveCompletionEmailSideEffect(outbox.id, outbox.accountDeletionRequestId, leaseId, clock());
+      if (!reservationId) {
+        await prisma.accountDeletionEmailOutbox.updateMany({ where: { id: outbox.id, executionLeaseId: leaseId }, data: { executionLeaseId: null, executionLeaseExpiresAt: null } });
+        continue;
+      }
+      await hooks?.afterCompletionEmailReservationBeforeAdapter?.();
       await sendAccountDeletionCompletedEmail({ to: decryptAccountDeletionValue(outbox.recipientCiphertext), idempotencyKey: outbox.id });
       await prisma.$transaction(async (tx) => {
+        await lockDeletionRequest(tx, outbox.accountDeletionRequestId);
         await tx.accountDeletionEmailOutbox.updateMany({
-          where: { id: outbox.id, executionLeaseId: leaseId, request: { legalHold: false } },
-          data: { status: "SENT", sentAt: clock(), recipientCiphertext: null, executionLeaseId: null, executionLeaseExpiresAt: null, safeErrorCode: null },
+          where: {
+            id: outbox.id,
+            executionLeaseId: leaseId,
+            deliveryReservationId: reservationId,
+            deliveryReservationExpiresAt: { gt: clock() },
+            request: { legalHold: false },
+          },
+          data: {
+            status: "SENT", sentAt: clock(), recipientCiphertext: null,
+            executionLeaseId: null, executionLeaseExpiresAt: null,
+            deliveryReservationId: null, deliveryReservationExpiresAt: null,
+            safeErrorCode: null,
+          },
         });
         await tx.accountDeletionRequest.updateMany({
           where: { id: outbox.accountDeletionRequestId, legalHold: false },
@@ -590,10 +798,40 @@ async function deliverCompletionEmailOutbox(
     } catch {
       await prisma.accountDeletionEmailOutbox.updateMany({
         where: { id: outbox.id, executionLeaseId: leaseId },
-        data: { status: "RETRYABLE", safeErrorCode: "COMPLETION_EMAIL_FAILED", executionLeaseId: null, executionLeaseExpiresAt: null },
+        data: {
+          status: "RETRYABLE", safeErrorCode: "COMPLETION_EMAIL_FAILED",
+          executionLeaseId: null, executionLeaseExpiresAt: null,
+          deliveryReservationId: null, deliveryReservationExpiresAt: null,
+        },
       });
     }
   }
+}
+
+async function reserveCompletionEmailSideEffect(outboxId: string, requestId: string, leaseId: string, now: Date) {
+  const reservationId = randomUUID();
+  let reserved = false;
+  await prisma.$transaction(async (tx) => {
+    await lockDeletionRequest(tx, requestId);
+    const updated = await tx.accountDeletionEmailOutbox.updateMany({
+      where: {
+        id: outboxId,
+        accountDeletionRequestId: requestId,
+        executionLeaseId: leaseId,
+        executionLeaseExpiresAt: { gt: now },
+        status: { in: ["PENDING", "RETRYABLE"] },
+        request: { legalHold: false },
+        OR: [{ deliveryReservationId: null }, { deliveryReservationExpiresAt: { lte: now } }],
+      },
+      data: {
+        deliveryReservationId: reservationId,
+        deliveryReservationExpiresAt: new Date(now.getTime() + leaseLifetimeMs),
+        executionLeaseExpiresAt: new Date(now.getTime() + leaseLifetimeMs),
+      },
+    });
+    reserved = updated.count === 1;
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  return reserved ? reservationId : null;
 }
 
 async function purgeCompletedDeletionReceipts(clock: DeletionClock) {

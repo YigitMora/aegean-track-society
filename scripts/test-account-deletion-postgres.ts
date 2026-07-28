@@ -94,6 +94,8 @@ async function isolateOperation(id: string) {
 async function verifyMigrationMetadata() {
   assert.equal(psql("SELECT count(*) FROM _prisma_migrations WHERE migration_name = '20260728170000_account_deletion_recovery' AND finished_at IS NOT NULL"), "1");
   assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionRequest' AND column_name IN ('operationReceiptHash', 'encryptedAuthUserId', 'encryptedEmail', 'executionLeaseId', 'executionLeaseExpiresAt', 'operationVersion', 'nextAttemptAt', 'purgeAfter')"), "8");
+  assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionRequest' AND column_name IN ('storageReservationId', 'storageReservationExpiresAt', 'authReservationId', 'authReservationExpiresAt')"), "4");
+  assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionEmailOutbox' AND column_name IN ('deliveryReservationId', 'deliveryReservationExpiresAt')"), "2");
   assert.equal(psql("SELECT count(*) FROM pg_indexes WHERE tablename = 'AccountDeletionEmailOutbox' AND indexname = 'AccountDeletionEmailOutbox_accountDeletionRequestId_key'"), "1");
   assert.equal(psql("SELECT count(*) FROM pg_indexes WHERE tablename = 'AccountDeletionRequest' AND indexname = 'AccountDeletionRequest_operationReceiptHash_idx'"), "0");
   checkpoint("fresh-migration-metadata");
@@ -105,6 +107,7 @@ async function verifyUpgradeMigration() {
   command(pg("createdb"), ["-h", "127.0.0.1", "-p", String(port), upgradeDatabase]);
   command("cp", ["-R", "prisma", upgradePrismaDirectory]);
   rmSync(join(upgradePrismaDirectory, "migrations", "20260728170000_account_deletion_recovery"), { recursive: true });
+  rmSync(join(upgradePrismaDirectory, "migrations", "20260728200000_account_deletion_side_effect_reservations"), { recursive: true });
   command("./node_modules/.bin/prisma", ["migrate", "deploy", "--schema", join(upgradePrismaDirectory, "schema.prisma")], {
     ...process.env, DATABASE_URL: upgradeUrl, CI: "1", PRISMA_HIDE_UPDATE_MESSAGE: "1",
   });
@@ -233,7 +236,7 @@ async function verifyInFlightLegalHolds() {
       hook: "beforeCompletion",
       expectedStage: "AUTH_PENDING",
       assertBlocked: async (operation, beforeCalls) => {
-        assert.equal(externalCalls.auth, beforeCalls.auth + 1);
+        assert.equal(externalCalls.auth, beforeCalls.auth);
         assert.equal(await primary!.user.count({ where: { id: operation.authUserId } }), 1);
       },
     },
@@ -332,6 +335,126 @@ async function verifyInFlightLegalHolds() {
   checkpoint("in-flight-legal-hold-and-purge-guard");
 }
 
+async function verifyDurableReservationOrdering() {
+  const service = await import("@/lib/account-deletion-service");
+  const holdClient = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
+  await holdClient.$connect();
+  let now = new Date("2026-02-02T00:00:00.000Z");
+  const clock = () => now;
+  const cases: Array<{
+    name: "storage" | "auth" | "completion_email";
+    operation: Parameters<typeof createOperation>[0];
+    hook: "afterStorageReservationBeforeAdapter" | "afterAuthReservationBeforeAdapter" | "afterCompletionEmailReservationBeforeAdapter";
+    callKey: keyof typeof externalCalls;
+    prepare?: (operation: { id: string }) => Promise<void>;
+  }> = [
+    { name: "storage", operation: { withImage: true }, hook: "afterStorageReservationBeforeAdapter", callKey: "storage" },
+    { name: "auth", operation: { stage: "AUTH_PENDING", storageCompleted: true, databaseCompleted: true }, hook: "afterAuthReservationBeforeAdapter", callKey: "auth" },
+    {
+      name: "completion_email", operation: {}, hook: "afterCompletionEmailReservationBeforeAdapter", callKey: "email",
+      prepare: async (operation) => {
+        const crypto = await import("@/lib/account-deletion-crypto");
+        await primary!.accountDeletionRequest.update({ where: { id: operation.id }, data: { stage: "COMPLETED", completedAt: now, databaseCompletedAt: now } });
+        await primary!.accountDeletionEmailOutbox.create({ data: { id: `reservation-email-${randomUUID()}`, accountDeletionRequestId: operation.id, recipientCiphertext: crypto.encryptAccountDeletionValue("reservation-email@invalid.local") } });
+      },
+    },
+  ];
+
+  try {
+    for (const scenario of cases) {
+      for (let iteration = 0; iteration < 20; iteration += 1) {
+      const operation = await createOperation(scenario.operation);
+      await isolateOperation(operation.id);
+      await scenario.prepare?.(operation);
+      let arrive: () => void = () => undefined;
+      const reserved = new Promise<void>((resolve) => { arrive = resolve; });
+      let release: () => void = () => undefined;
+      const barrier = new Promise<void>((resolve) => { release = resolve; });
+      const before = externalCalls[scenario.callKey];
+      const worker = service.runAccountDeletionWorker({
+        limit: 1,
+        clock,
+        hooks: { [scenario.hook]: async () => { arrive(); await barrier; } },
+      });
+      await reserved;
+      const concurrentWorker = service.runAccountDeletionWorker({ limit: 1, clock });
+      const hold = await service.setAccountDeletionLegalHold({ requestId: operation.id, active: true, reason: "reservation-ordering-test", now }, holdClient);
+      assert.equal(hold.status, "COMMIT_POINT_PASSED", `${scenario.name} reservation wins ${iteration}`);
+      release();
+      await Promise.all([worker, concurrentWorker]);
+      assert.equal(externalCalls[scenario.callKey], before + 1, `${scenario.name} adapter exactly once ${iteration}`);
+    }
+    }
+
+    for (const scenario of cases) {
+      for (let iteration = 0; iteration < 20; iteration += 1) {
+      const operation = await createOperation(scenario.operation);
+      await isolateOperation(operation.id);
+      await scenario.prepare?.(operation);
+      const before = externalCalls[scenario.callKey];
+      assert.equal((await service.setAccountDeletionLegalHold({ requestId: operation.id, active: true, reason: "hold-wins-test", now }, holdClient)).status, "APPLIED");
+      await service.runAccountDeletionWorker({ limit: 1, clock });
+      assert.equal(externalCalls[scenario.callKey], before, `${scenario.name} hold wins ${iteration}`);
+      assert.equal((await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: operation.id } })).legalHold, true);
+      assert.equal((await service.setAccountDeletionLegalHold({ requestId: operation.id, active: false, now }, holdClient)).status, "CLEARED");
+      await primary!.accountDeletionRequest.update({ where: { id: operation.id }, data: { executionLeaseExpiresAt: new Date(0), nextAttemptAt: new Date(0) } });
+      now = new Date(now.getTime() + 60_001);
+      await service.runAccountDeletionWorker({ limit: 1, clock });
+    }
+    }
+  } finally {
+    await holdClient.$disconnect();
+  }
+  checkpoint("durable-side-effect-reservation-ordering-20x");
+}
+
+async function verifyExpiredReservationRecovery() {
+  const { runAccountDeletionWorker } = await import("@/lib/account-deletion-service");
+  const now = new Date("2026-02-03T00:00:00.000Z");
+  const clock = () => now;
+
+  const storage = await createOperation({ withImage: true });
+  await isolateOperation(storage.id);
+  const storageBefore = externalCalls.storage;
+  await primary!.accountDeletionRequest.update({
+    where: { id: storage.id },
+    data: { storageReservationId: randomUUID(), storageReservationExpiresAt: new Date(0) },
+  });
+  await runAccountDeletionWorker({ limit: 1, clock });
+  assert.equal(externalCalls.storage, storageBefore + 1);
+  assert.equal((await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: storage.id } })).stage, "COMPLETED");
+
+  const auth = await createOperation({ stage: "AUTH_PENDING", storageCompleted: true, databaseCompleted: true });
+  await isolateOperation(auth.id);
+  const authBefore = externalCalls.auth;
+  await primary!.accountDeletionRequest.update({
+    where: { id: auth.id },
+    data: { authReservationId: randomUUID(), authReservationExpiresAt: new Date(0) },
+  });
+  await runAccountDeletionWorker({ limit: 1, clock });
+  assert.equal(externalCalls.auth, authBefore + 1);
+  assert.equal((await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: auth.id } })).stage, "COMPLETED");
+
+  const email = await createOperation();
+  await isolateOperation(email.id);
+  const crypto = await import("@/lib/account-deletion-crypto");
+  await primary!.accountDeletionRequest.update({ where: { id: email.id }, data: { stage: "COMPLETED", completedAt: now, databaseCompletedAt: now } });
+  await primary!.accountDeletionEmailOutbox.create({
+    data: {
+      id: `expired-reservation-email-${randomUUID()}`,
+      accountDeletionRequestId: email.id,
+      recipientCiphertext: crypto.encryptAccountDeletionValue("expired-reservation@invalid.local"),
+      deliveryReservationId: randomUUID(),
+      deliveryReservationExpiresAt: new Date(0),
+    },
+  });
+  const emailBefore = externalCalls.email;
+  await runAccountDeletionWorker({ limit: 1, clock });
+  assert.equal(externalCalls.email, emailBefore + 1);
+  assert.equal((await primary!.accountDeletionEmailOutbox.findUniqueOrThrow({ where: { accountDeletionRequestId: email.id } })).status, "SENT");
+  checkpoint("expired-side-effect-reservation-recovery");
+}
+
 async function verifyReceiptStatusRateLimiter() {
   const service = await import("@/lib/account-deletion-service");
   service.resetAccountDeletionRateLimitForTests();
@@ -350,8 +473,11 @@ async function verifyReceiptStatusRateLimiter() {
   }
   assert.equal(service.accountDeletionRateLimitEntryCountForTests(), 1_000);
   assert.equal(saturated, 500);
-  service.recordAccountDeletionRateLimitForTests("b".repeat(43), start + 60_001);
-  assert.equal(service.accountDeletionRateLimitEntryCountForTests(), 1);
+  for (let index = 0; index < 63; index += 1) {
+    service.recordAccountDeletionRateLimitForTests(`fresh-${index}`, start + 60_001);
+    assert.ok(service.accountDeletionRateLimitStatsForTests().lastCleanupWork <= 16);
+  }
+  assert.ok(service.accountDeletionRateLimitEntryCountForTests() <= 64);
   service.resetAccountDeletionRateLimitForTests();
   checkpoint("receipt-status-rate-limit-bounded-memory");
 }
@@ -515,6 +641,8 @@ async function main() {
     await verifyLeaseExpiryAndStaleOwner();
     await verifyConcurrentClaims();
     await verifyInFlightLegalHolds();
+    await verifyDurableReservationOrdering();
+    await verifyExpiredReservationRecovery();
     await verifyOutboxUniqueness();
     await verifyServiceRecovery();
     await verifyReceiptStatusRateLimiter();

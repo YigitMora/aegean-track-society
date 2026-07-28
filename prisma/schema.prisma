@@ -505,6 +505,10 @@ model AccountDeletionRequest {
   executionLeaseId     String?
   executionLeaseExpiresAt DateTime?
   operationVersion     Int                  @default(0)
+  storageReservationId String?
+  storageReservationExpiresAt DateTime?
+  authReservationId    String?
+  authReservationExpiresAt DateTime?
   nextAttemptAt        DateTime?
   purgeAfter           DateTime?
   legalHold            Boolean              @default(false)
@@ -524,6 +528,8 @@ model AccountDeletionRequest {
   @@index([completedAt])
   @@index([stage, nextAttemptAt])
   @@index([executionLeaseExpiresAt])
+  @@index([storageReservationExpiresAt])
+  @@index([authReservationExpiresAt])
 }
 
 model AccountDeletionEmailOutbox {
@@ -534,6 +540,8 @@ model AccountDeletionEmailOutbox {
   recipientCiphertext      String?
   executionLeaseId         String?
   executionLeaseExpiresAt  DateTime?
+  deliveryReservationId    String?
+  deliveryReservationExpiresAt DateTime?
   attemptCount             Int                          @default(0)
   lastAttemptAt            DateTime?
   sentAt                   DateTime?
@@ -543,6 +551,7 @@ model AccountDeletionEmailOutbox {
 
   @@unique([accountDeletionRequestId])
   @@index([status, executionLeaseExpiresAt])
+  @@index([deliveryReservationExpiresAt])
 }
 
 model Vehicle {
