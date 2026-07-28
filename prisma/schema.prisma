@@ -123,6 +123,14 @@ enum AccountDeletionOutboxStatus {
   FAILED_FINAL
 }
 
+enum AccountDeletionSideEffectInvocationState {
+  RESERVED
+  INVOKING
+  RECONCILING
+  SUCCEEDED
+  RETRYABLE
+}
+
 enum ModificationCategory {
   ENGINE
   ECU
@@ -507,8 +515,15 @@ model AccountDeletionRequest {
   operationVersion     Int                  @default(0)
   storageReservationId String?
   storageReservationExpiresAt DateTime?
+  storageInvocationKey String?
+  storageInvocationState AccountDeletionSideEffectInvocationState?
+  storageInvocationStartedAt DateTime?
+  storageInvocationTarget Json?
   authReservationId    String?
   authReservationExpiresAt DateTime?
+  authInvocationKey    String?
+  authInvocationState  AccountDeletionSideEffectInvocationState?
+  authInvocationStartedAt DateTime?
   nextAttemptAt        DateTime?
   purgeAfter           DateTime?
   legalHold            Boolean              @default(false)
@@ -530,6 +545,8 @@ model AccountDeletionRequest {
   @@index([executionLeaseExpiresAt])
   @@index([storageReservationExpiresAt])
   @@index([authReservationExpiresAt])
+  @@index([storageInvocationState])
+  @@index([authInvocationState])
 }
 
 model AccountDeletionEmailOutbox {
@@ -542,6 +559,9 @@ model AccountDeletionEmailOutbox {
   executionLeaseExpiresAt  DateTime?
   deliveryReservationId    String?
   deliveryReservationExpiresAt DateTime?
+  deliveryInvocationKey    String?
+  deliveryInvocationState  AccountDeletionSideEffectInvocationState?
+  deliveryInvocationStartedAt DateTime?
   attemptCount             Int                          @default(0)
   lastAttemptAt            DateTime?
   sentAt                   DateTime?
@@ -552,6 +572,7 @@ model AccountDeletionEmailOutbox {
   @@unique([accountDeletionRequestId])
   @@index([status, executionLeaseExpiresAt])
   @@index([deliveryReservationExpiresAt])
+  @@index([deliveryInvocationState])
 }
 
 model Vehicle {

@@ -18,10 +18,17 @@ that every supported client understands the durable asynchronous contract.
 ## Legal-hold and side-effect ordering
 
 Storage deletion, Auth user deletion, and completion-email delivery each write
-a durable, expiring reservation before their external adapter is invoked. The
-legal-hold setter locks the same deletion request row. It therefore either
-commits before a reservation and blocks that side effect, or returns
-`COMMIT_POINT_PASSED` without claiming that an already-reserved adapter call
-was stopped. Reservations expire with the worker lease so crash recovery can
-take over; adapter retry behavior remains idempotent at the Storage, Auth and
-email provider boundaries.
+a durable reservation and a separate invocation state before their external
+adapter is invoked. Each effect has a stable identity across retry, lease
+replacement and takeover. An expired `RESERVED` or `INVOKING` generation is
+recovered as `RECONCILING`; a stale owner cannot write the replacement
+generation's result. Storage applies deletes to the persisted exact object set,
+Auth deletion is scoped to the exact user and treats only that provider's 404
+as reconciled success, and the Resend completion email uses the provider's
+documented idempotency key.
+
+The legal-hold setter locks the same deletion request row. It always persists
+the hold intent. If an effect was already reserved it returns
+`COMMIT_POINT_PASSED`: that current effect may complete or reconcile, while all
+future irreversible phases are held. Releasing the hold resumes the durable
+operation from its recorded stage without caller-managed retry timing.
