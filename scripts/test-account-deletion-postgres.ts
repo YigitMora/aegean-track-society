@@ -22,7 +22,7 @@ const databaseUrl = `postgresql://${databaseUser}@127.0.0.1:${port}/${database}?
 let primary: PrismaClient | undefined;
 let authMode: "success" | "not-found" | "failure" = "success";
 let emailMode: "success" | "failure" = "success";
-let externalCalls = { auth: 0, email: 0 };
+let externalCalls = { auth: 0, email: 0, storage: 0 };
 
 function checkpoint(name: string) {
   console.log(`account-deletion-postgres ${name}: PASS`);
@@ -46,7 +46,12 @@ function testUserId() {
   return randomUUID();
 }
 
-async function createOperation(stage: "VERIFIED" | "AUTH_DELETE_RETRY" = "VERIFIED") {
+async function createOperation(input: {
+  stage?: "VERIFIED" | "DATABASE_PENDING" | "AUTH_PENDING" | "AUTH_DELETE_RETRY";
+  storageCompleted?: boolean;
+  databaseCompleted?: boolean;
+  withImage?: boolean;
+} = {}) {
   const id = `operation-${randomUUID()}`;
   const authUserId = testUserId();
   await primary!.user.create({ data: { id: authUserId, email: `${id}@invalid.local` } });
@@ -58,17 +63,39 @@ async function createOperation(stage: "VERIFIED" | "AUTH_DELETE_RETRY" = "VERIFI
       authUserIdHash: contract.accountDeletionHash(authUserId),
       encryptedAuthUserId: crypto.encryptAccountDeletionValue(authUserId),
       encryptedEmail: crypto.encryptAccountDeletionValue(`${id}@invalid.local`),
-      stage,
+      stage: input.stage ?? "VERIFIED",
       nextAttemptAt: new Date(0),
+      storageCompletedAt: input.storageCompleted ? new Date(0) : null,
+      databaseCompletedAt: input.databaseCompleted ? new Date(0) : null,
     },
   });
+  if (input.withImage) {
+    await primary!.vehicle.create({
+      data: {
+        userId: authUserId,
+        brand: "Test",
+        model: "Lease",
+        plateNumber: `TEST-${id.slice(-8)}`,
+        imagePath: `${authUserId}/test-image.jpg`,
+      },
+    });
+  }
   return { id, authUserId };
+}
+
+async function isolateOperation(id: string) {
+  await primary!.accountDeletionRequest.updateMany({
+    where: { id: { not: id } },
+    data: { legalHold: true },
+  });
+  await primary!.accountDeletionRequest.update({ where: { id }, data: { legalHold: false } });
 }
 
 async function verifyMigrationMetadata() {
   assert.equal(psql("SELECT count(*) FROM _prisma_migrations WHERE migration_name = '20260728170000_account_deletion_recovery' AND finished_at IS NOT NULL"), "1");
   assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionRequest' AND column_name IN ('operationReceiptHash', 'encryptedAuthUserId', 'encryptedEmail', 'executionLeaseId', 'executionLeaseExpiresAt', 'operationVersion', 'nextAttemptAt', 'purgeAfter')"), "8");
   assert.equal(psql("SELECT count(*) FROM pg_indexes WHERE tablename = 'AccountDeletionEmailOutbox' AND indexname = 'AccountDeletionEmailOutbox_accountDeletionRequestId_key'"), "1");
+  assert.equal(psql("SELECT count(*) FROM pg_indexes WHERE tablename = 'AccountDeletionRequest' AND indexname = 'AccountDeletionRequest_operationReceiptHash_idx'"), "0");
   checkpoint("fresh-migration-metadata");
 }
 
@@ -100,52 +127,233 @@ async function verifyRollback() {
   checkpoint("transaction-rollback");
 }
 
-async function verifyLeaseAndStaleOwner() {
-  const { id } = await createOperation();
-  const activeLease = randomUUID();
-  await primary!.accountDeletionRequest.update({ where: { id }, data: { executionLeaseId: activeLease, executionLeaseExpiresAt: new Date(Date.now() + 60_000) } });
-  const blocked = await primary!.accountDeletionRequest.updateMany({
-    where: { id, executionLeaseExpiresAt: { lte: new Date() } }, data: { executionLeaseId: randomUUID() },
+async function verifyLeaseExpiryAndStaleOwner() {
+  const { processAccountDeletionClaimForTests, claimAccountDeletionOperationForTests } = await import("@/lib/account-deletion-service");
+  const { id } = await createOperation({ withImage: true });
+  await isolateOperation(id);
+  let now = new Date("2026-01-01T00:00:00.000Z");
+  const staleLease = randomUUID();
+  await primary!.accountDeletionRequest.update({
+    where: { id },
+    data: {
+      executionLeaseId: staleLease,
+      executionLeaseExpiresAt: new Date(now.getTime() + 60_000),
+      operationVersion: 7,
+    },
   });
-  assert.equal(blocked.count, 0);
-  await primary!.accountDeletionRequest.update({ where: { id }, data: { executionLeaseExpiresAt: new Date(0) } });
-  const replacementLease = randomUUID();
-  const taken = await primary!.accountDeletionRequest.updateMany({
-    where: { id, stage: "VERIFIED", executionLeaseExpiresAt: { lte: new Date() } },
-    data: { executionLeaseId: replacementLease, executionLeaseExpiresAt: new Date(Date.now() + 60_000) },
+  const before = await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id } });
+  const callsBefore = { ...externalCalls };
+  now = new Date(now.getTime() + 60_001);
+  await processAccountDeletionClaimForTests({
+    requestId: id,
+    leaseId: staleLease,
+    operationVersion: before.operationVersion,
+    clock: () => now,
   });
-  assert.equal(taken.count, 1);
-  const stale = await primary!.accountDeletionRequest.updateMany({
-    where: { id, executionLeaseId: activeLease, stage: "VERIFIED" }, data: { stage: "STORAGE_PENDING" },
+  const expiredState = await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id } });
+  assert.equal(expiredState.stage, before.stage);
+  assert.equal(expiredState.operationVersion, before.operationVersion);
+  assert.equal(expiredState.executionLeaseId, staleLease);
+  assert.deepEqual(externalCalls, callsBefore);
+
+  const replacement = await claimAccountDeletionOperationForTests(() => now);
+  assert.equal(replacement?.request.id, id);
+  assert.notEqual(replacement?.lease.id, staleLease);
+  const afterReplacement = await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id } });
+  const replacementCalls = { ...externalCalls };
+  await processAccountDeletionClaimForTests({
+    requestId: id,
+    leaseId: staleLease,
+    operationVersion: before.operationVersion,
+    clock: () => now,
   });
-  assert.equal(stale.count, 0);
-  checkpoint("active-expired-and-stale-lease");
+  assert.deepEqual(await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id } }), afterReplacement);
+  assert.deepEqual(externalCalls, replacementCalls);
+  checkpoint("lease-expiry-before-replacement-and-stale-owner");
 }
 
 async function verifyConcurrentClaims() {
+  const { claimAccountDeletionOperationForTests } = await import("@/lib/account-deletion-service");
   for (let iteration = 0; iteration < 20; iteration += 1) {
     const { id } = await createOperation();
-    const contenders = [
-      new PrismaClient({ datasources: { db: { url: databaseUrl } } }),
-      new PrismaClient({ datasources: { db: { url: databaseUrl } } }),
-    ];
-    let arrived = 0;
-    let release: () => void = () => undefined;
-    const barrier = new Promise<void>((resolve) => { release = resolve; });
-    const claim = async (client: PrismaClient) => {
-      arrived += 1;
-      if (arrived === contenders.length) release();
-      await barrier;
-      return client.accountDeletionRequest.updateMany({
-        where: { id, stage: "VERIFIED", executionLeaseExpiresAt: null },
-        data: { executionLeaseId: randomUUID(), executionLeaseExpiresAt: new Date(Date.now() + 60_000) },
-      });
-    };
-    const result = await Promise.all(contenders.map(claim));
-    await Promise.all(contenders.map((client) => client.$disconnect()));
-    assert.equal(result[0].count + result[1].count, 1, `iteration ${iteration}`);
+    await isolateOperation(id);
+    const now = new Date("2026-01-01T00:00:00.000Z");
+    const result = await Promise.all([
+      claimAccountDeletionOperationForTests(() => now),
+      claimAccountDeletionOperationForTests(() => now),
+    ]);
+    assert.equal(result.filter(Boolean).length, 1, `iteration ${iteration}`);
   }
-  checkpoint("concurrent-cas-20x");
+  checkpoint("production-claim-cas-20x");
+}
+
+async function verifyInFlightLegalHolds() {
+  const { runAccountDeletionWorker } = await import("@/lib/account-deletion-service");
+  let now = new Date("2026-02-01T00:00:00.000Z");
+  const clock = () => now;
+
+  const scenarios: Array<{
+    name: "storage" | "database" | "auth" | "completion";
+    operation: Parameters<typeof createOperation>[0];
+    hook: "beforeStorage" | "beforeDatabase" | "beforeAuth" | "beforeCompletion";
+    expectedStage: "STORAGE_PENDING" | "DATABASE_PENDING" | "AUTH_PENDING";
+    assertBlocked: (operation: { id: string; authUserId: string }, beforeCalls: typeof externalCalls) => Promise<void>;
+  }> = [
+    {
+      name: "storage",
+      operation: { withImage: true },
+      hook: "beforeStorage",
+      expectedStage: "STORAGE_PENDING",
+      assertBlocked: async (_operation, beforeCalls) => {
+        assert.equal(externalCalls.storage, beforeCalls.storage);
+      },
+    },
+    {
+      name: "database",
+      operation: { stage: "DATABASE_PENDING", storageCompleted: true },
+      hook: "beforeDatabase",
+      expectedStage: "DATABASE_PENDING",
+      assertBlocked: async (operation, beforeCalls) => {
+        assert.equal(externalCalls.auth, beforeCalls.auth);
+        assert.equal(await primary!.user.count({ where: { id: operation.authUserId } }), 1);
+      },
+    },
+    {
+      name: "auth",
+      operation: { stage: "AUTH_PENDING", storageCompleted: true, databaseCompleted: true },
+      hook: "beforeAuth",
+      expectedStage: "AUTH_PENDING",
+      assertBlocked: async (_operation, beforeCalls) => {
+        assert.equal(externalCalls.auth, beforeCalls.auth);
+      },
+    },
+    {
+      name: "completion",
+      operation: { stage: "AUTH_PENDING", storageCompleted: true, databaseCompleted: true },
+      hook: "beforeCompletion",
+      expectedStage: "AUTH_PENDING",
+      assertBlocked: async (operation, beforeCalls) => {
+        assert.equal(externalCalls.auth, beforeCalls.auth + 1);
+        assert.equal(await primary!.user.count({ where: { id: operation.authUserId } }), 1);
+      },
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    const operation = await createOperation(scenario.operation);
+    await isolateOperation(operation.id);
+    const beforeCalls = { ...externalCalls };
+    await runAccountDeletionWorker({
+      limit: 1,
+      clock,
+      hooks: {
+        [scenario.hook]: async () => {
+          await primary!.accountDeletionRequest.update({
+            where: { id: operation.id },
+            data: { legalHold: true, legalHoldReason: "disposable-test-hold" },
+          });
+        },
+      },
+    });
+    const blocked = await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: operation.id } });
+    assert.equal(blocked.legalHold, true, scenario.name);
+    assert.equal(blocked.stage, scenario.expectedStage, scenario.name);
+    await scenario.assertBlocked(operation, beforeCalls);
+
+    await primary!.accountDeletionRequest.update({
+      where: { id: operation.id },
+      data: { legalHold: false, legalHoldReason: null, executionLeaseExpiresAt: new Date(0), nextAttemptAt: new Date(0) },
+    });
+    now = new Date(now.getTime() + 60_001);
+    await runAccountDeletionWorker({ limit: 1, clock });
+    assert.equal((await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: operation.id } })).stage, "COMPLETED", scenario.name);
+  }
+
+  const completionEmail = await createOperation();
+  await isolateOperation(completionEmail.id);
+  const crypto = await import("@/lib/account-deletion-crypto");
+  await primary!.accountDeletionRequest.update({
+    where: { id: completionEmail.id },
+    data: { stage: "COMPLETED", completedAt: now, databaseCompletedAt: now },
+  });
+  const completionOutbox = await primary!.accountDeletionEmailOutbox.create({
+    data: {
+      id: `completion-outbox-${randomUUID()}`,
+      accountDeletionRequestId: completionEmail.id,
+      recipientCiphertext: crypto.encryptAccountDeletionValue("completion-email@invalid.local"),
+    },
+  });
+  const emailBeforeCompletionHold = externalCalls.email;
+  await runAccountDeletionWorker({
+    limit: 1,
+    clock,
+    hooks: {
+      beforeCompletionEmail: async () => {
+        await primary!.accountDeletionRequest.update({
+          where: { id: completionEmail.id },
+          data: { legalHold: true, legalHoldReason: "disposable-completion-email-hold" },
+        });
+      },
+    },
+  });
+  assert.equal(externalCalls.email, emailBeforeCompletionHold);
+  assert.equal((await primary!.accountDeletionEmailOutbox.findUniqueOrThrow({ where: { id: completionOutbox.id } })).status, "PENDING");
+  await primary!.$transaction(async (tx) => {
+    await tx.accountDeletionRequest.update({ where: { id: completionEmail.id }, data: { legalHold: false, legalHoldReason: null } });
+    await tx.accountDeletionEmailOutbox.update({ where: { id: completionOutbox.id }, data: { executionLeaseExpiresAt: new Date(0) } });
+  });
+  now = new Date(now.getTime() + 60_001);
+  await runAccountDeletionWorker({ limit: 1, clock });
+  assert.equal(externalCalls.email, emailBeforeCompletionHold + 1);
+  assert.equal((await primary!.accountDeletionEmailOutbox.findUniqueOrThrow({ where: { id: completionOutbox.id } })).status, "SENT");
+
+  const completed = await createOperation();
+  await isolateOperation(completed.id);
+  await primary!.accountDeletionRequest.update({
+    where: { id: completed.id },
+    data: { stage: "COMPLETED", legalHold: true, completedAt: new Date(0), purgeAfter: new Date(0) },
+  });
+  await primary!.accountDeletionEmailOutbox.create({
+    data: { id: `held-outbox-${randomUUID()}`, accountDeletionRequestId: completed.id, recipientCiphertext: "held-test-ciphertext" },
+  });
+  const emailBeforeHeldOutbox = externalCalls.email;
+  await runAccountDeletionWorker({ limit: 1, clock });
+  assert.equal(await primary!.accountDeletionRequest.count({ where: { id: completed.id } }), 1);
+  assert.equal(externalCalls.email, emailBeforeHeldOutbox);
+  await primary!.$transaction(async (tx) => {
+    await tx.accountDeletionEmailOutbox.updateMany({
+      where: { accountDeletionRequestId: completed.id },
+      data: { recipientCiphertext: null, status: "SENT", sentAt: new Date() },
+    });
+    await tx.accountDeletionRequest.update({ where: { id: completed.id }, data: { legalHold: false } });
+  });
+  await runAccountDeletionWorker({ limit: 1, clock });
+  assert.equal(await primary!.accountDeletionRequest.count({ where: { id: completed.id } }), 0);
+  checkpoint("in-flight-legal-hold-and-purge-guard");
+}
+
+async function verifyReceiptStatusRateLimiter() {
+  const service = await import("@/lib/account-deletion-service");
+  service.resetAccountDeletionRateLimitForTests();
+  const start = Date.parse("2026-03-01T00:00:00.000Z");
+  // The public endpoint receives only hashes; the bounded limiter must retain
+  // neither raw receipts nor attacker-controlled unbounded cardinality.
+  let saturated = 0;
+  for (let index = 0; index < 1_500; index += 1) {
+    try {
+      const receipt = `${"a".repeat(37)}${index.toString(36).padStart(6, "0")}`;
+      service.recordAccountDeletionRateLimitForTests(receipt, start);
+    } catch (error) {
+      assert.equal((error as { code?: string }).code, "ACCOUNT_DELETION_STATUS_LIMITED");
+      saturated += 1;
+    }
+  }
+  assert.equal(service.accountDeletionRateLimitEntryCountForTests(), 1_000);
+  assert.equal(saturated, 500);
+  service.recordAccountDeletionRateLimitForTests("b".repeat(43), start + 60_001);
+  assert.equal(service.accountDeletionRateLimitEntryCountForTests(), 1);
+  service.resetAccountDeletionRateLimitForTests();
+  checkpoint("receipt-status-rate-limit-bounded-memory");
 }
 
 async function verifyOutboxUniqueness() {
@@ -285,6 +493,10 @@ async function main() {
       externalCalls.auth += 1;
       return new Response("{}", { status: authMode === "success" ? 200 : authMode === "not-found" ? 404 : 503 });
     }
+    if (url.includes("/storage/v1/object/")) {
+      externalCalls.storage += 1;
+      return new Response("{}", { status: 200 });
+    }
     return new Response("{}", { status: 200 });
   };
 
@@ -300,10 +512,12 @@ async function main() {
     await verifyMigrationMetadata();
     await verifyUpgradeMigration();
     await verifyRollback();
-    await verifyLeaseAndStaleOwner();
+    await verifyLeaseExpiryAndStaleOwner();
     await verifyConcurrentClaims();
+    await verifyInFlightLegalHolds();
     await verifyOutboxUniqueness();
     await verifyServiceRecovery();
+    await verifyReceiptStatusRateLimiter();
     console.log("account-deletion-postgres integration passed");
   } finally {
     globalThis.fetch = realFetch;

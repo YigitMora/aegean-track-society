@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 async function main() {
   process.env.ACCOUNT_DELETION_CODE_PEPPER = "test-only-account-deletion-pepper";
@@ -28,7 +29,11 @@ async function main() {
   assert.equal(deletionConfirmationSchema.safeParse({ ...validConfirmation, email: "not-accepted" }).success, false);
   assert.equal(deletionConfirmationSchema.safeParse({ ...validConfirmation, verificationCode: "12345" }).success, false);
 
-  console.log("account-deletion contract runtime passed (receipt, strict bodies, no identity fields)");
+  const releaseNote = readFileSync("docs/account-deletion-release.md", "utf8");
+  assert.match(releaseNote, /first-release contract/);
+  assert.match(releaseNote, /not\s+restored/);
+
+  console.log("account-deletion contract runtime passed (receipt, strict bodies, first-release gate)");
 }
 
 void main();
