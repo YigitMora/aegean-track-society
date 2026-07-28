@@ -116,6 +116,13 @@ enum AccountDeletionStage {
   FAILED_FINAL
 }
 
+enum AccountDeletionOutboxStatus {
+  PENDING
+  RETRYABLE
+  SENT
+  FAILED_FINAL
+}
+
 enum ModificationCategory {
   ENGINE
   ECU
@@ -492,6 +499,14 @@ model AccountDeletionRequest {
   resendCount          Int                  @default(0)
   lastSentAt           DateTime?
   idempotencyKeyHash   String?              @unique
+  operationReceiptHash String?              @unique
+  encryptedAuthUserId  String?
+  encryptedEmail       String?
+  executionLeaseId     String?
+  executionLeaseExpiresAt DateTime?
+  operationVersion     Int                  @default(0)
+  nextAttemptAt        DateTime?
+  purgeAfter           DateTime?
   legalHold            Boolean              @default(false)
   legalHoldReason      String?              @db.Text
   legalHoldUntil       DateTime?
@@ -502,10 +517,33 @@ model AccountDeletionRequest {
   completedAt          DateTime?
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
+  emailOutbox          AccountDeletionEmailOutbox[]
 
   @@index([stage])
   @@index([verificationExpiresAt])
   @@index([completedAt])
+  @@index([operationReceiptHash])
+  @@index([stage, nextAttemptAt])
+  @@index([executionLeaseExpiresAt])
+}
+
+model AccountDeletionEmailOutbox {
+  id                       String                       @id @default(cuid())
+  accountDeletionRequestId String
+  request                  AccountDeletionRequest       @relation(fields: [accountDeletionRequestId], references: [id], onDelete: Cascade)
+  status                   AccountDeletionOutboxStatus  @default(PENDING)
+  recipientCiphertext      String?
+  executionLeaseId         String?
+  executionLeaseExpiresAt  DateTime?
+  attemptCount             Int                          @default(0)
+  lastAttemptAt            DateTime?
+  sentAt                   DateTime?
+  safeErrorCode            String?
+  createdAt                DateTime                     @default(now())
+  updatedAt                DateTime                     @updatedAt
+
+  @@unique([accountDeletionRequestId])
+  @@index([status, executionLeaseExpiresAt])
 }
 
 model Vehicle {

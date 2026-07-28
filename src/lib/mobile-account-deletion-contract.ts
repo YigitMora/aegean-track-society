@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { mobileAuthJsonResponse } from "@/lib/mobile-auth";
 
@@ -12,6 +12,9 @@ export const deletionConfirmationSchema = z.object({
   verificationCode: z.string().regex(/^\d{6}$/),
   idempotencyKey: z.string().uuid(),
 }).strict();
+export const deletionStatusSchema = z.object({
+  receipt: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+}).strict();
 
 const definitions = {
   ACCOUNT_DELETION_INVALID_BODY: [422, "Silme isteği geçerli değil."],
@@ -22,6 +25,8 @@ const definitions = {
   ACCOUNT_DELETION_CONFIGURATION_ERROR: [503, "Hesap silme şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin."],
   ACCOUNT_DELETION_STORAGE_FAILED: [503, "Hesap silme işlemi şu anda tamamlanamadı. Lütfen daha sonra tekrar deneyin."],
   ACCOUNT_DELETION_RETRY_REQUIRED: [503, "Hesap silme işlemi güvenli olarak tamamlanmayı bekliyor. Lütfen daha sonra tekrar deneyin."],
+  ACCOUNT_DELETION_STATUS_UNAVAILABLE: [404, "Hesap silme durumu doğrulanamadı."],
+  ACCOUNT_DELETION_STATUS_LIMITED: [429, "Hesap silme durumu şu anda doğrulanamadı. Lütfen daha sonra tekrar deneyin."],
   ACCOUNT_DELETION_INTERNAL_ERROR: [500, "Hesap silme işlemi şu anda tamamlanamadı. Lütfen daha sonra tekrar deneyin."],
 } as const;
 
@@ -54,4 +59,8 @@ export function accountDeletionHash(value: string) {
 export function equalAccountDeletionHash(expected: string, value: string) {
   const actual = accountDeletionHash(value);
   return timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(actual, "hex"));
+}
+
+export function createAccountDeletionReceipt() {
+  return randomBytes(32).toString("base64url");
 }

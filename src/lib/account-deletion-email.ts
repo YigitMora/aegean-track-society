@@ -12,12 +12,13 @@ export async function sendAccountDeletionVerificationEmail(input: {
   });
 }
 
-export async function sendAccountDeletionCompletedEmail(input: { to: string }) {
+export async function sendAccountDeletionCompletedEmail(input: { to: string; idempotencyKey: string }) {
   return sendAccountDeletionEmail({
     to: input.to,
     subject: "ATS hesabınız silindi",
     text: "ATS hesabınız ve silme kapsamındaki verileriniz kaldırıldı.",
     html: "<p>ATS hesabınız ve silme kapsamındaki verileriniz kaldırıldı.</p>",
+    idempotencyKey: input.idempotencyKey,
   });
 }
 
@@ -26,6 +27,7 @@ async function sendAccountDeletionEmail(input: {
   subject: string;
   text: string;
   html: string;
+  idempotencyKey?: string;
 }) {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const from = process.env.EMAIL_FROM?.trim();
@@ -39,6 +41,7 @@ async function sendAccountDeletionEmail(input: {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
+      ...(input.idempotencyKey ? { "Idempotency-Key": input.idempotencyKey } : {}),
     },
     body: JSON.stringify({
       from,
