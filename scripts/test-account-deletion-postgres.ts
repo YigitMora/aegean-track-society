@@ -20,11 +20,14 @@ const databaseUser = execFileSync("id", ["-un"], { encoding: "utf8" }).trim();
 const databaseUrl = `postgresql://${databaseUser}@127.0.0.1:${port}/${database}?schema=public`;
 
 let primary: PrismaClient | undefined;
-let authMode: "success" | "not-found" | "failure" = "success";
-let emailMode: "success" | "failure" = "success";
+let authMode: "success" | "not-found" | "generic-not-found" | "failure" = "success";
+let emailMode: "success" | "failure" | "concurrent" | "invalid" = "success";
+let storageMode: "success" | "no-such-key" | "no-such-bucket" | "tenant-not-found" | "unknown-not-found" = "success";
+let providerNow = new Date("2026-01-01T00:00:00.000Z");
 let externalCalls = { auth: 0, email: 0, storage: 0 };
 const logicalEffects = { auth: new Set<string>(), email: new Set<string>(), storage: new Set<string>() };
 const transportEffectKeys = { auth: [] as string[], email: [] as string[], storage: [] as string[] };
+const emailProviderDeliveries = new Map<string, { payload: string; acceptedAt: number; messageId: string }>();
 
 function checkpoint(name: string) {
   console.log(`account-deletion-postgres ${name}: PASS`);
@@ -65,6 +68,7 @@ async function createOperation(input: {
       authUserIdHash: contract.accountDeletionHash(authUserId),
       encryptedAuthUserId: crypto.encryptAccountDeletionValue(authUserId),
       encryptedEmail: crypto.encryptAccountDeletionValue(`${id}@invalid.local`),
+      authProviderIdentity: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).origin.toLowerCase(),
       stage: input.stage ?? "VERIFIED",
       nextAttemptAt: new Date(0),
       storageCompletedAt: input.storageCompleted ? new Date(0) : null,
@@ -100,6 +104,9 @@ async function verifyMigrationMetadata() {
   assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionEmailOutbox' AND column_name IN ('deliveryReservationId', 'deliveryReservationExpiresAt')"), "2");
   assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionRequest' AND column_name IN ('storageInvocationKey', 'storageInvocationState', 'storageInvocationStartedAt', 'storageInvocationTarget', 'authInvocationKey', 'authInvocationState', 'authInvocationStartedAt')"), "7");
   assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionEmailOutbox' AND column_name IN ('deliveryInvocationKey', 'deliveryInvocationState', 'deliveryInvocationStartedAt')"), "3");
+  assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionRequest' AND column_name IN ('authProviderIdentity')"), "1");
+  assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionEmailOutbox' AND column_name IN ('deliveryPayloadCiphertext', 'deliveryPayloadFingerprint', 'deliveryFirstTransportAt', 'deliveryRetryDeadlineAt', 'providerMessageId', 'reconciliationRequiredAt')"), "6");
+  assert.equal(psql("SELECT count(*) FROM pg_enum WHERE enumtypid = '\"AccountDeletionOutboxStatus\"'::regtype AND enumlabel = 'RECONCILIATION_REQUIRED'"), "1");
   assert.equal(psql("SELECT count(*) FROM pg_indexes WHERE tablename = 'AccountDeletionEmailOutbox' AND indexname = 'AccountDeletionEmailOutbox_accountDeletionRequestId_key'"), "1");
   assert.equal(psql("SELECT count(*) FROM pg_indexes WHERE tablename = 'AccountDeletionRequest' AND indexname = 'AccountDeletionRequest_operationReceiptHash_idx'"), "0");
   checkpoint("fresh-migration-metadata");
@@ -113,6 +120,7 @@ async function verifyUpgradeMigration() {
   rmSync(join(upgradePrismaDirectory, "migrations", "20260728170000_account_deletion_recovery"), { recursive: true });
   rmSync(join(upgradePrismaDirectory, "migrations", "20260728200000_account_deletion_side_effect_reservations"), { recursive: true });
   rmSync(join(upgradePrismaDirectory, "migrations", "20260728210000_account_deletion_side_effect_invocations"), { recursive: true });
+  rmSync(join(upgradePrismaDirectory, "migrations", "20260729200000_account_deletion_reconciliation_boundaries"), { recursive: true });
   command("./node_modules/.bin/prisma", ["migrate", "deploy", "--schema", join(upgradePrismaDirectory, "schema.prisma")], {
     ...process.env, DATABASE_URL: upgradeUrl, CI: "1", PRISMA_HIDE_UPDATE_MESSAGE: "1",
   });
@@ -351,12 +359,14 @@ async function verifyDurableReservationOrdering() {
     operation: Parameters<typeof createOperation>[0];
     hook: "afterStorageReservationBeforeAdapter" | "afterAuthReservationBeforeAdapter" | "afterCompletionEmailReservationBeforeAdapter";
     callKey: keyof typeof externalCalls;
+    holdWinsStatus: "APPLIED" | "COMMIT_POINT_PASSED";
     prepare?: (operation: { id: string }) => Promise<void>;
   }> = [
-    { name: "storage", operation: { withImage: true }, hook: "afterStorageReservationBeforeAdapter", callKey: "storage" },
-    { name: "auth", operation: { stage: "AUTH_PENDING", storageCompleted: true, databaseCompleted: true }, hook: "afterAuthReservationBeforeAdapter", callKey: "auth" },
+    { name: "storage", operation: { withImage: true }, hook: "afterStorageReservationBeforeAdapter", callKey: "storage", holdWinsStatus: "APPLIED" },
+    { name: "auth", operation: { stage: "AUTH_PENDING", storageCompleted: true, databaseCompleted: true }, hook: "afterAuthReservationBeforeAdapter", callKey: "auth", holdWinsStatus: "COMMIT_POINT_PASSED" },
     {
       name: "completion_email", operation: {}, hook: "afterCompletionEmailReservationBeforeAdapter", callKey: "email",
+      holdWinsStatus: "COMMIT_POINT_PASSED",
       prepare: async (operation) => {
         const crypto = await import("@/lib/account-deletion-crypto");
         await primary!.accountDeletionRequest.update({ where: { id: operation.id }, data: { stage: "COMPLETED", completedAt: now, databaseCompletedAt: now } });
@@ -397,7 +407,7 @@ async function verifyDurableReservationOrdering() {
       await isolateOperation(operation.id);
       await scenario.prepare?.(operation);
       const before = externalCalls[scenario.callKey];
-      assert.equal((await service.setAccountDeletionLegalHold({ requestId: operation.id, active: true, reason: "hold-wins-test", now }, holdClient)).status, "APPLIED");
+      assert.equal((await service.setAccountDeletionLegalHold({ requestId: operation.id, active: true, reason: "hold-wins-test", now }, holdClient)).status, scenario.holdWinsStatus);
       await service.runAccountDeletionWorker({ limit: 1, clock });
       assert.equal(externalCalls[scenario.callKey], before, `${scenario.name} hold wins ${iteration}`);
       assert.equal((await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: operation.id } })).legalHold, true);
@@ -730,6 +740,7 @@ async function verifyServiceRecovery() {
       id: `db-failure-${randomUUID()}`,
       authUserIdHash: `hash-${randomUUID()}`,
       encryptedAuthUserId: crypto.encryptAccountDeletionValue(absentAuthUserId),
+      authProviderIdentity: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).origin.toLowerCase(),
       stage: "VERIFIED",
       nextAttemptAt: new Date(0),
     },
@@ -758,6 +769,224 @@ async function verifyServiceRecovery() {
   checkpoint("storage-auth-email-recovery");
 }
 
+async function verifyProviderReconciliationBoundaries() {
+  const { runAccountDeletionWorker } = await import("@/lib/account-deletion-service");
+  let now = new Date("2026-03-01T00:00:00.000Z");
+  const clock = () => now;
+  authMode = "success";
+  emailMode = "success";
+  storageMode = "success";
+
+  const retryInsideWindow = await createOperation();
+  await isolateOperation(retryInsideWindow.id);
+  providerNow = now;
+  const emailBefore = externalCalls.email;
+  const logicalBefore = logicalEffects.email.size;
+  let crashAfterAcceptance = true;
+  await runAccountDeletionWorker({
+    limit: 1,
+    clock,
+    hooks: {
+      afterCompletionEmailAdapterBeforeSuccessCommit: () => {
+        if (!crashAfterAcceptance) return;
+        crashAfterAcceptance = false;
+        throw new Error("simulated process loss after provider acceptance");
+      },
+    },
+  });
+  let retryOutbox = await primary!.accountDeletionEmailOutbox.findUniqueOrThrow({ where: { accountDeletionRequestId: retryInsideWindow.id } });
+  assert.equal(retryOutbox.status, "RETRYABLE");
+  assert.ok(retryOutbox.deliveryPayloadCiphertext);
+  assert.ok(retryOutbox.deliveryPayloadFingerprint);
+  assert.ok(retryOutbox.deliveryFirstTransportAt);
+  assert.ok(retryOutbox.deliveryRetryDeadlineAt);
+  const retryKey = retryOutbox.deliveryInvocationKey;
+
+  now = new Date(now.getTime() + 60_001);
+  providerNow = now;
+  await runAccountDeletionWorker({ limit: 1, clock });
+  retryOutbox = await primary!.accountDeletionEmailOutbox.findUniqueOrThrow({ where: { accountDeletionRequestId: retryInsideWindow.id } });
+  assert.equal(retryOutbox.status, "SENT");
+  assert.ok(retryOutbox.providerMessageId);
+  assert.equal(externalCalls.email, emailBefore + 2);
+  assert.equal(logicalEffects.email.size, logicalBefore + 1);
+  assert.equal(retryOutbox.deliveryInvocationKey, retryKey);
+
+  const expiredWindow = await createOperation();
+  await isolateOperation(expiredWindow.id);
+  now = new Date("2026-03-03T00:00:00.000Z");
+  providerNow = now;
+  crashAfterAcceptance = true;
+  await runAccountDeletionWorker({
+    limit: 1,
+    clock,
+    hooks: {
+      afterCompletionEmailAdapterBeforeSuccessCommit: () => {
+        if (!crashAfterAcceptance) return;
+        crashAfterAcceptance = false;
+        throw new Error("simulated process loss after provider acceptance");
+      },
+    },
+  });
+  const attemptsBeforeDeadline = externalCalls.email;
+  now = new Date(now.getTime() + 23 * 60 * 60 * 1000 + 1);
+  providerNow = now;
+  await runAccountDeletionWorker({ limit: 1, clock });
+  const expiredOutbox = await primary!.accountDeletionEmailOutbox.findUniqueOrThrow({ where: { accountDeletionRequestId: expiredWindow.id } });
+  assert.equal(expiredOutbox.status, "RECONCILIATION_REQUIRED");
+  assert.equal(expiredOutbox.safeErrorCode, "COMPLETION_EMAIL_RECONCILIATION_REQUIRED");
+  assert.equal(externalCalls.email, attemptsBeforeDeadline);
+
+  const concurrent = await createOperation();
+  await isolateOperation(concurrent.id);
+  emailMode = "concurrent";
+  now = new Date("2026-03-05T00:00:00.000Z");
+  providerNow = now;
+  await runAccountDeletionWorker({ limit: 1, clock });
+  let concurrentOutbox = await primary!.accountDeletionEmailOutbox.findUniqueOrThrow({ where: { accountDeletionRequestId: concurrent.id } });
+  assert.equal(concurrentOutbox.status, "RETRYABLE");
+  assert.equal(concurrentOutbox.safeErrorCode, "COMPLETION_EMAIL_CONCURRENT");
+  const concurrentKey = concurrentOutbox.deliveryInvocationKey;
+  emailMode = "success";
+  now = new Date(now.getTime() + 60_001);
+  providerNow = now;
+  await runAccountDeletionWorker({ limit: 1, clock });
+  concurrentOutbox = await primary!.accountDeletionEmailOutbox.findUniqueOrThrow({ where: { accountDeletionRequestId: concurrent.id } });
+  assert.equal(concurrentOutbox.status, "SENT");
+  assert.equal(concurrentOutbox.deliveryInvocationKey, concurrentKey);
+
+  const invalid = await createOperation();
+  await isolateOperation(invalid.id);
+  emailMode = "invalid";
+  now = new Date("2026-03-06T00:00:00.000Z");
+  providerNow = now;
+  await runAccountDeletionWorker({ limit: 1, clock });
+  const invalidOutbox = await primary!.accountDeletionEmailOutbox.findUniqueOrThrow({ where: { accountDeletionRequestId: invalid.id } });
+  assert.equal(invalidOutbox.status, "RECONCILIATION_REQUIRED");
+  assert.equal(invalidOutbox.safeErrorCode, "COMPLETION_EMAIL_RECONCILIATION_REQUIRED");
+  emailMode = "success";
+  checkpoint("email-provider-window-and-409-reconciliation");
+}
+
+async function verifyStructuredProviderErrorHandling() {
+  const { runAccountDeletionWorker } = await import("@/lib/account-deletion-service");
+  const { createSupabaseAdminClient } = await import("@/lib/supabase/admin");
+  const now = new Date("2026-03-07T00:00:00.000Z");
+  const clock = () => now;
+  authMode = "success";
+  emailMode = "success";
+
+  storageMode = "no-such-key";
+  const directStorageResult = await createSupabaseAdminClient()!.storage.from("vehicle-images").remove(["missing-object.jpg"]);
+  const directStorageError = directStorageResult.error as { status?: unknown; statusCode?: unknown; code?: unknown; error?: unknown } | null;
+  assert.equal(directStorageError?.status, 404);
+  assert.equal(directStorageError?.statusCode, "NoSuchKey");
+
+  const missingObject = await createOperation({ withImage: true });
+  await isolateOperation(missingObject.id);
+  storageMode = "no-such-key";
+  providerNow = now;
+  await runAccountDeletionWorker({ limit: 1, clock });
+  const missingObjectState = await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: missingObject.id } });
+  assert.equal(missingObjectState.stage, "COMPLETED", missingObjectState.safeErrorCode ?? "missing-object state");
+
+  for (const mode of ["no-such-bucket", "tenant-not-found", "unknown-not-found"] as const) {
+    const operation = await createOperation({ withImage: true });
+    await isolateOperation(operation.id);
+    const authBefore = externalCalls.auth;
+    storageMode = mode;
+    await runAccountDeletionWorker({ limit: 1, clock });
+    const request = await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: operation.id } });
+    assert.equal(request.stage, "FAILED_RETRYABLE", mode);
+    assert.equal(request.storageCompletedAt, null, mode);
+    assert.equal(externalCalls.auth, authBefore, mode);
+  }
+  storageMode = "success";
+
+  const exactMissingUser = await createOperation({ stage: "AUTH_PENDING", storageCompleted: true, databaseCompleted: true });
+  await isolateOperation(exactMissingUser.id);
+  authMode = "not-found";
+  await runAccountDeletionWorker({ limit: 1, clock });
+  assert.equal((await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: exactMissingUser.id } })).stage, "COMPLETED");
+
+  const genericMissingUser = await createOperation({ stage: "AUTH_PENDING", storageCompleted: true, databaseCompleted: true });
+  await isolateOperation(genericMissingUser.id);
+  authMode = "generic-not-found";
+  await runAccountDeletionWorker({ limit: 1, clock });
+  assert.equal((await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: genericMissingUser.id } })).stage, "AUTH_DELETE_RETRY");
+
+  const providerMismatch = await createOperation({ stage: "AUTH_PENDING", storageCompleted: true, databaseCompleted: true });
+  await isolateOperation(providerMismatch.id);
+  const originalProviderUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const authBeforeMismatch = externalCalls.auth;
+  process.env.NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:59998";
+  try {
+    await runAccountDeletionWorker({ limit: 1, clock });
+  } finally {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = originalProviderUrl;
+  }
+  const mismatch = await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: providerMismatch.id } });
+  assert.equal(mismatch.stage, "FAILED_FINAL");
+  assert.equal(mismatch.safeErrorCode, "AUTH_PROVIDER_IDENTITY_MISMATCH");
+  assert.equal(externalCalls.auth, authBeforeMismatch);
+  authMode = "success";
+  checkpoint("structured-storage-and-auth-provider-errors");
+}
+
+async function verifyDatabaseCommitPointLegalHold() {
+  const service = await import("@/lib/account-deletion-service");
+  const holdClient = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
+  await holdClient.$connect();
+  const now = new Date("2026-03-08T00:00:00.000Z");
+  const clock = () => now;
+  authMode = "success";
+  emailMode = "success";
+  try {
+    const committed = await createOperation({ stage: "DATABASE_PENDING", storageCompleted: true });
+    await isolateOperation(committed.id);
+    let arrived: () => void = () => undefined;
+    const markerWritten = new Promise<void>((resolve) => { arrived = resolve; });
+    let release: () => void = () => undefined;
+    const barrier = new Promise<void>((resolve) => { release = resolve; });
+    const authBefore = externalCalls.auth;
+    const emailBefore = externalCalls.email;
+    const worker = service.runAccountDeletionWorker({
+      limit: 1,
+      clock,
+      hooks: { afterDatabaseCommitMarkerBeforePurge: async () => { arrived(); await barrier; } },
+    });
+    await markerWritten;
+    const hold = service.setAccountDeletionLegalHold({ requestId: committed.id, active: true, reason: "database-commit-point", now }, holdClient);
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    release();
+    await worker;
+    const result = await hold;
+    assert.equal(result.status, "COMMIT_POINT_PASSED");
+    if (result.status === "COMMIT_POINT_PASSED") assert.deepEqual(result.sideEffects, ["database"]);
+    const committedState = await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: committed.id } });
+    assert.equal(committedState.legalHold, true);
+    assert.notEqual(committedState.databaseCompletedAt, null);
+    assert.equal(committedState.stage, "AUTH_PENDING");
+    assert.equal(externalCalls.auth, authBefore);
+    assert.equal(externalCalls.email, emailBefore);
+    assert.equal((await service.setAccountDeletionLegalHold({ requestId: committed.id, active: false, now }, holdClient)).status, "CLEARED");
+    const resumeClock = () => new Date(now.getTime() + 5 * 60 * 1000 + 1);
+    await service.runAccountDeletionWorker({ limit: 1, clock: resumeClock });
+    assert.equal((await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: committed.id } })).stage, "COMPLETED");
+
+    const rollback = await createOperation({ stage: "DATABASE_PENDING", storageCompleted: true });
+    await isolateOperation(rollback.id);
+    await primary!.user.delete({ where: { id: rollback.authUserId } });
+    await service.runAccountDeletionWorker({ limit: 1, clock });
+    const rollbackState = await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: rollback.id } });
+    assert.equal(rollbackState.databaseCompletedAt, null);
+    assert.equal((await service.setAccountDeletionLegalHold({ requestId: rollback.id, active: true, reason: "database-rollback", now }, holdClient)).status, "APPLIED");
+  } finally {
+    await holdClient.$disconnect();
+  }
+  checkpoint("database-commit-marker-legal-hold");
+}
+
 async function main() {
   const serverOnlyShimDirectory = join(testDirectory, "server-only");
   mkdirSync(serverOnlyShimDirectory);
@@ -780,22 +1009,42 @@ async function main() {
       externalCalls.email += 1;
       const headers = new Headers(init?.headers);
       const key = headers.get("Idempotency-Key") ?? "missing-email-idempotency-key";
+      const payload = typeof init?.body === "string" ? init.body : "";
       transportEffectKeys.email.push(key);
-      if (emailMode === "success") logicalEffects.email.add(key);
-      return new Response("{}", { status: emailMode === "success" ? 200 : 503 });
+      if (emailMode === "failure") return new Response("{}", { status: 503 });
+      if (emailMode === "concurrent") return new Response(JSON.stringify({ name: "concurrent_idempotent_requests" }), { status: 409 });
+      if (emailMode === "invalid") return new Response(JSON.stringify({ name: "invalid_idempotent_request" }), { status: 409 });
+      const prior = emailProviderDeliveries.get(key);
+      if (prior && providerNow.getTime() - prior.acceptedAt < 24 * 60 * 60 * 1000) {
+        if (prior.payload !== payload) return new Response(JSON.stringify({ name: "invalid_idempotent_request" }), { status: 409 });
+        return new Response(JSON.stringify({ id: prior.messageId }), { status: 200 });
+      }
+      const messageId = `email-${emailProviderDeliveries.size + 1}`;
+      emailProviderDeliveries.set(key, { payload, acceptedAt: providerNow.getTime(), messageId });
+      logicalEffects.email.add(key);
+      return new Response(JSON.stringify({ id: messageId }), { status: 200 });
     }
     if (url.includes("/auth/v1/admin/users/")) {
       externalCalls.auth += 1;
       transportEffectKeys.auth.push(url);
       if (authMode === "success" || authMode === "not-found") logicalEffects.auth.add(url);
-      return new Response("{}", { status: authMode === "success" ? 200 : authMode === "not-found" ? 404 : 503 });
+      if (authMode === "success") return new Response("{}", { status: 200 });
+      const authErrorHeaders = { "X-Supabase-Api-Version": "2024-01-01" };
+      if (authMode === "not-found") return new Response(JSON.stringify({ code: "user_not_found" }), { status: 404, headers: authErrorHeaders });
+      if (authMode === "generic-not-found") return new Response(JSON.stringify({ code: "unexpected_not_found" }), { status: 404, headers: authErrorHeaders });
+      return new Response("{}", { status: 503 });
     }
     if (url.includes("/storage/v1/object/")) {
       externalCalls.storage += 1;
       const key = typeof init?.body === "string" ? init.body : url;
       transportEffectKeys.storage.push(key);
-      logicalEffects.storage.add(key);
-      return new Response("{}", { status: 200 });
+      if (storageMode === "success" || storageMode === "no-such-key") logicalEffects.storage.add(key);
+      if (storageMode === "success") return new Response("{}", { status: 200 });
+      const code = storageMode === "no-such-key" ? "NoSuchKey"
+        : storageMode === "no-such-bucket" ? "NoSuchBucket"
+          : storageMode === "tenant-not-found" ? "TenantNotFound"
+            : "UnknownNotFound";
+      return new Response(JSON.stringify({ code, error: code, message: code }), { status: 404 });
     }
     return new Response("{}", { status: 200 });
   };
@@ -819,6 +1068,9 @@ async function main() {
     await verifyInvocationTakeoverIdempotency();
     await verifyDurableFuturePhaseHold();
     await verifyExpiredReservationRecovery();
+    await verifyProviderReconciliationBoundaries();
+    await verifyStructuredProviderErrorHandling();
+    await verifyDatabaseCommitPointLegalHold();
     await verifyOutboxUniqueness();
     await verifyServiceRecovery();
     await verifyReceiptStatusRateLimiter();
