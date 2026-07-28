@@ -3,7 +3,10 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { vehicleImagesBucket } from "@/lib/vehicle-images";
-import { sendAccountDeletionVerificationEmail } from "@/lib/account-deletion-email";
+import {
+  sendAccountDeletionCompletedEmail,
+  sendAccountDeletionVerificationEmail,
+} from "@/lib/account-deletion-email";
 import {
   AccountDeletionError,
   accountDeletionHash,
@@ -69,6 +72,7 @@ export async function startAccountDeletionVerification(input: { authUserId: stri
 
 export async function confirmAccountDeletion(input: {
   authUserId: string;
+  email: string;
   verificationCode: string;
   idempotencyKey: string;
 }) {
@@ -84,7 +88,7 @@ export async function confirmAccountDeletion(input: {
     throw new AccountDeletionError("ACCOUNT_DELETION_IN_PROGRESS");
   }
   if (request.stage === "AUTH_DELETE_RETRY" || request.stage === "AUTH_PENDING") {
-    await finalizeSupabaseAuthDeletion({ requestId: request.id, authUserId: input.authUserId });
+    await finalizeSupabaseAuthDeletion({ requestId: request.id, authUserId: input.authUserId, email: input.email });
     return { data: { status: "completed" as const } };
   }
   if (
@@ -94,7 +98,7 @@ export async function confirmAccountDeletion(input: {
     request.stage === "FAILED_RETRYABLE"
   ) {
     if (!request.idempotencyKeyHash) throw new AccountDeletionError("ACCOUNT_DELETION_NOT_READY");
-    await deleteAccountData({ authUserId: input.authUserId, authUserIdHash });
+    await deleteAccountData({ authUserId: input.authUserId, authUserIdHash, email: input.email });
     return { data: { status: "completed" as const } };
   }
   if (!request.verificationHash || !request.verificationExpiresAt) throw new AccountDeletionError("ACCOUNT_DELETION_NOT_READY");
@@ -107,7 +111,7 @@ export async function confirmAccountDeletion(input: {
   await prisma.accountDeletionRequest.update({ where: { authUserIdHash }, data: {
     stage: "VERIFIED", idempotencyKeyHash, verificationHash: null, verificationExpiresAt: null,
   } });
-  await deleteAccountData({ authUserId: input.authUserId, authUserIdHash });
+  await deleteAccountData({ authUserId: input.authUserId, authUserIdHash, email: input.email });
   return { data: { status: "completed" as const } };
 }
 
@@ -116,7 +120,7 @@ export async function getAccountDeletionStatus(authUserId: string) {
   return { data: { status: request?.stage === "COMPLETED" ? "completed" : request?.stage ?? "none" } };
 }
 
-async function deleteAccountData(input: { authUserId: string; authUserIdHash: string }) {
+async function deleteAccountData(input: { authUserId: string; authUserIdHash: string; email: string }) {
   const request = await prisma.accountDeletionRequest.update({ where: { authUserIdHash: input.authUserIdHash }, data: { stage: "STORAGE_PENDING" } });
   try {
     const vehicles = await prisma.vehicle.findMany({ where: { userId: input.authUserId }, select: { imagePath: true } });
@@ -173,7 +177,7 @@ async function deleteAccountData(input: { authUserId: string; authUserIdHash: st
     throw new AccountDeletionError("ACCOUNT_DELETION_RETRY_REQUIRED");
   }
 
-  await finalizeSupabaseAuthDeletion({ requestId: request.id, authUserId: input.authUserId });
+  await finalizeSupabaseAuthDeletion({ requestId: request.id, authUserId: input.authUserId, email: input.email });
 }
 
 async function markDeletionRetryable(requestId: string, safeErrorCode: string) {
@@ -183,7 +187,7 @@ async function markDeletionRetryable(requestId: string, safeErrorCode: string) {
   });
 }
 
-async function finalizeSupabaseAuthDeletion(input: { requestId: string; authUserId: string }) {
+async function finalizeSupabaseAuthDeletion(input: { requestId: string; authUserId: string; email: string }) {
   const admin = createSupabaseAdminClient();
   if (!admin) {
     await prisma.accountDeletionRequest.update({ where: { id: input.requestId }, data: { stage: "AUTH_DELETE_RETRY", safeErrorCode: "AUTH_CONFIGURATION" } });
@@ -198,6 +202,13 @@ async function finalizeSupabaseAuthDeletion(input: { requestId: string; authUser
     await tx.user.deleteMany({ where: { id: input.authUserId, status: "DELETION_PENDING" } });
     await tx.accountDeletionRequest.update({ where: { id: input.requestId }, data: { stage: "COMPLETED", authCompletedAt: new Date(), completedAt: new Date(), safeErrorCode: null, verificationHash: null } });
   });
+  try {
+    await sendAccountDeletionCompletedEmail({ to: input.email });
+  } catch {
+    await prisma.accountDeletionRequest
+      .update({ where: { id: input.requestId }, data: { safeErrorCode: "COMPLETION_EMAIL_FAILED" } })
+      .catch(() => undefined);
+  }
 }
 
 async function deleteVehicleImages(imagePaths: string[]) {

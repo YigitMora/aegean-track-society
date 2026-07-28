@@ -4,6 +4,29 @@ export async function sendAccountDeletionVerificationEmail(input: {
   to: string;
   code: string;
 }) {
+  return sendAccountDeletionEmail({
+    to: input.to,
+    subject: "ATS hesap silme doğrulama kodunuz",
+    text: `Hesap silme doğrulama kodunuz: ${input.code}\nBu kod 10 dakika geçerlidir.`,
+    html: `<p>Hesap silme doğrulama kodunuz:</p><p><strong>${input.code}</strong></p><p>Bu kod 10 dakika geçerlidir.</p>`,
+  });
+}
+
+export async function sendAccountDeletionCompletedEmail(input: { to: string }) {
+  return sendAccountDeletionEmail({
+    to: input.to,
+    subject: "ATS hesabınız silindi",
+    text: "ATS hesabınız ve silme kapsamındaki verileriniz kaldırıldı.",
+    html: "<p>ATS hesabınız ve silme kapsamındaki verileriniz kaldırıldı.</p>",
+  });
+}
+
+async function sendAccountDeletionEmail(input: {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+}) {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const from = process.env.EMAIL_FROM?.trim();
 
@@ -20,9 +43,9 @@ export async function sendAccountDeletionVerificationEmail(input: {
     body: JSON.stringify({
       from,
       to: [input.to],
-      subject: "ATS hesap silme doğrulama kodunuz",
-      text: `Hesap silme doğrulama kodunuz: ${input.code}\nBu kod 10 dakika geçerlidir.`,
-      html: `<p>Hesap silme doğrulama kodunuz:</p><p><strong>${input.code}</strong></p><p>Bu kod 10 dakika geçerlidir.</p>`,
+      subject: input.subject,
+      text: input.text,
+      html: input.html,
     }),
   });
 

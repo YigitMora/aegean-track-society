@@ -22,7 +22,9 @@ export async function POST(request: Request) {
   try {
     const body = deletionConfirmationSchema.parse(await request.json().catch(() => null));
     const identity = await authenticateMobileIdentity(request);
-    return mobileAuthJsonResponse(await confirmAccountDeletion({ authUserId: identity.id, ...body }));
+    return mobileAuthJsonResponse(
+      await confirmAccountDeletion({ authUserId: identity.id, email: identity.email, ...body }),
+    );
   } catch (error) {
     return error instanceof Error && error.name === "MobileAuthError"
       ? mobileAuthErrorResponse(error)
