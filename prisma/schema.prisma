@@ -522,7 +522,6 @@ model AccountDeletionRequest {
   @@index([stage])
   @@index([verificationExpiresAt])
   @@index([completedAt])
-  @@index([operationReceiptHash])
   @@index([stage, nextAttemptAt])
   @@index([executionLeaseExpiresAt])
 }

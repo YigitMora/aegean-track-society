@@ -11,7 +11,6 @@ ALTER TABLE "AccountDeletionRequest"
   ADD COLUMN "purgeAfter" TIMESTAMP(3);
 
 CREATE UNIQUE INDEX "AccountDeletionRequest_operationReceiptHash_key" ON "AccountDeletionRequest"("operationReceiptHash");
-CREATE INDEX "AccountDeletionRequest_operationReceiptHash_idx" ON "AccountDeletionRequest"("operationReceiptHash");
 CREATE INDEX "AccountDeletionRequest_stage_nextAttemptAt_idx" ON "AccountDeletionRequest"("stage", "nextAttemptAt");
 CREATE INDEX "AccountDeletionRequest_executionLeaseExpiresAt_idx" ON "AccountDeletionRequest"("executionLeaseExpiresAt");
 

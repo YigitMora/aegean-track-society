@@ -28,9 +28,25 @@ const leaseLifetimeMs = 60 * 1000;
 const receiptRetentionMs = 7 * 24 * 60 * 60 * 1000;
 const receiptStatusWindowMs = 60 * 1000;
 const receiptStatusMaxRequests = 20;
+const receiptStatusMaxEntries = 1_000;
 const receiptStatusAttempts = new Map<string, { count: number; startedAt: number }>();
 
 type WorkerRequest = Awaited<ReturnType<typeof prisma.accountDeletionRequest.findUnique>>;
+type DeletionClock = () => Date;
+type WorkerLease = { id: string; operationVersion: number };
+
+type AccountDeletionWorkerHooks = Partial<Record<
+  "beforeStorage" | "beforeDatabase" | "beforeAuth" | "beforeCompletion" | "beforeCompletionEmail",
+  () => void | Promise<void>
+>>;
+
+export type AccountDeletionWorkerOptions = {
+  limit?: number;
+  /** Internal deterministic clock used by the disposable PostgreSQL harness. */
+  clock?: DeletionClock;
+  /** Internal phase barriers used only by the disposable PostgreSQL harness. */
+  hooks?: AccountDeletionWorkerHooks;
+};
 
 export async function startAccountDeletionVerification(input: { authUserId: string; email: string }) {
   const authUserIdHash = accountDeletionHash(input.authUserId);
@@ -61,7 +77,7 @@ export async function startAccountDeletionVerification(input: { authUserId: stri
 
   if (existing) {
     const updated = await prisma.accountDeletionRequest.updateMany({
-      where: { id: existing.id, stage: "VERIFICATION_PENDING", resendCount: { lt: maxResends } },
+      where: { id: existing.id, stage: "VERIFICATION_PENDING", legalHold: false, resendCount: { lt: maxResends } },
       data: { ...common, resendCount: { increment: 1 }, operationVersion: { increment: 1 } },
     });
     if (!updated.count) throw new AccountDeletionError("ACCOUNT_DELETION_IN_PROGRESS");
@@ -116,7 +132,7 @@ export async function confirmAccountDeletion(input: {
   }
   if (!equalAccountDeletionHash(request.verificationHash, `${input.authUserId}:${input.verificationCode}`)) {
     await prisma.accountDeletionRequest.updateMany({
-      where: { id: request.id, stage: "VERIFICATION_PENDING", verificationAttempts: { lt: maxVerificationAttempts } },
+      where: { id: request.id, stage: "VERIFICATION_PENDING", legalHold: false, verificationAttempts: { lt: maxVerificationAttempts } },
       data: { verificationAttempts: { increment: 1 } },
     });
     throw new AccountDeletionError("ACCOUNT_DELETION_VERIFICATION_INVALID");
@@ -129,6 +145,7 @@ export async function confirmAccountDeletion(input: {
       id: request.id,
       stage: "VERIFICATION_PENDING",
       idempotencyKeyHash: null,
+      legalHold: false,
       verificationHash: request.verificationHash,
       verificationExpiresAt: { gt: now },
     },
@@ -166,10 +183,17 @@ export async function getAccountDeletionStatusByReceipt(receipt: string) {
   return { data: { status: "pending" as const } };
 }
 
-function limitReceiptStatusLookup(receiptHash: string) {
-  const now = Date.now();
+function limitReceiptStatusLookup(receiptHash: string, now = Date.now()) {
+  for (const [key, entry] of receiptStatusAttempts) {
+    if (now - entry.startedAt > receiptStatusWindowMs) receiptStatusAttempts.delete(key);
+  }
   const prior = receiptStatusAttempts.get(receiptHash);
-  if (!prior || now - prior.startedAt > receiptStatusWindowMs) {
+  if (!prior) {
+    if (receiptStatusAttempts.size >= receiptStatusMaxEntries) {
+      // Reject new receipts while saturated rather than evicting an existing
+      // entry and allowing an attacker-controlled stream to reach Prisma.
+      throw new AccountDeletionError("ACCOUNT_DELETION_STATUS_LIMITED");
+    }
     receiptStatusAttempts.set(receiptHash, { count: 1, startedAt: now });
     return;
   }
@@ -177,22 +201,35 @@ function limitReceiptStatusLookup(receiptHash: string) {
   prior.count += 1;
 }
 
-export async function runAccountDeletionWorker(input: { limit?: number } = {}) {
+export function accountDeletionRateLimitEntryCountForTests() {
+  return receiptStatusAttempts.size;
+}
+
+export function resetAccountDeletionRateLimitForTests() {
+  receiptStatusAttempts.clear();
+}
+
+export function recordAccountDeletionRateLimitForTests(receipt: string, now: number) {
+  limitReceiptStatusLookup(accountDeletionHash(receipt), now);
+}
+
+export async function runAccountDeletionWorker(input: AccountDeletionWorkerOptions = {}) {
   const limit = Math.min(Math.max(input.limit ?? 10, 1), 20);
+  const clock = input.clock ?? (() => new Date());
   let processed = 0;
   for (let index = 0; index < limit; index += 1) {
-    const claimed = await claimNextDeletionOperation();
+    const claimed = await claimNextDeletionOperation(clock);
     if (!claimed) break;
     processed += 1;
-    await processClaimedDeletionOperation(claimed).catch(() => undefined);
+    await processClaimedDeletionOperation(claimed.request, claimed.lease, clock, input.hooks).catch(() => undefined);
   }
-  await deliverCompletionEmailOutbox({ limit });
-  await purgeCompletedDeletionReceipts();
+  await deliverCompletionEmailOutbox({ limit }, clock, input.hooks);
+  await purgeCompletedDeletionReceipts(clock);
   return { processed };
 }
 
-async function claimNextDeletionOperation() {
-  const now = new Date();
+async function claimNextDeletionOperation(clock: DeletionClock) {
+  const now = clock();
   const candidate = await prisma.accountDeletionRequest.findFirst({
     where: {
       legalHold: false,
@@ -212,6 +249,7 @@ async function claimNextDeletionOperation() {
     where: {
       id: candidate.id,
       stage: candidate.stage,
+      operationVersion: candidate.operationVersion,
       legalHold: false,
       OR: [{ executionLeaseExpiresAt: null }, { executionLeaseExpiresAt: { lte: now } }],
     },
@@ -222,59 +260,127 @@ async function claimNextDeletionOperation() {
     },
   });
   if (!claimed.count) return null;
-  return prisma.accountDeletionRequest.findUnique({ where: { id: candidate.id } });
+  const request = await prisma.accountDeletionRequest.findUnique({ where: { id: candidate.id } });
+  if (!request || request.executionLeaseId !== leaseId) return null;
+  return { request, lease: { id: leaseId, operationVersion: request.operationVersion } };
 }
 
-async function processClaimedDeletionOperation(request: WorkerRequest) {
+/** Used by the disposable PostgreSQL harness to exercise the production CAS. */
+export async function claimAccountDeletionOperationForTests(clock: DeletionClock = () => new Date()) {
+  return claimNextDeletionOperation(clock);
+}
+
+/** Used by the disposable PostgreSQL harness to exercise a pre-existing lease. */
+export async function processAccountDeletionClaimForTests(input: {
+  requestId: string;
+  leaseId: string;
+  operationVersion: number;
+  clock: DeletionClock;
+  hooks?: AccountDeletionWorkerHooks;
+}) {
+  const request = await prisma.accountDeletionRequest.findUnique({ where: { id: input.requestId } });
+  if (!request) return;
+  await processClaimedDeletionOperation(
+    request,
+    { id: input.leaseId, operationVersion: input.operationVersion },
+    input.clock,
+    input.hooks,
+  );
+}
+
+async function processClaimedDeletionOperation(
+  request: WorkerRequest,
+  lease: WorkerLease,
+  clock: DeletionClock,
+  hooks?: AccountDeletionWorkerHooks,
+) {
   if (!request?.executionLeaseId || request.stage === "COMPLETED" || request.stage === "FAILED_FINAL") return;
-  const leaseId = request.executionLeaseId;
   const authUserId = request.encryptedAuthUserId ? decryptAccountDeletionValue(request.encryptedAuthUserId) : null;
-  if (!authUserId) return markDeletionFinal(request.id, leaseId, "AUTH_REFERENCE_UNAVAILABLE");
+  if (!authUserId) return markDeletionFinal(request.id, lease, "AUTH_REFERENCE_UNAVAILABLE", clock);
 
   if (!request.storageCompletedAt) {
-    if (!(await runStoragePhase(request.id, leaseId, authUserId))) return;
+    if (!(await runStoragePhase(request.id, lease, authUserId, clock, hooks))) return;
   }
-  const afterStorage = await prisma.accountDeletionRequest.findUnique({ where: { id: request.id } });
-  if (!afterStorage?.executionLeaseId || afterStorage.executionLeaseId !== leaseId) return;
+  const afterStorage = await findActiveDeletionOperation(
+    request.id,
+    lease,
+    ["DATABASE_PENDING", "AUTH_PENDING", "AUTH_DELETE_RETRY", "FAILED_RETRYABLE"],
+    clock(),
+  );
+  if (!afterStorage) return;
 
+  let afterDatabase = afterStorage;
   if (!afterStorage.databaseCompletedAt) {
-    if (!(await runDatabasePhase(afterStorage.id, leaseId, authUserId, afterStorage.authUserIdHash))) return;
+    if (!(await runDatabasePhase(afterStorage.id, lease, authUserId, afterStorage.authUserIdHash, clock, hooks))) return;
+    const completedDatabase = await findActiveDeletionOperation(
+      request.id,
+      lease,
+      ["AUTH_PENDING", "AUTH_DELETE_RETRY", "FAILED_RETRYABLE"],
+      clock(),
+    );
+    if (!completedDatabase) return;
+    afterDatabase = completedDatabase;
   }
-  const afterDatabase = await prisma.accountDeletionRequest.findUnique({ where: { id: request.id } });
-  if (!afterDatabase?.executionLeaseId || afterDatabase.executionLeaseId !== leaseId) return;
 
-  await runAuthPhase(afterDatabase.id, leaseId, authUserId, afterDatabase.encryptedEmail);
+  await runAuthPhase(afterDatabase.id, lease, authUserId, afterDatabase.encryptedEmail, clock, hooks);
 }
 
-async function runStoragePhase(requestId: string, leaseId: string, authUserId: string) {
-  const begun = await transition(requestId, leaseId, ["VERIFIED", "FAILED_RETRYABLE"], {
+async function runStoragePhase(requestId: string, lease: WorkerLease, authUserId: string, clock: DeletionClock, hooks?: AccountDeletionWorkerHooks) {
+  const begun = await transition(requestId, lease, ["VERIFIED", "STORAGE_PENDING", "FAILED_RETRYABLE"], {
     stage: "STORAGE_PENDING", safeErrorCode: null,
-  });
+  }, clock());
   if (!begun) return false;
+  await hooks?.beforeStorage?.();
+  if (!(await renewDeletionLease(requestId, lease, ["STORAGE_PENDING"], clock()))) return false;
   try {
     const vehicles = await prisma.vehicle.findMany({ where: { userId: authUserId }, select: { imagePath: true } });
     const imagePaths = vehicles.flatMap((vehicle) => vehicle.imagePath ? [vehicle.imagePath] : []);
     if (imagePaths.some((path) => !path.startsWith(`${authUserId}/`))) {
-      await markDeletionFinal(requestId, leaseId, "STORAGE_PATH_INVALID");
+      await markDeletionFinal(requestId, lease, "STORAGE_PATH_INVALID", clock);
       return false;
     }
+    // This renewal is the storage phase commit point. A hold recorded before
+    // it prevents the adapter call; a later hold is observed before the next
+    // irreversible phase because external storage cannot share the DB lock.
+    if (!(await renewDeletionLease(requestId, lease, ["STORAGE_PENDING"], clock()))) return false;
     await deleteVehicleImages(imagePaths);
-    return transition(requestId, leaseId, ["STORAGE_PENDING"], {
-      storageCompletedAt: new Date(), stage: "DATABASE_PENDING", safeErrorCode: null, nextAttemptAt: new Date(),
-    });
+    const now = clock();
+    return transition(requestId, lease, ["STORAGE_PENDING"], {
+      storageCompletedAt: now, stage: "DATABASE_PENDING", safeErrorCode: null, nextAttemptAt: now,
+    }, now);
   } catch {
-    await markDeletionRetryable(requestId, leaseId, "STORAGE_DELETE_FAILED");
+    await markDeletionRetryable(requestId, lease, "STORAGE_DELETE_FAILED", "FAILED_RETRYABLE", clock);
     return false;
   }
 }
 
-async function runDatabasePhase(requestId: string, leaseId: string, authUserId: string, authUserIdHash: string) {
-  const begun = await transition(requestId, leaseId, ["DATABASE_PENDING", "FAILED_RETRYABLE"], {
+class LeaseLostError extends Error {}
+
+async function runDatabasePhase(
+  requestId: string,
+  lease: WorkerLease,
+  authUserId: string,
+  authUserIdHash: string,
+  clock: DeletionClock,
+  hooks?: AccountDeletionWorkerHooks,
+) {
+  const begun = await transition(requestId, lease, ["DATABASE_PENDING", "FAILED_RETRYABLE"], {
     stage: "DATABASE_PENDING", safeErrorCode: null,
-  });
+  }, clock());
   if (!begun) return false;
+  await hooks?.beforeDatabase?.();
   try {
+    const transactionNow = clock();
+    const transactionVersion = lease.operationVersion;
     await prisma.$transaction(async (tx) => {
+      const reserved = await tx.accountDeletionRequest.updateMany({
+        where: activeDeletionWhere(requestId, { ...lease, operationVersion: transactionVersion }, ["DATABASE_PENDING"], transactionNow),
+        data: {
+          executionLeaseExpiresAt: new Date(transactionNow.getTime() + leaseLifetimeMs),
+          operationVersion: { increment: 1 },
+        },
+      });
+      if (!reserved.count) throw new LeaseLostError();
       const registrations = await tx.registration.findMany({ where: { userId: authUserId }, select: { id: true } });
       const registrationIds = registrations.map((registration) => registration.id);
       const vehicles = await tx.vehicle.findMany({ where: { userId: authUserId }, select: { id: true } });
@@ -297,44 +403,67 @@ async function runDatabasePhase(requestId: string, leaseId: string, authUserId: 
       await tx.user.update({ where: { id: authUserId }, data: {
         status: "DELETION_PENDING", email: `deleted-${authUserIdHash.slice(0, 32)}@invalid.local`,
         memberKvkkAcceptedAt: null, memberTermsAcceptedAt: null, memberMarketingConsentAt: null,
-        memberMarketingConsentRevokedAt: null, memberConsentIpAddress: null, deletedAt: new Date(),
+        memberMarketingConsentRevokedAt: null, memberConsentIpAddress: null, deletedAt: transactionNow,
       } });
+      const completedAt = clock();
       const transitioned = await tx.accountDeletionRequest.updateMany({
-        where: { id: requestId, executionLeaseId: leaseId, stage: "DATABASE_PENDING" },
-        data: { databaseCompletedAt: new Date(), stage: "AUTH_PENDING", safeErrorCode: null, nextAttemptAt: new Date() },
+        where: activeDeletionWhere(requestId, { ...lease, operationVersion: transactionVersion + 1 }, ["DATABASE_PENDING"], completedAt),
+        data: {
+          databaseCompletedAt: completedAt,
+          stage: "AUTH_PENDING",
+          safeErrorCode: null,
+          nextAttemptAt: completedAt,
+          operationVersion: { increment: 1 },
+        },
       });
-      if (!transitioned.count) throw new Error("lease lost");
+      if (!transitioned.count) throw new LeaseLostError();
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    lease.operationVersion = transactionVersion + 2;
     return true;
-  } catch {
-    await markDeletionRetryable(requestId, leaseId, "DATABASE_DELETE_FAILED");
+  } catch (error) {
+    if (error instanceof LeaseLostError) return false;
+    await markDeletionRetryable(requestId, lease, "DATABASE_DELETE_FAILED", "FAILED_RETRYABLE", clock);
     return false;
   }
 }
 
-async function runAuthPhase(requestId: string, leaseId: string, authUserId: string, encryptedEmail: string | null) {
-  const begun = await transition(requestId, leaseId, ["AUTH_PENDING", "AUTH_DELETE_RETRY", "FAILED_RETRYABLE"], {
+async function runAuthPhase(
+  requestId: string,
+  lease: WorkerLease,
+  authUserId: string,
+  encryptedEmail: string | null,
+  clock: DeletionClock,
+  hooks?: AccountDeletionWorkerHooks,
+) {
+  const begun = await transition(requestId, lease, ["AUTH_PENDING", "AUTH_DELETE_RETRY", "FAILED_RETRYABLE"], {
     stage: "AUTH_PENDING", safeErrorCode: null,
-  });
+  }, clock());
   if (!begun) return;
+  await hooks?.beforeAuth?.();
+  if (!(await renewDeletionLease(requestId, lease, ["AUTH_PENDING"], clock()))) return;
 
   const admin = createSupabaseAdminClient();
-  if (!admin) return markDeletionRetryable(requestId, leaseId, "AUTH_CONFIGURATION", "AUTH_DELETE_RETRY");
+  if (!admin) return markDeletionRetryable(requestId, lease, "AUTH_CONFIGURATION", "AUTH_DELETE_RETRY", clock);
+  // This CAS is the Auth deletion commit point. A legal hold or expired lease
+  // observed here prevents the external Auth call from starting.
+  if (!(await renewDeletionLease(requestId, lease, ["AUTH_PENDING"], clock()))) return;
   const { error } = await admin.auth.admin.deleteUser(authUserId);
   // A missing Auth user safely reconciles the response-loss boundary only after
   // this operation has completed its own database tombstone phase.
   if (error && statusFromUnknown(error) !== 404) {
-    return markDeletionRetryable(requestId, leaseId, "AUTH_DELETE_FAILED", "AUTH_DELETE_RETRY");
+    return markDeletionRetryable(requestId, lease, "AUTH_DELETE_FAILED", "AUTH_DELETE_RETRY", clock);
   }
 
-  const now = new Date();
+  await hooks?.beforeCompletion?.();
+  const now = clock();
   await prisma.$transaction(async (tx) => {
     const completed = await tx.accountDeletionRequest.updateMany({
-      where: { id: requestId, executionLeaseId: leaseId, stage: "AUTH_PENDING" },
+      where: activeDeletionWhere(requestId, lease, ["AUTH_PENDING"], now),
       data: {
         stage: "COMPLETED", authCompletedAt: now, completedAt: now, purgeAfter: new Date(now.getTime() + receiptRetentionMs),
         safeErrorCode: null, verificationHash: null, verificationExpiresAt: null, encryptedAuthUserId: null,
         executionLeaseId: null, executionLeaseExpiresAt: null, nextAttemptAt: null,
+        operationVersion: { increment: 1 },
       },
     });
     if (!completed.count) return;
@@ -347,52 +476,116 @@ async function runAuthPhase(requestId: string, leaseId: string, authUserId: stri
       });
     }
   });
+  // A zero-row completion CAS means the lease was lost or a legal hold was
+  // applied. In either case the durable request remains retryable in AUTH_PENDING.
 }
 
-async function transition(requestId: string, leaseId: string, from: AccountDeletionStage[], data: Prisma.AccountDeletionRequestUpdateManyMutationInput) {
+function activeDeletionWhere(requestId: string, lease: WorkerLease, stages: AccountDeletionStage[], now: Date): Prisma.AccountDeletionRequestWhereInput {
+  return {
+    id: requestId,
+    executionLeaseId: lease.id,
+    operationVersion: lease.operationVersion,
+    executionLeaseExpiresAt: { gt: now },
+    legalHold: false,
+    stage: { in: stages },
+  };
+}
+
+async function findActiveDeletionOperation(requestId: string, lease: WorkerLease, stages: AccountDeletionStage[], now: Date) {
+  return prisma.accountDeletionRequest.findFirst({ where: activeDeletionWhere(requestId, lease, stages, now) });
+}
+
+async function renewDeletionLease(requestId: string, lease: WorkerLease, stages: AccountDeletionStage[], now: Date) {
+  const renewed = await prisma.accountDeletionRequest.updateMany({
+    where: activeDeletionWhere(requestId, lease, stages, now),
+    data: {
+      executionLeaseExpiresAt: new Date(now.getTime() + leaseLifetimeMs),
+      operationVersion: { increment: 1 },
+    },
+  });
+  if (!renewed.count) return false;
+  lease.operationVersion += 1;
+  return true;
+}
+
+async function transition(requestId: string, lease: WorkerLease, from: AccountDeletionStage[], data: Prisma.AccountDeletionRequestUpdateManyMutationInput, now: Date) {
   const updated = await prisma.accountDeletionRequest.updateMany({
-    where: { id: requestId, executionLeaseId: leaseId, stage: { in: from } },
-    data,
+    where: activeDeletionWhere(requestId, lease, from, now),
+    data: { ...data, operationVersion: { increment: 1 } },
   });
-  return updated.count === 1;
+  if (!updated.count) return false;
+  lease.operationVersion += 1;
+  return true;
 }
 
-async function markDeletionRetryable(requestId: string, leaseId: string, safeErrorCode: string, stage: AccountDeletionStage = "FAILED_RETRYABLE") {
+async function markDeletionRetryable(requestId: string, lease: WorkerLease, safeErrorCode: string, stage: AccountDeletionStage = "FAILED_RETRYABLE", now: DeletionClock = () => new Date()) {
+  const at = now();
   await prisma.accountDeletionRequest.updateMany({
-    where: { id: requestId, executionLeaseId: leaseId, stage: { notIn: ["COMPLETED", "FAILED_FINAL"] } },
-    data: { stage, safeErrorCode, nextAttemptAt: new Date(Date.now() + leaseLifetimeMs), executionLeaseId: null, executionLeaseExpiresAt: null },
+    where: activeDeletionWhere(requestId, lease, ["VERIFIED", "STORAGE_PENDING", "DATABASE_PENDING", "AUTH_PENDING", "AUTH_DELETE_RETRY", "FAILED_RETRYABLE"], at),
+    data: { stage, safeErrorCode, nextAttemptAt: new Date(at.getTime() + leaseLifetimeMs), executionLeaseId: null, executionLeaseExpiresAt: null, operationVersion: { increment: 1 } },
   });
 }
 
-async function markDeletionFinal(requestId: string, leaseId: string, safeErrorCode: string) {
+async function markDeletionFinal(requestId: string, lease: WorkerLease, safeErrorCode: string, clock: DeletionClock) {
   await prisma.accountDeletionRequest.updateMany({
-    where: { id: requestId, executionLeaseId: leaseId, stage: { not: "COMPLETED" } },
-    data: { stage: "FAILED_FINAL", safeErrorCode, executionLeaseId: null, executionLeaseExpiresAt: null, nextAttemptAt: null },
+    where: activeDeletionWhere(requestId, lease, ["VERIFIED", "STORAGE_PENDING", "DATABASE_PENDING", "AUTH_PENDING", "AUTH_DELETE_RETRY", "FAILED_RETRYABLE"], clock()),
+    data: { stage: "FAILED_FINAL", safeErrorCode, executionLeaseId: null, executionLeaseExpiresAt: null, nextAttemptAt: null, operationVersion: { increment: 1 } },
   });
 }
 
-async function deliverCompletionEmailOutbox(input: { limit: number }) {
+async function deliverCompletionEmailOutbox(
+  input: { limit: number },
+  clock: DeletionClock,
+  hooks?: AccountDeletionWorkerHooks,
+) {
   for (let index = 0; index < input.limit; index += 1) {
-    const now = new Date();
+    const now = clock();
     const outbox = await prisma.accountDeletionEmailOutbox.findFirst({
-      where: { status: { in: ["PENDING", "RETRYABLE"] }, OR: [{ executionLeaseExpiresAt: null }, { executionLeaseExpiresAt: { lte: now } }] },
+      where: {
+        request: { legalHold: false },
+        status: { in: ["PENDING", "RETRYABLE"] },
+        OR: [{ executionLeaseExpiresAt: null }, { executionLeaseExpiresAt: { lte: now } }],
+      },
       orderBy: { createdAt: "asc" },
     });
     if (!outbox) return;
     const leaseId = randomUUID();
     const claimed = await prisma.accountDeletionEmailOutbox.updateMany({
-      where: { id: outbox.id, status: { in: ["PENDING", "RETRYABLE"] }, OR: [{ executionLeaseExpiresAt: null }, { executionLeaseExpiresAt: { lte: now } }] },
+      where: {
+        id: outbox.id,
+        request: { legalHold: false },
+        status: { in: ["PENDING", "RETRYABLE"] },
+        OR: [{ executionLeaseExpiresAt: null }, { executionLeaseExpiresAt: { lte: now } }],
+      },
       data: { executionLeaseId: leaseId, executionLeaseExpiresAt: new Date(now.getTime() + leaseLifetimeMs), attemptCount: { increment: 1 }, lastAttemptAt: now },
     });
     if (!claimed.count || !outbox.recipientCiphertext) continue;
     try {
+      await hooks?.beforeCompletionEmail?.();
+      // Revalidate immediately before the external email commit point. A
+      // legal hold placed after the claim must prevent delivery.
+      const readyAt = clock();
+      const ready = await prisma.accountDeletionEmailOutbox.updateMany({
+        where: {
+          id: outbox.id,
+          executionLeaseId: leaseId,
+          executionLeaseExpiresAt: { gt: readyAt },
+          status: { in: ["PENDING", "RETRYABLE"] },
+          request: { legalHold: false },
+        },
+        data: { executionLeaseExpiresAt: new Date(readyAt.getTime() + leaseLifetimeMs) },
+      });
+      if (!ready.count) continue;
       await sendAccountDeletionCompletedEmail({ to: decryptAccountDeletionValue(outbox.recipientCiphertext), idempotencyKey: outbox.id });
       await prisma.$transaction(async (tx) => {
         await tx.accountDeletionEmailOutbox.updateMany({
-          where: { id: outbox.id, executionLeaseId: leaseId },
-          data: { status: "SENT", sentAt: new Date(), recipientCiphertext: null, executionLeaseId: null, executionLeaseExpiresAt: null, safeErrorCode: null },
+          where: { id: outbox.id, executionLeaseId: leaseId, request: { legalHold: false } },
+          data: { status: "SENT", sentAt: clock(), recipientCiphertext: null, executionLeaseId: null, executionLeaseExpiresAt: null, safeErrorCode: null },
         });
-        await tx.accountDeletionRequest.updateMany({ where: { id: outbox.accountDeletionRequestId }, data: { encryptedEmail: null } });
+        await tx.accountDeletionRequest.updateMany({
+          where: { id: outbox.accountDeletionRequestId, legalHold: false },
+          data: { encryptedEmail: null },
+        });
       });
     } catch {
       await prisma.accountDeletionEmailOutbox.updateMany({
@@ -403,9 +596,9 @@ async function deliverCompletionEmailOutbox(input: { limit: number }) {
   }
 }
 
-async function purgeCompletedDeletionReceipts() {
+async function purgeCompletedDeletionReceipts(clock: DeletionClock) {
   await prisma.accountDeletionRequest.deleteMany({
-    where: { stage: "COMPLETED", purgeAfter: { lte: new Date() }, emailOutbox: { none: { status: { in: ["PENDING", "RETRYABLE"] } } } },
+    where: { legalHold: false, stage: "COMPLETED", purgeAfter: { lte: clock() }, emailOutbox: { none: { status: { in: ["PENDING", "RETRYABLE"] } } } },
   });
 }
 
