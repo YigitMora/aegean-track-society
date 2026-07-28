@@ -8,6 +8,21 @@ const legalDocuments = {
     summary:
       "Bu sayfa, katılımcı verilerinin etkinlik kaydı ve operasyon süreçlerinde nasıl işleneceğini açıklayacak metin için ayrılmıştır.",
   },
+  "privacy-policy": {
+    title: "Gizlilik Politikası",
+    summary:
+      "Bu sayfa, ATS uygulaması ve web hizmetlerinde işlenen kişisel veriler için nihai gizlilik politikasına ayrılmıştır.",
+  },
+  "uyelik-sozlesmesi": {
+    title: "Üyelik Sözleşmesi",
+    summary:
+      "Bu sayfa, ATS üyelik koşullarını açıklayan nihai sözleşme metni için ayrılmıştır.",
+  },
+  "account-deletion": {
+    title: "Hesap Silme ve Veri İşleme",
+    summary:
+      "Hesap silme uygulama içinden iki aşamalı doğrulamayla başlatılır. Profil, garaj araçları ve araç fotoğrafları silinir; etkinlik kayıtları ise geçerli saklama politikası kapsamında kimlikle bağlantısı kaldırılarak anonimleştirilebilir.",
+  },
   "onay-metni": {
     title: "Açık Rıza / Onay Metni",
     summary:
@@ -52,7 +67,8 @@ export default async function LegalPage({ params }: LegalPageProps) {
         <div className="mt-8 rounded-lg border border-ats-blue/30 bg-ats-blue/10 p-5 text-sm font-semibold leading-6 text-ats-text">
           Bu metin taslaktır ve nihai hukuki beyan yerine geçmez. Yayına alınacak
           son metin hukuk danışmanı ve etkinlik operasyon ekibi tarafından
-          onaylanmalıdır.
+          onaylanmalıdır. Veri sorumlusu ve başvuru iletişim bilgileri henüz
+          doğrulanmadığı için bu belge public release için yeterli değildir.
         </div>
         <div className="mt-10 space-y-6 text-base leading-8 text-ats-muted">
           <p>{document.summary}</p>

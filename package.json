@@ -20,6 +20,7 @@
     "validate:mobile-profile": "tsx scripts/validate-mobile-profile-api.ts",
     "validate:admin-login-log-safety": "tsx scripts/validate-admin-login-log-safety.ts",
     "validate:password-recovery": "tsx scripts/validate-password-recovery.ts",
+    "validate:account-deletion": "tsx scripts/validate-account-deletion.ts",
     "validate:advisory-dependencies": "tsx scripts/validate-advisory-dependencies.ts",
     "validate:modification-catalog": "tsx scripts/validate-modification-catalog-expansion.ts",
     "validate:tyre-catalog": "tsx scripts/validate-tyre-catalog.ts",

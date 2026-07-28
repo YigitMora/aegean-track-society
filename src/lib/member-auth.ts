@@ -143,6 +143,10 @@ export async function ensureMemberUser(
         },
       });
 
+      if (existingUser?.status === "DELETION_PENDING") {
+        throw new MemberAuthError("ACCOUNT_UNAVAILABLE", "ATS member account is being deleted.");
+      }
+
       if (options.rejectUnavailableBeforeMutation && existingUser?.deletedAt) {
         throw new MemberAuthError("ACCOUNT_UNAVAILABLE", "ATS member account is unavailable.");
       }

@@ -101,6 +101,19 @@ enum MemberRole {
 enum MemberStatus {
   ACTIVE
   SUSPENDED
+  DELETION_PENDING
+}
+
+enum AccountDeletionStage {
+  VERIFICATION_PENDING
+  VERIFIED
+  STORAGE_PENDING
+  DATABASE_PENDING
+  AUTH_PENDING
+  AUTH_DELETE_RETRY
+  COMPLETED
+  FAILED_RETRYABLE
+  FAILED_FINAL
 }
 
 enum ModificationCategory {
@@ -467,6 +480,32 @@ model User {
   deletedAt                       DateTime?
 
   @@index([status])
+}
+
+model AccountDeletionRequest {
+  id                   String               @id @default(cuid())
+  authUserIdHash       String               @unique
+  stage                AccountDeletionStage @default(VERIFICATION_PENDING)
+  verificationHash     String?
+  verificationExpiresAt DateTime?
+  verificationAttempts Int                  @default(0)
+  resendCount          Int                  @default(0)
+  lastSentAt           DateTime?
+  idempotencyKeyHash   String?              @unique
+  legalHold            Boolean              @default(false)
+  legalHoldReason      String?              @db.Text
+  legalHoldUntil       DateTime?
+  safeErrorCode        String?
+  storageCompletedAt   DateTime?
+  databaseCompletedAt  DateTime?
+  authCompletedAt      DateTime?
+  completedAt          DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  @@index([stage])
+  @@index([verificationExpiresAt])
+  @@index([completedAt])
 }
 
 model Vehicle {

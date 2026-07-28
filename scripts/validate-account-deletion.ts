@@ -1,0 +1,36 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
+const schema = read("prisma/schema.prisma");
+const migration = read("prisma/migrations/20260728150000_account_deletion_foundation/migration.sql");
+const service = read("src/lib/account-deletion-service.ts");
+const contract = read("src/lib/mobile-account-deletion-contract.ts");
+const route = read("src/app/api/mobile/v1/account/deletion/route.ts");
+const verificationRoute = read("src/app/api/mobile/v1/account/deletion/verification/route.ts");
+const admin = read("src/lib/supabase/admin.ts");
+
+assert.match(schema, /model AccountDeletionRequest/);
+assert.match(schema, /DELETION_PENDING/);
+assert.match(migration, /CREATE TABLE "AccountDeletionRequest"/);
+assert.match(contract, /idempotencyKey: z\.string\(\)\.uuid\(\)/);
+assert.match(contract, /createHash\("sha256"\)/);
+assert.match(service, /verificationAttempts >= maxVerificationAttempts/);
+assert.match(service, /resendCount >= maxResends/);
+assert.match(service, /Prisma\.TransactionIsolationLevel\.Serializable/);
+assert.match(service, /stage: "AUTH_DELETE_RETRY"/);
+assert.match(service, /stage: "FAILED_RETRYABLE"/);
+assert.match(service, /legalHold/);
+assert.match(service, /markDeletionRetryable/);
+assert.match(service, /admin\.auth\.admin\.deleteUser/);
+assert.match(service, /userId: null, vehicleId: null, participantCode: null, qrTokenHash: null/);
+assert.match(service, /payment\.deleteMany/);
+assert.match(service, /providerMessageId: null/);
+assert.match(admin, /import "server-only"/);
+assert.match(admin, /SUPABASE_SERVICE_ROLE_KEY/);
+assert.doesNotMatch(route, /body\.userId|body\.email/i);
+assert.doesNotMatch(verificationRoute, /body\.userId|body\.email/i);
+assert.doesNotMatch(service, /console\.(?:log|warn|error)\([^)]*(?:authUserId|email|verificationCode|imagePath)/i);
+assert.doesNotMatch(service, /idempotencyKeyHash: null/);
+console.log("validate-account-deletion passed (22 assertions)");

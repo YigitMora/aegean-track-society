@@ -33,6 +33,11 @@ export type AuthenticatedMobileMember = {
   accessToken: string;
 };
 
+export type AuthenticatedMobileIdentity = {
+  id: string;
+  email: string;
+};
+
 type SupabaseUserLookupResult = {
   data: {
     user: SupabaseUser | null;
@@ -112,6 +117,34 @@ export async function authenticateMobileMember(
     memberUser,
     accessToken,
   };
+}
+
+// Account deletion cannot provision a member record: it must also be able to
+// resume a deletion after the relational account data has been removed.
+export async function authenticateMobileIdentity(request: Request): Promise<AuthenticatedMobileIdentity> {
+  const accessToken = getBearerTokenFromAuthorizationHeader(request.headers.get("authorization"));
+  const config = getSupabasePublicConfig();
+  if (!config) throw new MobileAuthError("MOBILE_AUTH_CONFIGURATION_ERROR");
+
+  let lookup: SupabaseUserLookupResult;
+  try {
+    lookup = await getSupabaseUser(config, accessToken);
+  } catch {
+    throw new MobileAuthError("MOBILE_AUTH_BACKEND_UNAVAILABLE");
+  }
+
+  if (lookup.error || !lookup.data.user) {
+    if (lookup.error && isSupabaseInfrastructureFailure(lookup.error)) {
+      throw new MobileAuthError("MOBILE_AUTH_BACKEND_UNAVAILABLE");
+    }
+    throw new MobileAuthError(isAccessTokenExpired(accessToken) ? "MOBILE_AUTH_EXPIRED_TOKEN" : "MOBILE_AUTH_INVALID_TOKEN");
+  }
+
+  if (!lookup.data.user.email || !isSupabaseEmailVerified(lookup.data.user)) {
+    throw new MobileAuthError("MOBILE_AUTH_EMAIL_UNVERIFIED");
+  }
+
+  return { id: lookup.data.user.id, email: lookup.data.user.email.trim().toLowerCase() };
 }
 
 export function mobileJsonResponse<TBody>(body: TBody, init: ResponseInit = {}) {
