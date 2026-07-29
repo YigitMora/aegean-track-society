@@ -65,9 +65,13 @@ server deadline, and has no lease or irreversible phase marker.
 
 The receipt status route preserves its original exact response by default.
 Clients that send `X-ATS-Account-Deletion-Contract: account-deletion-v2`
-receive the status plus nullable server-owned `scheduledDeletionAt`; clients
-without that header continue to receive only the legacy status object. This is
-an additive negotiation boundary, not a client-side schedule calculation.
+continue to receive the original status-plus-schedule response. Clients that
+send `account-deletion-v3` additionally receive the distinct
+`verification_pending` state before a valid code has scheduled deletion. Only
+the `pending` state carries a non-null, server-owned `scheduledDeletionAt`.
+Clients without the header continue to receive only the legacy status object.
+This is an additive negotiation boundary, not a client-side schedule
+calculation.
 
 `CANCELLED` requests have no runnable attempt time and are excluded from worker
 claims. Their encrypted owner contact material is cleared while the opaque

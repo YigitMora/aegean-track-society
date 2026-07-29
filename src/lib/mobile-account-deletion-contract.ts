@@ -5,7 +5,8 @@ import { mobileAuthJsonResponse } from "@/lib/mobile-auth";
 export const accountDeletionConfirmation = "DELETE_MY_ACCOUNT";
 export const accountDeletionAcknowledgementVersion = "account-deletion-v1";
 export const accountDeletionStatusContractHeader = "X-ATS-Account-Deletion-Contract";
-export const accountDeletionStatusContractVersion = "account-deletion-v2";
+export const legacyAccountDeletionStatusContractVersion = "account-deletion-v2";
+export const accountDeletionStatusContractVersion = "account-deletion-v3";
 
 export const deletionVerificationSchema = z.object({}).strict();
 export const deletionCancellationSchema = z.object({}).strict();

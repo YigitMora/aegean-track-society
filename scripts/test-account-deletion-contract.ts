@@ -8,6 +8,7 @@ async function main() {
   accountDeletionHash,
   accountDeletionStatusContractHeader,
   accountDeletionStatusContractVersion,
+  legacyAccountDeletionStatusContractVersion,
   createAccountDeletionReceipt,
   deletionCancellationSchema,
   deletionConfirmationSchema,
@@ -24,7 +25,8 @@ async function main() {
   assert.equal(deletionCancellationSchema.safeParse({}).success, true);
   assert.equal(deletionCancellationSchema.safeParse({ receipt }).success, false);
   assert.equal(accountDeletionStatusContractHeader, "X-ATS-Account-Deletion-Contract");
-  assert.equal(accountDeletionStatusContractVersion, "account-deletion-v2");
+  assert.equal(legacyAccountDeletionStatusContractVersion, "account-deletion-v2");
+  assert.equal(accountDeletionStatusContractVersion, "account-deletion-v3");
 
   const validConfirmation = {
   confirmation: "DELETE_MY_ACCOUNT",

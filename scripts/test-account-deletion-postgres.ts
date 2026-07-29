@@ -667,6 +667,15 @@ async function verifyCancellationAndScheduledDeletion() {
     },
   });
 
+  assert.deepEqual(
+    await getAccountDeletionStatusByReceipt(receipt, { includeSchedule: true, contractVersion: "account-deletion-v2" }),
+    { data: { status: "pending", scheduledDeletionAt: null } },
+  );
+  assert.deepEqual(
+    await getAccountDeletionStatusByReceipt(receipt, { includeSchedule: true, contractVersion: "account-deletion-v3" }),
+    { data: { status: "verification_pending", scheduledDeletionAt: null } },
+  );
+
   const confirmed = await confirmAccountDeletion({
     authUserId: pending.authUserId,
     verificationCode: code,
@@ -680,7 +689,7 @@ async function verifyCancellationAndScheduledDeletion() {
   assert.equal(scheduled.nextAttemptAt?.toISOString(), expectedSchedule.toISOString());
   assert.deepEqual(await getAccountDeletionStatusByReceipt(receipt), { data: { status: "pending" } });
   assert.deepEqual(
-    await getAccountDeletionStatusByReceipt(receipt, { includeSchedule: true }),
+    await getAccountDeletionStatusByReceipt(receipt, { includeSchedule: true, contractVersion: "account-deletion-v3" }),
     { data: { status: "pending", scheduledDeletionAt: expectedSchedule.toISOString() } },
   );
 
@@ -704,7 +713,7 @@ async function verifyCancellationAndScheduledDeletion() {
   assert.equal(cancelled.encryptedEmail, null);
   assert.notEqual(cancelled.cancelledAt, null);
   assert.deepEqual(
-    await getAccountDeletionStatusByReceipt(receipt, { includeSchedule: true }),
+    await getAccountDeletionStatusByReceipt(receipt, { includeSchedule: true, contractVersion: "account-deletion-v3" }),
     { data: { status: "cancelled", scheduledDeletionAt: null } },
   );
 

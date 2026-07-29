@@ -262,7 +262,7 @@ export async function cancelAccountDeletion(input: { authUserId: string; clock?:
 
 export async function getAccountDeletionStatusByReceipt(
   receipt: string,
-  options: { includeSchedule?: boolean } = {},
+  options: { includeSchedule?: boolean; contractVersion?: "account-deletion-v2" | "account-deletion-v3" } = {},
 ) {
   const receiptHash = accountDeletionHash(receipt);
   limitReceiptStatusLookup(receiptHash);
@@ -279,6 +279,8 @@ export async function getAccountDeletionStatusByReceipt(
         ? "failed_final" as const
         : request.stage === "CANCELLED"
           ? "cancelled" as const
+          : request.stage === "VERIFICATION_PENDING" && options.contractVersion === "account-deletion-v3"
+            ? "verification_pending" as const
           : "pending" as const;
   if (!options.includeSchedule) {
     // Existing strict mobile v1 parsers accept only this exact object.
