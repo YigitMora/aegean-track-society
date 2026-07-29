@@ -2,16 +2,10 @@ name: Verify Production Release
 
 on:
   deployment_status:
-  workflow_call:
-    inputs:
-      expected_sha:
-        description: "Exact backend commit SHA expected in Production"
-        required: true
-        type: string
   workflow_dispatch:
     inputs:
-      expected_sha:
-        description: "Exact backend commit SHA expected in Production"
+      target_sha:
+        description: "Exact 40-character Production commit SHA to verify after promotion"
         required: true
         type: string
 
@@ -24,7 +18,6 @@ jobs:
     name: Authorize exact main commit
     if: >-
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
-      github.event_name == 'workflow_call' ||
       (github.event_name == 'deployment_status' &&
       github.event.deployment_status.state == 'success' &&
       github.event.deployment.environment == 'Production' &&
@@ -36,8 +29,10 @@ jobs:
     timeout-minutes: 5
     outputs:
       approved_sha: ${{ steps.authorize.outputs.approved_sha }}
+      verification_mode: ${{ steps.authorize.outputs.verification_mode }}
     env:
-      EXPECTED_SHA: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') && inputs.expected_sha || github.event.deployment.sha }}
+      VERIFICATION_MODE: ${{ github.event_name == 'workflow_dispatch' && 'promoted' || 'staged' }}
+      EXPECTED_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.target_sha || github.event.deployment.sha }}
 
     steps:
       - name: Check out main policy source
@@ -56,6 +51,7 @@ jobs:
           [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]
           git merge-base --is-ancestor "$EXPECTED_SHA" origin/main
           echo "approved_sha=$EXPECTED_SHA" >> "$GITHUB_OUTPUT"
+          echo "verification_mode=$VERIFICATION_MODE" >> "$GITHUB_OUTPUT"
           echo "Authorized repository=$GITHUB_REPOSITORY actor=$GITHUB_ACTOR sha=$EXPECTED_SHA run=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 
   verify:
@@ -87,7 +83,23 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify exact Vercel Production deployment
+      - name: Verify staged Vercel Production deployment
+        if: ${{ needs.authorize.outputs.verification_mode == 'staged' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERCEL_ACCESS_TOKEN: ${{ secrets.VERCEL_ACCESS_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+          EXPECTED_CANONICAL_PRODUCTION_SHA: ${{ vars.EXPECTED_CANONICAL_PRODUCTION_SHA }}
+        run: >-
+          pnpm verify:production-release
+          --mode staged
+          --repository "YigitMora/aegean-track-society"
+          --sha "${{ needs.authorize.outputs.approved_sha }}"
+          --expected-canonical-sha "$EXPECTED_CANONICAL_PRODUCTION_SHA"
+
+      - name: Verify promoted Vercel Production deployment and API contract
+        if: ${{ needs.authorize.outputs.verification_mode == 'promoted' }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
           VERCEL_ACCESS_TOKEN: ${{ secrets.VERCEL_ACCESS_TOKEN }}
@@ -95,5 +107,6 @@ jobs:
           VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
         run: >-
           pnpm verify:production-release
+          --mode promoted
           --repository "YigitMora/aegean-track-society"
           --sha "${{ needs.authorize.outputs.approved_sha }}"

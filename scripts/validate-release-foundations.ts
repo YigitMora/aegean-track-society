@@ -34,6 +34,7 @@ import {
 } from "../src/lib/release-verifier";
 
 const expectedSha = "0123456789abcdef0123456789abcdef01234567";
+const expectedCanonicalSha = "abcdef0123456789abcdef0123456789abcdef01";
 const repository = expectedBackendRepository;
 const deploymentHost = "ats-release-012345.vercel.app";
 const deploymentId = "dpl_TestDeployment123";
@@ -84,12 +85,69 @@ assert.equal(canonicalBackendProductionOrigin, `https://${canonicalHost}`);
 assert.equal(expectedBackendRepositoryId, 1293619947);
 assert.equal(trustedVercelActorId, 35613825);
 assert.deepEqual(happy.githubDeploymentPages, [1]);
-assert.equal(happy.productRequests.length, 10);
+assert.equal(happy.productRequests.length, 9);
 assert.ok(happy.productRequests.every((request) => request.method === "GET"));
 assert.ok(
   happy.productRequests.every(
     (request) => !new Headers(request.headers).has("Authorization"),
   ),
+);
+
+const staged = createMockFetch({
+  stagedCanonicalSeparate: true,
+  canonicalSha: expectedCanonicalSha,
+  candidateAliasNotAssigned: true,
+});
+const stagedResult = await verifyProductionRelease(
+  stagedVerificationOptions(staged.fetch),
+);
+assert.equal(stagedResult.mode, "staged");
+assert.equal(stagedResult.expectedCanonicalSha, expectedCanonicalSha);
+assert.equal(stagedResult.verifiedProbeCount, 0);
+assert.equal(staged.productRequests.length, 0);
+
+await expectStagedVerificationFailure(
+  { stagedCanonicalSeparate: true, vercelDeploymentShaWrong: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "sha_match",
+);
+await expectStagedVerificationFailure(
+  { stagedCanonicalSeparate: true, missingDeployment: true },
+  "PRODUCTION_DEPLOYMENT_NOT_VERIFIED",
+);
+await expectStagedVerificationFailure(
+  { stagedCanonicalSeparate: true, deploymentReadyStateWrong: true },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "ready_state",
+);
+await expectStagedVerificationFailure(
+  {
+    stagedCanonicalSeparate: true,
+    canonicalSha: "f".repeat(40),
+  },
+  "VERCEL_DEPLOYMENT_PROVENANCE_MISMATCH",
+  "sha_match",
+);
+for (const invalidExpectedCanonicalSha of ["", "   "]) {
+  adversarialVerificationFixtureCount += 1;
+  await assert.rejects(
+    () =>
+      verifyProductionRelease({
+        ...stagedVerificationOptions(createMockFetch().fetch),
+        expectedCanonicalSha: invalidExpectedCanonicalSha,
+      }),
+    (error: unknown) =>
+      hasCode(error, "EXPECTED_CANONICAL_PRODUCTION_SHA_INVALID"),
+  );
+}
+adversarialVerificationFixtureCount += 1;
+await assert.rejects(
+  () =>
+    verifyProductionRelease({
+      ...verificationOptions(createMockFetch().fetch),
+      expectedSha: "0123456789abcdef",
+    }),
+  (error: unknown) => hasCode(error, "EXPECTED_SHA_INVALID"),
 );
 await verifyProductionRelease(
   verificationOptions(
@@ -565,6 +623,9 @@ type MockFetchOptions = {
   excessiveDeploymentPages?: boolean;
   wrongDeploymentSha?: boolean;
   staleCanonicalAlias?: boolean;
+  stagedCanonicalSeparate?: boolean;
+  canonicalSha?: string;
+  candidateAliasNotAssigned?: boolean;
   htmlResponse?: boolean;
   malformedJson?: boolean;
   malformedContractHeader?: boolean;
@@ -579,6 +640,7 @@ type MockFetchOptions = {
 
 function verificationOptions(fetchImpl: ReturnType<typeof createMockFetch>["fetch"]) {
   return {
+    mode: "promoted" as const,
     repository,
     expectedSha,
     githubToken: "test-github-token-not-a-real-credential",
@@ -588,6 +650,51 @@ function verificationOptions(fetchImpl: ReturnType<typeof createMockFetch>["fetc
     expectedContract: contract,
     fetchImpl,
   };
+}
+
+function stagedVerificationOptions(
+  fetchImpl: ReturnType<typeof createMockFetch>["fetch"],
+  expectedCanonical = expectedCanonicalSha,
+) {
+  return {
+    mode: "staged" as const,
+    repository,
+    expectedSha,
+    expectedCanonicalSha: expectedCanonical,
+    githubToken: "test-github-token-not-a-real-credential",
+    vercelAccessToken: "test-vercel-token-not-a-real-credential",
+    vercelProjectId,
+    vercelTeamId,
+    expectedContract: contract,
+    fetchImpl,
+  };
+}
+
+async function expectStagedVerificationFailure(
+  options: MockFetchOptions,
+  expectedCode: string,
+  expectedFailedCheck?: string,
+) {
+  adversarialVerificationFixtureCount += 1;
+  await assert.rejects(
+    () =>
+      verifyProductionRelease(
+        stagedVerificationOptions(createMockFetch(options).fetch),
+      ),
+    (error: unknown) => {
+      if (!hasCode(error, expectedCode)) {
+        return false;
+      }
+      if (expectedFailedCheck) {
+        assert.ok(error instanceof ReleaseVerificationError);
+        assert.match(
+          error.message,
+          new RegExp(`(?:^|[ ,:])${escapeRegExp(expectedFailedCheck)}(?:[,.]|$)`),
+        );
+      }
+      return true;
+    },
+  );
 }
 
 async function expectVerificationFailure(
@@ -626,6 +733,9 @@ function createMockFetch(options?: MockFetchOptions) {
   const githubDeploymentPages: number[] = [];
   const manifestSha = options?.manifestSha ?? expectedSha;
   const deploymentSucceeded = options?.deploymentSucceeded ?? true;
+  const canonicalDeploymentId = "dpl_CanonicalDeployment123";
+  const canonicalDeploymentHost = "ats-canonical-012345.vercel.app";
+  const canonicalSha = options?.canonicalSha ?? expectedCanonicalSha;
   const trustedActor = {
     id: trustedVercelActorId,
     login: "vercel[bot]",
@@ -875,52 +985,86 @@ function createMockFetch(options?: MockFetchOptions) {
         });
       }
       if (url.pathname.startsWith("/v13/deployments/")) {
+        const deploymentReference = decodeURIComponent(
+          url.pathname.slice("/v13/deployments/".length),
+        );
+        const isCanonicalDeployment =
+          options?.stagedCanonicalSeparate === true &&
+          deploymentReference === canonicalDeploymentId;
         return jsonResponse({
-          id: deploymentId,
-          url: options?.deploymentUrlWrong
+          id: isCanonicalDeployment ? canonicalDeploymentId : deploymentId,
+          url: isCanonicalDeployment
+            ? canonicalDeploymentHost
+            : options?.deploymentUrlWrong
             ? "another-deployment.vercel.app"
             : deploymentHost,
-          projectId: options?.deploymentProjectIdWrong
+          projectId: !isCanonicalDeployment && options?.deploymentProjectIdWrong
             ? "prj_WrongDeploymentProject"
             : vercelProjectId,
-          ownerId: options?.deploymentOwnerIdWrong
+          ownerId: !isCanonicalDeployment && options?.deploymentOwnerIdWrong
             ? "team_WrongDeploymentOwner"
             : vercelTeamId,
-          target: options?.previewTarget ? "preview" : "production",
-          readyState: options?.deploymentReadyStateWrong ? "ERROR" : "READY",
-          status: options?.deploymentStatusWrong ? "ERROR" : "READY",
-          aliasAssigned: options?.deploymentAliasNotAssigned ? false : true,
+          target:
+            !isCanonicalDeployment && options?.previewTarget
+              ? "preview"
+              : "production",
+          readyState:
+            !isCanonicalDeployment && options?.deploymentReadyStateWrong
+              ? "ERROR"
+              : "READY",
+          status:
+            !isCanonicalDeployment && options?.deploymentStatusWrong
+              ? "ERROR"
+              : "READY",
+          aliasAssigned: isCanonicalDeployment
+            ? true
+            : options?.candidateAliasNotAssigned || options?.deploymentAliasNotAssigned
+              ? false
+              : true,
           gitSource: {
             type: "github",
-            ...(options?.incompleteDeploymentGitSource
+            ...(!isCanonicalDeployment && options?.incompleteDeploymentGitSource
               ? {}
               : {
-                  ...(options?.deploymentRepositoryIdOnly ||
+                  ...(!isCanonicalDeployment &&
+                  (options?.deploymentRepositoryIdOnly ||
                   options?.deploymentRepositoryIdOnlyAsString
+                    )
                     ? {}
                     : {
                         org: "YigitMora",
-                        repo: options?.deploymentRepositoryCoordinatesOnlyWrong
+                        repo:
+                          !isCanonicalDeployment &&
+                          options?.deploymentRepositoryCoordinatesOnlyWrong
                           ? "another-repository"
                           : "aegean-track-society",
                       }),
-                  ...(options?.deploymentRepositoryCoordinatesOnly ||
+                  ...(!isCanonicalDeployment &&
+                  (options?.deploymentRepositoryCoordinatesOnly ||
                   options?.deploymentRepositoryCoordinatesOnlyWrong
+                    )
                     ? {}
                     : {
                         repoId:
-                          options?.deploymentRepositoryIdMalformed
+                          !isCanonicalDeployment && options?.deploymentRepositoryIdMalformed
                             ? "not-a-repository-id"
-                            : options?.deploymentRepositoryIdOnlyAsString
+                            : !isCanonicalDeployment && options?.deploymentRepositoryIdOnlyAsString
                             ? String(repositoryId)
-                            : options?.deploymentRepositoryIdWrong ||
+                            : !isCanonicalDeployment &&
+                              (options?.deploymentRepositoryIdWrong ||
                               options?.bothVercelRepositoryIdsWrong
+                              )
                             ? repositoryId + 1
                             : repositoryId,
                       }),
                 }),
-            ref: options?.vercelDeploymentRefWrong ? "preview" : "main",
-            sha: options?.vercelDeploymentShaWrong
+            ref:
+              !isCanonicalDeployment && options?.vercelDeploymentRefWrong
+                ? "preview"
+                : "main",
+            sha: isCanonicalDeployment
+              ? canonicalSha
+              : options?.vercelDeploymentShaWrong
               ? "f".repeat(40)
               : expectedSha,
           },
@@ -931,7 +1075,9 @@ function createMockFetch(options?: MockFetchOptions) {
           alias: canonicalHost,
           deploymentId: options?.staleCanonicalAlias
             ? "dpl_PreviousDeployment"
-            : deploymentId,
+            : options?.stagedCanonicalSeparate
+              ? canonicalDeploymentId
+              : deploymentId,
           projectId: vercelProjectId,
         });
       }
@@ -1153,8 +1299,12 @@ function assertProductionDatabaseWorkflow({
 
 function assertReleaseWorkflow(source: string) {
   assert.match(source, /github\.ref == 'refs\/heads\/main'/);
-  assert.match(source, /workflow_call:/);
-  assert.match(source, /github\.event_name == 'workflow_call'/);
+  assert.match(source, /deployment_status:/);
+  assert.match(source, /workflow_dispatch:/);
+  assert.doesNotMatch(source, /workflow_call:/);
+  assert.match(source, /target_sha:/);
+  assert.match(source, /VERIFICATION_MODE:/);
+  assert.match(source, /verification_mode=\$VERIFICATION_MODE/);
   assert.match(source, /github\.event\.deployment\.creator\.login == 'vercel\[bot\]'/);
   assert.match(
     source,
@@ -1177,16 +1327,25 @@ function assertReleaseWorkflow(source: string) {
     source.match(/repository:\s*YigitMora\/aegean-track-society/g)?.length,
     2,
   );
-  const invocation = extractWorkflowRunCommand(
+  const stagedInvocation = extractWorkflowRunCommand(
     source,
-    "Verify exact Vercel Production deployment",
+    "Verify staged Vercel Production deployment",
   );
-  assertProductionVerifierInvocation(invocation);
+  assertStagedProductionVerifierInvocation(stagedInvocation);
+  const promotedInvocation = extractWorkflowRunCommand(
+    source,
+    "Verify promoted Vercel Production deployment and API contract",
+  );
+  assertPromotedProductionVerifierInvocation(promotedInvocation);
   assertInvalidProductionVerifierInvocations();
   assert.doesNotMatch(source, /canonical_url|--canonical-url|CANONICAL_URL/);
-  assert.equal(source.match(/secrets\.VERCEL_ACCESS_TOKEN/g)?.length, 1);
-  assert.equal(source.match(/vars\.VERCEL_PROJECT_ID/g)?.length, 1);
-  assert.equal(source.match(/vars\.VERCEL_TEAM_ID/g)?.length, 1);
+  assert.equal(source.match(/secrets\.VERCEL_ACCESS_TOKEN/g)?.length, 2);
+  assert.equal(source.match(/vars\.VERCEL_PROJECT_ID/g)?.length, 2);
+  assert.equal(source.match(/vars\.VERCEL_TEAM_ID/g)?.length, 2);
+  assert.equal(
+    source.match(/vars\.EXPECTED_CANONICAL_PRODUCTION_SHA/g)?.length,
+    1,
+  );
 
   const installIndex = source.indexOf("pnpm install --frozen-lockfile");
   const secretIndex = source.indexOf("VERCEL_ACCESS_TOKEN:");
@@ -1230,12 +1389,31 @@ function extractWorkflowRunCommand(source: string, stepName: string) {
   return commandLines.join(" ");
 }
 
-function assertProductionVerifierInvocation(command: string) {
+function assertStagedProductionVerifierInvocation(command: string) {
   const tokens = tokenizeShellCommand(command);
   assert.equal(tokens.includes("--"), false);
   assert.deepEqual(tokens, [
     "pnpm",
     "verify:production-release",
+    "--mode",
+    "staged",
+    "--repository",
+    "YigitMora/aegean-track-society",
+    "--sha",
+    "${{ needs.authorize.outputs.approved_sha }}",
+    "--expected-canonical-sha",
+    "$EXPECTED_CANONICAL_PRODUCTION_SHA",
+  ]);
+}
+
+function assertPromotedProductionVerifierInvocation(command: string) {
+  const tokens = tokenizeShellCommand(command);
+  assert.equal(tokens.includes("--"), false);
+  assert.deepEqual(tokens, [
+    "pnpm",
+    "verify:production-release",
+    "--mode",
+    "promoted",
     "--repository",
     "YigitMora/aegean-track-society",
     "--sha",
@@ -1248,17 +1426,17 @@ function assertInvalidProductionVerifierInvocations() {
     '--repository "YigitMora/aegean-track-society" --sha "${{ needs.authorize.outputs.approved_sha }}"';
   const invalidCommands = [
     `pnpm verify:production-release -- ${expectedSuffix}`,
-    'pnpm verify:production-release --sha "${{ needs.authorize.outputs.approved_sha }}"',
-    `pnpm verify:production-release ${expectedSuffix} --repository "YigitMora/aegean-track-society"`,
-    `pnpm verify-production-release ${expectedSuffix}`,
-    `echo ok # pnpm verify:production-release ${expectedSuffix}`,
-    `$VERIFY_COMMAND ${expectedSuffix}`,
-    'pnpm verify:production-release --repositry "YigitMora/aegean-track-society" --sha "${{ needs.authorize.outputs.approved_sha }}"',
+    `pnpm verify:production-release --mode promoted ${expectedSuffix} --expected-canonical-sha "$EXPECTED_CANONICAL_PRODUCTION_SHA"`,
+    `pnpm verify:production-release --mode staged ${expectedSuffix}`,
+    `pnpm verify-production-release --mode promoted ${expectedSuffix}`,
+    `echo ok # pnpm verify:production-release --mode promoted ${expectedSuffix}`,
+    `$VERIFY_COMMAND --mode promoted ${expectedSuffix}`,
+    'pnpm verify:production-release --mode promoted --repositry "YigitMora/aegean-track-society" --sha "${{ needs.authorize.outputs.approved_sha }}"',
   ];
 
   for (const command of invalidCommands) {
     adversarialInvocationFixtureCount += 1;
-    assert.throws(() => assertProductionVerifierInvocation(command));
+    assert.throws(() => assertPromotedProductionVerifierInvocation(command));
   }
 }
 
