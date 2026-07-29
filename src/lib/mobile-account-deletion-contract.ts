@@ -4,8 +4,11 @@ import { mobileAuthJsonResponse } from "@/lib/mobile-auth";
 
 export const accountDeletionConfirmation = "DELETE_MY_ACCOUNT";
 export const accountDeletionAcknowledgementVersion = "account-deletion-v1";
+export const accountDeletionStatusContractHeader = "X-ATS-Account-Deletion-Contract";
+export const accountDeletionStatusContractVersion = "account-deletion-v2";
 
 export const deletionVerificationSchema = z.object({}).strict();
+export const deletionCancellationSchema = z.object({}).strict();
 export const deletionConfirmationSchema = z.object({
   confirmation: z.literal(accountDeletionConfirmation),
   acknowledgementVersion: z.literal(accountDeletionAcknowledgementVersion),
@@ -22,6 +25,8 @@ const definitions = {
   ACCOUNT_DELETION_VERIFICATION_LIMITED: [429, "Doğrulama isteği sınırına ulaştınız. Lütfen daha sonra tekrar deneyin."],
   ACCOUNT_DELETION_NOT_READY: [409, "Hesap silme doğrulaması tamamlanmadı."],
   ACCOUNT_DELETION_IN_PROGRESS: [409, "Hesap silme işlemi sürüyor."],
+  ACCOUNT_DELETION_NOT_CANCELLABLE: [409, "Hesap silme talebi artık iptal edilemez."],
+  ACCOUNT_DELETION_CONTRACT_UNSUPPORTED: [426, "Hesap silme uygulama sözleşmesi desteklenmiyor."],
   ACCOUNT_DELETION_CONFIGURATION_ERROR: [503, "Hesap silme şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin."],
   ACCOUNT_DELETION_STORAGE_FAILED: [503, "Hesap silme işlemi şu anda tamamlanamadı. Lütfen daha sonra tekrar deneyin."],
   ACCOUNT_DELETION_RETRY_REQUIRED: [503, "Hesap silme işlemi güvenli olarak tamamlanmayı bekliyor. Lütfen daha sonra tekrar deneyin."],

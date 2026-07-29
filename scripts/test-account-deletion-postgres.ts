@@ -105,8 +105,10 @@ async function verifyMigrationMetadata() {
   assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionRequest' AND column_name IN ('storageInvocationKey', 'storageInvocationState', 'storageInvocationStartedAt', 'storageInvocationTarget', 'authInvocationKey', 'authInvocationState', 'authInvocationStartedAt')"), "7");
   assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionEmailOutbox' AND column_name IN ('deliveryInvocationKey', 'deliveryInvocationState', 'deliveryInvocationStartedAt')"), "3");
   assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionRequest' AND column_name IN ('authProviderIdentity')"), "1");
+  assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionRequest' AND column_name IN ('scheduledDeletionAt', 'cancelledAt')"), "2");
   assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionEmailOutbox' AND column_name IN ('deliveryPayloadCiphertext', 'deliveryPayloadFingerprint', 'deliveryFirstTransportAt', 'deliveryRetryDeadlineAt', 'providerMessageId', 'reconciliationRequiredAt')"), "6");
   assert.equal(psql("SELECT count(*) FROM pg_enum WHERE enumtypid = '\"AccountDeletionOutboxStatus\"'::regtype AND enumlabel = 'RECONCILIATION_REQUIRED'"), "1");
+  assert.equal(psql("SELECT count(*) FROM pg_enum WHERE enumtypid = '\"AccountDeletionStage\"'::regtype AND enumlabel = 'CANCELLED'"), "1");
   assert.equal(psql("SELECT count(*) FROM pg_indexes WHERE tablename = 'AccountDeletionEmailOutbox' AND indexname = 'AccountDeletionEmailOutbox_accountDeletionRequestId_key'"), "1");
   assert.equal(psql("SELECT count(*) FROM pg_indexes WHERE tablename = 'AccountDeletionRequest' AND indexname = 'AccountDeletionRequest_operationReceiptHash_idx'"), "0");
   checkpoint("fresh-migration-metadata");
@@ -121,6 +123,7 @@ async function verifyUpgradeMigration() {
   rmSync(join(upgradePrismaDirectory, "migrations", "20260728200000_account_deletion_side_effect_reservations"), { recursive: true });
   rmSync(join(upgradePrismaDirectory, "migrations", "20260728210000_account_deletion_side_effect_invocations"), { recursive: true });
   rmSync(join(upgradePrismaDirectory, "migrations", "20260729200000_account_deletion_reconciliation_boundaries"), { recursive: true });
+  rmSync(join(upgradePrismaDirectory, "migrations", "20260729150000_account_deletion_cancellation_schedule"), { recursive: true });
   command("./node_modules/.bin/prisma", ["migrate", "deploy", "--schema", join(upgradePrismaDirectory, "schema.prisma")], {
     ...process.env, DATABASE_URL: upgradeUrl, CI: "1", PRISMA_HIDE_UPDATE_MESSAGE: "1",
   });
@@ -130,6 +133,8 @@ async function verifyUpgradeMigration() {
   });
   assert.equal(psql("SELECT \"operationVersion\" FROM \"AccountDeletionRequest\" WHERE id = 'upgrade-preserved'", upgradeDatabase), "0");
   assert.equal(psql("SELECT count(*) FROM _prisma_migrations WHERE migration_name = '20260728170000_account_deletion_recovery' AND finished_at IS NOT NULL", upgradeDatabase), "1");
+  assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_name = 'AccountDeletionRequest' AND column_name IN ('scheduledDeletionAt', 'cancelledAt')", upgradeDatabase), "2");
+  assert.equal(psql("SELECT count(*) FROM pg_enum WHERE enumtypid = '\"AccountDeletionStage\"'::regtype AND enumlabel = 'CANCELLED'", upgradeDatabase), "1");
   checkpoint("upgrade-migration-preserves-request");
 }
 
@@ -630,6 +635,123 @@ async function verifyExpiredReservationRecovery() {
   checkpoint("expired-side-effect-reservation-recovery");
 }
 
+async function verifyCancellationAndScheduledDeletion() {
+  const contract = await import("@/lib/mobile-account-deletion-contract");
+  const {
+    accountDeletionGracePeriodMs,
+    cancelAccountDeletion,
+    claimAccountDeletionOperationForTests,
+    confirmAccountDeletion,
+    getAccountDeletionStatusByReceipt,
+    runAccountDeletionWorker,
+  } = await import("@/lib/account-deletion-service");
+  let now = new Date("2026-04-01T00:00:00.000Z");
+  const clock = () => now;
+  const pending = await createOperation();
+  await isolateOperation(pending.id);
+  const receipt = contract.createAccountDeletionReceipt();
+  const code = "123456";
+  await primary!.accountDeletionRequest.update({
+    where: { id: pending.id },
+    data: {
+      stage: "VERIFICATION_PENDING",
+      idempotencyKeyHash: null,
+      verificationHash: contract.accountDeletionHash(`${pending.authUserId}:${code}`),
+      verificationExpiresAt: new Date(now.getTime() + 60_000),
+      operationReceiptHash: contract.accountDeletionHash(receipt),
+      scheduledDeletionAt: null,
+      nextAttemptAt: null,
+      executionLeaseId: null,
+      executionLeaseExpiresAt: null,
+      legalHold: false,
+    },
+  });
+
+  const confirmed = await confirmAccountDeletion({
+    authUserId: pending.authUserId,
+    verificationCode: code,
+    idempotencyKey: "00000000-0000-4000-8000-000000000001",
+    clock,
+  });
+  assert.deepEqual(confirmed, { data: { status: "pending" } });
+  const expectedSchedule = new Date(now.getTime() + accountDeletionGracePeriodMs);
+  const scheduled = await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: pending.id } });
+  assert.equal(scheduled.scheduledDeletionAt?.toISOString(), expectedSchedule.toISOString());
+  assert.equal(scheduled.nextAttemptAt?.toISOString(), expectedSchedule.toISOString());
+  assert.deepEqual(await getAccountDeletionStatusByReceipt(receipt), { data: { status: "pending" } });
+  assert.deepEqual(
+    await getAccountDeletionStatusByReceipt(receipt, { includeSchedule: true }),
+    { data: { status: "pending", scheduledDeletionAt: expectedSchedule.toISOString() } },
+  );
+
+  const beforeSchedule = { ...externalCalls };
+  await runAccountDeletionWorker({ limit: 1, clock });
+  assert.deepEqual(externalCalls, beforeSchedule);
+
+  const cancellationResults = await Promise.all([
+    cancelAccountDeletion({ authUserId: pending.authUserId, clock }),
+    cancelAccountDeletion({ authUserId: pending.authUserId, clock }),
+  ]);
+  assert.deepEqual(cancellationResults, [
+    { data: { status: "cancelled" } },
+    { data: { status: "cancelled" } },
+  ]);
+  const cancelled = await primary!.accountDeletionRequest.findUniqueOrThrow({ where: { id: pending.id } });
+  assert.equal(cancelled.stage, "CANCELLED");
+  assert.equal(cancelled.scheduledDeletionAt, null);
+  assert.equal(cancelled.nextAttemptAt, null);
+  assert.equal(cancelled.encryptedAuthUserId, null);
+  assert.equal(cancelled.encryptedEmail, null);
+  assert.notEqual(cancelled.cancelledAt, null);
+  assert.deepEqual(
+    await getAccountDeletionStatusByReceipt(receipt, { includeSchedule: true }),
+    { data: { status: "cancelled", scheduledDeletionAt: null } },
+  );
+
+  now = new Date(expectedSchedule.getTime() + 1);
+  const beforeCancelledWorker = { ...externalCalls };
+  await runAccountDeletionWorker({ limit: 1, clock });
+  assert.deepEqual(externalCalls, beforeCancelledWorker);
+
+  await assert.rejects(
+    cancelAccountDeletion({ authUserId: testUserId(), clock }),
+    (error: unknown) => error instanceof contract.AccountDeletionError && error.code === "ACCOUNT_DELETION_NOT_CANCELLABLE",
+  );
+
+  const expired = await createOperation();
+  await isolateOperation(expired.id);
+  await primary!.accountDeletionRequest.update({
+    where: { id: expired.id },
+    data: { scheduledDeletionAt: now, nextAttemptAt: now, executionLeaseId: null, executionLeaseExpiresAt: null },
+  });
+  await assert.rejects(
+    cancelAccountDeletion({ authUserId: expired.authUserId, clock }),
+    (error: unknown) => error instanceof contract.AccountDeletionError && error.code === "ACCOUNT_DELETION_NOT_CANCELLABLE",
+  );
+
+  const processing = await createOperation();
+  await isolateOperation(processing.id);
+  await primary!.accountDeletionRequest.update({
+    where: { id: processing.id },
+    data: { scheduledDeletionAt: now, nextAttemptAt: now },
+  });
+  const claim = await claimAccountDeletionOperationForTests(clock);
+  assert.equal(claim?.request.id, processing.id);
+  await assert.rejects(
+    cancelAccountDeletion({ authUserId: processing.authUserId, clock }),
+    (error: unknown) => error instanceof contract.AccountDeletionError && error.code === "ACCOUNT_DELETION_NOT_CANCELLABLE",
+  );
+
+  const completed = await createOperation();
+  await isolateOperation(completed.id);
+  await primary!.accountDeletionRequest.update({ where: { id: completed.id }, data: { stage: "COMPLETED", completedAt: now } });
+  await assert.rejects(
+    cancelAccountDeletion({ authUserId: completed.authUserId, clock }),
+    (error: unknown) => error instanceof contract.AccountDeletionError && error.code === "ACCOUNT_DELETION_NOT_CANCELLABLE",
+  );
+  checkpoint("cancellation-schedule-owner-race-and-worker-skip");
+}
+
 async function verifyReceiptStatusRateLimiter() {
   const service = await import("@/lib/account-deletion-service");
   service.resetAccountDeletionRateLimitForTests();
@@ -1071,6 +1193,7 @@ async function main() {
     await verifyProviderReconciliationBoundaries();
     await verifyStructuredProviderErrorHandling();
     await verifyDatabaseCommitPointLegalHold();
+    await verifyCancellationAndScheduledDeletion();
     await verifyOutboxUniqueness();
     await verifyServiceRecovery();
     await verifyReceiptStatusRateLimiter();

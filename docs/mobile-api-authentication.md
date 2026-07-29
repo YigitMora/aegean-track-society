@@ -352,6 +352,25 @@ No additional server environment variable is introduced by M2D. Storage uses
 the existing public Supabase URL/publishable key and the authenticated member's
 access token; no service-role key is used.
 
+### Account Deletion v2
+
+Account deletion remains member-authenticated for verification, confirmation,
+and cancellation. `POST /api/mobile/v1/account/deletion/cancel` accepts only an
+empty JSON object and can cancel only the authenticated member's still-pending
+request before its server-owned schedule. It is intentionally not a receipt or
+user-id based operation.
+
+`POST /api/mobile/v1/account/deletion/status` retains its original receipt-only
+response unless the client sends:
+
+```http
+X-ATS-Account-Deletion-Contract: account-deletion-v2
+```
+
+The v2 response adds nullable `scheduledDeletionAt`, calculated by the server.
+Requests with an absent or unsupported contract header never receive a
+partially shaped v2 response.
+
 ## Event Applications API
 
 M3 adds the Bearer-authenticated `applications-v1` capability for event

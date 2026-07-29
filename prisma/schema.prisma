@@ -107,6 +107,7 @@ enum MemberStatus {
 enum AccountDeletionStage {
   VERIFICATION_PENDING
   VERIFIED
+  CANCELLED
   STORAGE_PENDING
   DATABASE_PENDING
   AUTH_PENDING
@@ -526,6 +527,8 @@ model AccountDeletionRequest {
   authInvocationState  AccountDeletionSideEffectInvocationState?
   authInvocationStartedAt DateTime?
   authProviderIdentity String?
+  scheduledDeletionAt DateTime?
+  cancelledAt         DateTime?
   nextAttemptAt        DateTime?
   purgeAfter           DateTime?
   legalHold            Boolean              @default(false)
@@ -544,6 +547,7 @@ model AccountDeletionRequest {
   @@index([verificationExpiresAt])
   @@index([completedAt])
   @@index([stage, nextAttemptAt])
+  @@index([stage, scheduledDeletionAt])
   @@index([executionLeaseExpiresAt])
   @@index([storageReservationExpiresAt])
   @@index([authReservationExpiresAt])

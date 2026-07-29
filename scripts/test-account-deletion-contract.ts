@@ -6,7 +6,10 @@ async function main() {
 
   const {
   accountDeletionHash,
+  accountDeletionStatusContractHeader,
+  accountDeletionStatusContractVersion,
   createAccountDeletionReceipt,
+  deletionCancellationSchema,
   deletionConfirmationSchema,
   deletionStatusSchema,
   } = await import("@/lib/mobile-account-deletion-contract");
@@ -18,6 +21,10 @@ async function main() {
   assert.equal(deletionStatusSchema.safeParse({ receipt }).success, true);
   assert.equal(deletionStatusSchema.safeParse({ receipt, identity: "leak" }).success, false);
   assert.equal(deletionStatusSchema.safeParse({ receipt: "not-a-receipt" }).success, false);
+  assert.equal(deletionCancellationSchema.safeParse({}).success, true);
+  assert.equal(deletionCancellationSchema.safeParse({ receipt }).success, false);
+  assert.equal(accountDeletionStatusContractHeader, "X-ATS-Account-Deletion-Contract");
+  assert.equal(accountDeletionStatusContractVersion, "account-deletion-v2");
 
   const validConfirmation = {
   confirmation: "DELETE_MY_ACCOUNT",
@@ -33,7 +40,7 @@ async function main() {
   assert.match(releaseNote, /first-release contract/);
   assert.match(releaseNote, /not\s+restored/);
 
-  console.log("account-deletion contract runtime passed (receipt, strict bodies, first-release gate)");
+  console.log("account-deletion contract runtime passed (receipt, cancellation, strict bodies, first-release gate)");
 }
 
 void main();

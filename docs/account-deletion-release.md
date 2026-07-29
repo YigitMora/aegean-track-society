@@ -52,3 +52,23 @@ success. Provider drift or an ambiguous 404 is fail-closed.
 `databaseCompletedAt` is the durable database commit marker. A legal hold that
 waits for this transaction reports `COMMIT_POINT_PASSED` with `database` and
 prevents the later Auth and completion-email effects.
+
+## Cancellation and planned deletion contract
+
+After a verified request, the server records a seven-day
+`scheduledDeletionAt` value and the worker does not claim the request before
+that time. A signed-in member may send a strict empty-body `POST` request to
+`/api/mobile/v1/account/deletion/cancel`. Cancellation is idempotent only for
+the same member's already-cancelled request. It otherwise succeeds only while
+the request is still `VERIFIED`, is not under legal hold, has not reached the
+server deadline, and has no lease or irreversible phase marker.
+
+The receipt status route preserves its original exact response by default.
+Clients that send `X-ATS-Account-Deletion-Contract: account-deletion-v2`
+receive the status plus nullable server-owned `scheduledDeletionAt`; clients
+without that header continue to receive only the legacy status object. This is
+an additive negotiation boundary, not a client-side schedule calculation.
+
+`CANCELLED` requests have no runnable attempt time and are excluded from worker
+claims. Their encrypted owner contact material is cleared while the opaque
+receipt hash remains only for the bounded status-retention period.
