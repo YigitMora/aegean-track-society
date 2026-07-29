@@ -1,0 +1,35 @@
+name: Account Deletion Worker
+
+on:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: account-deletion-worker
+  cancel-in-progress: false
+
+jobs:
+  run:
+    if: vars.ACCOUNT_DELETION_WORKER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: Production
+
+    steps:
+      - name: Run account deletion worker
+        env:
+          WORKER_URL: https://www.aegeantracksociety.com/api/internal/account-deletion-worker
+          WORKER_SECRET: ${{ secrets.ACCOUNT_DELETION_WORKER_CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          test -n "$WORKER_SECRET"
+          curl --fail --silent --show-error --output /dev/null \
+            --connect-timeout 10 \
+            --max-time 45 \
+            --request POST \
+            --header "Authorization: Bearer ${WORKER_SECRET}" \
+            "$WORKER_URL"
