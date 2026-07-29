@@ -101,6 +101,35 @@ enum MemberRole {
 enum MemberStatus {
   ACTIVE
   SUSPENDED
+  DELETION_PENDING
+}
+
+enum AccountDeletionStage {
+  VERIFICATION_PENDING
+  VERIFIED
+  STORAGE_PENDING
+  DATABASE_PENDING
+  AUTH_PENDING
+  AUTH_DELETE_RETRY
+  COMPLETED
+  FAILED_RETRYABLE
+  FAILED_FINAL
+}
+
+enum AccountDeletionOutboxStatus {
+  PENDING
+  RETRYABLE
+  RECONCILIATION_REQUIRED
+  SENT
+  FAILED_FINAL
+}
+
+enum AccountDeletionSideEffectInvocationState {
+  RESERVED
+  INVOKING
+  RECONCILING
+  SUCCEEDED
+  RETRYABLE
 }
 
 enum ModificationCategory {
@@ -467,6 +496,91 @@ model User {
   deletedAt                       DateTime?
 
   @@index([status])
+}
+
+model AccountDeletionRequest {
+  id                   String               @id @default(cuid())
+  authUserIdHash       String               @unique
+  stage                AccountDeletionStage @default(VERIFICATION_PENDING)
+  verificationHash     String?
+  verificationExpiresAt DateTime?
+  verificationAttempts Int                  @default(0)
+  resendCount          Int                  @default(0)
+  lastSentAt           DateTime?
+  idempotencyKeyHash   String?              @unique
+  operationReceiptHash String?              @unique
+  encryptedAuthUserId  String?
+  encryptedEmail       String?
+  executionLeaseId     String?
+  executionLeaseExpiresAt DateTime?
+  operationVersion     Int                  @default(0)
+  storageReservationId String?
+  storageReservationExpiresAt DateTime?
+  storageInvocationKey String?
+  storageInvocationState AccountDeletionSideEffectInvocationState?
+  storageInvocationStartedAt DateTime?
+  storageInvocationTarget Json?
+  authReservationId    String?
+  authReservationExpiresAt DateTime?
+  authInvocationKey    String?
+  authInvocationState  AccountDeletionSideEffectInvocationState?
+  authInvocationStartedAt DateTime?
+  authProviderIdentity String?
+  nextAttemptAt        DateTime?
+  purgeAfter           DateTime?
+  legalHold            Boolean              @default(false)
+  legalHoldReason      String?              @db.Text
+  legalHoldUntil       DateTime?
+  safeErrorCode        String?
+  storageCompletedAt   DateTime?
+  databaseCompletedAt  DateTime?
+  authCompletedAt      DateTime?
+  completedAt          DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  emailOutbox          AccountDeletionEmailOutbox[]
+
+  @@index([stage])
+  @@index([verificationExpiresAt])
+  @@index([completedAt])
+  @@index([stage, nextAttemptAt])
+  @@index([executionLeaseExpiresAt])
+  @@index([storageReservationExpiresAt])
+  @@index([authReservationExpiresAt])
+  @@index([storageInvocationState])
+  @@index([authInvocationState])
+}
+
+model AccountDeletionEmailOutbox {
+  id                       String                       @id @default(cuid())
+  accountDeletionRequestId String
+  request                  AccountDeletionRequest       @relation(fields: [accountDeletionRequestId], references: [id], onDelete: Cascade)
+  status                   AccountDeletionOutboxStatus  @default(PENDING)
+  recipientCiphertext      String?
+  executionLeaseId         String?
+  executionLeaseExpiresAt  DateTime?
+  deliveryReservationId    String?
+  deliveryReservationExpiresAt DateTime?
+  deliveryInvocationKey    String?
+  deliveryInvocationState  AccountDeletionSideEffectInvocationState?
+  deliveryInvocationStartedAt DateTime?
+  deliveryPayloadCiphertext String?                    @db.Text
+  deliveryPayloadFingerprint String?
+  deliveryFirstTransportAt  DateTime?
+  deliveryRetryDeadlineAt  DateTime?
+  providerMessageId        String?
+  reconciliationRequiredAt DateTime?
+  attemptCount             Int                          @default(0)
+  lastAttemptAt            DateTime?
+  sentAt                   DateTime?
+  safeErrorCode            String?
+  createdAt                DateTime                     @default(now())
+  updatedAt                DateTime                     @updatedAt
+
+  @@unique([accountDeletionRequestId])
+  @@index([status, executionLeaseExpiresAt])
+  @@index([deliveryReservationExpiresAt])
+  @@index([deliveryInvocationState])
 }
 
 model Vehicle {
