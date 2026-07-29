@@ -24,6 +24,9 @@ import {
 } from "@/lib/account-deletion-crypto";
 
 const verificationLifetimeMs = 10 * 60 * 1000;
+// The cancellation window is server-owned so clients never infer a deletion
+// deadline from local time or a retry schedule.
+export const accountDeletionGracePeriodMs = 7 * 24 * 60 * 60 * 1000;
 const resendCooldownMs = 60 * 1000;
 const maxResends = 3;
 const maxVerificationAttempts = 5;
@@ -76,14 +79,14 @@ export async function startAccountDeletionVerification(input: { authUserId: stri
   const now = new Date();
   const existing = await prisma.accountDeletionRequest.findUnique({ where: { authUserIdHash } });
 
-  if (existing && existing.stage !== "VERIFICATION_PENDING") {
+  if (existing && existing.stage !== "VERIFICATION_PENDING" && existing.stage !== "CANCELLED") {
     throw new AccountDeletionError("ACCOUNT_DELETION_IN_PROGRESS");
   }
   if (existing?.legalHold) throw new AccountDeletionError("ACCOUNT_DELETION_IN_PROGRESS");
-  if (existing?.lastSentAt && now.getTime() - existing.lastSentAt.getTime() < resendCooldownMs) {
+  if (existing?.stage !== "CANCELLED" && existing?.lastSentAt && now.getTime() - existing.lastSentAt.getTime() < resendCooldownMs) {
     throw new AccountDeletionError("ACCOUNT_DELETION_VERIFICATION_LIMITED");
   }
-  if (existing && existing.resendCount >= maxResends) throw new AccountDeletionError("ACCOUNT_DELETION_VERIFICATION_LIMITED");
+  if (existing && existing.stage !== "CANCELLED" && existing.resendCount >= maxResends) throw new AccountDeletionError("ACCOUNT_DELETION_VERIFICATION_LIMITED");
 
   const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
   const receipt = createAccountDeletionReceipt();
@@ -100,9 +103,25 @@ export async function startAccountDeletionVerification(input: { authUserId: stri
   };
 
   if (existing) {
+    const restartingCancelledRequest = existing.stage === "CANCELLED";
     const updated = await prisma.accountDeletionRequest.updateMany({
-      where: { id: existing.id, stage: "VERIFICATION_PENDING", legalHold: false, resendCount: { lt: maxResends } },
-      data: { ...common, resendCount: { increment: 1 }, operationVersion: { increment: 1 } },
+      where: {
+        id: existing.id,
+        stage: restartingCancelledRequest ? "CANCELLED" : "VERIFICATION_PENDING",
+        legalHold: false,
+        ...(restartingCancelledRequest ? {} : { resendCount: { lt: maxResends } }),
+      },
+      data: {
+        ...common,
+        stage: "VERIFICATION_PENDING",
+        resendCount: restartingCancelledRequest ? 1 : { increment: 1 },
+        idempotencyKeyHash: null,
+        scheduledDeletionAt: null,
+        cancelledAt: null,
+        nextAttemptAt: null,
+        purgeAfter: null,
+        operationVersion: { increment: 1 },
+      },
     });
     if (!updated.count) throw new AccountDeletionError("ACCOUNT_DELETION_IN_PROGRESS");
   } else {
@@ -135,10 +154,12 @@ export async function confirmAccountDeletion(input: {
   authUserId: string;
   verificationCode: string;
   idempotencyKey: string;
+  /** Internal deterministic clock used only by the disposable PostgreSQL harness. */
+  clock?: DeletionClock;
 }) {
   const authUserIdHash = accountDeletionHash(input.authUserId);
   const idempotencyKeyHash = accountDeletionHash(input.idempotencyKey);
-  const now = new Date();
+  const now = input.clock?.() ?? new Date();
   const request = await prisma.accountDeletionRequest.findUnique({ where: { authUserIdHash } });
   if (!request) throw new AccountDeletionError("ACCOUNT_DELETION_NOT_READY");
   if (request.legalHold || request.stage === "FAILED_FINAL") throw new AccountDeletionError("ACCOUNT_DELETION_IN_PROGRESS");
@@ -164,6 +185,7 @@ export async function confirmAccountDeletion(input: {
 
   // Compare-and-set means a second instance cannot overwrite this operation
   // with another idempotency key or execute the external deletion steps.
+  const scheduledDeletionAt = new Date(now.getTime() + accountDeletionGracePeriodMs);
   const started = await prisma.accountDeletionRequest.updateMany({
     where: {
       id: request.id,
@@ -179,7 +201,8 @@ export async function confirmAccountDeletion(input: {
       verificationHash: null,
       verificationExpiresAt: null,
       safeErrorCode: null,
-      nextAttemptAt: now,
+      scheduledDeletionAt,
+      nextAttemptAt: scheduledDeletionAt,
       operationVersion: { increment: 1 },
     },
   });
@@ -189,22 +212,86 @@ export async function confirmAccountDeletion(input: {
     throw new AccountDeletionError("ACCOUNT_DELETION_IN_PROGRESS");
   }
 
-  void runAccountDeletionWorker({ limit: 1 }).catch(() => undefined);
   return { data: { status: "pending" as const } };
 }
 
-export async function getAccountDeletionStatusByReceipt(receipt: string) {
+export async function cancelAccountDeletion(input: { authUserId: string; clock?: DeletionClock }) {
+  const now = input.clock?.() ?? new Date();
+  const authUserIdHash = accountDeletionHash(input.authUserId);
+  const request = await prisma.accountDeletionRequest.findUnique({
+    where: { authUserIdHash },
+    select: { id: true, stage: true },
+  });
+  if (!request) throw new AccountDeletionError("ACCOUNT_DELETION_NOT_CANCELLABLE");
+  if (request.stage === "CANCELLED") return { data: { status: "cancelled" as const } };
+
+  // A cancellation may win only before the server-side deadline and before a
+  // worker has a lease or any irreversible phase has started.
+  const cancelled = await prisma.accountDeletionRequest.updateMany({
+    where: {
+      id: request.id,
+      stage: "VERIFIED",
+      legalHold: false,
+      scheduledDeletionAt: { gt: now },
+      executionLeaseId: null,
+      executionLeaseExpiresAt: null,
+      storageCompletedAt: null,
+      databaseCompletedAt: null,
+      authCompletedAt: null,
+    },
+    data: {
+      stage: "CANCELLED",
+      cancelledAt: now,
+      scheduledDeletionAt: null,
+      nextAttemptAt: null,
+      verificationHash: null,
+      verificationExpiresAt: null,
+      encryptedAuthUserId: null,
+      encryptedEmail: null,
+      safeErrorCode: null,
+      purgeAfter: new Date(now.getTime() + receiptRetentionMs),
+      operationVersion: { increment: 1 },
+    },
+  });
+  if (cancelled.count) return { data: { status: "cancelled" as const } };
+
+  const current = await prisma.accountDeletionRequest.findUnique({ where: { id: request.id }, select: { stage: true } });
+  if (current?.stage === "CANCELLED") return { data: { status: "cancelled" as const } };
+  throw new AccountDeletionError("ACCOUNT_DELETION_NOT_CANCELLABLE");
+}
+
+export async function getAccountDeletionStatusByReceipt(
+  receipt: string,
+  options: { includeSchedule?: boolean } = {},
+) {
   const receiptHash = accountDeletionHash(receipt);
   limitReceiptStatusLookup(receiptHash);
   const request = await prisma.accountDeletionRequest.findUnique({
     where: { operationReceiptHash: receiptHash },
-    select: { stage: true, legalHold: true, updatedAt: true },
+    select: { stage: true, legalHold: true, scheduledDeletionAt: true, updatedAt: true },
   });
   if (!request) throw new AccountDeletionError("ACCOUNT_DELETION_STATUS_UNAVAILABLE");
-  if (request.legalHold) return { data: { status: "blocked" as const } };
-  if (request.stage === "COMPLETED") return { data: { status: "completed" as const } };
-  if (request.stage === "FAILED_FINAL") return { data: { status: "failed_final" as const } };
-  return { data: { status: "pending" as const } };
+  const status = request.legalHold
+    ? "blocked" as const
+    : request.stage === "COMPLETED"
+      ? "completed" as const
+      : request.stage === "FAILED_FINAL"
+        ? "failed_final" as const
+        : request.stage === "CANCELLED"
+          ? "cancelled" as const
+          : "pending" as const;
+  if (!options.includeSchedule) {
+    // Existing strict mobile v1 parsers accept only this exact object.
+    return { data: { status: status === "cancelled" ? "failed_final" as const : status } };
+  }
+  return {
+    data: {
+      status,
+      scheduledDeletionAt: status === "pending" && request.scheduledDeletionAt
+        ? request.scheduledDeletionAt.toISOString()
+        : null,
+    },
+  };
 }
 
 function limitReceiptStatusLookup(receiptHash: string, now = Date.now()) {
@@ -284,7 +371,7 @@ export async function runAccountDeletionWorker(input: AccountDeletionWorkerOptio
     await processClaimedDeletionOperation(claimed.request, claimed.lease, clock, input.hooks).catch(() => undefined);
   }
   await deliverCompletionEmailOutbox({ limit }, clock, input.hooks);
-  await purgeCompletedDeletionReceipts(clock);
+  await purgeFinishedDeletionReceipts(clock);
   return { processed };
 }
 
@@ -295,10 +382,13 @@ async function claimNextDeletionOperation(clock: DeletionClock) {
       legalHold: false,
       stage: { in: ["VERIFIED", "STORAGE_PENDING", "DATABASE_PENDING", "AUTH_PENDING", "AUTH_DELETE_RETRY", "FAILED_RETRYABLE"] },
       OR: [
+        { scheduledDeletionAt: null },
+        { scheduledDeletionAt: { lte: now } },
+      ],
+      AND: [{ OR: [
         { nextAttemptAt: null },
         { nextAttemptAt: { lte: now } },
-      ],
-      AND: [{ OR: [{ executionLeaseExpiresAt: null }, { executionLeaseExpiresAt: { lte: now } }] }],
+      ] }, { OR: [{ executionLeaseExpiresAt: null }, { executionLeaseExpiresAt: { lte: now } }] }],
     },
     orderBy: { updatedAt: "asc" },
   });
@@ -311,7 +401,10 @@ async function claimNextDeletionOperation(clock: DeletionClock) {
       stage: candidate.stage,
       operationVersion: candidate.operationVersion,
       legalHold: false,
-      OR: [{ executionLeaseExpiresAt: null }, { executionLeaseExpiresAt: { lte: now } }],
+      AND: [
+        { OR: [{ scheduledDeletionAt: null }, { scheduledDeletionAt: { lte: now } }] },
+        { OR: [{ executionLeaseExpiresAt: null }, { executionLeaseExpiresAt: { lte: now } }] },
+      ],
     },
     data: {
       executionLeaseId: leaseId,
@@ -1085,9 +1178,14 @@ function readCompletionEmailPayload(outbox: {
   };
 }
 
-async function purgeCompletedDeletionReceipts(clock: DeletionClock) {
+async function purgeFinishedDeletionReceipts(clock: DeletionClock) {
   await prisma.accountDeletionRequest.deleteMany({
-    where: { legalHold: false, stage: "COMPLETED", purgeAfter: { lte: clock() }, emailOutbox: { none: { status: { in: ["PENDING", "RETRYABLE", "RECONCILIATION_REQUIRED"] } } } },
+    where: {
+      legalHold: false,
+      stage: { in: ["COMPLETED", "CANCELLED"] },
+      purgeAfter: { lte: clock() },
+      emailOutbox: { none: { status: { in: ["PENDING", "RETRYABLE", "RECONCILIATION_REQUIRED"] } } },
+    },
   });
 }
 
